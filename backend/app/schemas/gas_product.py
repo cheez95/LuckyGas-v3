@@ -1,12 +1,14 @@
 from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 from app.models.gas_product import DeliveryMethod, ProductAttribute
 
 
 class GasProductBase(BaseModel):
+    """Base schema for gas products"""
     delivery_method: DeliveryMethod
     size_kg: int
     attribute: ProductAttribute
+    sku: Optional[str] = None
     name_zh: str
     name_en: Optional[str] = None
     description: Optional[str] = None
@@ -16,28 +18,15 @@ class GasProductBase(BaseModel):
     is_available: bool = True
     track_inventory: bool = True
     low_stock_threshold: int = 10
-    
-    @field_validator('size_kg')
-    def validate_size(cls, v):
-        valid_sizes = [4, 10, 16, 20, 50]
-        if v not in valid_sizes:
-            raise ValueError(f'Size must be one of {valid_sizes}')
-        return v
-    
-    @field_validator('unit_price')
-    def validate_price(cls, v):
-        if v < 0:
-            raise ValueError('Unit price must be non-negative')
-        return v
 
 
 class GasProductCreate(GasProductBase):
-    """Schema for creating a new gas product"""
+    """Schema for creating gas products"""
     pass
 
 
 class GasProductUpdate(BaseModel):
-    """Schema for updating a gas product"""
+    """Schema for updating gas products"""
     name_zh: Optional[str] = None
     name_en: Optional[str] = None
     description: Optional[str] = None
@@ -54,7 +43,6 @@ class GasProduct(GasProductBase):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
-    sku: str
     display_name: str
 
 
@@ -64,12 +52,3 @@ class GasProductList(BaseModel):
     total: int
     skip: int
     limit: int
-
-
-class GasProductSummary(BaseModel):
-    """Summary view of gas product for dropdowns/selections"""
-    id: int
-    sku: str
-    display_name: str
-    unit_price: float
-    is_available: bool

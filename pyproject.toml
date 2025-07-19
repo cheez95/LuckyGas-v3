@@ -1,0 +1,36 @@
+[project]
+name = "luckygas-v3"
+version = "0.1.0"
+description = "LuckyGas v3 project"
+requires-python = ">=3.11"
+dependencies = [
+    "superclaude>=3.0.0.1",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "backend",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true

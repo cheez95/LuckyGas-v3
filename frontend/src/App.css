@@ -1,0 +1,102 @@
+/* Root styles */
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Main layout styles */
+.main-layout {
+  height: 100vh;
+}
+
+.site-layout-content {
+  margin: 24px 16px;
+  padding: 24px;
+  background: #fff;
+  min-height: 280px;
+}
+
+/* Login page styles */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f0f2f5;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-logo h1 {
+  color: #1890ff;
+  font-size: 32px;
+  margin: 0;
+}
+
+/* Dashboard styles */
+.dashboard-stats {
+  margin-bottom: 24px;
+}
+
+/* Table styles */
+.table-operations {
+  margin-bottom: 16px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .site-layout-content {
+    margin: 12px 8px;
+    padding: 16px;
+  }
+  
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+/* Driver interface styles */
+.driver-interface {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.driver-route-nav {
+  margin-top: 16px;
+}
+
+/* Loading spinner */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Error styles */
+.error-container {
+  text-align: center;
+  padding: 48px;
+}
+
+/* Traditional Chinese specific adjustments */
+.ant-table {
+  font-size: 14px;
+}
+
+.ant-form-item-label {
+  font-weight: 500;
+}
