@@ -8,7 +8,7 @@ A comprehensive template for getting started with Context Engineering - the disc
 
 ```bash
 # 1. Clone this template
-git clone https://github.com/YOUR_USERNAME/LuckyGas-v3.git
+git clone https://github.com/cheez95/LuckyGas-v3.git
 cd LuckyGas-v3
 
 # 2. Set up your project rules (optional - template provided)

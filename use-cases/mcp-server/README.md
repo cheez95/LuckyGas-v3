@@ -148,7 +148,7 @@ The `examples/` folder shows how to create MCP tools:
 
 ```bash
 # Clone the LuckyGas-v3 project
-git clone https://github.com/YOUR_USERNAME/LuckyGas-v3.git
+git clone https://github.com/cheez95/LuckyGas-v3.git
 cd LuckyGas-v3/use-cases/mcp-server
 
 # Install dependencies
