@@ -1,5 +1,13 @@
 import api, { handleApiError } from './api';
-import { Order, OrderCreate, OrderUpdate, OrderStats } from '../types/order';
+import { 
+  Order, 
+  OrderCreate, 
+  OrderUpdate, 
+  OrderStats,
+  OrderV2,
+  OrderCreateV2,
+  OrderUpdateV2
+} from '../types/order';
 
 interface OrderQueryParams {
   skip?: number;
@@ -66,6 +74,34 @@ export const orderService = {
           date_to: dateTo,
         },
       });
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  // V2 methods for flexible product system
+  async getOrderV2(id: number): Promise<OrderV2> {
+    try {
+      const response = await api.get<OrderV2>(`/orders/v2/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  async createOrderV2(data: OrderCreateV2): Promise<OrderV2> {
+    try {
+      const response = await api.post<OrderV2>('/orders/v2/', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+
+  async updateOrderV2(id: number, data: OrderUpdateV2): Promise<OrderV2> {
+    try {
+      const response = await api.put<OrderV2>(`/orders/v2/${id}`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

@@ -1,4 +1,5 @@
 // Order related types
+import { OrderItem, OrderItemCreate } from './product';
 
 export type OrderStatus = 
   | 'pending'
@@ -186,3 +187,83 @@ export const getPaymentStatusText = (status: PaymentStatus) => {
   };
   return textMap[status] || status;
 };
+
+// V2 Order types for flexible product system
+export interface OrderV2 {
+  id: number;
+  order_number: string;
+  customer_id: number;
+  status: OrderStatus;
+  scheduled_date: string;
+  delivery_time_start?: string;
+  delivery_time_end?: string;
+  
+  // Pricing
+  total_amount: number;
+  discount_amount: number;
+  final_amount: number;
+  
+  // Payment
+  payment_status: PaymentStatus;
+  payment_method?: string;
+  invoice_number?: string;
+  
+  // Delivery
+  delivery_address?: string;
+  delivery_notes?: string;
+  is_urgent: boolean;
+  
+  // Assignment
+  route_id?: number;
+  driver_id?: number;
+  
+  // Timestamps
+  created_at: string;
+  updated_at?: string;
+  delivered_at?: string;
+  
+  // Order items (flexible products)
+  order_items: OrderItem[];
+  
+  // Related data
+  customer?: Customer;
+  customer_name?: string;
+  customer_phone?: string;
+}
+
+export interface OrderCreateV2 {
+  customer_id: number;
+  scheduled_date: string;
+  delivery_time_start?: string;
+  delivery_time_end?: string;
+  
+  // Order items
+  order_items: OrderItemCreate[];
+  
+  // Delivery info
+  delivery_address?: string;
+  delivery_notes?: string;
+  is_urgent?: boolean;
+  
+  // Payment
+  payment_method?: string;
+}
+
+export interface OrderUpdateV2 {
+  scheduled_date?: string;
+  delivery_time_start?: string;
+  delivery_time_end?: string;
+  
+  // Status
+  status?: OrderStatus;
+  payment_status?: PaymentStatus;
+  
+  // Delivery
+  delivery_address?: string;
+  delivery_notes?: string;
+  is_urgent?: boolean;
+  
+  // Assignment
+  route_id?: number;
+  driver_id?: number;
+}

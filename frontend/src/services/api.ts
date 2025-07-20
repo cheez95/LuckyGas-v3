@@ -10,11 +10,11 @@ declare module 'axios' {
   }
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: API_URL ? `${API_URL}/api/v1` : '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -90,7 +90,8 @@ api.interceptors.response.use(
     
     const originalRequest = error.config as any;
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't try to refresh token for login requests
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login')) {
       originalRequest._retry = true;
       
       // If we're already refreshing, wait for it to complete
@@ -102,7 +103,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       
       if (refreshToken) {
-        refreshPromise = axios.post(`${API_URL}/api/v1/auth/refresh`, {
+        refreshPromise = axios.post(API_URL ? `${API_URL}/api/v1/auth/refresh` : '/api/v1/auth/refresh', {
           refresh_token: refreshToken,
         })
           .then((response) => {
@@ -126,8 +127,10 @@ api.interceptors.response.use(
         await refreshPromise;
         return api(originalRequest);
       } else {
-        // No refresh token, redirect to login
-        window.location.href = '/login';
+        // No refresh token, redirect to login (unless we're already on login page)
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
       }
     }
     
@@ -153,6 +156,14 @@ export const handleApiError = (error: any): string => {
   if (error.response) {
     const status = error.response.status;
     
+    // Check for detailed error message from server first
+    if (error.response.data?.detail) {
+      return error.response.data.detail;
+    } else if (error.response.data?.message) {
+      return error.response.data.message;
+    }
+    
+    // Fallback to generic messages based on status code
     if (status >= 500) {
       return '伺服器錯誤，請稍後再試';
     } else if (status === 404) {
@@ -161,13 +172,6 @@ export const handleApiError = (error: any): string => {
       return '您沒有權限執行此操作';
     } else if (status === 401) {
       return '登入已過期，請重新登入';
-    }
-    
-    // Check for detailed error message from server
-    if (error.response.data?.detail) {
-      return error.response.data.detail;
-    } else if (error.response.data?.message) {
-      return error.response.data.message;
     }
   }
   

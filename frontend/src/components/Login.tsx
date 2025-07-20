@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginRequest } from '../types/auth';
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated, error, clearError } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -30,30 +33,37 @@ const Login: React.FC = () => {
 
   const onFinish = async (values: LoginRequest) => {
     setLoading(true);
+    setLocalError(null);
     try {
       await login(values);
-    } catch (error) {
-      // Error is handled by AuthContext
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      // Handle error locally if login throws
+      const errorMessage = error?.response?.data?.detail || 
+                          error?.message || 
+                          '登入失敗，請稍後再試';
+      setLocalError(errorMessage);
     }
+    setLoading(false);
   };
 
   return (
     <div className="login-container">
       <Card className="login-box">
         <div className="login-logo">
-          <Title level={2}>幸福氣管理系統</Title>
-          <Title level={5} type="secondary">Lucky Gas Management System</Title>
+          <Title level={2}>{t('app.title')}</Title>
+          <Title level={5} type="secondary">{t('app.shortTitle')}</Title>
         </div>
         
-        {error && (
+        {(error || localError) && (
           <Alert
-            message={error}
+            message={error || localError}
             type="error"
             showIcon
             closable
-            onClose={clearError}
+            onClose={() => {
+              clearError();
+              setLocalError(null);
+            }}
             style={{ marginBottom: 16 }}
           />
         )}
@@ -67,25 +77,25 @@ const Login: React.FC = () => {
           size="large"
         >
           <Form.Item
-            label="使用者名稱"
+            label={t('auth.username')}
             name="username"
-            rules={[{ required: true, message: '請輸入使用者名稱！' }]}
+            rules={[{ required: true, message: t('validation.required') }]}
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="請輸入使用者名稱"
+              placeholder={t('auth.username')}
               autoComplete="username"
             />
           </Form.Item>
 
           <Form.Item
-            label="密碼"
+            label={t('auth.password')}
             name="password"
-            rules={[{ required: true, message: '請輸入密碼！' }]}
+            rules={[{ required: true, message: t('validation.required') }]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="請輸入密碼"
+              placeholder={t('auth.password')}
               autoComplete="current-password"
             />
           </Form.Item>
@@ -97,14 +107,14 @@ const Login: React.FC = () => {
               loading={loading}
               block
             >
-              登入
+              {t('auth.login')}
             </Button>
           </Form.Item>
         </Form>
         
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           <Typography.Text type="secondary">
-            © 2025 Lucky Gas - 幸福氣瓦斯行
+            © 2025 {t('app.shortTitle')} - {t('app.title')}
           </Typography.Text>
         </div>
       </Card>

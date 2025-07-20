@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Row, Col, Statistic, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   ShoppingCartOutlined,
   UserOutlined,
@@ -10,6 +11,8 @@ import {
 const { Title } = Typography;
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
+  
   // TODO: Fetch actual statistics from API
   const stats = {
     todayOrders: 45,
@@ -20,12 +23,12 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <Title level={2}>總覽</Title>
+      <Title level={2}>{t('navigation.dashboard')}</Title>
       <Row gutter={[16, 16]} className="dashboard-stats">
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="今日訂單"
+              title={t('dashboard.todayOrders')}
               value={stats.todayOrders}
               prefix={<ShoppingCartOutlined />}
               valueStyle={{ color: '#3f8600' }}
@@ -35,7 +38,7 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="活躍客戶"
+              title={t('dashboard.activeCustomers')}
               value={stats.activeCustomers}
               prefix={<UserOutlined />}
               valueStyle={{ color: '#1890ff' }}
@@ -45,7 +48,7 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="配送中司機"
+              title={t('dashboard.driversOnRoute')}
               value={stats.driversOnRoute}
               prefix={<CarOutlined />}
               valueStyle={{ color: '#fa8c16' }}
@@ -55,11 +58,11 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="今日營收"
+              title={t('dashboard.todayRevenue')}
               value={stats.todayRevenue}
               prefix={<DollarOutlined />}
               valueStyle={{ color: '#cf1322' }}
-              suffix="元"
+              suffix={t('dashboard.yuan')}
             />
           </Card>
         </Col>
@@ -67,12 +70,12 @@ const Dashboard: React.FC = () => {
       
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
         <Col span={24}>
-          <Card title="即將實現功能">
+          <Card title={t('dashboard.upcomingFeatures')}>
             <ul>
-              <li>即時訂單狀態追蹤</li>
-              <li>每日需求預測圖表</li>
-              <li>司機配送路線地圖</li>
-              <li>客戶滿意度統計</li>
+              <li>{t('dashboard.features.realTimeTracking')}</li>
+              <li>{t('dashboard.features.demandPrediction')}</li>
+              <li>{t('dashboard.features.routeMap')}</li>
+              <li>{t('dashboard.features.satisfaction')}</li>
             </ul>
           </Card>
         </Col>

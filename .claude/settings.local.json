@@ -35,7 +35,10 @@
       "mcp__playwright__browser_snapshot",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(npm init playwright@latest:*)",
+      "Bash(npx playwright:*)"
     ],
     "deny": []
   }

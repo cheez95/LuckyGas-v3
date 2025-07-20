@@ -51,3 +51,8 @@ uv.lock
 *.swo
 *~
 .DS_Store
+
+# Playwright test artifacts
+frontend/playwright-report/
+frontend/test-results/
+frontend/screenshots/

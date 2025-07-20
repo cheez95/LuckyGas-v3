@@ -12,6 +12,9 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+  
+  // Check if tokens exist in localStorage
+  const hasTokens = localStorage.getItem('access_token') && localStorage.getItem('refresh_token');
 
   if (isLoading) {
     return (
@@ -21,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRoles
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !hasTokens) {
     // Redirect to login page but save the location they were trying to go to
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

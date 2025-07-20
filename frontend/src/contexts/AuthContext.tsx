@@ -115,10 +115,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           navigate('/dashboard');
       }
     } catch (error) {
+      const errorMessage = handleApiError(error);
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: handleApiError(error),
+        error: errorMessage,
       }));
       throw error;
     }
