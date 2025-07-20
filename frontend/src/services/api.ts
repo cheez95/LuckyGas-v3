@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosError, AxiosInstance } from 'axios';
+import { navigateTo } from '../utils/router';
 
 // Extend axios config to include metadata
 declare module 'axios' {
@@ -21,9 +22,6 @@ const api: AxiosInstance = axios.create({
   timeout: 30000, // 30 seconds timeout
   withCredentials: true, // Include credentials for CORS
 });
-
-// Token refresh promise to prevent multiple refresh requests
-let refreshPromise: Promise<any> | null = null;
 
 // Request interceptor to add auth token and log requests
 api.interceptors.request.use(
@@ -90,47 +88,14 @@ api.interceptors.response.use(
     
     const originalRequest = error.config as any;
     
-    // Don't try to refresh token for login requests
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login')) {
-      originalRequest._retry = true;
+    // Handle 401 errors - redirect to login for unauthorized requests
+    if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/login')) {
+      // Clear token and redirect to login
+      localStorage.removeItem('access_token');
       
-      // If we're already refreshing, wait for it to complete
-      if (refreshPromise) {
-        await refreshPromise;
-        return api(originalRequest);
-      }
-      
-      const refreshToken = localStorage.getItem('refresh_token');
-      
-      if (refreshToken) {
-        refreshPromise = axios.post(API_URL ? `${API_URL}/api/v1/auth/refresh` : '/api/v1/auth/refresh', {
-          refresh_token: refreshToken,
-        })
-          .then((response) => {
-            const { access_token, refresh_token } = response.data;
-            localStorage.setItem('access_token', access_token);
-            localStorage.setItem('refresh_token', refresh_token);
-            api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-            return response;
-          })
-          .catch((refreshError) => {
-            // Refresh failed, redirect to login
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            window.location.href = '/login';
-            throw refreshError;
-          })
-          .finally(() => {
-            refreshPromise = null;
-          });
-        
-        await refreshPromise;
-        return api(originalRequest);
-      } else {
-        // No refresh token, redirect to login (unless we're already on login page)
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        navigateTo('/login');
       }
     }
     

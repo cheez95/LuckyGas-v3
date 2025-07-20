@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Input, Button, Space, Typography, Tag, message, Modal, Form, Row, Col, Switch, InputNumber, TimePicker, Select } from 'antd';
-import { SearchOutlined, PlusOutlined, EditOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { SearchOutlined, PlusOutlined, EditOutlined, ExclamationCircleOutlined, ContainerOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { customerService } from '../../services/customer.service';
 import { Customer } from '../../types/order';
+import CustomerInventory from './CustomerInventory';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -21,6 +22,7 @@ const CustomerList: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [inventoryModalVisible, setInventoryModalVisible] = useState(false);
   const [form] = Form.useForm();
 
   // Fetch customers from API
@@ -95,7 +97,7 @@ const CustomerList: React.FC = () => {
       cancelText: '取消',
       onOk: async () => {
         try {
-          await customerService.updateCustomer(customer.id, { is_terminated: true });
+          await customerService.updateCustomer(customer.id, { is_active: false });
           message.success('客戶已停用');
           fetchCustomers(searchText, currentPage, pageSize);
         } catch (error) {
@@ -103,6 +105,11 @@ const CustomerList: React.FC = () => {
         }
       },
     });
+  };
+
+  const handleViewInventory = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setInventoryModalVisible(true);
   };
 
   const columns: ColumnsType<Customer> = [
@@ -182,24 +189,27 @@ const CustomerList: React.FC = () => {
       key: 'status',
       width: 120,
       render: (_, record) => (
-        <Space>
-          {record.is_terminated ? (
-            <Tag color="red">已停用</Tag>
-          ) : (
-            <Tag color="green">啟用</Tag>
-          )}
-          {record.is_subscription && <Tag color="blue">訂閱</Tag>}
-          {record.needs_same_day_delivery && <Tag color="orange">當日配送</Tag>}
-        </Space>
+        record.is_active ? (
+          <Tag color="green">啟用</Tag>
+        ) : (
+          <Tag color="red">已停用</Tag>
+        )
       ),
     },
     {
       title: '操作',
       key: 'action',
       fixed: 'right',
-      width: 150,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
+          <Button
+            size="small"
+            icon={<ContainerOutlined />}
+            onClick={() => handleViewInventory(record)}
+          >
+            庫存
+          </Button>
           <Button
             size="small"
             icon={<EditOutlined />}
@@ -211,7 +221,7 @@ const CustomerList: React.FC = () => {
             size="small"
             danger
             onClick={() => handleDelete(record)}
-            disabled={record.is_terminated}
+            disabled={!record.is_active}
           >
             停用
           </Button>
@@ -430,6 +440,15 @@ const CustomerList: React.FC = () => {
           </Row>
         </Form>
       </Modal>
+
+      {/* Customer Inventory Modal */}
+      {selectedCustomer && (
+        <CustomerInventory
+          customer={selectedCustomer}
+          open={inventoryModalVisible}
+          onClose={() => setInventoryModalVisible(false)}
+        />
+      )}
     </div>
   );
 };

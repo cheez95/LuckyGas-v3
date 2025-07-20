@@ -39,7 +39,7 @@ app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
 app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["predictions"])
 app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
-app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
+app.include_router(websocket.router, tags=["websocket"])
 
 
 @app.get("/")

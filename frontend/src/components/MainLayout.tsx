@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
+import NotificationBell from './common/NotificationBell';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -131,12 +132,15 @@ const MainLayout: React.FC = () => {
               onClick: () => setCollapsed(!collapsed),
               style: { fontSize: 18, padding: '0 24px', cursor: 'pointer' }
             })}
-            <Dropdown overlay={userMenu} trigger={['click']}>
-              <Space style={{ cursor: 'pointer' }}>
-                <Avatar icon={<UserOutlined />} />
-                <Text>{user?.full_name || user?.username}</Text>
-              </Space>
-            </Dropdown>
+            <Space size="large">
+              <NotificationBell />
+              <Dropdown overlay={userMenu} trigger={['click']}>
+                <Space style={{ cursor: 'pointer' }}>
+                  <Avatar icon={<UserOutlined />} />
+                  <Text>{user?.full_name || user?.username}</Text>
+                </Space>
+              </Dropdown>
+            </Space>
           </Header>
           <Content className="site-layout-content">
             <Outlet />

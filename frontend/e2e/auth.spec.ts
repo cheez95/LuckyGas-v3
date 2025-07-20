@@ -105,7 +105,6 @@ test.describe('Authentication', () => {
     // Simulate session expiry by clearing local storage
     await page.evaluate(() => {
       localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
     });
     
     // Reload the page to trigger re-authentication check

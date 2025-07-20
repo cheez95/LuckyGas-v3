@@ -23,7 +23,7 @@ export const authService = {
     // Return combined response
     return {
       access_token,
-      refresh_token: '', // Backend doesn't return refresh token yet
+      refresh_token: null as any, // Backend doesn't support refresh tokens yet
       token_type: response.data.token_type,
       user: userResponse.data,
     };
@@ -33,20 +33,12 @@ export const authService = {
     // Call logout endpoint if needed
     // await api.post('/auth/logout');
     
-    // Clear tokens
+    // Clear token
     localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
   },
   
   async getCurrentUser(): Promise<User> {
     const response = await api.get<User>('/auth/me');
-    return response.data;
-  },
-  
-  async refreshToken(refreshToken: string): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse>('/auth/refresh', {
-      refresh_token: refreshToken,
-    });
     return response.data;
   },
 };

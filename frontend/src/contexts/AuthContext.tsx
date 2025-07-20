@@ -35,43 +35,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const accessToken = localStorage.getItem('access_token');
-      const refreshToken = localStorage.getItem('refresh_token');
       
-      if (accessToken && refreshToken) {
+      if (accessToken) {
         try {
           const user = await authService.getCurrentUser();
           setState({
             user,
             accessToken,
-            refreshToken,
+            refreshToken: null,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
         } catch (error) {
-          // Token might be expired, try to refresh
-          try {
-            const response = await authService.refreshToken(refreshToken);
-            localStorage.setItem('access_token', response.access_token);
-            localStorage.setItem('refresh_token', response.refresh_token);
-            
-            setState({
-              user: response.user,
-              accessToken: response.access_token,
-              refreshToken: response.refresh_token,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
-          } catch (refreshError) {
-            // Refresh failed, clear tokens
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            setState({
-              ...initialState,
-              isLoading: false,
-            });
-          }
+          // Token might be expired or invalid, clear it
+          localStorage.removeItem('access_token');
+          setState({
+            ...initialState,
+            isLoading: false,
+          });
         }
       } else {
         setState({
@@ -90,14 +72,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authService.login(credentials);
       
-      // Store tokens
+      // Store token
       localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
       
       setState({
         user: response.user,
         accessToken: response.access_token,
-        refreshToken: response.refresh_token,
+        refreshToken: null,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -135,26 +116,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [navigate]);
 
   const refreshAccessToken = useCallback(async () => {
-    if (!state.refreshToken) {
-      throw new Error('No refresh token available');
-    }
-    
-    try {
-      const response = await authService.refreshToken(state.refreshToken);
-      
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      
-      setState(prev => ({
-        ...prev,
-        accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-      }));
-    } catch (error) {
-      logout();
-      throw error;
-    }
-  }, [state.refreshToken, logout]);
+    // Refresh token not supported yet
+    throw new Error('Token refresh not implemented');
+  }, []);
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));

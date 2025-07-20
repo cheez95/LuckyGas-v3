@@ -38,7 +38,14 @@
       "Bash(git push:*)",
       "Bash(npm install:*)",
       "Bash(npm init playwright@latest:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(rm:*)",
+      "mcp__playwright__browser_install",
+      "mcp__playwright__browser_network_requests"
     ],
     "deny": []
   }

@@ -15,6 +15,7 @@ from app.schemas.order import Order as OrderSchema, OrderCreate, OrderUpdate
 from app.schemas.order import OrderCreateV2, OrderUpdateV2, OrderV2
 from app.schemas.order_item import OrderItemCreate
 from app.core.database import get_async_session
+from app.api.v1.websocket import notify_order_update
 
 router = APIRouter()
 
@@ -58,7 +59,7 @@ def calculate_order_amount(order_data: dict) -> dict:
 async def get_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[OrderStatus] = None,
+    status: Optional[str] = None,
     customer_id: Optional[int] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
@@ -86,8 +87,12 @@ async def get_orders(
     
     # Apply filters
     conditions = []
-    if status:
-        conditions.append(Order.status == status)
+    if status and status != "all":
+        try:
+            order_status = OrderStatus(status)
+            conditions.append(Order.status == order_status)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"無效的訂單狀態: {status}")
     if customer_id:
         conditions.append(Order.customer_id == customer_id)
     if date_from:
@@ -186,6 +191,13 @@ async def create_order(
     await db.commit()
     await db.refresh(order)
     
+    # Send WebSocket notification
+    await notify_order_update(
+        order_id=order.id,
+        status=order.status.value,
+        details={"action": "created", "order_number": order.order_number}
+    )
+    
     return order
 
 
@@ -243,6 +255,13 @@ async def update_order(
     await db.commit()
     await db.refresh(order)
     
+    # Send WebSocket notification
+    await notify_order_update(
+        order_id=order.id,
+        status=order.status.value,
+        details={"action": "updated", "order_number": order.order_number}
+    )
+    
     return order
 
 
@@ -279,6 +298,13 @@ async def cancel_order(
         order.delivery_notes = f"取消原因：{reason}"
     
     await db.commit()
+    
+    # Send WebSocket notification
+    await notify_order_update(
+        order_id=order.id,
+        status=OrderStatus.CANCELLED.value,
+        details={"action": "cancelled", "order_number": order.order_number, "reason": reason or ""}
+    )
     
     return {"message": "訂單已成功取消", "order_id": order_id}
 

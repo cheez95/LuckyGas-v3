@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, Alert, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginRequest } from '../types/auth';
@@ -10,19 +9,12 @@ const { Title } = Typography;
 
 const Login: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { login, isAuthenticated, error, clearError } = useAuth();
+  const { login, error, clearError } = useAuth();
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const from = location.state?.from?.pathname || '/dashboard';
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, navigate, from]);
+  // Navigation is handled by AuthContext after successful login
+  // const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
     // Clear error when component unmounts

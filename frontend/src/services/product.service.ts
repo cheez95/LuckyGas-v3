@@ -8,7 +8,7 @@ import {
 } from '../types/product';
 
 export class ProductService {
-  private static readonly BASE_URL = '/api/v1/products';
+  private static readonly BASE_URL = '/products';
 
   /**
    * Get all products with optional filters
@@ -59,8 +59,8 @@ export class ProductService {
    * Get available products (active and available for ordering)
    */
   static async getAvailableProducts(): Promise<GasProduct[]> {
-    const response = await api.get<GasProduct[]>(`${this.BASE_URL}/available`);
-    return response.data;
+    const response = await api.get<GasProductList>(`${this.BASE_URL}/available`);
+    return response.data.items;
   }
 
   /**
@@ -102,7 +102,7 @@ export class ProductService {
     if (params?.limit) queryParams.append('limit', params.limit.toString());
 
     const response = await api.get<CustomerInventoryList>(
-      `/api/v1/customers/${customerId}/inventory?${queryParams.toString()}`
+      `/customers/${customerId}/inventory?${queryParams.toString()}`
     );
     return response.data;
   }
@@ -119,7 +119,7 @@ export class ProductService {
     }
   ): Promise<CustomerInventory> {
     const response = await api.put<CustomerInventory>(
-      `/api/v1/customers/${customerId}/inventory/${productId}`,
+      `/customers/${customerId}/inventory/${productId}`,
       updates
     );
     return response.data;

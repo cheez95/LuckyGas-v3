@@ -20,10 +20,10 @@ async def get_customers(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=5000),
     area: Optional[str] = None,
     search: Optional[str] = None,
-    is_active: Optional[bool] = None
+    is_active: Optional[str] = None
 ) -> Any:
     """
     Retrieve customers
@@ -41,7 +41,9 @@ async def get_customers(
         base_query = base_query.where(CustomerModel.area == area)
     
     if is_active is not None:
-        base_query = base_query.where(CustomerModel.is_terminated == (not is_active))
+        # Convert string to boolean
+        is_active_bool = is_active.lower() in ['true', '1', 'yes'] if isinstance(is_active, str) else bool(is_active)
+        base_query = base_query.where(CustomerModel.is_terminated == (not is_active_bool))
     
     if search:
         search_filter = or_(
@@ -58,7 +60,7 @@ async def get_customers(
     if area:
         count_query = count_query.where(CustomerModel.area == area)
     if is_active is not None:
-        count_query = count_query.where(CustomerModel.is_terminated == (not is_active))
+        count_query = count_query.where(CustomerModel.is_terminated == (not is_active_bool))
     if search:
         count_query = count_query.where(search_filter)
     

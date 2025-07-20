@@ -23,6 +23,7 @@ from app.schemas.route import (
     RouteOptimizationResponse
 )
 from app.core.database import get_async_session
+from app.services.google_cloud.maps import route_optimization_service
 
 router = APIRouter()
 
@@ -595,3 +596,194 @@ async def optimize_route(
         optimization_score=0.85,
         optimized_stops=route.stops
     )
+
+
+@router.post("/optimize-batch", response_model=dict)
+async def optimize_routes_batch(
+    optimization_date: datetime = Query(..., description="優化日期"),
+    area: Optional[str] = Query(None, description="特定區域"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    批量優化配送路線
+    
+    使用 Google Maps Route Optimization API (placeholder) 自動分配訂單到車輛並優化路線
+    """
+    # Check permissions
+    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+        raise HTTPException(status_code=403, detail="權限不足")
+    
+    # Get unassigned orders for the date
+    orders_query = select(Order).options(
+        selectinload(Order.customer),
+        selectinload(Order.order_items)
+    ).where(
+        and_(
+            Order.delivery_date == optimization_date.date(),
+            Order.route_id.is_(None),
+            Order.status.in_([OrderStatus.CONFIRMED, OrderStatus.PENDING])
+        )
+    )
+    
+    if area:
+        orders_query = orders_query.join(Customer).where(Customer.area == area)
+    
+    orders_result = await db.execute(orders_query)
+    orders = list(orders_result.scalars().all())
+    
+    if not orders:
+        raise HTTPException(status_code=404, detail="沒有需要優化的訂單")
+    
+    # Get available vehicles
+    vehicles_query = select(Vehicle).where(
+        and_(
+            Vehicle.is_active == True,
+            Vehicle.is_available == True
+        )
+    )
+    vehicles_result = await db.execute(vehicles_query)
+    vehicles = list(vehicles_result.scalars().all())
+    
+    if not vehicles:
+        raise HTTPException(status_code=400, detail="沒有可用的車輛")
+    
+    # Call optimization service
+    optimization_result = await route_optimization_service.optimize_delivery_routes(
+        orders=orders,
+        vehicles=vehicles,
+        optimization_date=optimization_date
+    )
+    
+    # Create routes based on optimization results
+    created_routes = []
+    for route_data in optimization_result["routes"]:
+        # Create route
+        route = Route(
+            route_date=optimization_date.date(),
+            area=route_data["area"],
+            vehicle_id=route_data["vehicle_id"],
+            driver_id=route_data.get("driver_id"),
+            status=RouteStatus.OPTIMIZED,
+            is_optimized=True,
+            optimization_timestamp=datetime.utcnow(),
+            total_stops=route_data["metrics"]["total_stops"],
+            total_distance_km=route_data["metrics"]["total_distance_km"],
+            estimated_duration_minutes=route_data["metrics"]["estimated_duration_minutes"],
+            optimization_score=route_data["metrics"]["vehicle_utilization"]
+        )
+        db.add(route)
+        await db.flush()
+        
+        # Create route stops
+        for stop_data in route_data["stops"]:
+            stop = RouteStop(
+                route_id=route.id,
+                order_id=stop_data["order_id"],
+                stop_sequence=stop_data["sequence"],
+                latitude=stop_data["location"]["lat"],
+                longitude=stop_data["location"]["lng"],
+                address=stop_data["address"],
+                estimated_arrival=datetime.fromisoformat(stop_data["estimated_arrival"]),
+                estimated_duration_minutes=stop_data["estimated_duration_minutes"]
+            )
+            db.add(stop)
+            
+            # Update order assignment
+            order_update = update(Order).where(Order.id == stop_data["order_id"]).values(
+                route_id=route.id,
+                driver_id=route.driver_id,
+                status=OrderStatus.ASSIGNED
+            )
+            await db.execute(order_update)
+        
+        created_routes.append({
+            "route_id": route.id,
+            "vehicle_id": route.vehicle_id,
+            "total_stops": route.total_stops,
+            "total_distance_km": route.total_distance_km
+        })
+    
+    await db.commit()
+    
+    return {
+        "optimization_id": optimization_result["optimization_id"],
+        "routes_created": len(created_routes),
+        "orders_assigned": optimization_result["metrics"]["assigned_orders"],
+        "unassigned_orders": optimization_result["unassigned_orders"],
+        "total_distance_km": optimization_result["metrics"]["total_distance_km"],
+        "optimization_score": optimization_result["metrics"]["optimization_score"],
+        "cost_savings_percentage": optimization_result["metrics"]["cost_savings_percentage"],
+        "created_routes": created_routes
+    }
+
+
+@router.get("/{route_id}/navigation", response_model=dict)
+async def get_route_navigation(
+    route_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """獲取路線導航資訊"""
+    # Check permissions
+    if current_user.role not in ["super_admin", "manager", "office_staff", "driver"]:
+        raise HTTPException(status_code=403, detail="權限不足")
+    
+    # Get route
+    route_query = select(Route).where(Route.id == route_id)
+    route_result = await db.execute(route_query)
+    route = route_result.scalar_one_or_none()
+    
+    if not route:
+        raise HTTPException(status_code=404, detail="路線不存在")
+    
+    # Drivers can only see their own routes
+    if current_user.role == "driver" and route.driver_id != current_user.id:
+        raise HTTPException(status_code=403, detail="無權查看此路線")
+    
+    # Get navigation from service
+    navigation = await route_optimization_service.get_route_navigation(route_id)
+    
+    if not navigation:
+        raise HTTPException(status_code=404, detail="導航資訊不可用")
+    
+    return navigation
+
+
+@router.post("/driver-location", response_model=dict)
+async def update_driver_location(
+    latitude: float = Query(..., description="緯度"),
+    longitude: float = Query(..., description="經度"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """更新司機位置"""
+    # Only drivers can update their location
+    if current_user.role != "driver":
+        raise HTTPException(status_code=403, detail="只有司機可以更新位置")
+    
+    # Update location in service
+    location_update = await route_optimization_service.update_driver_location(
+        driver_id=current_user.id,
+        latitude=latitude,
+        longitude=longitude
+    )
+    
+    return location_update
+
+
+@router.get("/calculate-eta", response_model=dict)
+async def calculate_eta(
+    from_lat: float = Query(..., description="起點緯度"),
+    from_lng: float = Query(..., description="起點經度"),
+    to_lat: float = Query(..., description="終點緯度"),
+    to_lng: float = Query(..., description="終點經度"),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """計算預計到達時間"""
+    eta_info = await route_optimization_service.calculate_eta(
+        current_location=(from_lat, from_lng),
+        destination=(to_lat, to_lng)
+    )
+    
+    return eta_info

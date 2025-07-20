@@ -1,13 +1,17 @@
-export enum DeliveryMethod {
-  CYLINDER = 'cylinder',
-  FLOW = 'flow'
-}
+export const DeliveryMethod = {
+  CYLINDER: 'cylinder',
+  FLOW: 'flow'
+} as const;
 
-export enum ProductAttribute {
-  REGULAR = 'regular',
-  HAOYUN = 'haoyun',
-  PINGAN = 'pingan'
-}
+export type DeliveryMethod = typeof DeliveryMethod[keyof typeof DeliveryMethod];
+
+export const ProductAttribute = {
+  REGULAR: 'regular',
+  HAOYUN: 'haoyun',
+  PINGAN: 'pingan'
+} as const;
+
+export type ProductAttribute = typeof ProductAttribute[keyof typeof ProductAttribute];
 
 export interface GasProduct {
   id: number;

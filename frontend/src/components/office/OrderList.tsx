@@ -36,32 +36,39 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { orderService } from '../../services/order.service';
 import { customerService } from '../../services/customer.service';
+import ProductSelector from './ProductSelector';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import {
   Order,
   OrderStatus,
   PaymentStatus,
-  OrderCreate,
   OrderUpdate,
+  OrderV2,
+  OrderCreateV2,
   getOrderStatusColor,
   getOrderStatusText,
   getPaymentStatusColor,
   getPaymentStatusText,
   Customer,
 } from '../../types/order';
+import { OrderItemCreate } from '../../types/product';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { confirm } = Modal;
 
 const OrderList: React.FC = () => {
+  const { on } = useWebSocket();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderV2, setSelectedOrderV2] = useState<OrderV2 | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [selectedOrderItems, setSelectedOrderItems] = useState<OrderItemCreate[]>([]);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
 
@@ -114,8 +121,8 @@ const OrderList: React.FC = () => {
   // Fetch customers for dropdown
   const fetchCustomers = async () => {
     try {
-      const data = await customerService.getCustomers({ limit: 1000 });
-      setCustomers(data);
+      const response = await customerService.getCustomers({ limit: 1000 });
+      setCustomers(response.items);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
     }
@@ -127,35 +134,89 @@ const OrderList: React.FC = () => {
     fetchCustomers();
   }, [filters]);
 
+  // WebSocket listeners for real-time updates
+  useEffect(() => {
+    const unsubscribeOrderCreated = on('order_created', (data) => {
+      // Add flash effect to new order
+      message.success(`新訂單 #${data.order_number} 已創建`);
+      fetchOrders();
+      fetchStats();
+    });
+
+    const unsubscribeOrderUpdated = on('order_updated', (data) => {
+      // Update order in the list if it's visible
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === data.order_id ? { ...order, ...data } : order
+        )
+      );
+      
+      // Update detail modal if it's showing this order
+      if (selectedOrder?.id === data.order_id) {
+        setSelectedOrder(prev => prev ? { ...prev, ...data } : null);
+      }
+      
+      fetchStats();
+    });
+
+    const unsubscribeOrderAssigned = on('order_assigned', (data) => {
+      message.info(`訂單 #${data.order_number} 已分配給路線 ${data.route_number}`);
+      fetchOrders();
+    });
+
+    const unsubscribeDeliveryCompleted = on('delivery_completed', (data) => {
+      message.success(`訂單 #${data.order_id} 已送達`);
+      fetchOrders();
+      fetchStats();
+    });
+
+    return () => {
+      unsubscribeOrderCreated();
+      unsubscribeOrderUpdated();
+      unsubscribeOrderAssigned();
+      unsubscribeDeliveryCompleted();
+    };
+  }, [on, selectedOrder]);
+
   // View order details
-  const handleViewDetails = (order: Order) => {
+  const handleViewDetails = async (order: Order) => {
     setSelectedOrder(order);
+    try {
+      // Fetch V2 order for details with order items
+      const orderV2 = await orderService.getOrderV2(order.id);
+      setSelectedOrderV2(orderV2);
+    } catch (error) {
+      console.error('Failed to fetch order details:', error);
+      setSelectedOrderV2(null);
+    }
     setIsDetailModalVisible(true);
   };
 
   // Create order
   const handleCreateOrder = async (values: any) => {
     try {
-      const orderData: OrderCreate = {
+      if (selectedOrderItems.length === 0) {
+        message.error('請至少選擇一個產品');
+        return;
+      }
+
+      const orderData: OrderCreateV2 = {
         customer_id: values.customer_id,
         scheduled_date: values.scheduled_date.toISOString(),
         delivery_time_start: values.delivery_time_start,
         delivery_time_end: values.delivery_time_end,
-        qty_50kg: values.qty_50kg || 0,
-        qty_20kg: values.qty_20kg || 0,
-        qty_16kg: values.qty_16kg || 0,
-        qty_10kg: values.qty_10kg || 0,
-        qty_4kg: values.qty_4kg || 0,
+        order_items: selectedOrderItems,
         delivery_address: values.delivery_address,
         delivery_notes: values.delivery_notes,
         is_urgent: values.is_urgent || false,
         payment_method: values.payment_method,
       };
 
-      await orderService.createOrder(orderData);
+      await orderService.createOrderV2(orderData);
       message.success('訂單創建成功');
       setIsCreateModalVisible(false);
       form.resetFields();
+      setSelectedOrderItems([]);
       fetchOrders();
       fetchStats();
     } catch (error) {
@@ -260,16 +321,25 @@ const OrderList: React.FC = () => {
       },
     },
     {
-      title: '瓦斯桶數量',
-      key: 'cylinders',
+      title: '訂單內容',
+      key: 'order_content',
       render: (_, record) => {
+        // For backwards compatibility, show cylinder quantities if available
         const quantities = [];
         if (record.qty_50kg > 0) quantities.push(`50kg×${record.qty_50kg}`);
         if (record.qty_20kg > 0) quantities.push(`20kg×${record.qty_20kg}`);
         if (record.qty_16kg > 0) quantities.push(`16kg×${record.qty_16kg}`);
         if (record.qty_10kg > 0) quantities.push(`10kg×${record.qty_10kg}`);
         if (record.qty_4kg > 0) quantities.push(`4kg×${record.qty_4kg}`);
-        return quantities.join(', ') || '-';
+        
+        if (quantities.length > 0) {
+          return quantities.join(', ');
+        }
+        
+        // For V2 orders, show "查看詳情" link
+        return (
+          <a onClick={() => handleViewDetails(record)}>查看產品明細</a>
+        );
       },
     },
     {
@@ -390,6 +460,9 @@ const OrderList: React.FC = () => {
         title="訂單管理"
         extra={
           <Space>
+            <Tag color="green" icon={<ThunderboltOutlined />}>
+              即時更新
+            </Tag>
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -467,6 +540,12 @@ const OrderList: React.FC = () => {
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 筆`,
           }}
+          rowClassName={(record) => {
+            // Add animation class for recently updated orders
+            const isRecent = record.updated_at && 
+              dayjs().diff(dayjs(record.updated_at), 'second') < 5;
+            return isRecent ? 'order-row-updated' : '';
+          }}
         />
       </Card>
 
@@ -516,14 +595,33 @@ const OrderList: React.FC = () => {
                 {getPaymentStatusText(selectedOrder.payment_status)}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="瓦斯桶數量" span={2}>
-              <Space>
-                {selectedOrder.qty_50kg > 0 && <Tag>50kg × {selectedOrder.qty_50kg}</Tag>}
-                {selectedOrder.qty_20kg > 0 && <Tag>20kg × {selectedOrder.qty_20kg}</Tag>}
-                {selectedOrder.qty_16kg > 0 && <Tag>16kg × {selectedOrder.qty_16kg}</Tag>}
-                {selectedOrder.qty_10kg > 0 && <Tag>10kg × {selectedOrder.qty_10kg}</Tag>}
-                {selectedOrder.qty_4kg > 0 && <Tag>4kg × {selectedOrder.qty_4kg}</Tag>}
-              </Space>
+            <Descriptions.Item label="訂單產品" span={2}>
+              {selectedOrderV2 && selectedOrderV2.order_items.length > 0 ? (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {selectedOrderV2.order_items.map((item, index) => (
+                    <div key={index} style={{ marginBottom: 8 }}>
+                      <Space>
+                        <Tag color="blue">
+                          {item.gas_product?.display_name || `產品 ID: ${item.gas_product_id}`}
+                        </Tag>
+                        <span>數量: {item.quantity}</span>
+                        <span>單價: NT$ {item.unit_price}</span>
+                        <span>小計: NT$ {item.subtotal}</span>
+                        {item.is_exchange && <Tag color="green">交換</Tag>}
+                        {item.discount_percentage > 0 && <Tag color="orange">折扣 {item.discount_percentage}%</Tag>}
+                      </Space>
+                    </div>
+                  ))}
+                </Space>
+              ) : (
+                <Space>
+                  {selectedOrder.qty_50kg > 0 && <Tag>50kg × {selectedOrder.qty_50kg}</Tag>}
+                  {selectedOrder.qty_20kg > 0 && <Tag>20kg × {selectedOrder.qty_20kg}</Tag>}
+                  {selectedOrder.qty_16kg > 0 && <Tag>16kg × {selectedOrder.qty_16kg}</Tag>}
+                  {selectedOrder.qty_10kg > 0 && <Tag>10kg × {selectedOrder.qty_10kg}</Tag>}
+                  {selectedOrder.qty_4kg > 0 && <Tag>4kg × {selectedOrder.qty_4kg}</Tag>}
+                </Space>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="總金額">
               NT$ {selectedOrder.total_amount.toLocaleString()}
@@ -548,9 +646,10 @@ const OrderList: React.FC = () => {
         onCancel={() => {
           setIsCreateModalVisible(false);
           form.resetFields();
+          setSelectedOrderItems([]);
         }}
         onOk={() => form.submit()}
-        width={800}
+        width={900}
       >
         <Form
           form={form}
@@ -604,41 +703,17 @@ const OrderList: React.FC = () => {
             </Col>
           </Row>
 
-          <Divider>瓦斯桶數量</Divider>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="qty_50kg" label="50kg">
-                <InputNumber min={0} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="qty_20kg" label="20kg">
-                <InputNumber min={0} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="qty_16kg" label="16kg">
-                <InputNumber min={0} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="qty_10kg" label="10kg">
-                <InputNumber min={0} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="qty_4kg" label="4kg">
-                <InputNumber min={0} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="is_urgent" label="緊急訂單" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Divider>產品選擇</Divider>
+          <Form.Item label="訂單產品" required>
+            <ProductSelector 
+              onProductsChange={setSelectedOrderItems}
+              initialItems={selectedOrderItems}
+            />
+          </Form.Item>
+
+          <Form.Item name="is_urgent" label="緊急訂單" valuePropName="checked">
+            <Switch />
+          </Form.Item>
 
           <Form.Item name="delivery_address" label="配送地址">
             <Input.TextArea rows={2} placeholder="如不填寫，將使用客戶預設地址" />

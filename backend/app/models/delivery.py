@@ -44,27 +44,22 @@ class DeliveryPrediction(Base):
     __tablename__ = "delivery_predictions"
     
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
     
     # Prediction details
-    prediction_date = Column(DateTime(timezone=True), server_default=func.now())
-    predicted_depletion_date = Column(DateTime(timezone=True), nullable=False)
-    recommended_delivery_date = Column(DateTime(timezone=True), nullable=False)
+    predicted_date = Column(DateTime(timezone=True), nullable=False, index=True)
     
-    # Confidence and reasoning
-    confidence_score = Column(Float)  # 0.0 to 1.0
-    days_until_depletion = Column(Integer)
+    # Predicted quantities for each cylinder size
+    predicted_quantity_50kg = Column(Integer, default=0)
+    predicted_quantity_20kg = Column(Integer, default=0)
+    predicted_quantity_16kg = Column(Integer, default=0)
+    predicted_quantity_10kg = Column(Integer, default=0)
+    predicted_quantity_4kg = Column(Integer, default=0)
     
-    # Predicted quantities
-    predicted_50kg = Column(Integer, default=0)
-    predicted_20kg = Column(Integer, default=0)
-    predicted_16kg = Column(Integer, default=0)
-    predicted_10kg = Column(Integer, default=0)
-    predicted_4kg = Column(Integer, default=0)
-    
-    # Model metadata
+    # Prediction metadata
+    confidence_score = Column(Float, default=0.0)  # 0.0 to 1.0
     model_version = Column(String(50))
-    features_used = Column(Text)  # JSON string of features
+    factors_json = Column(Text)  # JSON string of factors that influenced the prediction
     
     # Status
     is_converted_to_order = Column(Boolean, default=False)

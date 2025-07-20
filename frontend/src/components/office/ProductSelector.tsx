@@ -134,9 +134,10 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({
                       disabled={disabled}
                       loading={loading}
                       showSearch
-                      filterOption={(input, option) =>
-                        (option?.children as string).toLowerCase().includes(input.toLowerCase())
-                      }
+                      filterOption={(input, option) => {
+                        const label = option?.children as any;
+                        return typeof label === 'string' && label.toLowerCase().includes(input.toLowerCase());
+                      }}
                     >
                       {products.map(product => (
                         <Option key={product.id} value={product.id}>

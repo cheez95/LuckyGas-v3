@@ -1,5 +1,6 @@
 import api, { handleApiError } from './api';
 import { Customer } from '../types/order';
+import { CustomerInventory, CustomerInventoryList } from '../types/product';
 
 interface CustomerQueryParams {
   skip?: number;
@@ -56,6 +57,25 @@ export const customerService = {
   async deleteCustomer(id: number): Promise<void> {
     try {
       await api.delete(`/customers/${id}`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+  
+  // Customer inventory methods
+  async getCustomerInventory(customerId: number): Promise<CustomerInventoryList> {
+    try {
+      const response = await api.get<CustomerInventoryList>(`/customers/${customerId}/inventory`);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  },
+  
+  async updateInventoryItem(customerId: number, productId: number, data: { quantity_owned?: number; quantity_rented?: number }): Promise<CustomerInventory> {
+    try {
+      const response = await api.put<CustomerInventory>(`/customers/${customerId}/inventory/${productId}`, data);
+      return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
     }
