@@ -1,0 +1,569 @@
+INFO:     Will watch for changes in these directories: ['/Users/lgee258/Desktop/LuckyGas-v3/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [90115] using StatReload
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 5, in <module>
+    from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/v1/auth.py", line 8, in <module>
+    from app.api.deps import get_db, get_current_user
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/deps.py", line 8, in <module>
+    from app.core.database import async_session_maker
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/core/database.py", line 5, in <module>
+    from app.core.config import settings
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/core/config.py", line 100, in <module>
+    settings = Settings()
+               ^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/pydantic_settings/main.py", line 188, in __init__
+    super().__init__(
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 4 validation errors for Settings
+REFRESH_TOKEN_EXPIRE_DAYS
+  Extra inputs are not permitted [type=extra_forbidden, input_value='7', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+ENVIRONMENT
+  Extra inputs are not permitted [type=extra_forbidden, input_value='test', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+LOG_LEVEL
+  Extra inputs are not permitted [type=extra_forbidden, input_value='INFO', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+RATE_LIMIT_ENABLED
+  Extra inputs are not permitted [type=extra_forbidden, input_value='false', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+WARNING:  StatReload detected changes in 'app/core/config.py'. Reloading...
+Process SpawnProcess-2:
+Traceback (most recent call last):
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 5, in <module>
+    from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/v1/auth.py", line 8, in <module>
+    from app.api.deps import get_db, get_current_user
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/deps.py", line 8, in <module>
+    from app.core.database import async_session_maker
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/core/database.py", line 5, in <module>
+    from app.core.config import settings
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/core/config.py", line 101, in <module>
+    settings = Settings()
+               ^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/pydantic_settings/main.py", line 188, in __init__
+    super().__init__(
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 3 validation errors for Settings
+ENVIRONMENT
+  Extra inputs are not permitted [type=extra_forbidden, input_value='test', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+LOG_LEVEL
+  Extra inputs are not permitted [type=extra_forbidden, input_value='INFO', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+RATE_LIMIT_ENABLED
+  Extra inputs are not permitted [type=extra_forbidden, input_value='false', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/extra_forbidden
+WARNING:  StatReload detected changes in 'app/core/config.py'. Reloading...
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 5, in <module>
+    from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/v1/routes.py", line 9, in <module>
+    from app.models.delivery import DeliveryRoute as Route, RouteStatus, RouteStop
+ImportError: cannot import name 'DeliveryRoute' from 'app.models.delivery' (/Users/lgee258/Desktop/LuckyGas-v3/backend/app/models/delivery.py)
+WARNING:  StatReload detected changes in 'app/api/v1/routes.py'. Reloading...
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 5, in <module>
+    from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/v1/routes.py", line 26, in <module>
+    from app.services.route_optimization import route_optimization_service
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/services/route_optimization.py", line 11, in <module>
+    from app.services.google_cloud.routes_service import google_routes_service
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/services/google_cloud/routes_service.py", line 13, in <module>
+    from app.models.delivery import DeliveryRoute, RouteStop
+ImportError: cannot import name 'DeliveryRoute' from 'app.models.delivery' (/Users/lgee258/Desktop/LuckyGas-v3/backend/app/models/delivery.py)
+WARNING:  StatReload detected changes in 'app/services/google_cloud/routes_service.py'. Reloading...
+Process SpawnProcess-5:
+Traceback (most recent call last):
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 5, in <module>
+    from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/api/v1/routes.py", line 26, in <module>
+    from app.services.route_optimization import route_optimization_service
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/services/route_optimization.py", line 12, in <module>
+    from app.models.delivery import DeliveryRoute, RouteStop
+ImportError: cannot import name 'DeliveryRoute' from 'app.models.delivery' (/Users/lgee258/Desktop/LuckyGas-v3/backend/app/models/delivery.py)
+WARNING:  StatReload detected changes in 'app/services/route_optimization.py'. Reloading...
+INFO:     Started server process [92309]
+INFO:     Waiting for application startup.
+ERROR:    Traceback (most recent call last):
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/starlette/routing.py", line 694, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 14, in lifespan
+    await create_db_and_tables()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/core/database.py", line 27, in create_db_and_tables
+    async with engine.begin() as conn:
+               ^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py", line 1066, in begin
+    async with conn:
+               ^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/base.py", line 121, in __aenter__
+    return await self.start(is_ctxmanager=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py", line 274, in start
+    await greenlet_spawn(self.sync_engine.connect)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3273, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 145, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3297, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+    self.__connect()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 961, in connect
+    await_only(creator_fn(*arg, **kw)),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connection.py", line 2421, in connect
+    return await connect_utils._connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py", line 1049, in _connect
+    conn = await _connect_addr(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py", line 886, in _connect_addr
+    return await __connect_addr(params, True, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py", line 934, in __connect_addr
+    await connected
+asyncpg.exceptions.InvalidAuthorizationSpecificationError: role "luckygas" does not exist
+
+ERROR:    Application startup failed. Exiting.
+WARNING:  StatReload detected changes in 'app/core/config.py'. Reloading...
+INFO:     Started server process [92599]
+INFO:     Waiting for application startup.
+ERROR:    Traceback (most recent call last):
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/starlette/routing.py", line 694, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in merged_lifespan
+    async with original_context(app) as maybe_original_state:
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/main.py", line 14, in lifespan
+    await create_db_and_tables()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/backend/app/core/database.py", line 27, in create_db_and_tables
+    async with engine.begin() as conn:
+               ^^^^^^^^^^^^^^
+  File "/Users/lgee258/.local/share/uv/python/cpython-3.12.6-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py", line 1066, in begin
+    async with conn:
+               ^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/base.py", line 121, in __aenter__
+    return await self.start(is_ctxmanager=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/engine.py", line 274, in start
+    await greenlet_spawn(self.sync_engine.connect)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 201, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3273, in connect
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 145, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3297, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+    self.__connect()
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 961, in connect
+    await_only(creator_fn(*arg, **kw)),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connection.py", line 2421, in connect
+    return await connect_utils._connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py", line 1049, in _connect
+    conn = await _connect_addr(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py", line 886, in _connect_addr
+    return await __connect_addr(params, True, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/lgee258/Desktop/LuckyGas-v3/.venv/lib/python3.12/site-packages/asyncpg/connect_utils.py", line 934, in __connect_addr
+    await connected
+asyncpg.exceptions.InvalidAuthorizationSpecificationError: role "luckygas" does not exist
+
+ERROR:    Application startup failed. Exiting.
+INFO:     Stopping reloader process [90115]

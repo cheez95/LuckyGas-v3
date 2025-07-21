@@ -35,22 +35,20 @@ test.describe('Customer Management', () => {
   });
 
   test('should create a new customer', async ({ page }) => {
-    // Get initial customer count
-    const initialCount = await customerPage.getTotalCustomerCount();
+    // Generate unique customer code with timestamp
+    const timestamp = Date.now();
+    const customerCode = `TEST${timestamp}`;
     
     // Click add customer button
     await customerPage.clickAddCustomer();
     
-    // Fill form
+    // Fill form with all required fields
     await customerPage.fillCustomerForm({
-      customerCode: 'TEST001',
-      name: '測試客戶',
-      shortName: '測試',
+      customerCode: customerCode,
+      shortName: '測試客戶',  // This is the required field
       invoiceTitle: '測試公司',
-      phone: '02-12345678',
-      mobile: '0912-345-678',
-      address: '台北市信義區測試路123號',
-      area: '信義區',
+      address: '台北市信義區測試路123號',  // Required field
+      area: 'A-瑞光',
       deliveryTimeStart: '09:00',
       deliveryTimeEnd: '18:00',
       avgDailyUsage: 10,
@@ -61,20 +59,19 @@ test.describe('Customer Management', () => {
     // Submit form
     await customerPage.submitCustomerForm();
     
-    // Check success toast
-    await expect(page.locator('.ant-message-notice')).toContainText('新增成功');
+    // Verify success by checking if modal closed and searching for the customer
+    await customerPage.searchCustomer(customerCode);
     
-    // Verify customer count increased
-    const newCount = await customerPage.getTotalCustomerCount();
-    expect(newCount).toBe(initialCount + 1);
-    
-    // Search for the new customer
-    await customerPage.searchCustomer('TEST001');
+    // Wait for search results
+    await page.waitForTimeout(1000);
     
     // Verify customer appears in list
+    const customerCount = await customerPage.getCustomerCount();
+    expect(customerCount).toBeGreaterThan(0);
+    
     const customerData = await customerPage.getCustomerData(0);
-    expect(customerData.customerCode).toBe('TEST001');
-    expect(customerData.name).toBe('測試客戶');
+    expect(customerData.customerCode).toBe(customerCode);
+    expect(customerData.shortName).toBe('測試客戶');
   });
 
   test('should edit an existing customer', async ({ page }) => {
@@ -122,7 +119,7 @@ test.describe('Customer Management', () => {
 
   test('should search customers by name', async ({ page }) => {
     // Search by partial name
-    await customerPage.searchCustomer('王');
+    await customerPage.searchCustomer('測試');
     
     // Check results
     const count = await customerPage.getCustomerCount();
@@ -131,7 +128,13 @@ test.describe('Customer Management', () => {
     // Verify all results contain search term
     for (let i = 0; i < count; i++) {
       const data = await customerPage.getCustomerData(i);
-      expect(data.name).toContain('王');
+      // Check if search term appears in any relevant field
+      const searchTerm = '測試';
+      const containsSearchTerm = 
+        data.shortName.includes(searchTerm) || 
+        data.invoiceTitle.includes(searchTerm) ||
+        data.customerCode.includes(searchTerm);
+      expect(containsSearchTerm).toBe(true);
     }
   });
 

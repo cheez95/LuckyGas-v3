@@ -5,14 +5,17 @@ from contextlib import asynccontextmanager
 from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
 from app.core.config import settings
 from app.core.database import create_db_and_tables
+from app.core.cache import cache
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     await create_db_and_tables()
+    await cache.connect()
     yield
     # Shutdown
+    await cache.disconnect()
 
 
 app = FastAPI(
@@ -22,13 +25,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS with all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=settings.get_all_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers

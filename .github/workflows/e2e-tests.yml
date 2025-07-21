@@ -1,0 +1,289 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC (10 AM Taiwan time)
+    - cron: '0 2 * * *'
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+        include:
+          - browser: chromium
+            project: 'chromium'
+          - browser: firefox
+            project: 'firefox'
+          - browser: webkit
+            project: 'webkit'
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: luckygas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install backend dependencies
+      working-directory: backend
+      run: |
+        uv pip install -r requirements.txt
+        uv pip install pytest pytest-asyncio pytest-cov
+    
+    - name: Install frontend dependencies
+      working-directory: frontend
+      run: |
+        npm ci
+        npx playwright install --with-deps ${{ matrix.browser }}
+    
+    - name: Set up test environment
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379
+        SECRET_KEY: test-secret-key-for-ci
+        BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
+      run: |
+        # Create .env file for backend
+        cat > backend/.env << EOF
+        DATABASE_URL=$DATABASE_URL
+        REDIS_URL=$REDIS_URL
+        SECRET_KEY=$SECRET_KEY
+        BACKEND_CORS_ORIGINS=$BACKEND_CORS_ORIGINS
+        GOOGLE_CLOUD_PROJECT=
+        VERTEX_AI_LOCATION=
+        GOOGLE_APPLICATION_CREDENTIALS=
+        EOF
+        
+        # Run database migrations
+        cd backend
+        uv run alembic upgrade head
+        
+        # Seed test data
+        uv run python -m scripts.seed_test_data || echo "Seed script not found, skipping..."
+    
+    - name: Start backend server
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379
+      run: |
+        uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+        curl -f http://localhost:8000/health || exit 1
+    
+    - name: Run E2E tests
+      working-directory: frontend
+      env:
+        CI: true
+      run: |
+        npm run test:e2e -- --project=${{ matrix.project }}
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report-${{ matrix.browser }}
+        path: frontend/playwright-report/
+        retention-days: 30
+    
+    - name: Upload screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-screenshots-${{ matrix.browser }}
+        path: frontend/test-results/
+        retention-days: 7
+    
+    - name: Upload videos
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-videos-${{ matrix.browser }}
+        path: frontend/test-results/
+        retention-days: 7
+
+  mobile-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: luckygas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        cd backend && uv pip install -r requirements.txt && cd ..
+        cd frontend && npm ci && npx playwright install --with-deps chromium && cd ..
+    
+    - name: Set up test environment
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379
+        SECRET_KEY: test-secret-key-for-ci
+      run: |
+        cat > backend/.env << EOF
+        DATABASE_URL=$DATABASE_URL
+        REDIS_URL=$REDIS_URL
+        SECRET_KEY=$SECRET_KEY
+        BACKEND_CORS_ORIGINS='["http://localhost:5173"]'
+        EOF
+        
+        cd backend
+        uv run alembic upgrade head
+    
+    - name: Start backend server
+      working-directory: backend
+      run: |
+        uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Run mobile E2E tests
+      working-directory: frontend
+      env:
+        CI: true
+      run: |
+        npm run test:e2e -- --project="Mobile Chrome" --project="Mobile Safari"
+    
+    - name: Upload mobile test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: mobile-test-results
+        path: frontend/playwright-report/
+        retention-days: 30
+
+  test-report:
+    needs: [e2e-tests, mobile-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Download all test reports
+      uses: actions/download-artifact@v4
+      with:
+        path: test-reports
+    
+    - name: Merge test reports
+      run: |
+        echo "# E2E Test Results Summary" > summary.md
+        echo "" >> summary.md
+        echo "## Browser Tests" >> summary.md
+        echo "- Chromium: Check artifacts" >> summary.md
+        echo "- Firefox: Check artifacts" >> summary.md
+        echo "- WebKit: Check artifacts" >> summary.md
+        echo "" >> summary.md
+        echo "## Mobile Tests" >> summary.md
+        echo "- Mobile Chrome: Check artifacts" >> summary.md
+        echo "- Mobile Safari: Check artifacts" >> summary.md
+        echo "" >> summary.md
+        echo "View detailed reports in the artifacts section." >> summary.md
+    
+    - name: Upload summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-summary
+        path: summary.md
+        retention-days: 30
+    
+    - name: Comment PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('summary.md', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });

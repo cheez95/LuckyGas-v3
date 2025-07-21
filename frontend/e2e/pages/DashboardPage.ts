@@ -8,7 +8,7 @@ export class DashboardPage extends BasePage {
 
   // Locators
   get pageTitle() {
-    return this.page.locator('h2.ant-typography');
+    return this.page.locator('[data-testid="page-title"]');
   }
 
   get todayOrdersCard() {
@@ -36,7 +36,7 @@ export class DashboardPage extends BasePage {
   }
 
   get userMenu() {
-    return this.page.locator('.ant-dropdown-trigger');
+    return this.page.locator('[data-testid="user-menu-trigger"]');
   }
 
   get logoutMenuItem() {
@@ -95,22 +95,22 @@ export class DashboardPage extends BasePage {
 
   async navigateToCustomers() {
     await this.customersMenuItem.click();
-    await this.page.waitForURL('**/office/customers');
+    await this.page.waitForURL('**/customers');
   }
 
   async navigateToOrders() {
     await this.ordersMenuItem.click();
-    await this.page.waitForURL('**/office/orders');
+    await this.page.waitForURL('**/orders');
   }
 
   async navigateToDeliveries() {
     await this.deliveriesMenuItem.click();
-    await this.page.waitForURL('**/office/deliveries');
+    await this.page.waitForURL('**/delivery-history');
   }
 
   async navigateToRoutes() {
     await this.routesMenuItem.click();
-    await this.page.waitForURL('**/office/routes');
+    await this.page.waitForURL('**/routes');
   }
 
   async logout() {

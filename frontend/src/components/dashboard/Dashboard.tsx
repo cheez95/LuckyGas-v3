@@ -183,7 +183,7 @@ const Dashboard: React.FC = () => {
     <div>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
-          <Title level={2} style={{ margin: 0 }}>{t('navigation.dashboard')}</Title>
+          <Title level={2} style={{ margin: 0 }} data-testid="page-title">{t('navigation.dashboard')}</Title>
         </Col>
         <Col>
           <Space>

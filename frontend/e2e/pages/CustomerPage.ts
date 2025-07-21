@@ -24,7 +24,8 @@ export class CustomerPage extends BasePage {
   }
 
   get customerRows() {
-    return this.page.locator('.ant-table-tbody tr');
+    // Exclude measurement rows and only get actual data rows
+    return this.page.locator('.ant-table-tbody tr:not([aria-hidden="true"])');
   }
 
   get paginationInfo() {
@@ -54,60 +55,52 @@ export class CustomerPage extends BasePage {
 
   // Form fields
   get customerCodeInput() {
-    return this.page.locator('#customer_customerCode');
-  }
-
-  get nameInput() {
-    return this.page.locator('#customer_name');
+    return this.page.locator('input[id="customer_code"]');
   }
 
   get shortNameInput() {
-    return this.page.locator('#customer_shortName');
+    return this.page.locator('input[id="short_name"]');
   }
 
   get invoiceTitleInput() {
-    return this.page.locator('#customer_invoiceTitle');
-  }
-
-  get phoneInput() {
-    return this.page.locator('#customer_phone');
-  }
-
-  get mobileInput() {
-    return this.page.locator('#customer_mobile');
+    return this.page.locator('input[id="invoice_title"]');
   }
 
   get addressInput() {
-    return this.page.locator('#customer_address');
+    return this.page.locator('textarea[id="address"]');
   }
 
   get areaSelect() {
-    return this.page.locator('#customer_area');
+    return this.page.locator('input[id="area"]');
   }
 
-  get deliveryTimeStartInput() {
-    return this.page.locator('#customer_deliveryTimeStart');
+  get deliveryTimeInput() {
+    return this.page.locator('input[id="delivery_time"]');
   }
 
-  get deliveryTimeEndInput() {
-    return this.page.locator('#customer_deliveryTimeEnd');
+  get paymentMethodSelect() {
+    return this.page.locator('input[id="payment_method"]');
   }
 
   get avgDailyUsageInput() {
-    return this.page.locator('#customer_avgDailyUsage');
+    return this.page.locator('input[id="avg_daily_usage"]');
   }
 
   get maxCycleDaysInput() {
-    return this.page.locator('#customer_maxCycleDays');
+    return this.page.locator('input[id="max_cycle_days"]');
   }
 
   get canDelayDaysInput() {
-    return this.page.locator('#customer_canDelayDays');
+    return this.page.locator('input[id="can_delay_days"]');
+  }
+  
+  get phoneInput() {
+    return this.page.locator('input[id="phone"]');
   }
 
   // Actions
   async navigateToCustomers() {
-    await this.goto('/office/customers');
+    await this.goto('/customers');
     await this.waitForLoadComplete();
   }
 
@@ -124,7 +117,7 @@ export class CustomerPage extends BasePage {
 
   async fillCustomerForm(customerData: {
     customerCode: string;
-    name: string;
+    name?: string;
     shortName?: string;
     invoiceTitle?: string;
     phone?: string;
@@ -138,7 +131,6 @@ export class CustomerPage extends BasePage {
     canDelayDays?: number;
   }) {
     await this.customerCodeInput.fill(customerData.customerCode);
-    await this.nameInput.fill(customerData.name);
     
     if (customerData.shortName) {
       await this.shortNameInput.fill(customerData.shortName);
@@ -149,21 +141,30 @@ export class CustomerPage extends BasePage {
     if (customerData.phone) {
       await this.phoneInput.fill(customerData.phone);
     }
-    if (customerData.mobile) {
-      await this.mobileInput.fill(customerData.mobile);
-    }
     if (customerData.address) {
       await this.addressInput.fill(customerData.address);
     }
     if (customerData.area) {
-      await this.selectDropdownOption('#customer_area', customerData.area);
+      await this.areaSelect.click();
+      await this.page.waitForTimeout(500); // Wait for dropdown animation
+      await this.page.locator('.ant-select-dropdown .ant-select-item[title="' + customerData.area + '"]').click();
     }
-    if (customerData.deliveryTimeStart) {
-      await this.deliveryTimeStartInput.fill(customerData.deliveryTimeStart);
+    
+    // Handle delivery time range picker
+    if (customerData.deliveryTimeStart && customerData.deliveryTimeEnd) {
+      const rangePickerInput = this.page.locator('input[id="delivery_time"]');
+      // Click the first input field
+      await rangePickerInput.first().click();
+      await this.page.waitForTimeout(500);
+      // Clear and type start time
+      await this.page.keyboard.press('Control+A');
+      await this.page.keyboard.type(customerData.deliveryTimeStart);
+      await this.page.keyboard.press('Tab');
+      // Type end time
+      await this.page.keyboard.type(customerData.deliveryTimeEnd);
+      await this.page.keyboard.press('Enter');
     }
-    if (customerData.deliveryTimeEnd) {
-      await this.deliveryTimeEndInput.fill(customerData.deliveryTimeEnd);
-    }
+    
     if (customerData.avgDailyUsage !== undefined) {
       await this.avgDailyUsageInput.fill(customerData.avgDailyUsage.toString());
     }
@@ -177,7 +178,15 @@ export class CustomerPage extends BasePage {
 
   async submitCustomerForm() {
     await this.modalConfirmButton.click();
-    await this.waitForToast();
+    
+    // Wait for success indication - either modal closes or success message appears
+    await this.page.waitForResponse(
+      response => response.url().includes('/api/v1/customers') && response.status() === 200,
+      { timeout: 10000 }
+    );
+    
+    // Give a bit more time for UI to update
+    await this.page.waitForTimeout(1000);
   }
 
   async cancelCustomerForm() {
@@ -198,14 +207,26 @@ export class CustomerPage extends BasePage {
     const row = this.customerRows.nth(rowIndex);
     const cells = row.locator('td');
     
+    // Wait for cells to be present
+    await cells.first().waitFor({ state: 'visible', timeout: 5000 });
+    
+    // Get text content with trimming
+    const getCellText = async (index: number) => {
+      const text = await cells.nth(index).textContent();
+      return text?.trim() || '';
+    };
+    
     return {
-      customerCode: await cells.nth(0).textContent() || '',
-      name: await cells.nth(1).textContent() || '',
-      shortName: await cells.nth(2).textContent() || '',
-      phone: await cells.nth(3).textContent() || '',
-      address: await cells.nth(4).textContent() || '',
-      area: await cells.nth(5).textContent() || '',
-      status: await cells.nth(6).textContent() || ''
+      customerCode: await getCellText(0),
+      shortName: await getCellText(1),
+      invoiceTitle: await getCellText(2),
+      address: await getCellText(3),
+      area: await getCellText(4),
+      deliveryTime: await getCellText(5),
+      avgDailyUsage: await getCellText(6),
+      paymentMethod: await getCellText(7),
+      customerType: await getCellText(8),
+      status: await getCellText(9)
     };
   }
 
@@ -247,12 +268,11 @@ export class CustomerPage extends BasePage {
     const expectedTexts = [
       '客戶管理',
       '新增客戶',
-      '客戶代碼',
-      '客戶名稱',
-      '聯絡電話',
+      '客戶編號',
+      '客戶簡稱',
+      '發票抬頭',
       '地址',
-      '區域',
-      '狀態'
+      '配送區域'
     ];
 
     for (const text of expectedTexts) {

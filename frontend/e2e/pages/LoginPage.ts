@@ -8,23 +8,23 @@ export class LoginPage extends BasePage {
 
   // Locators
   get usernameInput() {
-    return this.page.locator('input#login_username');
+    return this.page.locator('[data-testid="username-input"]');
   }
 
   get passwordInput() {
-    return this.page.locator('input#login_password');
+    return this.page.locator('[data-testid="password-input"]');
   }
 
   get loginButton() {
-    return this.page.locator('button[type="submit"]');
+    return this.page.locator('[data-testid="login-button"]');
   }
 
   get errorAlert() {
-    return this.page.locator('.ant-alert-error');
+    return this.page.locator('[data-testid="error-alert"]');
   }
 
   get loginTitle() {
-    return this.page.locator('h2.ant-typography');
+    return this.page.locator('[data-testid="login-title"]');
   }
 
   // Actions
@@ -66,7 +66,11 @@ export class LoginPage extends BasePage {
 
   async waitForLoginSuccess() {
     // Wait for navigation away from login page
-    await this.page.waitForURL((url) => !url.pathname.includes('/login'), {
+    // The URL should change to /dashboard, /driver, or /customer based on role
+    await this.page.waitForURL((url) => {
+      const path = url.pathname;
+      return path.includes('/dashboard') || path.includes('/driver') || path.includes('/customer');
+    }, {
       timeout: 10000
     });
   }

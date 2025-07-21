@@ -23,7 +23,8 @@ from app.schemas.route import (
     RouteOptimizationResponse
 )
 from app.core.database import get_async_session
-from app.services.google_cloud.maps import route_optimization_service
+from app.services.route_optimization import route_optimization_service
+from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
 
 router = APIRouter()
 
@@ -63,6 +64,7 @@ async def calculate_route_stats(route: Route, db: AsyncSession) -> dict:
 
 
 @router.get("/", response_model=List[RouteWithDetails])
+@cache_result("routes:list", expire=timedelta(minutes=10))
 async def get_routes(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -161,6 +163,7 @@ async def get_routes(
 
 
 @router.get("/{route_id}", response_model=RouteWithDetails)
+@cache_result("route", expire=timedelta(hours=1))
 async def get_route(
     route_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -217,6 +220,7 @@ async def get_route(
 
 
 @router.post("/", response_model=RouteSchema)
+@invalidate_cache("routes:list:*")
 async def create_route(
     route_create: RouteCreate,
     db: AsyncSession = Depends(get_async_session),
@@ -329,6 +333,10 @@ async def update_route(
     await db.commit()
     await db.refresh(route)
     
+    # Invalidate route caches
+    await cache.invalidate(f"route:update_route:{route_id}:*")
+    await cache.invalidate("routes:list:*")
+    
     return route
 
 
@@ -370,6 +378,10 @@ async def cancel_route(
     await db.execute(orders_update)
     
     await db.commit()
+    
+    # Invalidate route caches
+    await cache.invalidate(f"route:cancel_route:{route_id}:*")
+    await cache.invalidate("routes:list:*")
     
     return {"message": "路線已成功取消", "route_id": route_id}
 

@@ -16,6 +16,7 @@ from app.schemas.order import OrderCreateV2, OrderUpdateV2, OrderV2
 from app.schemas.order_item import OrderItemCreate
 from app.core.database import get_async_session
 from app.api.v1.websocket import notify_order_update
+from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
 
 router = APIRouter()
 
@@ -56,6 +57,7 @@ def calculate_order_amount(order_data: dict) -> dict:
 
 
 @router.get("/", response_model=List[OrderSchema])
+@cache_result("orders:list", expire=timedelta(minutes=10))
 async def get_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -119,6 +121,7 @@ async def get_orders(
 
 
 @router.get("/{order_id}", response_model=OrderSchema)
+@cache_result("order", expire=timedelta(hours=1))
 async def get_order(
     order_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -145,6 +148,7 @@ async def get_order(
 
 
 @router.post("/", response_model=OrderSchema)
+@invalidate_cache("orders:list:*")
 async def create_order(
     order_create: OrderCreate,
     db: AsyncSession = Depends(get_async_session),
@@ -255,6 +259,10 @@ async def update_order(
     await db.commit()
     await db.refresh(order)
     
+    # Invalidate specific order cache and order list cache
+    await cache.invalidate(f"order:update_order:{order_id}:*")
+    await cache.invalidate("orders:list:*")
+    
     # Send WebSocket notification
     await notify_order_update(
         order_id=order.id,
@@ -298,6 +306,10 @@ async def cancel_order(
         order.delivery_notes = f"取消原因：{reason}"
     
     await db.commit()
+    
+    # Invalidate specific order cache and order list cache
+    await cache.invalidate(f"order:cancel_order:{order_id}:*")
+    await cache.invalidate("orders:list:*")
     
     # Send WebSocket notification
     await notify_order_update(
@@ -509,6 +521,7 @@ async def update_order_v2(
 
 
 @router.get("/stats/summary")
+@cache_result("orders:stats", expire=timedelta(minutes=30))
 async def get_order_stats(
     date_from: Optional[datetime] = Query(None, description="開始日期"),
     date_to: Optional[datetime] = Query(None, description="結束日期"),

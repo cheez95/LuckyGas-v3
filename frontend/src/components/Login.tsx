@@ -42,12 +42,13 @@ const Login: React.FC = () => {
     <div className="login-container">
       <Card className="login-box">
         <div className="login-logo">
-          <Title level={2}>{t('app.title')}</Title>
+          <Title level={2} data-testid="login-title">{t('app.title')}</Title>
           <Title level={5} type="secondary">{t('app.shortTitle')}</Title>
         </div>
         
         {(error || localError) && (
           <Alert
+            data-testid="error-alert"
             message={error || localError}
             type="error"
             showIcon
@@ -74,6 +75,7 @@ const Login: React.FC = () => {
             rules={[{ required: true, message: t('validation.required') }]}
           >
             <Input
+              data-testid="username-input"
               prefix={<UserOutlined />}
               placeholder={t('auth.username')}
               autoComplete="username"
@@ -86,6 +88,7 @@ const Login: React.FC = () => {
             rules={[{ required: true, message: t('validation.required') }]}
           >
             <Input.Password
+              data-testid="password-input"
               prefix={<LockOutlined />}
               placeholder={t('auth.password')}
               autoComplete="current-password"
@@ -94,6 +97,7 @@ const Login: React.FC = () => {
 
           <Form.Item>
             <Button
+              data-testid="login-button"
               type="primary"
               htmlType="submit"
               loading={loading}

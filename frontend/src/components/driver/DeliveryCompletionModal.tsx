@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Modal, Form, Input, Upload, Button, Space, message, Image } from 'antd';
-import { CameraOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, Button, Space, message, Image } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import SignatureCanvas from 'react-signature-canvas';
-import type { UploadFile } from 'antd/es/upload/interface';
+import PhotoCapture from './PhotoCapture';
 import type { RouteStop } from '../../services/route.service';
 
 const { TextArea } = Input;
@@ -12,7 +12,7 @@ interface DeliveryCompletionModalProps {
   stop: RouteStop & { customerName?: string };
   onComplete: (data: {
     signature?: string;
-    photo?: string;
+    photos?: string[];
     notes?: string;
   }) => void;
   onCancel: () => void;
@@ -27,8 +27,7 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
   const [form] = Form.useForm();
   const signatureRef = useRef<SignatureCanvas>(null);
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<UploadFile | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Clear signature
@@ -50,27 +49,9 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
     }
   };
 
-  // Handle photo upload
-  const handlePhotoUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setPhotoPreview(result);
-      setPhotoFile({
-        uid: '-1',
-        name: file.name,
-        status: 'done',
-        url: result,
-      } as UploadFile);
-    };
-    reader.readAsDataURL(file);
-    return false; // Prevent auto upload
-  };
-
-  // Remove photo
-  const removePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
+  // Handle photos update
+  const handlePhotosUpdate = (updatedPhotos: string[]) => {
+    setPhotos(updatedPhotos);
   };
 
   // Handle form submission
@@ -84,14 +65,14 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
     try {
       await onComplete({
         signature: signatureData,
-        photo: photoPreview || undefined,
+        photos: photos.length > 0 ? photos : undefined,
         notes: values.notes,
       });
       
       // Reset form
       form.resetFields();
       clearSignature();
-      removePhoto();
+      setPhotos([]);
     } catch (error) {
       message.error('提交失敗，請重試');
     } finally {
@@ -103,7 +84,7 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
   const handleCancel = () => {
     form.resetFields();
     clearSignature();
-    removePhoto();
+    setPhotos([]);
     onCancel();
   };
 
@@ -193,36 +174,13 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
           </div>
         </Form.Item>
 
-        {/* Delivery photo */}
+        {/* Delivery photos */}
         <Form.Item label="配送照片（選填）">
-          {!photoFile ? (
-            <Upload
-              accept="image/*"
-              beforeUpload={handlePhotoUpload}
-              showUploadList={false}
-            >
-              <Button icon={<CameraOutlined />}>
-                拍照或選擇照片
-              </Button>
-            </Upload>
-          ) : (
-            <div>
-              <Image
-                src={photoPreview!}
-                alt="Delivery photo"
-                style={{ maxWidth: '100%', maxHeight: 300 }}
-              />
-              <div style={{ marginTop: 8 }}>
-                <Button
-                  icon={<DeleteOutlined />}
-                  onClick={removePhoto}
-                  danger
-                >
-                  移除照片
-                </Button>
-              </div>
-            </div>
-          )}
+          <PhotoCapture
+            onCapture={handlePhotosUpdate}
+            maxPhotos={3}
+            maxSizeMB={1}
+          />
         </Form.Item>
 
         {/* Delivery notes */}

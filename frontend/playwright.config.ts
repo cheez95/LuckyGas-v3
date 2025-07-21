@@ -1,10 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
+dotenv.config({ path: '.env.test' });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -86,5 +87,8 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      VITE_API_URL: 'http://localhost:8000',
+    },
   },
 });

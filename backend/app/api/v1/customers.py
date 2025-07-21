@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, func
 from sqlalchemy.orm import selectinload
+from datetime import timedelta
 
 from app.api.deps import get_db, get_current_user
 from app.models.user import User as UserModel, UserRole
@@ -11,11 +12,13 @@ from app.models.customer_inventory import CustomerInventory as CustomerInventory
 from app.models.gas_product import GasProduct as GasProductModel
 from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate, CustomerList
 from app.schemas.customer_inventory import CustomerInventory, CustomerInventoryUpdate, CustomerInventoryList
+from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
 
 router = APIRouter()
 
 
 @router.get("/", response_model=CustomerList)
+@cache_result("customers:list", expire=timedelta(minutes=15))
 async def get_customers(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
@@ -82,6 +85,7 @@ async def get_customers(
 
 
 @router.get("/{customer_id}", response_model=Customer)
+@cache_result("customer", expire=timedelta(hours=2))
 async def get_customer(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -107,6 +111,7 @@ async def get_customer(
 
 
 @router.post("/", response_model=Customer)
+@invalidate_cache("customers:list:*")
 async def create_customer(
     customer_in: CustomerCreate,
     db: AsyncSession = Depends(get_db),
@@ -168,6 +173,10 @@ async def update_customer(
     await db.commit()
     await db.refresh(customer)
     
+    # Invalidate specific customer cache and customer list cache
+    await cache.invalidate(f"customer:update_customer:{customer_id}:*")
+    await cache.invalidate("customers:list:*")
+    
     return customer
 
 
@@ -197,12 +206,17 @@ async def delete_customer(
     customer.is_terminated = True
     await db.commit()
     
+    # Invalidate specific customer cache and customer list cache
+    await cache.invalidate(f"customer:delete_customer:{customer_id}:*")
+    await cache.invalidate("customers:list:*")
+    
     return {"message": "客戶已停用"}
 
 
 # Customer Inventory Endpoints
 
 @router.get("/{customer_id}/inventory", response_model=CustomerInventoryList)
+@cache_result("customer:inventory", expire=timedelta(hours=1))
 async def get_customer_inventory(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -329,5 +343,8 @@ async def update_customer_inventory(
     
     # Load related data
     await db.refresh(inventory, ["gas_product"])
+    
+    # Invalidate customer inventory cache
+    await cache.invalidate(f"customer:inventory:update_customer_inventory:{customer_id}:*")
     
     return inventory

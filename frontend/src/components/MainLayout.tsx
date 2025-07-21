@@ -135,7 +135,7 @@ const MainLayout: React.FC = () => {
             <Space size="large">
               <NotificationBell />
               <Dropdown overlay={userMenu} trigger={['click']}>
-                <Space style={{ cursor: 'pointer' }}>
+                <Space style={{ cursor: 'pointer' }} data-testid="user-menu-trigger">
                   <Avatar icon={<UserOutlined />} />
                   <Text>{user?.full_name || user?.username}</Text>
                 </Space>

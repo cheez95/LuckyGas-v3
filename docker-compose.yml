@@ -2,83 +2,188 @@ version: '3.8'
 
 services:
   # PostgreSQL Database
-  db:
-    image: postgres:15
-    restart: always
+  postgres:
+    image: postgres:15-alpine
+    container_name: luckygas-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: luckygas
-      POSTGRES_USER: luckygas
-      POSTGRES_PASSWORD: luckygas123
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-luckygas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-luckygas123}
+      POSTGRES_DB: ${POSTGRES_DB:-luckygas}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U luckygas"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-luckygas}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - luckygas-network
 
   # Redis Cache
   redis:
     image: redis:7-alpine
-    restart: always
-    ports:
-      - "6379:6379"
+    container_name: luckygas-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - luckygas-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: luckygas-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-luckygas}:${POSTGRES_PASSWORD:-luckygas123}@postgres:5432/${POSTGRES_DB:-luckygas}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-here}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:3000","http://localhost:80"]}
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/credentials.json}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-central1}
+      VERTEX_AI_MODEL_NAME: ${VERTEX_AI_MODEL_NAME:-}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ${HOST_GOOGLE_CREDENTIALS:-./backend/credentials.json}:/app/credentials.json:ro
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - luckygas-network
+
+  # Frontend Web App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: luckygas-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://backend:8000}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://backend:8000}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - luckygas-network
+
+  # Database migrations and setup (one-time run)
+  setup:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: luckygas-setup
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-luckygas}:${POSTGRES_PASSWORD:-luckygas123}@postgres:5432/${POSTGRES_DB:-luckygas}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Running database setup...' &&
+        python manage.py init-db &&
+        python manage.py create-indexes &&
+        echo 'Database setup completed!'
+      "
+    networks:
+      - luckygas-network
+    profiles:
+      - setup
 
   # Adminer - Database Web UI
   adminer:
     image: adminer:latest
-    restart: always
+    container_name: luckygas-adminer
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${ADMINER_PORT:-8080}:8080"
     environment:
-      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DEFAULT_SERVER: postgres
       ADMINER_DESIGN: pepa-linha-dark
     depends_on:
-      - db
+      - postgres
+    networks:
+      - luckygas-network
+    profiles:
+      - tools
 
-  # Backend API (development mode)
-  # Uncomment when ready to run with Docker
-  # backend:
-  #   build: ./backend
-  #   restart: always
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     DATABASE_URL: postgresql://luckygas:luckygas123@db:5432/luckygas
-  #     REDIS_URL: redis://redis:6379
-  #   volumes:
-  #     - ./backend:/app
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+  # pgAdmin (alternative to Adminer)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: luckygas-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@luckygas.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    networks:
+      - luckygas-network
+    profiles:
+      - tools
 
-  # Frontend (development mode)
-  # Uncomment when React app is created
-  # frontend:
-  #   build: ./frontend
-  #   restart: always
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     REACT_APP_API_URL: http://localhost:8000
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   depends_on:
-  #     - backend
+  # Redis Commander
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: luckygas-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-}
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
+    depends_on:
+      - redis
+    networks:
+      - luckygas-network
+    profiles:
+      - tools
 
 volumes:
   postgres_data:
   redis_data:
+  pgadmin_data:
+
+networks:
+  luckygas-network:
+    driver: bridge

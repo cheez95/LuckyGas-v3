@@ -181,11 +181,16 @@ class RouteService {
   }
 
   // Mark stop as completed
-  async completeStop(stopId: number, notes?: string): Promise<RouteStop> {
+  async completeStop(stopId: number, data?: {
+    notes?: string;
+    signature?: string;
+    photos?: string[];
+  }): Promise<RouteStop> {
     return this.updateStop(stopId, {
       is_completed: true,
       actual_arrival: new Date().toISOString(),
-      delivery_notes: notes,
+      delivery_notes: data?.notes,
+      ...data
     });
   }
 

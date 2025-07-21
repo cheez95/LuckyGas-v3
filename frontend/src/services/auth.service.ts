@@ -3,29 +3,30 @@ import { LoginRequest, LoginResponse, User } from '../types/auth';
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const formData = new FormData();
+    // Convert to form data format for OAuth2PasswordRequestForm
+    const formData = new URLSearchParams();
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
     
     const response = await api.post<{ access_token: string; token_type: string }>('/auth/login', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
     
-    // Store token temporarily to get user data
-    const { access_token } = response.data;
+    // Store token
+    const { access_token, token_type } = response.data;
     localStorage.setItem('access_token', access_token);
     
-    // Get user data
-    const userResponse = await api.get<User>('/auth/me');
+    // Fetch user data after successful login
+    const user = await this.getCurrentUser();
     
     // Return combined response
     return {
       access_token,
       refresh_token: null as any, // Backend doesn't support refresh tokens yet
-      token_type: response.data.token_type,
-      user: userResponse.data,
+      token_type,
+      user,
     };
   },
   

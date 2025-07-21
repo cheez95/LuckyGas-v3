@@ -9,7 +9,14 @@ from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.delivery import DeliveryPrediction
 from app.models.customer import Customer
-from app.services.google_cloud.vertex_ai import demand_prediction_service
+from app.core.google_cloud_config import get_gcp_config
+
+# Import the appropriate service based on configuration
+gcp_config = get_gcp_config()
+if gcp_config.is_vertex_ai_configured():
+    from app.services.google_cloud.vertex_ai_service import vertex_ai_service as demand_prediction_service
+else:
+    from app.services.google_cloud.vertex_ai import demand_prediction_service
 from app.schemas.prediction import (
     PredictionCreate,
     PredictionResponse,
