@@ -17,8 +17,8 @@ Before starting, ensure you have:
 
 ```bash
 # Set project name variable
-export PROJECT_ID="lucky-gas-prod"
-export PROJECT_NAME="Lucky Gas Production"
+export PROJECT_ID="vast-tributary-466619-m8"
+export PROJECT_NAME="Lucky Gas Prod"
 
 # Create the project
 gcloud projects create $PROJECT_ID --name="$PROJECT_NAME"
@@ -27,7 +27,7 @@ gcloud projects create $PROJECT_ID --name="$PROJECT_NAME"
 gcloud config set project $PROJECT_ID
 
 # Link billing account (replace with your billing account ID)
-gcloud beta billing projects link $PROJECT_ID --billing-account=XXXXXX-XXXXXX-XXXXXX
+gcloud beta billing projects link $PROJECT_ID --billing-account=011479-B04C2D-B0F925
 
 # Enable required APIs upfront
 gcloud services enable \
