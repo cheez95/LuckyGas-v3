@@ -28,7 +28,7 @@ from app.schemas.prediction import (
     PredictionMetrics,
     CustomerPrediction
 )
-from app.api.v1.websocket import notify_prediction_ready
+from app.api.v1.socketio_handler import notify_prediction_ready
 
 router = APIRouter()
 

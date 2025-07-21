@@ -3,11 +3,19 @@ from typing import Dict, Set, List, Optional
 from datetime import datetime
 import json
 import asyncio
+import warnings
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
 from app.core.security import decode_access_token
 from app.models.user import User
+
+# Deprecation warning
+warnings.warn(
+    "WebSocket endpoint is deprecated. Please migrate to Socket.IO at /socket.io",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 router = APIRouter()
 

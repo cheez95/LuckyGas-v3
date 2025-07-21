@@ -12,6 +12,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products
+from app.api.v1.socketio_handler import sio, socket_app
 from app.core.config import settings
 from app.core.database import create_db_and_tables
 
@@ -37,6 +38,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Mount Socket.IO app
+app.mount("/socket.io", socket_app)
 
 # Configure CORS with all origins
 app.add_middleware(

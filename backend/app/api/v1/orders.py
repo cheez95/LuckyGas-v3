@@ -15,7 +15,7 @@ from app.schemas.order import Order as OrderSchema, OrderCreate, OrderUpdate
 from app.schemas.order import OrderCreateV2, OrderUpdateV2, OrderV2
 from app.schemas.order_item import OrderItemCreate
 from app.core.database import get_async_session
-from app.api.v1.websocket import notify_order_update
+from app.api.v1.socketio_handler import notify_order_update
 from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
 
 router = APIRouter()
