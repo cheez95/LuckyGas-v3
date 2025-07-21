@@ -7,7 +7,7 @@ import os
 from cryptography.fernet import Fernet
 import base64
 
-from app.core.security.api_key_manager import (
+from app.core.api_key_manager import (
     APIKeyManager,
     LocalEncryptedKeyManager,
     GCPSecretManager,

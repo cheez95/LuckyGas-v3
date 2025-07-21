@@ -45,7 +45,10 @@
       "Bash(npm run build:*)",
       "Bash(rm:*)",
       "mcp__playwright__browser_install",
-      "mcp__playwright__browser_network_requests"
+      "mcp__playwright__browser_network_requests",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   }

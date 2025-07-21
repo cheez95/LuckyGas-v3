@@ -53,6 +53,23 @@ api.interceptors.request.use(
   }
 );
 
+import { tokenRefreshService } from './tokenRefresh';
+
+// Flag to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+// Helper to notify all subscribers when token is refreshed
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+// Helper to add request to queue while refreshing
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
 // Response interceptor to handle token refresh and log responses
 api.interceptors.response.use(
   (response) => {
@@ -98,16 +115,50 @@ api.interceptors.response.use(
     
     const originalRequest = error.config as any;
     
-    // Handle 401 errors - redirect to login for unauthorized requests
-    if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/login')) {
-      // Clear token and redirect to login
-      localStorage.removeItem('access_token');
-      message.error('登入已過期，請重新登入');
+    // Handle 401 errors - try to refresh token first
+    if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/login') && !originalRequest.url?.includes('/auth/refresh')) {
       
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        navigateTo('/login');
+      // Mark request as retry to avoid infinite loop
+      if (originalRequest._retry) {
+        // Already tried to refresh, clear tokens and redirect
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('token_expiry');
+        message.error('登入已過期，請重新登入');
+        
+        if (!window.location.pathname.includes('/login')) {
+          navigateTo('/login');
+        }
+        return Promise.reject(error);
       }
+      
+      originalRequest._retry = true;
+      
+      // If not already refreshing, start refresh process
+      if (!isRefreshing) {
+        isRefreshing = true;
+        
+        try {
+          const { access_token } = await tokenRefreshService.refreshToken();
+          isRefreshing = false;
+          onTokenRefreshed(access_token);
+          
+          // Retry the original request with new token
+          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          isRefreshing = false;
+          return Promise.reject(refreshError);
+        }
+      }
+      
+      // If already refreshing, queue this request
+      return new Promise((resolve) => {
+        addRefreshSubscriber((token: string) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          resolve(api(originalRequest));
+        });
+      });
     }
     
     // Handle 404 errors

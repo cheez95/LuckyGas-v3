@@ -17,7 +17,8 @@ import logging
 from app.core.google_cloud_config import get_gcp_config
 from app.core.database import get_async_session
 from app.models.customer import Customer
-from app.models.delivery import DeliveryPrediction, DeliveryHistory
+from app.models.delivery import DeliveryPrediction
+from app.models.delivery_history import DeliveryHistory
 from app.models.order import Order
 from app.services.google_cloud.vertex_ai_service import VertexAIDemandPredictionService
 from app.services.google_cloud.monitoring.rate_limiter import GoogleAPIRateLimiter
@@ -27,7 +28,7 @@ from app.services.google_cloud.monitoring.circuit_breaker import CircuitBreaker
 from app.services.google_cloud.monitoring.api_cache import GoogleAPICache
 from app.services.google_cloud.development_mode import DevelopmentModeManager
 from app.services.google_cloud.mock_vertex_ai_service import MockVertexAIDemandPredictionService
-from app.core.security.api_key_manager import get_api_key_manager
+from app.core.api_key_manager import get_api_key_manager
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +47,10 @@ class EnhancedVertexAIService(VertexAIDemandPredictionService):
         self.cost_monitor = GoogleAPICostMonitor()
         self.error_handler = GoogleAPIErrorHandler()
         self.circuit_breaker = CircuitBreaker(
+            api_type="vertex_ai",
             failure_threshold=5,
-            timeout=60,
-            half_open_retries=3
+            success_threshold=3,
+            timeout=60
         )
         self.cache = GoogleAPICache()
         self.key_manager = None  # Will be initialized asynchronously

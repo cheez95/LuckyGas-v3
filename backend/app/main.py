@@ -1,14 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 import time
-import redis.asyncio as redis
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products, google_api_dashboard
@@ -32,17 +30,18 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Lucky Gas backend service")
     
     # Validate environment variables
-    validate_environment()
-    logger.info("Environment validation completed")
+    # Note: Environment validation is done by Pydantic Settings during initialization
+    # validate_environment()
+    logger.info("Environment loaded from settings")
     
     # Create database tables
     await create_db_and_tables()
     logger.info("Database tables created/verified")
     
-    # Initialize FastAPI-Cache2
-    redis_client = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
-    FastAPICache.init(RedisBackend(redis_client), prefix="luckygas-cache")
-    logger.info("Redis cache initialized")
+    # Initialize custom cache service
+    from app.core.cache import cache
+    await cache.connect()
+    logger.info("Custom cache service initialized")
     
     # Start database metrics collector
     db_metrics_collector = DatabaseMetricsCollector(engine)
@@ -59,8 +58,9 @@ async def lifespan(app: FastAPI):
     db_metrics_collector.stop()
     metrics_task.cancel()
     
-    # Close Redis connection
-    await redis_client.close()
+    # Close custom cache connection
+    from app.core.cache import cache
+    await cache.disconnect()
     logger.info("Cleanup completed")
 
 
@@ -74,14 +74,14 @@ app = FastAPI(
 # Mount Socket.IO app
 app.mount("/socket.io", socket_app)
 
-# Configure CORS with all origins
+# Configure CORS with restricted settings
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_all_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-Request-ID", "X-Process-Time"],
 )
 
 # Add GZip compression middleware
@@ -93,6 +93,10 @@ app.add_middleware(CorrelationIdMiddleware)
 
 # Add metrics middleware
 app.add_middleware(MetricsMiddleware)
+
+# Add HTTPS redirect middleware for production
+if settings.ENVIRONMENT.value == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
 
 # Add timing middleware
 @app.middleware("http")

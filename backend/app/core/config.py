@@ -57,11 +57,32 @@ class SecurityConfig(BaseModel):
     lockout_duration_minutes: int = Field(30, ge=1, description="Account lockout duration")
 
 
+class DatabaseConfig(BaseModel):
+    """Database connection pool configuration"""
+    # Pool settings
+    pool_size: int = Field(20, ge=1, le=100, description="Number of connections to maintain")
+    max_overflow: int = Field(10, ge=0, le=50, description="Maximum overflow connections")
+    pool_timeout: int = Field(30, ge=1, description="Timeout waiting for connection")
+    pool_recycle: int = Field(3600, ge=60, description="Recycle connections after seconds")
+    pool_pre_ping: bool = Field(True, description="Test connections before using")
+    
+    # Performance settings
+    statement_timeout: int = Field(60000, ge=1000, description="Statement timeout in milliseconds")
+    command_timeout: int = Field(60, ge=1, description="Command timeout in seconds")
+    
+    # Connection settings
+    keepalives: int = Field(1, ge=0, description="Enable TCP keepalives")
+    keepalives_idle: int = Field(30, ge=1, description="Seconds before sending keepalive")
+    keepalives_interval: int = Field(5, ge=1, description="Interval between keepalives")
+    keepalives_count: int = Field(5, ge=1, description="Number of keepalives before closing")
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=True
+        case_sensitive=True,
+        extra="ignore"
     )
 
     # API Settings
@@ -79,23 +100,24 @@ class Settings(BaseSettings):
             raise ValueError(f"Invalid environment: {v}. Must be one of: {', '.join([e.value for e in Environment])}")
     
     # Security
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: str = Field(..., min_length=32, description="Secret key for JWT encoding")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 2  # 2 hours (reduced from 8 days)
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7 days
     
     # Database
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "luckygas"
-    POSTGRES_PASSWORD: str = "luckygas123"
+    POSTGRES_PASSWORD: str = Field(..., description="PostgreSQL password")
     POSTGRES_DB: str = "luckygas"
+    POSTGRES_PORT: int = Field(5433, ge=1024, le=65535, description="PostgreSQL port")
     DATABASE_URL: str = ""
     
     @field_validator("DATABASE_URL", mode="after")
     def assemble_db_connection(cls, v: str, values) -> str:
         if v:
             return v
-        return f"postgresql+asyncpg://{values.data.get('POSTGRES_USER')}:{values.data.get('POSTGRES_PASSWORD')}@{values.data.get('POSTGRES_SERVER')}:5433/{values.data.get('POSTGRES_DB')}"
+        return f"postgresql+asyncpg://{values.data.get('POSTGRES_USER')}:{values.data.get('POSTGRES_PASSWORD')}@{values.data.get('POSTGRES_SERVER')}:{values.data.get('POSTGRES_PORT')}/{values.data.get('POSTGRES_DB')}"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
@@ -125,6 +147,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8000",
+        # Production domains
+        "https://app.luckygas.tw",
+        "https://www.luckygas.tw",
     ]
     
     def get_all_cors_origins(self) -> List[str]:
@@ -139,7 +164,7 @@ class Settings(BaseSettings):
     GCP_LOCATION: str = "asia-east1"  # Taiwan region
     VERTEX_MODEL_ID: str = ""
     VERTEX_ENDPOINT_ID: str = ""
-    GOOGLE_MAPS_API_KEY: str = ""
+    GOOGLE_MAPS_API_KEY: str = Field("", pattern="^$|^AIza[0-9A-Za-z-_]{35}$", description="Google Maps API key (empty or valid format)")
     
     # Storage
     GCS_BUCKET_NAME: str = "lucky-gas-storage"
@@ -157,12 +182,13 @@ class Settings(BaseSettings):
     TIMEZONE: str = "Asia/Taipei"
     
     # Admin User
-    FIRST_SUPERUSER: str = "admin@luckygas.tw"
-    FIRST_SUPERUSER_PASSWORD: str = "admin123"
+    FIRST_SUPERUSER: str = Field("admin@luckygas.tw", description="Initial superuser email")
+    FIRST_SUPERUSER_PASSWORD: str = Field(..., min_length=8, description="Initial superuser password")
     
     # Nested Configuration Objects
     business: BusinessConfig = Field(default_factory=BusinessConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     
     # Taiwan-specific Validators
     @field_validator("FIRST_SUPERUSER")

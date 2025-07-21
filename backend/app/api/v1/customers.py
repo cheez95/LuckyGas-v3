@@ -12,14 +12,14 @@ from app.models.customer_inventory import CustomerInventory as CustomerInventory
 from app.models.gas_product import GasProduct as GasProductModel
 from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate, CustomerList
 from app.schemas.customer_inventory import CustomerInventory, CustomerInventoryUpdate, CustomerInventoryList
-from fastapi_cache.decorator import cache
-from fastapi_cache import FastAPICache
+from app.services.customer_service import CustomerService
+from app.core.cache import cache_result, cache
 
 router = APIRouter()
 
 
 @router.get("/", response_model=CustomerList)
-@cache(expire=900)  # 15 minutes
+@cache_result("customers:list", expire=timedelta(minutes=15))
 async def get_customers(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
@@ -37,45 +37,23 @@ async def get_customers(
     if current_user.role not in allowed_roles:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Build base query for filtering
-    base_query = select(CustomerModel)
+    # Initialize service
+    customer_service = CustomerService(db)
     
-    # Apply filters
-    if area:
-        base_query = base_query.where(CustomerModel.area == area)
-    
+    # Convert is_active string to boolean
+    is_active_bool = True
     if is_active is not None:
-        # Convert string to boolean
         is_active_bool = is_active.lower() in ['true', '1', 'yes'] if isinstance(is_active, str) else bool(is_active)
-        base_query = base_query.where(CustomerModel.is_terminated == (not is_active_bool))
     
-    if search:
-        search_filter = or_(
-            CustomerModel.customer_code.ilike(f"%{search}%"),
-            CustomerModel.short_name.ilike(f"%{search}%"),
-            CustomerModel.invoice_title.ilike(f"%{search}%"),
-            CustomerModel.address.ilike(f"%{search}%")
-        )
-        base_query = base_query.where(search_filter)
-    
-    # Get total count
-    count_query = select(func.count()).select_from(CustomerModel)
-    # Apply the same filters to count query
-    if area:
-        count_query = count_query.where(CustomerModel.area == area)
-    if is_active is not None:
-        count_query = count_query.where(CustomerModel.is_terminated == (not is_active_bool))
-    if search:
-        count_query = count_query.where(search_filter)
-    
-    count_result = await db.execute(count_query)
-    total = count_result.scalar() or 0
-    
-    # Apply pagination to main query
-    query = base_query.offset(skip).limit(limit)
-    
-    result = await db.execute(query)
-    customers = result.scalars().all()
+    # Use service to search/list customers
+    customers, total = await customer_service.search_customers(
+        search_term=search,
+        area=area,
+        customer_type=None,
+        is_active=is_active_bool,
+        skip=skip,
+        limit=limit
+    )
     
     return CustomerList(
         items=customers,
@@ -86,7 +64,7 @@ async def get_customers(
 
 
 @router.get("/{customer_id}", response_model=Customer)
-@cache(expire=7200)  # 2 hours
+@cache_result("customers:detail", expire=timedelta(hours=2))
 async def get_customer(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -100,15 +78,16 @@ async def get_customer(
     if current_user.role not in allowed_roles:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    result = await db.execute(
-        select(CustomerModel).where(CustomerModel.id == customer_id)
-    )
-    customer = result.scalar_one_or_none()
+    # Initialize service
+    customer_service = CustomerService(db)
     
-    if not customer:
+    # Get customer using service
+    customer_details = await customer_service.get_customer_details(customer_id)
+    
+    if not customer_details:
         raise HTTPException(status_code=404, detail="客戶不存在")
     
-    return customer
+    return customer_details["customer"]
 
 
 @router.post("/", response_model=Customer)
@@ -125,23 +104,19 @@ async def create_customer(
     if current_user.role not in allowed_roles:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Check if customer code exists
-    result = await db.execute(
-        select(CustomerModel).where(CustomerModel.customer_code == customer_in.customer_code)
-    )
-    if result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="客戶代碼已存在")
+    # Initialize service
+    customer_service = CustomerService(db)
     
-    # Create customer
-    db_customer = CustomerModel(**customer_in.model_dump())
-    db.add(db_customer)
-    await db.commit()
-    await db.refresh(db_customer)
-    
-    # Clear cache
-    await FastAPICache.clear(namespace="luckygas-cache")
-    
-    return db_customer
+    try:
+        # Create customer using service
+        customer = await customer_service.create_customer(customer_in)
+        
+        # Clear customer-related cache
+        await cache.invalidate("customers:*")
+        
+        return customer
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{customer_id}", response_model=Customer)
@@ -159,25 +134,17 @@ async def update_customer(
     if current_user.role not in allowed_roles:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Get customer
-    result = await db.execute(
-        select(CustomerModel).where(CustomerModel.id == customer_id)
-    )
-    customer = result.scalar_one_or_none()
+    # Initialize service
+    customer_service = CustomerService(db)
+    
+    # Update customer using service
+    customer = await customer_service.update_customer(customer_id, customer_in)
     
     if not customer:
         raise HTTPException(status_code=404, detail="客戶不存在")
     
-    # Update customer
-    update_data = customer_in.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(customer, field, value)
-    
-    await db.commit()
-    await db.refresh(customer)
-    
-    # Clear cache after update
-    await FastAPICache.clear(namespace="luckygas-cache")
+    # Clear customer-related cache after update
+    await cache.invalidate("customers:*")
     
     return customer
 
@@ -195,21 +162,17 @@ async def delete_customer(
     if current_user.role != UserRole.SUPER_ADMIN:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Get customer
-    result = await db.execute(
-        select(CustomerModel).where(CustomerModel.id == customer_id)
-    )
-    customer = result.scalar_one_or_none()
+    # Initialize service
+    customer_service = CustomerService(db)
     
-    if not customer:
+    # Deactivate customer using service
+    success = await customer_service.deactivate_customer(customer_id, reason="由管理員停用")
+    
+    if not success:
         raise HTTPException(status_code=404, detail="客戶不存在")
     
-    # Soft delete
-    customer.is_terminated = True
-    await db.commit()
-    
-    # Clear cache after delete
-    await FastAPICache.clear(namespace="luckygas-cache")
+    # Clear customer-related cache after delete
+    await cache.invalidate("customers:*")
     
     return {"message": "客戶已停用"}
 
@@ -217,7 +180,7 @@ async def delete_customer(
 # Customer Inventory Endpoints
 
 @router.get("/{customer_id}/inventory", response_model=CustomerInventoryList)
-@cache(expire=3600)  # 1 hour
+@cache_result("customers:inventory", expire=timedelta(hours=1))
 async def get_customer_inventory(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -345,7 +308,7 @@ async def update_customer_inventory(
     # Load related data
     await db.refresh(inventory, ["gas_product"])
     
-    # Clear cache after inventory update
-    await FastAPICache.clear(namespace="luckygas-cache")
+    # Clear customer inventory cache after update
+    await cache.invalidate("customers:inventory:*")
     
     return inventory

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 
-from app.api.deps import get_current_user, require_admin
+from app.api.deps import get_current_user, get_current_active_superuser
 from app.models.user import User
 from app.services.google_cloud.monitoring.rate_limiter import get_rate_limiter
 from app.services.google_cloud.monitoring.cost_monitor import get_cost_monitor
@@ -16,7 +16,7 @@ from app.services.google_cloud.monitoring.api_cache import get_api_cache
 from app.services.google_cloud.monitoring.circuit_breaker import circuit_manager
 from app.services.google_cloud.development_mode import get_development_mode_manager
 from app.services.google_cloud.routes_service_enhanced import get_enhanced_routes_service
-from app.core.security.api_key_manager import get_api_key_manager
+from app.core.api_key_manager import get_api_key_manager
 
 router = APIRouter()
 
@@ -157,7 +157,7 @@ async def get_rate_limit_status(
     }
 
 
-@router.post("/dashboard/rate-limits", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/rate-limits", dependencies=[Depends(get_current_active_superuser)])
 async def update_rate_limits(
     update: RateLimitUpdate,
     current_user: User = Depends(get_current_user)
@@ -209,7 +209,7 @@ async def get_circuit_breaker_status(
     }
 
 
-@router.post("/dashboard/circuit-breakers/reset/{api_type}", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/circuit-breakers/reset/{api_type}", dependencies=[Depends(get_current_active_superuser)])
 async def reset_circuit_breaker(
     api_type: str,
     current_user: User = Depends(get_current_user)
@@ -234,7 +234,7 @@ async def reset_circuit_breaker(
     }
 
 
-@router.post("/dashboard/circuit-breakers/reset-all", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/circuit-breakers/reset-all", dependencies=[Depends(get_current_active_superuser)])
 async def reset_all_circuit_breakers(
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
@@ -271,7 +271,7 @@ async def get_cache_statistics(
     }
 
 
-@router.post("/dashboard/cache/clear/{api_type}", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/cache/clear/{api_type}", dependencies=[Depends(get_current_active_superuser)])
 async def clear_cache_by_type(
     api_type: str,
     current_user: User = Depends(get_current_user)
@@ -294,7 +294,7 @@ async def clear_cache_by_type(
     }
 
 
-@router.post("/dashboard/cache/clear-all", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/cache/clear-all", dependencies=[Depends(get_current_active_superuser)])
 async def clear_all_cache(
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
@@ -313,7 +313,7 @@ async def clear_all_cache(
     }
 
 
-@router.post("/dashboard/api-keys/{api_name}", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/api-keys/{api_name}", dependencies=[Depends(get_current_active_superuser)])
 async def update_api_key(
     api_name: str,
     api_key: str,
@@ -362,7 +362,7 @@ async def get_development_mode_status(
     }
 
 
-@router.post("/dashboard/budgets/reset/{period}", dependencies=[Depends(require_admin)])
+@router.post("/dashboard/budgets/reset/{period}", dependencies=[Depends(get_current_active_superuser)])
 async def reset_budget_tracking(
     period: Optional[str] = None,
     current_user: User = Depends(get_current_user)

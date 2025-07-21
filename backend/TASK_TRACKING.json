@@ -1,0 +1,256 @@
+{
+  "project": {
+    "id": "PROD-DEPLOY-001",
+    "name": "Lucky Gas Production Deployment",
+    "created": "2025-07-22T02:10:00Z",
+    "strategy": "systematic",
+    "status": "active",
+    "progress": 0,
+    "estimated_duration": "15 days",
+    "actual_start": "2025-07-22T02:20:00Z",
+    "actual_end": null
+  },
+  "epics": [
+    {
+      "id": "FE-INT",
+      "name": "Frontend-Backend Integration",
+      "status": "completed",
+      "progress": 100,
+      "duration": "3-5 days",
+      "dependencies": [],
+      "stories": [
+        {
+          "id": "FE-INT-01",
+          "name": "API Client Configuration",
+          "status": "completed",
+          "tasks": [
+            {"id": "1.1.1", "name": "Create axios/fetch client with interceptors", "status": "completed"},
+            {"id": "1.1.2", "name": "Configure CORS settings for production domains", "status": "completed"},
+            {"id": "1.1.3", "name": "Implement JWT token management in frontend", "status": "completed"},
+            {"id": "1.1.4", "name": "Add request/response error handling", "status": "completed"},
+            {"id": "1.1.5", "name": "Create API service layer for all endpoints", "status": "completed"}
+          ]
+        },
+        {
+          "id": "FE-INT-02",
+          "name": "Authentication Flow",
+          "status": "completed",
+          "tasks": [
+            {"id": "1.2.1", "name": "Implement login/logout UI components", "status": "completed"},
+            {"id": "1.2.2", "name": "Create protected route wrappers", "status": "completed"},
+            {"id": "1.2.3", "name": "Add token refresh mechanism", "status": "completed"},
+            {"id": "1.2.4", "name": "Implement role-based UI rendering", "status": "completed"},
+            {"id": "1.2.5", "name": "Add session timeout handling", "status": "completed"}
+          ]
+        },
+        {
+          "id": "FE-INT-03",
+          "name": "Environment Configuration",
+          "status": "completed",
+          "tasks": [
+            {"id": "1.3.1", "name": "Set up .env files for different environments", "status": "completed"},
+            {"id": "1.3.2", "name": "Configure API base URLs", "status": "completed"},
+            {"id": "1.3.3", "name": "Add build-time environment validation", "status": "completed"},
+            {"id": "1.3.4", "name": "Create deployment-specific configurations", "status": "completed"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "GCP-SETUP",
+      "name": "Google Cloud Setup",
+      "status": "in_progress",
+      "progress": 33,
+      "duration": "2-3 days",
+      "dependencies": [],
+      "stories": [
+        {
+          "id": "GCP-SETUP-01",
+          "name": "Service Account Configuration",
+          "status": "completed",
+          "tasks": [
+            {"id": "2.1.1", "name": "Create production service account", "status": "completed"},
+            {"id": "2.1.2", "name": "Assign minimal required permissions", "status": "completed"},
+            {"id": "2.1.3", "name": "Generate and secure service account key", "status": "completed"},
+            {"id": "2.1.4", "name": "Configure workload identity (if using GKE)", "status": "completed"},
+            {"id": "2.1.5", "name": "Set up key rotation policy", "status": "completed"}
+          ]
+        },
+        {
+          "id": "GCP-SETUP-02",
+          "name": "API Services Setup",
+          "status": "documented",
+          "tasks": [
+            {"id": "2.2.1", "name": "Enable Routes API and set quotas", "status": "documented"},
+            {"id": "2.2.2", "name": "Configure Vertex AI endpoint", "status": "documented"},
+            {"id": "2.2.3", "name": "Set up Cloud Storage buckets", "status": "documented"},
+            {"id": "2.2.4", "name": "Configure API key restrictions", "status": "documented"},
+            {"id": "2.2.5", "name": "Set up cost alerts and budgets", "status": "documented"}
+          ]
+        },
+        {
+          "id": "GCP-SETUP-03",
+          "name": "Security Configuration",
+          "status": "documented",
+          "tasks": [
+            {"id": "2.3.1", "name": "Enable Cloud Security Command Center", "status": "documented"},
+            {"id": "2.3.2", "name": "Configure VPC Service Controls", "status": "documented"},
+            {"id": "2.3.3", "name": "Set up Cloud Armor rules", "status": "documented"},
+            {"id": "2.3.4", "name": "Enable audit logging", "status": "documented"},
+            {"id": "2.3.5", "name": "Configure DLP policies", "status": "documented"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MON-ALERT",
+      "name": "Monitoring & Alerting",
+      "status": "pending",
+      "progress": 0,
+      "duration": "3-4 days",
+      "dependencies": ["GCP-SETUP"],
+      "stories": [
+        {
+          "id": "MON-ALERT-01",
+          "name": "Application Monitoring",
+          "status": "pending",
+          "tasks": [
+            {"id": "3.1.1", "name": "Set up Prometheus metrics collection", "status": "pending"},
+            {"id": "3.1.2", "name": "Create Grafana dashboards", "status": "pending"},
+            {"id": "3.1.3", "name": "Configure application performance monitoring", "status": "pending"},
+            {"id": "3.1.4", "name": "Set up distributed tracing", "status": "pending"},
+            {"id": "3.1.5", "name": "Create custom business metrics", "status": "pending"}
+          ]
+        },
+        {
+          "id": "MON-ALERT-02",
+          "name": "Infrastructure Monitoring",
+          "status": "pending",
+          "tasks": [
+            {"id": "3.2.1", "name": "Configure Cloud Monitoring", "status": "pending"},
+            {"id": "3.2.2", "name": "Set up uptime checks", "status": "pending"},
+            {"id": "3.2.3", "name": "Monitor database performance", "status": "pending"},
+            {"id": "3.2.4", "name": "Track API quota usage", "status": "pending"},
+            {"id": "3.2.5", "name": "Monitor SSL certificate expiration", "status": "pending"}
+          ]
+        },
+        {
+          "id": "MON-ALERT-03",
+          "name": "Alerting Configuration",
+          "status": "pending",
+          "tasks": [
+            {"id": "3.3.1", "name": "Define SLIs and SLOs", "status": "pending"},
+            {"id": "3.3.2", "name": "Create alert policies", "status": "pending"},
+            {"id": "3.3.3", "name": "Set up notification channels", "status": "pending"},
+            {"id": "3.3.4", "name": "Configure escalation policies", "status": "pending"},
+            {"id": "3.3.5", "name": "Create runbooks for common issues", "status": "pending"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CICD",
+      "name": "CI/CD Pipeline",
+      "status": "pending",
+      "progress": 0,
+      "duration": "4-5 days",
+      "dependencies": ["FE-INT"],
+      "stories": [
+        {
+          "id": "CICD-01",
+          "name": "Build Pipeline",
+          "status": "pending",
+          "tasks": [
+            {"id": "4.1.1", "name": "Set up GitHub Actions workflows", "status": "pending"},
+            {"id": "4.1.2", "name": "Configure automated testing", "status": "pending"},
+            {"id": "4.1.3", "name": "Add code quality checks", "status": "pending"},
+            {"id": "4.1.4", "name": "Implement security scanning", "status": "pending"},
+            {"id": "4.1.5", "name": "Create Docker build process", "status": "pending"}
+          ]
+        },
+        {
+          "id": "CICD-02",
+          "name": "Deployment Pipeline",
+          "status": "pending",
+          "tasks": [
+            {"id": "4.2.1", "name": "Configure staging environment", "status": "pending"},
+            {"id": "4.2.2", "name": "Set up Cloud Run deployment", "status": "pending"},
+            {"id": "4.2.3", "name": "Implement blue-green deployment", "status": "pending"},
+            {"id": "4.2.4", "name": "Add database migration automation", "status": "pending"},
+            {"id": "4.2.5", "name": "Configure rollback mechanisms", "status": "pending"}
+          ]
+        },
+        {
+          "id": "CICD-03",
+          "name": "Quality Gates",
+          "status": "pending",
+          "tasks": [
+            {"id": "4.3.1", "name": "Set test coverage requirements", "status": "pending"},
+            {"id": "4.3.2", "name": "Add performance benchmarks", "status": "pending"},
+            {"id": "4.3.3", "name": "Implement security gates", "status": "pending"},
+            {"id": "4.3.4", "name": "Configure manual approval steps", "status": "pending"},
+            {"id": "4.3.5", "name": "Add deployment verification tests", "status": "pending"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PROD-DEPLOY",
+      "name": "Production Deployment",
+      "status": "pending",
+      "progress": 0,
+      "duration": "2-3 days",
+      "dependencies": ["GCP-SETUP", "MON-ALERT", "CICD"],
+      "stories": [
+        {
+          "id": "PROD-DEPLOY-01",
+          "name": "Infrastructure Setup",
+          "status": "pending",
+          "tasks": [
+            {"id": "5.1.1", "name": "Provision production Cloud SQL", "status": "pending"},
+            {"id": "5.1.2", "name": "Set up Cloud Memorystore (Redis)", "status": "pending"},
+            {"id": "5.1.3", "name": "Configure Cloud Load Balancer", "status": "pending"},
+            {"id": "5.1.4", "name": "Set up Cloud CDN", "status": "pending"},
+            {"id": "5.1.5", "name": "Configure custom domain and SSL", "status": "pending"}
+          ]
+        },
+        {
+          "id": "PROD-DEPLOY-02",
+          "name": "Application Deployment",
+          "status": "pending",
+          "tasks": [
+            {"id": "5.2.1", "name": "Deploy backend to Cloud Run", "status": "pending"},
+            {"id": "5.2.2", "name": "Deploy frontend to Cloud Storage/CDN", "status": "pending"},
+            {"id": "5.2.3", "name": "Run database migrations", "status": "pending"},
+            {"id": "5.2.4", "name": "Verify all integrations", "status": "pending"},
+            {"id": "5.2.5", "name": "Perform smoke tests", "status": "pending"}
+          ]
+        },
+        {
+          "id": "PROD-DEPLOY-03",
+          "name": "Post-Deployment",
+          "status": "pending",
+          "tasks": [
+            {"id": "5.3.1", "name": "Monitor deployment metrics", "status": "pending"},
+            {"id": "5.3.2", "name": "Verify backup procedures", "status": "pending"},
+            {"id": "5.3.3", "name": "Test disaster recovery", "status": "pending"},
+            {"id": "5.3.4", "name": "Document deployment process", "status": "pending"},
+            {"id": "5.3.5", "name": "Conduct security audit", "status": "pending"}
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "total_tasks": 75,
+    "completed_tasks": 27,
+    "documented_tasks": 10,
+    "blocked_tasks": 0,
+    "critical_path": ["GCP-SETUP", "MON-ALERT", "PROD-DEPLOY"],
+    "next_milestone": "Frontend Integration Complete",
+    "risk_level": "medium",
+    "last_updated": "2025-07-22T06:30:00Z",
+    "execution_mode": "parallel",
+    "active_spawns": ["FE-INT-SPAWN", "GCP-SETUP-SPAWN"]
+  }
+}

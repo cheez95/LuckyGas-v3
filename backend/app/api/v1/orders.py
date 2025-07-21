@@ -17,43 +17,11 @@ from app.schemas.order_item import OrderItemCreate
 from app.core.database import get_async_session
 from app.api.v1.socketio_handler import notify_order_update
 from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
+from app.services.order_service import OrderService
 
 router = APIRouter()
 
 
-def generate_order_number() -> str:
-    """Generate unique order number with format: ORD-YYYYMMDD-XXXX"""
-    today = datetime.now().strftime("%Y%m%d")
-    random_suffix = str(datetime.now().microsecond)[:4].zfill(4)
-    return f"ORD-{today}-{random_suffix}"
-
-
-def calculate_order_amount(order_data: dict) -> dict:
-    """Calculate order amounts based on cylinder quantities and prices"""
-    # Pricing per cylinder type (TWD)
-    prices = {
-        "50kg": 2500,
-        "20kg": 1200,
-        "16kg": 1000,
-        "10kg": 700,
-        "4kg": 350
-    }
-    
-    total = 0
-    total += order_data.get("qty_50kg", 0) * prices["50kg"]
-    total += order_data.get("qty_20kg", 0) * prices["20kg"]
-    total += order_data.get("qty_16kg", 0) * prices["16kg"]
-    total += order_data.get("qty_10kg", 0) * prices["10kg"]
-    total += order_data.get("qty_4kg", 0) * prices["4kg"]
-    
-    # Apply discount if any (future feature)
-    discount = 0
-    
-    return {
-        "total_amount": total,
-        "discount_amount": discount,
-        "final_amount": total - discount
-    }
 
 
 @router.get("/", response_model=List[OrderSchema])
@@ -83,6 +51,13 @@ async def get_orders(
     # Check permissions
     if current_user.role not in ["super_admin", "manager", "office_staff"]:
         raise HTTPException(status_code=403, detail="權限不足")
+    
+    # Initialize service
+    order_service = OrderService(db)
+    
+    # For date range filtering, we'll need to handle this differently
+    # Currently the service only filters by single scheduled_date
+    # So we'll use direct database access for now
     
     # Build query
     query = select(Order).options(selectinload(Order.customer))
@@ -132,10 +107,11 @@ async def get_order(
     if current_user.role not in ["super_admin", "manager", "office_staff", "driver"]:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Get order with customer info
-    query = select(Order).options(selectinload(Order.customer)).where(Order.id == order_id)
-    result = await db.execute(query)
-    order = result.scalar_one_or_none()
+    # Initialize service
+    order_service = OrderService(db)
+    
+    # Get order using repository method with details
+    order = await order_service.order_repo.get_with_details(order_id)
     
     if not order:
         raise HTTPException(status_code=404, detail="訂單不存在")
@@ -161,48 +137,19 @@ async def create_order(
     if current_user.role not in ["super_admin", "manager", "office_staff"]:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Verify customer exists
-    customer_query = select(Customer).where(Customer.id == order_create.customer_id)
-    customer_result = await db.execute(customer_query)
-    customer = customer_result.scalar_one_or_none()
+    # Initialize service
+    order_service = OrderService(db)
     
-    if not customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
-    
-    # Create order data
-    order_data = order_create.model_dump()
-    
-    # Generate order number
-    order_data["order_number"] = generate_order_number()
-    
-    # Calculate amounts
-    amounts = calculate_order_amount(order_data)
-    order_data.update(amounts)
-    
-    # Use customer's address if not specified
-    if not order_data.get("delivery_address"):
-        order_data["delivery_address"] = customer.address
-    
-    # Use customer's delivery time preferences if not specified
-    if not order_data.get("delivery_time_start"):
-        order_data["delivery_time_start"] = customer.delivery_time_start
-    if not order_data.get("delivery_time_end"):
-        order_data["delivery_time_end"] = customer.delivery_time_end
-    
-    # Create order
-    order = Order(**order_data)
-    db.add(order)
-    await db.commit()
-    await db.refresh(order)
-    
-    # Send WebSocket notification
-    await notify_order_update(
-        order_id=order.id,
-        status=order.status.value,
-        details={"action": "created", "order_number": order.order_number}
-    )
-    
-    return order
+    try:
+        # Create order using service
+        order = await order_service.create_order(
+            order_data=order_create,
+            created_by=current_user.id
+        )
+        
+        return order
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{order_id}", response_model=OrderSchema)
@@ -217,60 +164,27 @@ async def update_order(
     if current_user.role not in ["super_admin", "manager", "office_staff"]:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Get order
-    query = select(Order).where(Order.id == order_id)
-    result = await db.execute(query)
-    order = result.scalar_one_or_none()
+    # Initialize service
+    order_service = OrderService(db)
     
-    if not order:
-        raise HTTPException(status_code=404, detail="訂單不存在")
-    
-    # Check if order can be modified
-    if order.status in [OrderStatus.DELIVERED, OrderStatus.CANCELLED]:
-        raise HTTPException(status_code=400, detail="已完成或已取消的訂單無法修改")
-    
-    # Update order fields
-    update_data = order_update.model_dump(exclude_unset=True)
-    
-    # Recalculate amounts if quantities changed
-    quantity_fields = ["qty_50kg", "qty_20kg", "qty_16kg", "qty_10kg", "qty_4kg"]
-    if any(field in update_data for field in quantity_fields):
-        # Merge current quantities with updates
-        current_quantities = {
-            "qty_50kg": order.qty_50kg,
-            "qty_20kg": order.qty_20kg,
-            "qty_16kg": order.qty_16kg,
-            "qty_10kg": order.qty_10kg,
-            "qty_4kg": order.qty_4kg
-        }
-        current_quantities.update(update_data)
-        amounts = calculate_order_amount(current_quantities)
-        update_data.update(amounts)
-    
-    # Update status timestamps
-    if "status" in update_data:
-        if update_data["status"] == OrderStatus.DELIVERED:
-            update_data["delivered_at"] = datetime.utcnow()
-    
-    # Apply updates
-    for field, value in update_data.items():
-        setattr(order, field, value)
-    
-    await db.commit()
-    await db.refresh(order)
-    
-    # Invalidate specific order cache and order list cache
-    await cache.invalidate(f"order:update_order:{order_id}:*")
-    await cache.invalidate("orders:list:*")
-    
-    # Send WebSocket notification
-    await notify_order_update(
-        order_id=order.id,
-        status=order.status.value,
-        details={"action": "updated", "order_number": order.order_number}
-    )
-    
-    return order
+    try:
+        # Update order using service
+        order = await order_service.update_order(
+            order_id=order_id,
+            order_update=order_update,
+            updated_by=current_user.id
+        )
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="訂單不存在")
+        
+        # Invalidate specific order cache and order list cache
+        await cache.invalidate(f"order:update_order:{order_id}:*")
+        await cache.invalidate("orders:list:*")
+        
+        return order
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.delete("/{order_id}")
@@ -285,40 +199,28 @@ async def cancel_order(
     if current_user.role not in ["super_admin", "manager", "office_staff"]:
         raise HTTPException(status_code=403, detail="權限不足")
     
-    # Get order
-    query = select(Order).where(Order.id == order_id)
-    result = await db.execute(query)
-    order = result.scalar_one_or_none()
+    # Initialize service
+    order_service = OrderService(db)
     
-    if not order:
-        raise HTTPException(status_code=404, detail="訂單不存在")
-    
-    # Check if order can be cancelled
-    if order.status == OrderStatus.DELIVERED:
-        raise HTTPException(status_code=400, detail="已完成的訂單無法取消")
-    
-    if order.status == OrderStatus.CANCELLED:
-        raise HTTPException(status_code=400, detail="訂單已經取消")
-    
-    # Cancel order
-    order.status = OrderStatus.CANCELLED
-    if reason:
-        order.delivery_notes = f"取消原因：{reason}"
-    
-    await db.commit()
-    
-    # Invalidate specific order cache and order list cache
-    await cache.invalidate(f"order:cancel_order:{order_id}:*")
-    await cache.invalidate("orders:list:*")
-    
-    # Send WebSocket notification
-    await notify_order_update(
-        order_id=order.id,
-        status=OrderStatus.CANCELLED.value,
-        details={"action": "cancelled", "order_number": order.order_number, "reason": reason or ""}
-    )
-    
-    return {"message": "訂單已成功取消", "order_id": order_id}
+    try:
+        # Update order status to cancelled using service
+        order = await order_service.update_delivery_status(
+            order_id=order_id,
+            status=OrderStatus.CANCELLED.value,
+            notes=f"取消原因：{reason}" if reason else None,
+            updated_by=current_user.id
+        )
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="訂單不存在")
+        
+        # Invalidate specific order cache and order list cache
+        await cache.invalidate(f"order:cancel_order:{order_id}:*")
+        await cache.invalidate("orders:list:*")
+        
+        return {"message": "訂單已成功取消", "order_id": order_id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # V2 endpoints for flexible product system
@@ -539,43 +441,39 @@ async def get_order_stats(
     if not date_from:
         date_from = date_to - timedelta(days=30)
     
-    # Build base query with date filter
-    base_conditions = [
-        Order.created_at >= date_from,
-        Order.created_at <= date_to
-    ]
+    # Initialize service
+    order_service = OrderService(db)
     
-    # Count orders by status
-    status_counts = {}
-    for status in OrderStatus:
-        count_query = select(func.count(Order.id)).where(
-            and_(*base_conditions, Order.status == status)
-        )
-        result = await db.execute(count_query)
-        status_counts[status.value] = result.scalar()
-    
-    # Calculate total revenue
-    revenue_query = select(
-        func.sum(Order.final_amount)
-    ).where(
-        and_(*base_conditions, Order.status == OrderStatus.DELIVERED)
+    # Get statistics using service
+    stats = await order_service.get_order_statistics(
+        start_date=date_from.date(),
+        end_date=date_to.date(),
+        area=None
     )
-    revenue_result = await db.execute(revenue_query)
-    total_revenue = revenue_result.scalar() or 0
     
-    # Count urgent orders
+    # Convert status breakdown to expected format
+    status_counts = stats.get("status_breakdown", {})
+    
+    # Count urgent orders (not available in service, need direct query)
     urgent_query = select(func.count(Order.id)).where(
-        and_(*base_conditions, Order.is_urgent == True)
+        and_(
+            Order.scheduled_date >= date_from.date(),
+            Order.scheduled_date <= date_to.date(),
+            Order.is_urgent == True
+        )
     )
     urgent_result = await db.execute(urgent_query)
-    urgent_count = urgent_result.scalar()
+    urgent_count = urgent_result.scalar() or 0
     
-    # Count unique customers
+    # Count unique customers (not available in service, need direct query)
     customers_query = select(func.count(func.distinct(Order.customer_id))).where(
-        and_(*base_conditions)
+        and_(
+            Order.scheduled_date >= date_from.date(),
+            Order.scheduled_date <= date_to.date()
+        )
     )
     customers_result = await db.execute(customers_query)
-    unique_customers = customers_result.scalar()
+    unique_customers = customers_result.scalar() or 0
     
     return {
         "date_range": {
@@ -583,8 +481,8 @@ async def get_order_stats(
             "to": date_to.isoformat()
         },
         "status_summary": status_counts,
-        "total_revenue": total_revenue,
+        "total_revenue": stats.get("total_revenue", 0),
         "urgent_orders": urgent_count,
         "unique_customers": unique_customers,
-        "total_orders": sum(status_counts.values())
+        "total_orders": stats.get("total_orders", 0)
     }

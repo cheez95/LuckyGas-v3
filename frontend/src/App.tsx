@@ -15,6 +15,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 
 // Common Components
 import ErrorBoundary from './components/common/ErrorBoundary';
+import SessionManager from './components/common/SessionManager';
 
 // Pages/Components (to be created)
 import Login from './components/Login';
@@ -56,18 +57,20 @@ const App: React.FC = () => {
           <NavigationSetup>
             <AuthProvider>
               <NotificationProvider>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/" element={<MainLayout />}>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="customers" element={<CustomerList />} />
-                    <Route path="orders" element={<OrderList />} />
-                    <Route path="routes" element={<RouteManagement />} />
-                    <Route path="delivery-history" element={<DeliveryHistory />} />
-                    <Route path="driver" element={<DriverInterface />} />
-                  </Route>
-                </Routes>
+                <SessionManager>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/" element={<MainLayout />}>
+                      <Route index element={<Navigate to="/dashboard" replace />} />
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="customers" element={<CustomerList />} />
+                      <Route path="orders" element={<OrderList />} />
+                      <Route path="routes" element={<RouteManagement />} />
+                      <Route path="delivery-history" element={<DeliveryHistory />} />
+                      <Route path="driver" element={<DriverInterface />} />
+                    </Route>
+                  </Routes>
+                </SessionManager>
               </NotificationProvider>
             </AuthProvider>
           </NavigationSetup>

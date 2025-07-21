@@ -8,15 +8,20 @@ export const authService = {
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
     
-    const response = await api.post<{ access_token: string; token_type: string }>('/auth/login', formData, {
+    const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
     
-    // Store token
-    const { access_token, token_type } = response.data;
+    // Store tokens
+    const { access_token, refresh_token, token_type } = response.data;
     localStorage.setItem('access_token', access_token);
+    localStorage.setItem('refresh_token', refresh_token);
+    
+    // Store token expiry time (2 hours from now)
+    const expiryTime = new Date().getTime() + (2 * 60 * 60 * 1000); // 2 hours in milliseconds
+    localStorage.setItem('token_expiry', expiryTime.toString());
     
     // Fetch user data after successful login
     const user = await this.getCurrentUser();
@@ -24,7 +29,7 @@ export const authService = {
     // Return combined response
     return {
       access_token,
-      refresh_token: null as any, // Backend doesn't support refresh tokens yet
+      refresh_token,
       token_type,
       user,
     };
@@ -34,9 +39,12 @@ export const authService = {
     // Call logout endpoint if needed
     // await api.post('/auth/logout');
     
-    // Clear token
+    // Clear tokens and expiry
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('token_expiry');
   },
+  
   
   async getCurrentUser(): Promise<User> {
     const response = await api.get<User>('/auth/me');

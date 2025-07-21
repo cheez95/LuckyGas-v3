@@ -8,7 +8,7 @@ from sqlalchemy import select, and_, insert, update
 from sqlalchemy.orm import selectinload
 import logging
 
-from app.services.google_cloud.routes_service_enhanced import enhanced_routes_service as google_routes_service
+from app.services.google_cloud.routes_service_enhanced import get_enhanced_routes_service
 from app.models.route import Route as DeliveryRoute, RouteStop
 from app.models.order import Order, OrderStatus
 from app.models.user import User
@@ -16,6 +16,9 @@ from app.models.vehicle import Vehicle
 from app.core.database import get_async_session
 
 logger = logging.getLogger(__name__)
+
+# Initialize Google Routes service
+google_routes_service = get_enhanced_routes_service()
 
 
 class RouteOptimizationService:

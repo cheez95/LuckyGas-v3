@@ -16,7 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.google_cloud_config import get_gcp_config
 from app.core.database import get_async_session
 from app.models.customer import Customer
-from app.models.delivery import DeliveryPrediction, DeliveryHistory
+from app.models.delivery import DeliveryPrediction
+from app.models.delivery_history import DeliveryHistory
 from app.models.order import Order
 import logging
 

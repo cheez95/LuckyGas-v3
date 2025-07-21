@@ -214,7 +214,7 @@ class Order(OrderBase):
     route_id: Optional[int] = Field(None, alias="路線編號", description="Assigned route ID")
     
     @field_validator('final_amount')
-    def validate_final_amount(cls, v: float, values) -> float:
+    def validate_final_amount(cls, v: float) -> float:
         # Ensure final amount is reasonable
         if v < 0:
             raise ValueError('應付金額不能為負數')
@@ -305,8 +305,16 @@ class OrderV2(OrderBaseV2):
     customer_phone: Optional[str] = Field(None, alias="客戶電話", max_length=15)
     
     # Apply validators
-    _validate_phone = field_validator('customer_phone')(lambda cls, v: TaiwanValidators.validate_phone_number(v) if v else v)
-    _validate_amount = field_validator('final_amount')(Order.validate_final_amount)
+    @field_validator('customer_phone')
+    def validate_phone(cls, v: str) -> str:
+        return TaiwanValidators.validate_phone_number(v) if v else v
+    
+    @field_validator('final_amount')
+    def validate_amount(cls, v: float) -> float:
+        # Ensure final amount is reasonable
+        if v < 0:
+            raise ValueError('應付金額不能為負數')
+        return v
     
     model_config = ConfigDict(
         from_attributes=True,

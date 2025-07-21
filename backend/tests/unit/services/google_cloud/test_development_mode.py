@@ -9,7 +9,7 @@ from app.services.google_cloud.development_mode import (
     DevelopmentMode,
     DevelopmentModeManager
 )
-from app.core.security.api_key_manager import get_api_key_manager
+from app.core.api_key_manager import get_api_key_manager
 
 
 class TestDevelopmentModeManager:

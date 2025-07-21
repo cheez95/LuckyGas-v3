@@ -28,7 +28,7 @@ from app.services.optimization.ortools_optimizer import (
 )
 
 # Import monitoring and protection components
-from app.core.security.api_key_manager import get_api_key_manager
+from app.core.api_key_manager import get_api_key_manager
 from app.services.google_cloud.monitoring.rate_limiter import get_rate_limiter
 from app.services.google_cloud.monitoring.cost_monitor import get_cost_monitor
 from app.services.google_cloud.monitoring.error_handler import GoogleAPIErrorHandler, GoogleAPIError

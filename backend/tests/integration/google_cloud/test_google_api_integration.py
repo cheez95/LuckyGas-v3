@@ -13,7 +13,7 @@ import redis.asyncio as redis
 from app.services.google_cloud.routes_service_enhanced import EnhancedGoogleRoutesService
 from app.services.google_cloud.vertex_ai_service_enhanced import EnhancedVertexAIService
 from app.services.google_cloud.monitoring.circuit_breaker import CircuitState
-from app.core.security.api_key_manager import LocalEncryptedKeyManager
+from app.core.api_key_manager import LocalEncryptedKeyManager
 from app.services.google_cloud.development_mode import DevelopmentMode
 
 

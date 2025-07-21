@@ -11,6 +11,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.pyc
 
 # Distribution / packaging
 build/
@@ -56,3 +57,31 @@ uv.lock
 frontend/playwright-report/
 frontend/test-results/
 frontend/screenshots/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Environment files (except examples)
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files outside test directories
+test_*.py
+*_test.py
+
+# Example/demo directories
+examples/
+demos/
+samples/

@@ -7,9 +7,9 @@ from sqlalchemy import select
 
 from app.api.deps import get_db, get_current_user
 from app.core.config import settings
-from app.core.security import create_access_token, verify_password, get_password_hash
+from app.core.security import create_access_token, create_refresh_token, verify_password, get_password_hash, decode_refresh_token
 from app.models.user import User as UserModel
-from app.schemas.user import User, Token, UserCreate
+from app.schemas.user import User, Token, UserCreate, RefreshTokenRequest
 
 router = APIRouter()
 
@@ -42,7 +42,15 @@ async def login_access_token(
         expires_delta=access_token_expires
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(
+        data={"sub": user.username, "role": user.role.value}
+    )
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 
 @router.post("/register", response_model=User)
@@ -81,6 +89,59 @@ async def register(
     await db.refresh(db_user)
     
     return db_user
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(
+    token_request: RefreshTokenRequest,
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    Refresh access token using refresh token
+    """
+    try:
+        payload = decode_refresh_token(token_request.refresh_token)
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="無效的重新整理令牌"
+            )
+        
+        # Get user from database
+        result = await db.execute(
+            select(UserModel).where(UserModel.username == username)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用戶不存在或已停用"
+            )
+        
+        # Create new tokens
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        new_access_token = create_access_token(
+            data={"sub": user.username, "role": user.role.value},
+            expires_delta=access_token_expires
+        )
+        
+        new_refresh_token = create_refresh_token(
+            data={"sub": user.username, "role": user.role.value}
+        )
+        
+        return {
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token,
+            "token_type": "bearer"
+        }
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
 
 
 @router.get("/me", response_model=User)

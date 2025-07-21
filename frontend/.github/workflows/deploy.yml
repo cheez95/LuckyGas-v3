@@ -1,0 +1,105 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: gcr.io
+  IMAGE_NAME: luckygas-frontend
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set environment based on branch
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "ENVIRONMENT=production" >> $GITHUB_ENV
+        else
+          echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+        fi
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm run lint
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+    
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+    
+    - name: Build and push Docker image
+      env:
+        VITE_API_URL: ${{ secrets[format('VITE_API_URL_{0}', env.ENVIRONMENT)] }}
+        VITE_WS_URL: ${{ secrets[format('VITE_WS_URL_{0}', env.ENVIRONMENT)] }}
+        VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+        VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+      run: |
+        docker build \
+          --build-arg VITE_API_URL="${VITE_API_URL}" \
+          --build-arg VITE_WS_URL="${VITE_WS_URL}" \
+          --build-arg VITE_ENV="${ENVIRONMENT}" \
+          --build-arg VITE_GOOGLE_MAPS_API_KEY="${VITE_GOOGLE_MAPS_API_KEY}" \
+          --build-arg VITE_SENTRY_DSN="${VITE_SENTRY_DSN}" \
+          -t "$REGISTRY/$PROJECT_ID/$IMAGE_NAME:$GITHUB_SHA" \
+          -t "$REGISTRY/$PROJECT_ID/$IMAGE_NAME:$ENVIRONMENT-latest" \
+          .
+        
+        docker push "$REGISTRY/$PROJECT_ID/$IMAGE_NAME:$GITHUB_SHA"
+        docker push "$REGISTRY/$PROJECT_ID/$IMAGE_NAME:$ENVIRONMENT-latest"
+    
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy luckygas-frontend-${{ env.ENVIRONMENT }} \
+          --image $REGISTRY/$PROJECT_ID/$IMAGE_NAME:$GITHUB_SHA \
+          --platform managed \
+          --region asia-east1 \
+          --allow-unauthenticated \
+          --port 80 \
+          --cpu 1 \
+          --memory 512Mi \
+          --max-instances 10 \
+          --min-instances 1
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment to ${{ env.ENVIRONMENT }} successful!"
+        else
+          echo "❌ Deployment to ${{ env.ENVIRONMENT }} failed!"
+        fi
