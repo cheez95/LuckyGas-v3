@@ -3,6 +3,7 @@ import { Table, Card, Input, Button, Space, Typography, Tag, message, Modal, For
 import { SearchOutlined, PlusOutlined, EditOutlined, ExclamationCircleOutlined, ContainerOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { customerService } from '../../services/customer.service';
 import { Customer } from '../../types/order';
 import CustomerInventory from './CustomerInventory';
@@ -13,6 +14,7 @@ const { Option } = Select;
 const { confirm } = Modal;
 
 const CustomerList: React.FC = () => {
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -120,39 +122,39 @@ const CustomerList: React.FC = () => {
 
   const columns: ColumnsType<Customer> = [
     {
-      title: '客戶編號',
+      title: t('customer.code'),
       dataIndex: 'customer_code',
       key: 'customer_code',
       width: 120,
       fixed: 'left',
     },
     {
-      title: '客戶簡稱',
+      title: t('customer.shortName'),
       dataIndex: 'short_name',
       key: 'short_name',
       width: 150,
     },
     {
-      title: '發票抬頭',
+      title: t('customer.invoiceTitle'),
       dataIndex: 'invoice_title',
       key: 'invoice_title',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '地址',
+      title: t('customer.address'),
       dataIndex: 'address',
       key: 'address',
       ellipsis: true,
     },
     {
-      title: '配送區域',
+      title: t('customer.area'),
       dataIndex: 'area',
       key: 'area',
       width: 100,
     },
     {
-      title: '配送時段',
+      title: t('customer.deliveryTime'),
       key: 'delivery_time',
       width: 120,
       render: (_, record) => {
@@ -163,14 +165,14 @@ const CustomerList: React.FC = () => {
       },
     },
     {
-      title: '月配送量',
+      title: t('customer.monthlyDelivery'),
       dataIndex: 'avg_daily_usage',
       key: 'avg_daily_usage',
       width: 100,
       render: (value) => value ? `${value} kg/日` : '-',
     },
     {
-      title: '付款方式',
+      title: t('customer.paymentMethod'),
       dataIndex: 'payment_method',
       key: 'payment_method',
       width: 100,
@@ -184,14 +186,14 @@ const CustomerList: React.FC = () => {
       },
     },
     {
-      title: '客戶類型',
+      title: t('customer.type'),
       dataIndex: 'customer_type',
       key: 'customer_type',
       width: 100,
       render: (type) => type || '-',
     },
     {
-      title: '狀態',
+      title: t('customer.status'),
       key: 'status',
       width: 120,
       render: (_, record) => (
@@ -203,7 +205,7 @@ const CustomerList: React.FC = () => {
       ),
     },
     {
-      title: '操作',
+      title: t('app.actions'),
       key: 'action',
       fixed: 'right',
       width: 200,
@@ -248,12 +250,12 @@ const CustomerList: React.FC = () => {
 
   return (
     <div>
-      <Title level={2}>客戶管理</Title>
+      <Title level={2}>{t('customer.title')}</Title>
       <Card>
         <div style={{ marginBottom: 16 }}>
           <Space>
             <Search
-              placeholder="搜尋客戶編號、名稱或地址"
+              placeholder={t('customer.searchPlaceholder')}
               allowClear
               enterButton={<SearchOutlined />}
               size="middle"
@@ -270,7 +272,7 @@ const CustomerList: React.FC = () => {
                 setIsModalVisible(true);
               }}
             >
-              新增客戶
+              {t('customer.addButton')}
             </Button>
           </Space>
         </div>
@@ -320,8 +322,8 @@ const CustomerList: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="short_name"
-                label="客戶簡稱"
-                rules={[{ required: true, message: '請輸入客戶簡稱' }]}
+                label={t('customer.shortName')}
+                rules={[{ required: true, message: t('validation.required') }]}
               >
                 <Input />
               </Form.Item>
@@ -350,8 +352,8 @@ const CustomerList: React.FC = () => {
 
           <Form.Item
             name="address"
-            label="地址"
-            rules={[{ required: true, message: '請輸入地址' }]}
+            label={t('customer.address')}
+            rules={[{ required: true, message: t('validation.required') }]}
           >
             <Input.TextArea rows={2} />
           </Form.Item>

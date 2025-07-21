@@ -1,0 +1,123 @@
+import { test, expect, devices } from '@playwright/test';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { CustomerPage } from './pages/CustomerPage';
+import { OrderPage } from './pages/OrderPage';
+
+// Test on iPhone 12
+test.describe('Mobile Responsiveness - iPhone 12', () => {
+  test.use(devices['iPhone 12']);
+  
+  let loginPage: LoginPage;
+  let dashboardPage: DashboardPage;
+  let customerPage: CustomerPage;
+  let orderPage: OrderPage;
+
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    dashboardPage = new DashboardPage(page);
+    customerPage = new CustomerPage(page);
+    orderPage = new OrderPage(page);
+  });
+
+  test('should display login page correctly on mobile', async ({ page }) => {
+    await loginPage.navigateToLogin();
+    
+    // Check mobile layout
+    const isMobileLayout = await loginPage.checkMobileLayout();
+    expect(isMobileLayout).toBe(true);
+    
+    // Elements should be visible
+    await expect(loginPage.logo).toBeVisible();
+    await expect(loginPage.usernameInput).toBeVisible();
+    await expect(loginPage.passwordInput).toBeVisible();
+    await expect(loginPage.loginButton).toBeVisible();
+  });
+
+  test('should handle mobile navigation', async ({ page }) => {
+    await loginPage.navigateToLogin();
+    await loginPage.login('admin', 'admin123');
+    await loginPage.waitForLoginSuccess();
+    
+    // Check mobile menu is accessible
+    const viewport = page.viewportSize();
+    expect(viewport?.width).toBeLessThan(768);
+    
+    // Dashboard should be visible
+    await expect(dashboardPage.pageTitle).toBeVisible();
+  });
+
+  test('should handle touch interactions', async ({ page }) => {
+    await loginPage.navigateToLogin();
+    await loginPage.login('admin', 'admin123');
+    await loginPage.waitForLoginSuccess();
+    
+    // Navigate to customers
+    await dashboardPage.navigateToCustomers();
+    
+    // Table should be scrollable on mobile
+    const isScrollable = await customerPage.checkMobileResponsive();
+    expect(isScrollable).toBe(true);
+  });
+});
+
+// Test on Pixel 5
+test.describe('Mobile Responsiveness - Pixel 5', () => {
+  test.use(devices['Pixel 5']);
+
+  test('should display dashboard correctly on Android', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
+    
+    await loginPage.navigateToLogin();
+    await loginPage.login('admin', 'admin123');
+    await loginPage.waitForLoginSuccess();
+    
+    // Check dashboard layout
+    await expect(dashboardPage.pageTitle).toBeVisible();
+    
+    // Cards should stack vertically
+    const cards = await page.locator('.ant-card').count();
+    expect(cards).toBeGreaterThan(0);
+  });
+});
+
+// Test specific mobile features
+test.describe('Mobile Features', () => {
+  test.use(devices['iPhone SE']);
+
+  test('should handle small screen sizes', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    
+    await loginPage.navigateToLogin();
+    
+    // Check viewport
+    const viewport = page.viewportSize();
+    expect(viewport?.width).toBe(375);
+    expect(viewport?.height).toBe(667);
+    
+    // All elements should still be visible
+    await expect(loginPage.loginButton).toBeVisible();
+  });
+
+  test('should handle orientation changes', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const dashboardPage = new DashboardPage(page);
+    
+    await loginPage.navigateToLogin();
+    await loginPage.login('admin', 'admin123');
+    await loginPage.waitForLoginSuccess();
+    
+    // Portrait orientation
+    await page.setViewportSize({ width: 375, height: 812 });
+    const portraitCards = await page.locator('.ant-card').first().boundingBox();
+    
+    // Landscape orientation
+    await page.setViewportSize({ width: 812, height: 375 });
+    await page.waitForTimeout(500); // Wait for layout adjustment
+    const landscapeCards = await page.locator('.ant-card').first().boundingBox();
+    
+    // Cards might be arranged differently in landscape
+    expect(landscapeCards?.width).not.toBe(portraitCards?.width);
+  });
+});

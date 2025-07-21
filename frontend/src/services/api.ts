@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AxiosError, AxiosInstance } from 'axios';
 import { message } from 'antd';
 import { navigateTo } from '../utils/router';
+import { performanceMonitor } from './performance.service';
 
 // Extend axios config to include metadata
 declare module 'axios' {
@@ -70,6 +71,10 @@ api.interceptors.response.use(
       if (duration > 5000) {
         console.warn(`⚠️ Slow API Response: ${response.config.url} took ${duration}ms`);
       }
+      
+      // Track performance metrics
+      const endpoint = response.config.url || 'unknown';
+      performanceMonitor.trackApiCall(endpoint, duration, true, response.status);
     }
     
     return response;
@@ -85,6 +90,10 @@ api.interceptors.response.use(
         error: error.response?.data || error.message,
         code: error.code,
       });
+      
+      // Track failed API calls
+      const endpoint = error.config.url || 'unknown';
+      performanceMonitor.trackApiCall(endpoint, duration, false, error.response?.status);
     }
     
     const originalRequest = error.config as any;

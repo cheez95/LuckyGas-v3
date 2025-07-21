@@ -333,4 +333,121 @@ export class RoutePage extends BasePage {
     await this.page.locator(`.ant-dropdown-menu-item:has-text("${status}")`).click();
     await this.waitForToast('狀態已更新');
   }
+
+  // Additional methods for route optimization validation
+
+  async getRouteDetails(index: number) {
+    const routeCard = this.routeCards.nth(index);
+    return {
+      routeName: await routeCard.locator('.route-name').textContent() || '',
+      driverName: await routeCard.locator('.driver-name').textContent() || '',
+      stopCount: parseInt(await routeCard.locator('.stop-count').textContent() || '0'),
+      totalDistance: await routeCard.locator('.total-distance').textContent() || '',
+      estimatedTime: await routeCard.locator('.estimated-time').textContent() || ''
+    };
+  }
+
+  async getStopOrder(): Promise<string[]> {
+    const stopNames: string[] = [];
+    const count = await this.stopItems.count();
+    
+    for (let i = 0; i < count; i++) {
+      const name = await this.stopItems.nth(i).locator('.stop-customer-name').textContent();
+      stopNames.push(name || '');
+    }
+    
+    return stopNames;
+  }
+
+  async dragStop(fromIndex: number, toIndex: number) {
+    const fromStop = this.stopItems.nth(fromIndex);
+    const toStop = this.stopItems.nth(toIndex);
+    await fromStop.dragTo(toStop);
+    await this.waitForLoadComplete();
+  }
+
+  async optimizeRoute() {
+    await this.optimizeRouteButton.click();
+    await this.waitForToast('路線優化中...');
+    // Wait for optimization to complete
+    await this.page.waitForTimeout(3000);
+    await this.waitForToast('路線優化完成');
+  }
+
+  async getRouteMetrics() {
+    return {
+      totalDistance: parseFloat((await this.getTotalDistance()).match(/[\d.]+/)?.[0] || '0'),
+      estimatedDuration: parseInt((await this.getEstimatedDuration()).match(/\d+/)?.[0] || '0'),
+      stopCount: await this.getStopCount()
+    };
+  }
+
+  async findUnassignedRoute(): Promise<number> {
+    const count = await this.routeCards.count();
+    
+    for (let i = 0; i < count; i++) {
+      const routeCard = this.routeCards.nth(i);
+      const driverText = await routeCard.locator('.driver-name').textContent();
+      if (!driverText || driverText.includes('未指派')) {
+        return i;
+      }
+    }
+    
+    return -1;
+  }
+
+  async assignDriver(routeIndex: number, driverName: string) {
+    await this.selectRoute(routeIndex);
+    const assignButton = this.page.locator('button').filter({ hasText: '指派司機' });
+    await assignButton.click();
+    
+    await this.selectDropdownOption('.driver-select', driverName);
+    await this.modalConfirmButton.click();
+    await this.waitForToast('司機已指派');
+  }
+
+  async exportRoutes(format: 'pdf' | 'excel' = 'pdf') {
+    const exportButton = this.page.locator('button').filter({ hasText: '匯出' });
+    await exportButton.click();
+    
+    const formatOption = format === 'pdf' ? '匯出PDF' : '匯出Excel';
+    await this.page.locator(`.ant-dropdown-menu-item:has-text("${formatOption}")`).click();
+  }
+
+  async filterByDate(date: string) {
+    await this.datePicker.click();
+    await this.page.locator('.ant-picker-input input').fill(date);
+    await this.page.keyboard.press('Enter');
+    await this.waitForLoadComplete();
+  }
+
+  async getRouteStatistics() {
+    return {
+      totalRoutes: parseInt(await this.page.locator('.stat-total-routes').textContent() || '0'),
+      completedRoutes: parseInt(await this.page.locator('.stat-completed-routes').textContent() || '0'),
+      activeRoutes: parseInt(await this.page.locator('.stat-active-routes').textContent() || '0'),
+      totalStops: parseInt(await this.page.locator('.stat-total-stops').textContent() || '0')
+    };
+  }
+
+  async getRouteStatus(index: number): Promise<string> {
+    const routeCard = this.routeCards.nth(index);
+    return await routeCard.locator('.route-status').textContent() || '';
+  }
+
+  async isMapVisible(): Promise<boolean> {
+    return await this.mapContainer.isVisible();
+  }
+
+  async getMapMarkerCount(): Promise<number> {
+    return await this.page.locator('.map-marker').count();
+  }
+
+  async createRoutesFromPredictions() {
+    const createButton = this.page.locator('button').filter({ hasText: '從預測建立路線' });
+    await createButton.click();
+    await this.waitForToast('正在建立路線...');
+    await this.page.waitForTimeout(3000);
+    await this.waitForToast('路線建立完成');
+  }
 }

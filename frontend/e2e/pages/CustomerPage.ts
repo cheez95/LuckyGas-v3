@@ -268,7 +268,7 @@ export class CustomerPage extends BasePage {
     const expectedTexts = [
       '客戶管理',
       '新增客戶',
-      '客戶編號',
+      '客戶代碼',
       '客戶簡稱',
       '發票抬頭',
       '地址',

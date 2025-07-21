@@ -34,6 +34,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { orderService } from '../../services/order.service';
 import { customerService } from '../../services/customer.service';
 import ProductSelector from './ProductSelector';
@@ -58,6 +59,7 @@ const { Option } = Select;
 const { confirm } = Modal;
 
 const OrderList: React.FC = () => {
+  const { t } = useTranslation();
   const { on } = useWebSocket();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -457,7 +459,7 @@ const OrderList: React.FC = () => {
 
       {/* Main Card */}
       <Card
-        title="訂單管理"
+        title={t('order.title')}
         extra={
           <Space>
             <Tag color="green" icon={<ThunderboltOutlined />}>
@@ -468,7 +470,7 @@ const OrderList: React.FC = () => {
               icon={<PlusOutlined />}
               onClick={() => setIsCreateModalVisible(true)}
             >
-              新增訂單
+              {t('order.addButton')}
             </Button>
             <Button icon={<ReloadOutlined />} onClick={fetchOrders}>
               刷新

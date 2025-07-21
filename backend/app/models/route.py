@@ -20,8 +20,10 @@ class Route(Base):
     __tablename__ = "routes"
     
     id = Column(Integer, primary_key=True, index=True)
-    route_name = Column(String(100), nullable=False)
-    route_date = Column(DateTime(timezone=True), nullable=False, index=True)
+    route_number = Column(String(100), nullable=False, unique=True)
+    route_name = Column(String(100))
+    date = Column(DateTime(timezone=True), nullable=False, index=True)
+    route_date = Column(DateTime(timezone=True))  # Backward compatibility
     
     # Assignment
     driver_id = Column(Integer, ForeignKey("drivers.id"))
@@ -29,10 +31,12 @@ class Route(Base):
     
     # Route details
     area = Column(String(50))
-    status = Column(SQLEnum(RouteStatus), default=RouteStatus.DRAFT)
+    status = Column(String(50), default="draft")  # Using string for flexibility
     total_stops = Column(Integer, default=0)
+    completed_stops = Column(Integer, default=0)
     total_distance_km = Column(Float, default=0.0)
     estimated_duration_minutes = Column(Integer, default=0)
+    polyline = Column(String(5000))  # For route visualization
     
     # Optimization
     is_optimized = Column(Boolean, default=False)
@@ -70,6 +74,7 @@ class RouteStop(Base):
     # Timing
     estimated_arrival = Column(DateTime(timezone=True))
     estimated_duration_minutes = Column(Integer, default=15)
+    service_duration_minutes = Column(Integer, default=10)  # Time spent at stop
     actual_arrival = Column(DateTime(timezone=True))
     actual_departure = Column(DateTime(timezone=True))
     

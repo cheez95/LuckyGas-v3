@@ -72,7 +72,7 @@ const Login: React.FC = () => {
           <Form.Item
             label={t('auth.username')}
             name="username"
-            rules={[{ required: true, message: t('validation.required') }]}
+            rules={[{ required: true, message: t('validation.username.required') }]}
           >
             <Input
               data-testid="username-input"
@@ -85,7 +85,7 @@ const Login: React.FC = () => {
           <Form.Item
             label={t('auth.password')}
             name="password"
-            rules={[{ required: true, message: t('validation.required') }]}
+            rules={[{ required: true, message: t('validation.password.required') }]}
           >
             <Input.Password
               data-testid="password-input"

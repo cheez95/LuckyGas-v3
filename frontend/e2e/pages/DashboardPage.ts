@@ -57,7 +57,7 @@ export class DashboardPage extends BasePage {
   }
 
   get routesMenuItem() {
-    return this.page.locator('.ant-menu-item').filter({ hasText: '路線管理' });
+    return this.page.locator('.ant-menu-item').filter({ hasText: '路線規劃' });
   }
 
   // Actions

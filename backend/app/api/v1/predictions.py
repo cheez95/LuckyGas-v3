@@ -1,15 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, insert
 from typing import List, Optional
 from datetime import datetime, date
+import logging
 
-from app.core.database import get_async_session
+from app.core.database import get_async_session, async_session_maker
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.delivery import DeliveryPrediction
 from app.models.customer import Customer
+from app.models.prediction_batch import PredictionBatch
 from app.core.google_cloud_config import get_gcp_config
+
+logger = logging.getLogger(__name__)
 
 # Import the appropriate service based on configuration
 gcp_config = get_gcp_config()
@@ -45,8 +49,107 @@ async def train_model(
     return result
 
 
-@router.post("/batch", response_model=PredictionBatchResponse)
+async def process_batch_predictions(batch_id: int, user_id: int):
+    """Background task for processing batch predictions"""
+    async with async_session_maker() as session:
+        try:
+            # Update batch status to processing
+            batch = await session.get(PredictionBatch, batch_id)
+            batch.status = "processing"
+            batch.started_at = datetime.utcnow()
+            await session.commit()
+            
+            # Get all active customers
+            result = await session.execute(
+                select(Customer).where(Customer.is_terminated == False)
+            )
+            customers = result.scalars().all()
+            batch.total_customers = len(customers)
+            await session.commit()
+            
+            # Generate predictions
+            predictions_data = []
+            successful = 0
+            failed = 0
+            
+            for customer in customers:
+                try:
+                    # Get prediction from service
+                    prediction = await demand_prediction_service.predict_for_customer(
+                        customer_id=customer.id,
+                        customer_data={
+                            "avg_daily_usage": customer.avg_daily_usage or 0.5,
+                            "max_cycle_days": customer.max_cycle_days or 30,
+                            "cylinders_50kg": customer.cylinders_50kg,
+                            "cylinders_20kg": customer.cylinders_20kg,
+                            "cylinders_16kg": customer.cylinders_16kg,
+                            "cylinders_10kg": customer.cylinders_10kg,
+                            "cylinders_4kg": customer.cylinders_4kg,
+                        }
+                    )
+                    
+                    if prediction:
+                        predictions_data.append({
+                            "customer_id": customer.id,
+                            "predicted_date": prediction["predicted_date"],
+                            "predicted_quantity_50kg": prediction.get("quantities", {}).get("50kg", 0),
+                            "predicted_quantity_20kg": prediction.get("quantities", {}).get("20kg", 0),
+                            "predicted_quantity_16kg": prediction.get("quantities", {}).get("16kg", 0),
+                            "predicted_quantity_10kg": prediction.get("quantities", {}).get("10kg", 0),
+                            "predicted_quantity_4kg": prediction.get("quantities", {}).get("4kg", 0),
+                            "confidence_score": prediction.get("confidence_score", 0.8),
+                            "model_version": "v1.0",
+                            "batch_id": batch_id
+                        })
+                        successful += 1
+                    
+                except Exception as e:
+                    logger.error(f"Failed to predict for customer {customer.id}: {e}")
+                    failed += 1
+                
+                # Update progress
+                batch.processed_customers = successful + failed
+                if batch.processed_customers % 10 == 0:  # Update every 10 customers
+                    await session.commit()
+            
+            # Bulk insert predictions
+            if predictions_data:
+                await session.execute(
+                    insert(DeliveryPrediction).values(predictions_data)
+                )
+            
+            # Update batch status
+            batch.status = "completed"
+            batch.completed_at = datetime.utcnow()
+            batch.successful_predictions = successful
+            batch.failed_predictions = failed
+            await session.commit()
+            
+            # Send WebSocket notification
+            await notify_prediction_ready(
+                batch_id=batch_id,
+                summary={
+                    "total": batch.total_customers,
+                    "successful": successful,
+                    "failed": failed
+                }
+            )
+            
+            logger.info(f"Batch prediction {batch_id} completed: {successful} successful, {failed} failed")
+            
+        except Exception as e:
+            logger.error(f"Batch prediction {batch_id} failed: {e}")
+            # Update batch with error
+            batch = await session.get(PredictionBatch, batch_id)
+            batch.status = "failed"
+            batch.error_message = str(e)
+            batch.completed_at = datetime.utcnow()
+            await session.commit()
+
+
+@router.post("/batch", response_model=dict)
 async def generate_batch_predictions(
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session)
 ):
@@ -57,15 +160,55 @@ async def generate_batch_predictions(
             detail="權限不足"
         )
     
-    result = await demand_prediction_service.predict_demand_batch()
+    # Create batch record
+    batch = PredictionBatch(
+        created_by=current_user.id,
+        status="pending"
+    )
+    session.add(batch)
+    await session.commit()
+    await session.refresh(batch)
     
-    # Send WebSocket notification
-    await notify_prediction_ready(
-        batch_id=result["batch_id"],
-        summary=result["summary"]
+    # Add to background tasks
+    background_tasks.add_task(
+        process_batch_predictions,
+        batch_id=batch.id,
+        user_id=current_user.id
     )
     
-    return PredictionBatchResponse(**result)
+    return {
+        "batch_id": batch.id,
+        "status": "processing",
+        "message": "預測生成已開始，完成後將通知您"
+    }
+
+
+@router.get("/batch/{batch_id}", response_model=dict)
+async def get_batch_status(
+    batch_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session)
+):
+    """Get the status of a prediction batch"""
+    batch = await session.get(PredictionBatch, batch_id)
+    if not batch:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="批次不存在"
+        )
+    
+    return {
+        "batch_id": batch.id,
+        "status": batch.status,
+        "total_customers": batch.total_customers,
+        "processed_customers": batch.processed_customers,
+        "successful_predictions": batch.successful_predictions,
+        "failed_predictions": batch.failed_predictions,
+        "error_message": batch.error_message,
+        "created_at": batch.created_at,
+        "started_at": batch.started_at,
+        "completed_at": batch.completed_at
+    }
 
 
 @router.get("/customers/{customer_id}", response_model=CustomerPrediction)

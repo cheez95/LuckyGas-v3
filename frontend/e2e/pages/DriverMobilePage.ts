@@ -24,7 +24,7 @@ export class DriverMobilePage extends BasePage {
   }
 
   async navigateToDriverInterface() {
-    await this.navigateTo('/driver');
+    await this.goto('/driver');
   }
 
   async selectRoute(routeId: string) {
@@ -62,14 +62,16 @@ export class DriverMobilePage extends BasePage {
     }
 
     // Check if mobile-specific elements are visible
-    const isMobileNavVisible = await this.navigationMenu.isVisible();
+    // Mobile menu trigger should be visible on mobile
+    const isMobileMenuTriggerVisible = await this.page.locator('[data-testid="mobile-menu-trigger"]').isVisible();
+    // Desktop nav should be hidden on mobile
     const isDesktopNavHidden = await this.page.locator('[data-testid="desktop-nav"]').isHidden();
 
-    return isMobileNavVisible && isDesktopNavHidden;
+    return isMobileMenuTriggerVisible && isDesktopNavHidden;
   }
 
   async toggleMobileMenu() {
-    await this.navigationMenu.click();
+    await this.page.locator('[data-testid="mobile-menu-trigger"]').click();
   }
 
   async logout() {
@@ -78,10 +80,17 @@ export class DriverMobilePage extends BasePage {
   }
 
   async waitForRouteLoad() {
-    await this.page.waitForSelector('[data-testid="routes-list"]', {
-      state: 'visible',
-      timeout: 10000
-    });
+    // Wait for either routes list or no routes message
+    await Promise.race([
+      this.page.waitForSelector('[data-testid="routes-list"]', {
+        state: 'visible',
+        timeout: 10000
+      }),
+      this.page.waitForSelector('text=今日沒有配送路線', {
+        state: 'visible',
+        timeout: 10000
+      })
+    ]);
   }
 
   async checkTouchTargets(): Promise<boolean> {

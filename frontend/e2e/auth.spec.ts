@@ -96,12 +96,20 @@ test.describe('Authentication', () => {
     await loginPage.login('admin', 'admin123');
     await loginPage.waitForLoginSuccess();
     
+    // Wait for dashboard to be fully loaded
+    await expect(dashboardPage.pageTitle).toBeVisible();
+    
     // Refresh page
     await page.reload();
     
+    // Wait for page to reload and auth to be restored
+    await page.waitForLoadState('networkidle');
+    
     // Should still be on dashboard
     await expect(page).toHaveURL(/.*\/dashboard/);
-    await expect(dashboardPage.pageTitle).toBeVisible();
+    
+    // Wait for dashboard content to load after auth restoration
+    await expect(dashboardPage.pageTitle).toBeVisible({ timeout: 10000 });
   });
 
   test('should handle session expiry gracefully', async ({ page }) => {

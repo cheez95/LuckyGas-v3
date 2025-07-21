@@ -350,10 +350,10 @@ const Dashboard: React.FC = () => {
       </Row>
 
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-        <Col span={24}>
+        <Col xs={24} lg={12}>
           <Card title="系統功能概覽">
             <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={12} sm={12}>
                 <Card size="small" hoverable>
                   <Space direction="vertical" align="center" style={{ width: '100%' }}>
                     <ShoppingCartOutlined style={{ fontSize: 32, color: '#1890ff' }} />
@@ -361,7 +361,7 @@ const Dashboard: React.FC = () => {
                   </Space>
                 </Card>
               </Col>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={12} sm={12}>
                 <Card size="small" hoverable>
                   <Space direction="vertical" align="center" style={{ width: '100%' }}>
                     <CarOutlined style={{ fontSize: 32, color: '#52c41a' }} />
@@ -369,7 +369,7 @@ const Dashboard: React.FC = () => {
                   </Space>
                 </Card>
               </Col>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={12} sm={12}>
                 <Card size="small" hoverable>
                   <Space direction="vertical" align="center" style={{ width: '100%' }}>
                     <LineChartOutlined style={{ fontSize: 32, color: '#fa8c16' }} />
@@ -377,7 +377,7 @@ const Dashboard: React.FC = () => {
                   </Space>
                 </Card>
               </Col>
-              <Col xs={24} sm={12} md={6}>
+              <Col xs={12} sm={12}>
                 <Card size="small" hoverable>
                   <Space direction="vertical" align="center" style={{ width: '100%' }}>
                     <RiseOutlined style={{ fontSize: 32, color: '#eb2f96' }} />
@@ -386,6 +386,27 @@ const Dashboard: React.FC = () => {
                 </Card>
               </Col>
             </Row>
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title={t('dashboard.upcomingFeatures')} data-testid="upcoming-features-card">
+            <List
+              size="small"
+              dataSource={[
+                t('dashboard.features.realTimeTracking'),
+                t('dashboard.features.demandPrediction'),
+                t('dashboard.features.routeMap'),
+                t('dashboard.features.satisfaction')
+              ]}
+              renderItem={(item) => (
+                <List.Item>
+                  <Space>
+                    <RocketOutlined style={{ color: '#1890ff' }} />
+                    {item}
+                  </Space>
+                </List.Item>
+              )}
+            />
           </Card>
         </Col>
       </Row>

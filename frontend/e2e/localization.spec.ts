@@ -209,19 +209,17 @@ test.describe('Traditional Chinese Localization', () => {
     // Open add customer form
     await customerPage.clickAddCustomer();
     
-    // Check form labels
-    await expect(page.getByText('客戶代碼')).toBeVisible();
-    await expect(page.getByText('客戶名稱')).toBeVisible();
-    await expect(page.getByText('簡稱')).toBeVisible();
+    // Check form labels - using actual labels from the form
+    await expect(page.getByText('客戶編號')).toBeVisible();
+    await expect(page.getByText('客戶簡稱')).toBeVisible();
     await expect(page.getByText('發票抬頭')).toBeVisible();
-    await expect(page.getByText('聯絡電話')).toBeVisible();
-    await expect(page.getByText('手機')).toBeVisible();
+    await expect(page.getByText('客戶類型')).toBeVisible();
     await expect(page.getByText('地址')).toBeVisible();
-    await expect(page.getByText('區域')).toBeVisible();
-    await expect(page.getByText('配送時間')).toBeVisible();
-    await expect(page.getByText('平均日用量')).toBeVisible();
-    await expect(page.getByText('最大週期天數')).toBeVisible();
-    await expect(page.getByText('可延遲天數')).toBeVisible();
+    await expect(page.getByText('電話')).toBeVisible();
+    await expect(page.getByText('電子郵件')).toBeVisible();
+    await expect(page.getByText('配送區域')).toBeVisible();
+    await expect(page.getByText('配送時段')).toBeVisible();
+    await expect(page.getByText('付款方式')).toBeVisible();
     
     // Check buttons
     await expect(customerPage.modalConfirmButton).toContainText('確定');

@@ -253,7 +253,7 @@ const DriverInterface: React.FC = () => {
     <div className="driver-interface">
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* Header with route info */}
-        <Card>
+        <Card data-testid="current-route">
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Title level={3} style={{ margin: 0 }}>今日配送路線</Title>
@@ -359,9 +359,11 @@ const DriverInterface: React.FC = () => {
             <Empty description="沒有配送站點" />
           ) : (
             <List
+              data-testid="routes-list"
               dataSource={stops}
               renderItem={(stop) => (
                 <Card
+                  data-testid="delivery-item"
                   style={{
                     marginBottom: 16,
                     borderColor: stop.is_completed ? '#52c41a' : '#1890ff',
@@ -392,6 +394,7 @@ const DriverInterface: React.FC = () => {
                         icon={<CheckCircleOutlined />}
                         onClick={() => handleDeliveryClick(stop)}
                         disabled={route.status !== 'in_progress'}
+                        data-testid="complete-delivery-btn"
                       >
                         完成配送
                       </Button>

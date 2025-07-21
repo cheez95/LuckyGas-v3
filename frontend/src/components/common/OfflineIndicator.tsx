@@ -23,7 +23,7 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
 
   if (isOnline && syncing) {
     return (
-      <Tag color="processing" icon={<CloudSyncOutlined spin />}>
+      <Tag color="processing" icon={<CloudSyncOutlined spin />} data-testid="sync-status">
         同步中...
       </Tag>
     );
@@ -33,7 +33,7 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
     return (
       <Tooltip title={`${pendingSync} 筆資料待同步`}>
         <Badge count={pendingSync} size="small">
-          <Tag color="warning" icon={<CloudSyncOutlined />}>
+          <Tag color="warning" icon={<CloudSyncOutlined />} data-testid="sync-status">
             待同步
           </Tag>
         </Badge>
@@ -44,7 +44,7 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   return (
     <Tooltip title="資料將在連線恢復後自動同步">
       <Badge count={pendingSync} size="small">
-        <Tag color="error" icon={<WifiOutlined />}>
+        <Tag color="error" icon={<WifiOutlined />} data-testid="offline-indicator">
           離線
         </Tag>
       </Badge>

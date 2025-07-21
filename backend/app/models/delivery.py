@@ -60,6 +60,7 @@ class DeliveryPrediction(Base):
     confidence_score = Column(Float, default=0.0)  # 0.0 to 1.0
     model_version = Column(String(50))
     factors_json = Column(Text)  # JSON string of factors that influenced the prediction
+    batch_id = Column(Integer, ForeignKey("prediction_batches.id"), nullable=True, index=True)
     
     # Status
     is_converted_to_order = Column(Boolean, default=False)

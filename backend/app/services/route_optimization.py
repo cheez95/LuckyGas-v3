@@ -4,7 +4,7 @@ Route optimization service integrating with Google Routes API
 from typing import List, Dict, Optional
 from datetime import datetime, date
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, insert, update
 from sqlalchemy.orm import selectinload
 import logging
 
@@ -190,7 +190,7 @@ class RouteOptimizationService:
         target_date: date,
         session: AsyncSession
     ) -> DeliveryRoute:
-        """Create a route record from optimization data"""
+        """Create a route record from optimization data using bulk operations"""
         # Create route
         route = DeliveryRoute(
             route_number=route_data["route_number"],
@@ -208,25 +208,38 @@ class RouteOptimizationService:
         session.add(route)
         await session.flush()  # Get route ID
         
-        # Create stops
-        for stop_data in route_data["stops"]:
-            stop = RouteStop(
-                route_id=route.id,
-                order_id=stop_data["order_id"],
-                stop_sequence=stop_data["stop_sequence"],
-                address=stop_data["address"],
-                latitude=stop_data["lat"],
-                longitude=stop_data["lng"],
-                estimated_arrival=stop_data.get("estimated_arrival"),
-                is_completed=False
+        # Prepare bulk data for stops
+        stops_data = [
+            {
+                "route_id": route.id,
+                "order_id": stop_data["order_id"],
+                "stop_sequence": stop_data["stop_sequence"],
+                "address": stop_data["address"],
+                "latitude": stop_data["lat"],
+                "longitude": stop_data["lng"],
+                "estimated_arrival": stop_data.get("estimated_arrival"),
+                "is_completed": False,
+                "service_duration_minutes": stop_data.get("service_time", 10)
+            }
+            for stop_data in route_data["stops"]
+        ]
+        
+        # Bulk insert stops
+        if stops_data:
+            await session.execute(
+                insert(RouteStop).values(stops_data)
             )
-            session.add(stop)
             
-            # Update order status
-            order = await session.get(Order, stop_data["order_id"])
-            if order:
-                order.status = OrderStatus.ASSIGNED
-                order.assigned_route_id = route.id
+            # Bulk update order statuses
+            order_ids = [stop["order_id"] for stop in route_data["stops"]]
+            await session.execute(
+                update(Order)
+                .where(Order.id.in_(order_ids))
+                .values(
+                    status=OrderStatus.ASSIGNED,
+                    assigned_route_id=route.id
+                )
+            )
         
         return route
     

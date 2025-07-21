@@ -34,6 +34,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { routeService, RouteWithDetails, RouteStop } from '../../services/route.service';
 import { orderService } from '../../services/order.service';
@@ -41,6 +42,7 @@ import GoogleMapsPlaceholder, { MapMarker } from '../common/GoogleMapsPlaceholde
 
 
 const RouteManagement: React.FC = () => {
+  const { t } = useTranslation();
   const { on } = useWebSocket();
   const [routes, setRoutes] = useState<RouteWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
@@ -298,10 +300,10 @@ const RouteManagement: React.FC = () => {
               icon={<RocketOutlined />}
               onClick={() => setOptimizeModalVisible(true)}
             >
-              優化路線
+              {t('route.optimize')}
             </Button>
             <Button icon={<ReloadOutlined />} onClick={fetchRoutes}>
-              刷新
+              {t('app.refresh')}
             </Button>
           </Space>
         }
