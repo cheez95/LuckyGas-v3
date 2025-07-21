@@ -208,9 +208,8 @@ async def delete_customer(
     customer.is_terminated = True
     await db.commit()
     
-    # Invalidate specific customer cache and customer list cache
-    await cache.invalidate(f"customer:delete_customer:{customer_id}:*")
-    await cache.invalidate("customers:list:*")
+    # Clear cache after delete
+    await FastAPICache.clear(namespace="luckygas-cache")
     
     return {"message": "客戶已停用"}
 
@@ -218,7 +217,7 @@ async def delete_customer(
 # Customer Inventory Endpoints
 
 @router.get("/{customer_id}/inventory", response_model=CustomerInventoryList)
-@cache_result("customer:inventory", expire=timedelta(hours=1))
+@cache(expire=3600)  # 1 hour
 async def get_customer_inventory(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -346,7 +345,7 @@ async def update_customer_inventory(
     # Load related data
     await db.refresh(inventory, ["gas_product"])
     
-    # Invalidate customer inventory cache
-    await cache.invalidate(f"customer:inventory:update_customer_inventory:{customer_id}:*")
+    # Clear cache after inventory update
+    await FastAPICache.clear(namespace="luckygas-cache")
     
     return inventory

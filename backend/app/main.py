@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 import time
-import aioredis
+import redis.asyncio as redis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -22,13 +22,13 @@ async def lifespan(app: FastAPI):
     await create_db_and_tables()
     
     # Initialize FastAPI-Cache2
-    redis = aioredis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
-    FastAPICache.init(RedisBackend(redis), prefix="luckygas-cache")
+    redis_client = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
+    FastAPICache.init(RedisBackend(redis_client), prefix="luckygas-cache")
     
     yield
     
     # Shutdown
-    await redis.close()
+    await redis_client.close()
 
 
 app = FastAPI(

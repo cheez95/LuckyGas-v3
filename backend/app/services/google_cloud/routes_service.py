@@ -10,10 +10,14 @@ from dataclasses import dataclass
 import logging
 
 from app.core.google_cloud_config import get_gcp_config
+from app.core.metrics import route_optimization_histogram
 from app.models.route import Route as DeliveryRoute, RouteStop
 from app.models.order import Order
 from app.models.customer import Customer
 from app.core.config import settings
+from app.services.optimization.ortools_optimizer import (
+    ortools_optimizer, VRPStop, VRPVehicle
+)
 
 logger = logging.getLogger(__name__)
 
@@ -230,31 +234,116 @@ class GoogleRoutesService:
         date: datetime
     ) -> List[Dict]:
         """
-        Optimize routes for multiple drivers
+        Optimize routes for multiple drivers using OR-Tools VRP solver
         """
-        # Group orders by geographic clusters
-        clusters = self._cluster_orders_by_location(orders, len(drivers))
-        
-        # Optimize each cluster
-        optimization_tasks = []
-        for i, (driver, cluster) in enumerate(zip(drivers, clusters)):
-            task = self._optimize_driver_route(
-                driver=driver,
-                orders=cluster,
-                route_number=f"R{date.strftime('%Y%m%d')}-{i+1:02d}"
+        # Convert orders to VRPStop format
+        stops = []
+        for order in orders:
+            if not order.customer:
+                continue
+                
+            stop = VRPStop(
+                order_id=order.id,
+                customer_id=order.customer_id,
+                customer_name=order.customer.short_name,
+                address=order.delivery_address or order.customer.address,
+                latitude=order.customer.latitude or self.depot_location[0],
+                longitude=order.customer.longitude or self.depot_location[1],
+                demand=self._extract_demand(order),
+                time_window=self._get_time_window(order),
+                service_time=self._estimate_service_time(order)
             )
-            optimization_tasks.append(task)
+            stops.append(stop)
         
-        # Run optimizations in parallel
-        optimized_routes = await asyncio.gather(*optimization_tasks)
+        # Convert drivers to VRPVehicle format
+        vehicles = []
+        for driver in drivers:
+            vehicle = VRPVehicle(
+                driver_id=driver["id"],
+                driver_name=driver["name"],
+                capacity={
+                    "50kg": 10,
+                    "20kg": 20,
+                    "16kg": 25,
+                    "10kg": 40,
+                    "4kg": 50
+                },
+                start_location=self.depot_location,
+                max_travel_time=480  # 8 hours
+            )
+            vehicles.append(vehicle)
         
-        return optimized_routes
+        # Optimize using OR-Tools
+        logger.info(f"Optimizing routes for {len(stops)} orders and {len(drivers)} drivers")
+        
+        # Track optimization time
+        import time
+        start_time = time.time()
+        optimized_routes = ortools_optimizer.optimize(stops, vehicles)
+        optimization_time = time.time() - start_time
+        
+        # Record metrics
+        route_optimization_histogram.labels(
+            method="OR-Tools VRP",
+            num_stops=str(len(stops))
+        ).observe(optimization_time)
+        
+        logger.info(f"Route optimization completed in {optimization_time:.2f} seconds")
+        
+        # Get turn-by-turn directions from Google Routes API for each route
+        route_results = []
+        for vehicle_idx, route_stops in optimized_routes.items():
+            if not route_stops:
+                continue
+                
+            # Get Google directions for visualization
+            google_route = await self._get_google_directions(
+                self.depot_location,
+                route_stops
+            )
+            
+            # Build route data
+            route_data = {
+                "route_number": f"R{date.strftime('%Y%m%d')}-{vehicle_idx+1:02d}",
+                "driver_id": vehicles[vehicle_idx].driver_id,
+                "vehicle_id": vehicle_idx,
+                "date": date.isoformat(),
+                "status": "optimized",
+                "area": self._determine_area(route_stops),
+                "stops": [
+                    {
+                        "order_id": stop.order_id,
+                        "customer_id": stop.customer_id,
+                        "customer_name": stop.customer_name,
+                        "address": stop.address,
+                        "lat": stop.latitude,
+                        "lng": stop.longitude,
+                        "stop_sequence": idx + 1,
+                        "estimated_arrival": self._minutes_to_datetime(
+                            date, stop.estimated_arrival
+                        ),
+                        "service_time": stop.service_time,
+                        "products": stop.demand
+                    }
+                    for idx, stop in enumerate(route_stops)
+                ],
+                "total_stops": len(route_stops),
+                "total_distance_km": google_route.get("distance", 0),
+                "estimated_duration_minutes": google_route.get("duration", 0),
+                "polyline": google_route.get("polyline", ""),
+                "optimized": True,
+                "optimization_method": "OR-Tools VRP"
+            }
+            route_results.append(route_data)
+        
+        return route_results
     
     async def _optimize_driver_route(
         self,
         driver: Dict,
         orders: List[Order],
-        route_number: str
+        route_number: str,
+        date: datetime
     ) -> Dict:
         """Optimize a single driver's route"""
         
@@ -375,6 +464,37 @@ class GoogleRoutesService:
                 clusters.append(orders[start:end])
             return clusters
     
+    def _extract_demand(self, order: Order) -> Dict[str, int]:
+        """Extract product demands from order"""
+        demand = {}
+        for size in [50, 20, 16, 10, 4]:
+            qty_field = f"quantity_{size}kg"
+            if hasattr(order, qty_field):
+                qty = getattr(order, qty_field, 0)
+                if qty > 0:
+                    demand[f"{size}kg"] = qty
+        return demand
+    
+    def _get_time_window(self, order: Order) -> Tuple[int, int]:
+        """Convert delivery time to minutes from day start"""
+        if order.customer and order.customer.delivery_time_start:
+            start_hour = int(order.customer.delivery_time_start.split(":")[0])
+            start_minutes = start_hour * 60
+        else:
+            start_minutes = 8 * 60  # Default 8 AM
+            
+        if order.customer and order.customer.delivery_time_end:
+            end_hour = int(order.customer.delivery_time_end.split(":")[0])
+            end_minutes = end_hour * 60
+        else:
+            end_minutes = 18 * 60  # Default 6 PM
+            
+        return (start_minutes, end_minutes)
+    
+    def _minutes_to_datetime(self, base_date: datetime, minutes: int) -> datetime:
+        """Convert minutes from day start to datetime"""
+        return datetime.combine(base_date.date(), datetime.min.time()) + timedelta(minutes=minutes)
+    
     def _estimate_service_time(self, order: Order) -> int:
         """Estimate service time for an order in minutes"""
         base_time = 5  # Base time for any delivery
@@ -404,7 +524,80 @@ class GoogleRoutesService:
         
         return products
     
-    def _determine_area(self, stops: List[Dict]) -> str:
+    async def _get_google_directions(
+        self,
+        depot: Tuple[float, float],
+        stops: List[VRPStop]
+    ) -> Dict:
+        """Get turn-by-turn directions from Google Routes API for visualization"""
+        if not self.api_key or not stops:
+            return {"distance": 0, "duration": 0, "polyline": ""}
+        
+        # Create waypoints for Google Routes API
+        waypoints = []
+        for stop in stops:
+            waypoints.append({
+                "location": {
+                    "latLng": {
+                        "latitude": stop.latitude,
+                        "longitude": stop.longitude
+                    }
+                }
+            })
+        
+        request_body = {
+            "origin": {
+                "location": {
+                    "latLng": {
+                        "latitude": depot[0],
+                        "longitude": depot[1]
+                    }
+                }
+            },
+            "destination": {
+                "location": {
+                    "latLng": {
+                        "latitude": depot[0],
+                        "longitude": depot[1]
+                    }
+                }
+            },
+            "intermediates": waypoints,
+            "travelMode": "DRIVE",
+            "routingPreference": "TRAFFIC_AWARE",
+            "optimizeWaypointOrder": False,  # Already optimized by OR-Tools
+            "languageCode": "zh-TW",
+            "regionCode": "TW"
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    "Content-Type": "application/json",
+                    "X-Goog-Api-Key": self.api_key,
+                    "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline"
+                }
+                
+                async with session.post(
+                    self.base_url,
+                    json=request_body,
+                    headers=headers
+                ) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        if result.get("routes"):
+                            route = result["routes"][0]
+                            return {
+                                "distance": route.get("distanceMeters", 0) / 1000,  # Convert to km
+                                "duration": self._parse_duration(route.get("duration", "0s")),
+                                "polyline": route.get("polyline", {}).get("encodedPolyline", "")
+                            }
+        except Exception as e:
+            logger.error(f"Failed to get Google directions: {e}")
+        
+        return {"distance": 0, "duration": 0, "polyline": ""}
+    
+    def _determine_area(self, stops: List[Any]) -> str:
         """Determine the primary area for a route"""
         if not stops:
             return "Unknown"
