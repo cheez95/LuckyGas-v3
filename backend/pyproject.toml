@@ -35,4 +35,6 @@ dependencies = [
     "websockets>=12.0",
     "python-dotenv>=1.0.0",
     "ortools>=9.8.3296",
+    "fastapi-cache2[redis]>=0.2.1",
+    "prometheus-fastapi-instrumentator>=6.1.0",
 ]

@@ -12,13 +12,14 @@ from app.models.customer_inventory import CustomerInventory as CustomerInventory
 from app.models.gas_product import GasProduct as GasProductModel
 from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate, CustomerList
 from app.schemas.customer_inventory import CustomerInventory, CustomerInventoryUpdate, CustomerInventoryList
-from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
+from fastapi_cache.decorator import cache
+from fastapi_cache import FastAPICache
 
 router = APIRouter()
 
 
 @router.get("/", response_model=CustomerList)
-@cache_result("customers:list", expire=timedelta(minutes=15))
+@cache(expire=900)  # 15 minutes
 async def get_customers(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
@@ -85,7 +86,7 @@ async def get_customers(
 
 
 @router.get("/{customer_id}", response_model=Customer)
-@cache_result("customer", expire=timedelta(hours=2))
+@cache(expire=7200)  # 2 hours
 async def get_customer(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -111,7 +112,6 @@ async def get_customer(
 
 
 @router.post("/", response_model=Customer)
-@invalidate_cache("customers:list:*")
 async def create_customer(
     customer_in: CustomerCreate,
     db: AsyncSession = Depends(get_db),
@@ -137,6 +137,9 @@ async def create_customer(
     db.add(db_customer)
     await db.commit()
     await db.refresh(db_customer)
+    
+    # Clear cache
+    await FastAPICache.clear(namespace="luckygas-cache")
     
     return db_customer
 
@@ -173,9 +176,8 @@ async def update_customer(
     await db.commit()
     await db.refresh(customer)
     
-    # Invalidate specific customer cache and customer list cache
-    await cache.invalidate(f"customer:update_customer:{customer_id}:*")
-    await cache.invalidate("customers:list:*")
+    # Clear cache after update
+    await FastAPICache.clear(namespace="luckygas-cache")
     
     return customer
 
