@@ -15,12 +15,8 @@ from app.core.google_cloud_config import get_gcp_config
 
 logger = logging.getLogger(__name__)
 
-# Import the appropriate service based on configuration
-gcp_config = get_gcp_config()
-if gcp_config.is_vertex_ai_configured():
-    from app.services.google_cloud.vertex_ai_service import vertex_ai_service as demand_prediction_service
-else:
-    from app.services.google_cloud.vertex_ai import demand_prediction_service
+# Import the enhanced Vertex AI service
+from app.services.google_cloud.vertex_ai_service_enhanced import enhanced_vertex_ai_service as demand_prediction_service
 from app.schemas.prediction import (
     PredictionCreate,
     PredictionResponse,

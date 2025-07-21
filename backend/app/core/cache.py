@@ -188,6 +188,13 @@ class CacheService:
 cache = CacheService()
 
 
+async def get_redis_client():
+    """Get Redis client instance for monitoring components"""
+    if not cache._connected:
+        await cache.connect()
+    return cache.redis
+
+
 def cache_key(*args, **kwargs) -> str:
     """Generate cache key from arguments"""
     parts = [str(arg) for arg in args]

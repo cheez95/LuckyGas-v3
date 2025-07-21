@@ -1,0 +1,288 @@
+"""
+Unit tests for API Key Manager
+"""
+import pytest
+from unittest.mock import Mock, patch, AsyncMock
+import os
+from cryptography.fernet import Fernet
+import base64
+
+from app.core.security.api_key_manager import (
+    APIKeyManager,
+    LocalEncryptedKeyManager,
+    GCPSecretManager,
+    get_api_key_manager
+)
+
+
+class TestLocalEncryptedKeyManager:
+    """Test cases for LocalEncryptedKeyManager"""
+    
+    @pytest.fixture
+    def temp_key_file(self, tmp_path):
+        """Create a temporary key file"""
+        key_file = tmp_path / ".api_keys.enc"
+        return str(key_file)
+    
+    @pytest.fixture
+    def manager(self, temp_key_file):
+        """Create a LocalEncryptedKeyManager instance"""
+        return LocalEncryptedKeyManager(key_file=temp_key_file)
+    
+    @pytest.mark.asyncio
+    async def test_set_and_get_key(self, manager):
+        """Test setting and getting an API key"""
+        # Set a key
+        success = await manager.set_key("test_api", "secret_key_123")
+        assert success is True
+        
+        # Get the key
+        retrieved_key = await manager.get_key("test_api")
+        assert retrieved_key == "secret_key_123"
+    
+    @pytest.mark.asyncio
+    async def test_get_nonexistent_key(self, manager):
+        """Test getting a key that doesn't exist"""
+        key = await manager.get_key("nonexistent")
+        assert key is None
+    
+    @pytest.mark.asyncio
+    async def test_update_existing_key(self, manager):
+        """Test updating an existing key"""
+        # Set initial key
+        await manager.set_key("test_api", "initial_key")
+        
+        # Update the key
+        success = await manager.set_key("test_api", "updated_key")
+        assert success is True
+        
+        # Verify update
+        retrieved_key = await manager.get_key("test_api")
+        assert retrieved_key == "updated_key"
+    
+    @pytest.mark.asyncio
+    async def test_delete_key(self, manager):
+        """Test deleting a key"""
+        # Set a key
+        await manager.set_key("test_api", "secret_key")
+        
+        # Delete the key
+        success = await manager.delete_key("test_api")
+        assert success is True
+        
+        # Verify deletion
+        key = await manager.get_key("test_api")
+        assert key is None
+    
+    @pytest.mark.asyncio
+    async def test_delete_nonexistent_key(self, manager):
+        """Test deleting a key that doesn't exist"""
+        success = await manager.delete_key("nonexistent")
+        assert success is False
+    
+    @pytest.mark.asyncio
+    async def test_list_keys(self, manager):
+        """Test listing all key names"""
+        # Set multiple keys
+        await manager.set_key("api1", "key1")
+        await manager.set_key("api2", "key2")
+        await manager.set_key("api3", "key3")
+        
+        # List keys
+        keys = await manager.list_keys()
+        assert set(keys) == {"api1", "api2", "api3"}
+    
+    @pytest.mark.asyncio
+    async def test_encryption_key_generation(self, manager):
+        """Test that encryption key is properly generated"""
+        assert manager.cipher_suite is not None
+        assert isinstance(manager.cipher_suite._signing_key, bytes)
+        assert isinstance(manager.cipher_suite._encryption_key, bytes)
+    
+    @pytest.mark.asyncio
+    async def test_file_persistence(self, temp_key_file):
+        """Test that keys persist across manager instances"""
+        # Create first manager and set keys
+        manager1 = LocalEncryptedKeyManager(key_file=temp_key_file)
+        await manager1.set_key("persistent_api", "persistent_key")
+        
+        # Create second manager with same file
+        manager2 = LocalEncryptedKeyManager(key_file=temp_key_file)
+        
+        # Verify key persists
+        key = await manager2.get_key("persistent_api")
+        assert key == "persistent_key"
+    
+    @pytest.mark.asyncio
+    async def test_concurrent_access(self, manager):
+        """Test concurrent access to keys"""
+        import asyncio
+        
+        async def set_key(name, value):
+            await manager.set_key(name, value)
+        
+        async def get_key(name):
+            return await manager.get_key(name)
+        
+        # Concurrent operations
+        await asyncio.gather(
+            set_key("concurrent1", "value1"),
+            set_key("concurrent2", "value2"),
+            set_key("concurrent3", "value3")
+        )
+        
+        # Verify all keys
+        results = await asyncio.gather(
+            get_key("concurrent1"),
+            get_key("concurrent2"),
+            get_key("concurrent3")
+        )
+        
+        assert results == ["value1", "value2", "value3"]
+
+
+class TestGCPSecretManager:
+    """Test cases for GCPSecretManager"""
+    
+    @pytest.fixture
+    def mock_secret_client(self):
+        """Mock Google Secret Manager client"""
+        with patch("app.core.security.api_key_manager.secretmanager.SecretManagerServiceAsyncClient") as mock:
+            yield mock
+    
+    @pytest.fixture
+    def manager(self, mock_secret_client):
+        """Create a GCPSecretManager instance"""
+        with patch.dict(os.environ, {"GCP_PROJECT_ID": "test-project"}):
+            return GCPSecretManager()
+    
+    @pytest.mark.asyncio
+    async def test_get_key_success(self, manager, mock_secret_client):
+        """Test successfully getting a key from GCP"""
+        # Mock the client response
+        mock_response = Mock()
+        mock_response.payload.data = b"secret_value_123"
+        
+        mock_client_instance = AsyncMock()
+        mock_client_instance.access_secret_version.return_value = mock_response
+        mock_secret_client.return_value = mock_client_instance
+        
+        # Get the key
+        key = await manager.get_key("test_api")
+        
+        # Verify
+        assert key == "secret_value_123"
+        mock_client_instance.access_secret_version.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_get_key_not_found(self, manager, mock_secret_client):
+        """Test getting a key that doesn't exist in GCP"""
+        # Mock client to raise exception
+        mock_client_instance = AsyncMock()
+        mock_client_instance.access_secret_version.side_effect = Exception("Secret not found")
+        mock_secret_client.return_value = mock_client_instance
+        
+        # Get the key
+        key = await manager.get_key("nonexistent")
+        
+        # Verify
+        assert key is None
+    
+    @pytest.mark.asyncio
+    async def test_set_key_create_new(self, manager, mock_secret_client):
+        """Test creating a new secret in GCP"""
+        # Mock client responses
+        mock_client_instance = AsyncMock()
+        mock_client_instance.create_secret.return_value = Mock(name="projects/test-project/secrets/test_api")
+        mock_client_instance.add_secret_version.return_value = Mock()
+        mock_secret_client.return_value = mock_client_instance
+        
+        # Set the key
+        success = await manager.set_key("test_api", "new_secret_value")
+        
+        # Verify
+        assert success is True
+        mock_client_instance.create_secret.assert_called_once()
+        mock_client_instance.add_secret_version.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_set_key_update_existing(self, manager, mock_secret_client):
+        """Test updating an existing secret in GCP"""
+        # Mock client to indicate secret already exists
+        mock_client_instance = AsyncMock()
+        mock_client_instance.create_secret.side_effect = Exception("Secret already exists")
+        mock_client_instance.add_secret_version.return_value = Mock()
+        mock_secret_client.return_value = mock_client_instance
+        
+        # Set the key
+        success = await manager.set_key("test_api", "updated_value")
+        
+        # Verify
+        assert success is True
+        mock_client_instance.add_secret_version.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_delete_key(self, manager, mock_secret_client):
+        """Test deleting a secret from GCP"""
+        # Mock client response
+        mock_client_instance = AsyncMock()
+        mock_client_instance.delete_secret.return_value = None
+        mock_secret_client.return_value = mock_client_instance
+        
+        # Delete the key
+        success = await manager.delete_key("test_api")
+        
+        # Verify
+        assert success is True
+        mock_client_instance.delete_secret.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_list_keys(self, manager, mock_secret_client):
+        """Test listing all secrets from GCP"""
+        # Mock secrets
+        mock_secret1 = Mock()
+        mock_secret1.name = "projects/test-project/secrets/api_key_1"
+        mock_secret2 = Mock()
+        mock_secret2.name = "projects/test-project/secrets/api_key_2"
+        mock_secret3 = Mock()
+        mock_secret3.name = "projects/test-project/secrets/other_secret"
+        
+        # Mock client response
+        mock_client_instance = AsyncMock()
+        mock_client_instance.list_secrets.return_value = [
+            mock_secret1, mock_secret2, mock_secret3
+        ]
+        mock_secret_client.return_value = mock_client_instance
+        
+        # List keys
+        keys = await manager.list_keys()
+        
+        # Verify - only api_key_ prefixed secrets
+        assert set(keys) == {"1", "2"}
+
+
+class TestGetAPIKeyManager:
+    """Test cases for get_api_key_manager factory function"""
+    
+    @pytest.mark.asyncio
+    async def test_get_local_manager_by_default(self):
+        """Test that local manager is returned by default"""
+        with patch.dict(os.environ, {}, clear=True):
+            manager = await get_api_key_manager()
+            assert isinstance(manager, LocalEncryptedKeyManager)
+    
+    @pytest.mark.asyncio
+    async def test_get_gcp_manager_when_configured(self):
+        """Test that GCP manager is returned when GCP is configured"""
+        with patch.dict(os.environ, {"GCP_PROJECT_ID": "test-project"}):
+            with patch("app.core.security.api_key_manager.secretmanager.SecretManagerServiceAsyncClient"):
+                manager = await get_api_key_manager()
+                assert isinstance(manager, GCPSecretManager)
+    
+    @pytest.mark.asyncio
+    async def test_singleton_pattern(self):
+        """Test that the same manager instance is returned"""
+        with patch.dict(os.environ, {}, clear=True):
+            manager1 = await get_api_key_manager()
+            manager2 = await get_api_key_manager()
+            assert manager1 is manager2
