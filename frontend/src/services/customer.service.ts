@@ -40,7 +40,11 @@ export const customerService = {
     try {
       const response = await api.post<Customer>('/customers', data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      // For duplicate customer codes, throw with the original error message
+      if (error.response?.status === 400 && error.response?.data?.detail) {
+        throw new Error(error.response.data.detail);
+      }
       throw new Error(handleApiError(error));
     }
   },

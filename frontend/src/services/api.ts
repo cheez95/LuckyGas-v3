@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosError, AxiosInstance } from 'axios';
+import { message } from 'antd';
 import { navigateTo } from '../utils/router';
 
 // Extend axios config to include metadata
@@ -92,11 +93,32 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/login')) {
       // Clear token and redirect to login
       localStorage.removeItem('access_token');
+      message.error('登入已過期，請重新登入');
       
       // Only redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
         navigateTo('/login');
       }
+    }
+    
+    // Handle 404 errors
+    if (error.response?.status === 404) {
+      message.error('找不到請求的資源');
+    }
+    
+    // Handle 500 errors
+    if (error.response?.status >= 500) {
+      message.error('伺服器錯誤，請稍後再試');
+    }
+    
+    // Handle network errors
+    if (error.code === 'ERR_NETWORK') {
+      message.error('網路連線錯誤');
+    }
+    
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED') {
+      message.error('請求超時，請檢查網路連線');
     }
     
     return Promise.reject(error);

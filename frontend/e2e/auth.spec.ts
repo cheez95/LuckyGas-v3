@@ -6,6 +6,13 @@ test.describe('Authentication', () => {
   let loginPage: LoginPage;
   let dashboardPage: DashboardPage;
 
+  test.beforeAll(async ({ browserName }) => {
+    // Skip tests for browsers that are not installed
+    if (browserName === 'microsoft-edge' && process.env.CI) {
+      test.skip();
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);

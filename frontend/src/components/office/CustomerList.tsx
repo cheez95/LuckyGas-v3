@@ -69,8 +69,13 @@ const CustomerList: React.FC = () => {
       setIsModalVisible(false);
       form.resetFields();
       fetchCustomers(searchText, currentPage, pageSize);
-    } catch (error) {
-      message.error(isEditMode ? '更新客戶失敗' : '創建客戶失敗');
+    } catch (error: any) {
+      // Check for duplicate customer code error
+      if (error.message?.includes('客戶代碼已存在')) {
+        message.error('此客戶編號已存在，請使用其他編號');
+      } else {
+        message.error(isEditMode ? '更新客戶失敗' : '創建客戶失敗');
+      }
     }
   };
 
@@ -90,18 +95,19 @@ const CustomerList: React.FC = () => {
   // Handle delete
   const handleDelete = (customer: Customer) => {
     confirm({
-      title: '確認停用客戶',
+      title: '確認刪除客戶',
       icon: <ExclamationCircleOutlined />,
-      content: `確定要停用客戶 ${customer.short_name} 嗎？`,
+      content: `確定要刪除客戶 ${customer.short_name} 嗎？此操作無法復原。`,
       okText: '確認',
       cancelText: '取消',
+      okButtonProps: { danger: true },
       onOk: async () => {
         try {
-          await customerService.updateCustomer(customer.id, { is_active: false });
-          message.success('客戶已停用');
+          await customerService.deleteCustomer(customer.id);
+          message.success('客戶已刪除');
           fetchCustomers(searchText, currentPage, pageSize);
         } catch (error) {
-          message.error('停用客戶失敗');
+          message.error('刪除客戶失敗');
         }
       },
     });
@@ -221,9 +227,8 @@ const CustomerList: React.FC = () => {
             size="small"
             danger
             onClick={() => handleDelete(record)}
-            disabled={!record.is_active}
           >
-            停用
+            刪除
           </Button>
         </Space>
       ),
@@ -350,6 +355,28 @@ const CustomerList: React.FC = () => {
           >
             <Input.TextArea rows={2} />
           </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="電話"
+                rules={[
+                  { 
+                    pattern: /^(0[2-9]-?\d{4}-?\d{4}|09\d{2}-?\d{3}-?\d{3})$/,
+                    message: '請輸入有效的台灣電話號碼'
+                  }
+                ]}
+              >
+                <Input placeholder="02-1234-5678 或 0912-345-678" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="email" label="電子郵件">
+                <Input type="email" />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Row gutter={16}>
             <Col span={8}>

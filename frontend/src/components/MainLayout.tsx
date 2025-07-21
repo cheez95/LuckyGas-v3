@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Space, Typography } from 'antd';
 import {
@@ -15,6 +15,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationBell from './common/NotificationBell';
+import OfflineIndicator from './common/OfflineIndicator';
+import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -24,6 +26,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const { isOnline, syncPending, syncing } = useOfflineSync();
 
   // Menu items based on user role
   const getMenuItems = () => {
@@ -88,7 +91,7 @@ const MainLayout: React.FC = () => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '登出',
+      label: <span data-testid="logout-button">登出</span>,
       onClick: logout,
     },
   ];
@@ -133,6 +136,7 @@ const MainLayout: React.FC = () => {
               style: { fontSize: 18, padding: '0 24px', cursor: 'pointer' }
             })}
             <Space size="large">
+              <OfflineIndicator isOnline={isOnline} pendingSync={syncPending} syncing={syncing} />
               <NotificationBell />
               <Dropdown overlay={userMenu} trigger={['click']}>
                 <Space style={{ cursor: 'pointer' }} data-testid="user-menu-trigger">

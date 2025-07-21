@@ -346,7 +346,7 @@ const OrderList: React.FC = () => {
       title: '金額',
       dataIndex: 'final_amount',
       key: 'final_amount',
-      render: (amount) => `NT$ ${amount.toLocaleString()}`,
+      render: (amount) => `NT$ ${amount.toLocaleString()} 元`,
     },
     {
       title: '狀態',
@@ -624,13 +624,13 @@ const OrderList: React.FC = () => {
               )}
             </Descriptions.Item>
             <Descriptions.Item label="總金額">
-              NT$ {selectedOrder.total_amount.toLocaleString()}
+              NT$ {selectedOrder.total_amount.toLocaleString()} 元
             </Descriptions.Item>
             <Descriptions.Item label="折扣">
-              NT$ {selectedOrder.discount_amount.toLocaleString()}
+              NT$ {selectedOrder.discount_amount.toLocaleString()} 元
             </Descriptions.Item>
             <Descriptions.Item label="應付金額">
-              <strong>NT$ {selectedOrder.final_amount.toLocaleString()}</strong>
+              <strong>NT$ {selectedOrder.final_amount.toLocaleString()} 元</strong>
             </Descriptions.Item>
             <Descriptions.Item label="建立時間">
               {dayjs(selectedOrder.created_at).format('YYYY/MM/DD HH:mm')}

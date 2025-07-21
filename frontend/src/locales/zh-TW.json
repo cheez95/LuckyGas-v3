@@ -68,6 +68,7 @@
     "list": "客戶列表",
     "detail": "客戶詳情",
     "new": "新增客戶",
+    "addButton": "新增客戶",
     "edit": "編輯客戶",
     "code": "客戶代碼",
     "name": "客戶名稱",
@@ -138,6 +139,7 @@
     "list": "訂單列表",
     "detail": "訂單詳情",
     "new": "新增訂單",
+    "addButton": "新增訂單",
     "edit": "編輯訂單",
     "orderNumber": "訂單編號",
     "customer": "客戶",
@@ -271,7 +273,9 @@
       "notFound": "找不到資料",
       "validation": "資料驗證失敗",
       "unauthorized": "未授權的操作",
-      "serverError": "伺服器錯誤"
+      "serverError": "伺服器錯誤",
+      "duplicate": "此客戶編號已存在",
+      "required": "此欄位為必填"
     },
     "confirm": {
       "delete": "確定要刪除嗎？",

@@ -160,11 +160,26 @@ test.describe('Traditional Chinese Localization', () => {
     await loginPage.waitForLoginSuccess();
     await dashboardPage.navigateToOrders();
     
-    // Check date format in order list
-    const dateText = await page.locator('.ant-table-cell').filter({ hasText: '2025' }).first().textContent();
+    // Wait for table to load
+    await page.waitForSelector('.ant-table-tbody tr', { timeout: 5000 });
     
-    // Should be in YYYY/MM/DD format
-    expect(dateText).toMatch(/\d{4}\/\d{2}\/\d{2}/);
+    // Check date format in order list - specifically look for date column (配送日期)
+    // Find the column index for "配送日期"
+    const headers = await page.locator('.ant-table-thead th').allTextContents();
+    const dateColumnIndex = headers.findIndex(h => h.includes('配送日期'));
+    
+    if (dateColumnIndex !== -1) {
+      // Get the date from the first row in the correct column
+      const dateCell = await page.locator(`.ant-table-tbody tr:first-child td:nth-child(${dateColumnIndex + 1})`).textContent();
+      
+      // Should be in YYYY/MM/DD format
+      expect(dateCell).toMatch(/\d{4}\/\d{2}\/\d{2}/);
+    } else {
+      // Fallback: look for any cell that matches date pattern
+      const dateCells = await page.locator('.ant-table-cell').allTextContents();
+      const dateFound = dateCells.some(text => /^\d{4}\/\d{2}\/\d{2}$/.test(text?.trim() || ''));
+      expect(dateFound).toBe(true);
+    }
   });
 
   test('should display currency in TWD', async ({ page }) => {

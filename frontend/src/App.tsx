@@ -13,6 +13,9 @@ import { setNavigate } from './utils/router';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 
+// Common Components
+import ErrorBoundary from './components/common/ErrorBoundary';
+
 // Pages/Components (to be created)
 import Login from './components/Login';
 import MainLayout from './components/MainLayout';
@@ -48,26 +51,28 @@ const App: React.FC = () => {
         },
       }}
     >
-      <Router>
-        <NavigationSetup>
-          <AuthProvider>
-            <NotificationProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/" element={<MainLayout />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="customers" element={<CustomerList />} />
-                  <Route path="orders" element={<OrderList />} />
-                  <Route path="routes" element={<RouteManagement />} />
-                  <Route path="delivery-history" element={<DeliveryHistory />} />
-                  <Route path="driver" element={<DriverInterface />} />
-                </Route>
-              </Routes>
-            </NotificationProvider>
-          </AuthProvider>
-        </NavigationSetup>
-      </Router>
+      <ErrorBoundary>
+        <Router>
+          <NavigationSetup>
+            <AuthProvider>
+              <NotificationProvider>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/" element={<MainLayout />}>
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="customers" element={<CustomerList />} />
+                    <Route path="orders" element={<OrderList />} />
+                    <Route path="routes" element={<RouteManagement />} />
+                    <Route path="delivery-history" element={<DeliveryHistory />} />
+                    <Route path="driver" element={<DriverInterface />} />
+                  </Route>
+                </Routes>
+              </NotificationProvider>
+            </AuthProvider>
+          </NavigationSetup>
+        </Router>
+      </ErrorBoundary>
     </ConfigProvider>
   );
 };

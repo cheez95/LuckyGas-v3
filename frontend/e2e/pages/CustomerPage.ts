@@ -250,7 +250,7 @@ export class CustomerPage extends BasePage {
 
   async getTotalCustomerCount(): Promise<number> {
     const paginationText = await this.paginationInfo.textContent() || '';
-    const match = paginationText.match(/共 (\d+) 項/);
+    const match = paginationText.match(/共 (\d+) 筆資料/);
     return match ? parseInt(match[1]) : 0;
   }
 

@@ -9,11 +9,17 @@
   height: 100vh;
 }
 
+.main-layout .ant-layout-header {
+  position: relative;
+  z-index: 10;
+}
+
 .site-layout-content {
   margin: 24px 16px;
   padding: 24px;
   background: #fff;
   min-height: 280px;
+  overflow: auto;
 }
 
 /* Login page styles */

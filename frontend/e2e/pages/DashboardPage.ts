@@ -114,8 +114,26 @@ export class DashboardPage extends BasePage {
   }
 
   async logout() {
-    await this.userMenu.click();
+    // Ensure page is loaded
+    await this.page.waitForLoadState('networkidle');
+    
+    // For mobile, might need to scroll to top to ensure header is visible
+    const viewport = this.page.viewportSize();
+    if (viewport && viewport.width < 768) {
+      await this.page.evaluate(() => window.scrollTo(0, 0));
+      await this.page.waitForTimeout(500);
+    }
+    
+    // Click user menu with force option to bypass any overlapping elements
+    await this.userMenu.click({ force: true });
+    
+    // Wait for dropdown to be visible
+    await this.logoutMenuItem.waitFor({ state: 'visible', timeout: 5000 });
+    
+    // Click logout
     await this.logoutMenuItem.click();
+    
+    // Wait for redirect to login
     await this.page.waitForURL('**/login');
   }
 
