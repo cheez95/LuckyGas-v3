@@ -12,6 +12,7 @@ import { setNavigate } from './utils/router';
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 
 // Common Components
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -60,23 +61,25 @@ const App: React.FC = () => {
           <NavigationSetup>
             <AuthProvider>
               <NotificationProvider>
-                <SessionManager>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/" element={<MainLayout />}>
-                      <Route index element={<Navigate to="/dashboard" replace />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="customers" element={<CustomerManagement />} />
-                      <Route path="orders" element={<OrderManagement />} />
-                      <Route path="routes" element={<RoutePlanning />} />
-                      <Route path="delivery-history" element={<DeliveryHistory />} />
-                      <Route path="driver" element={<DriverInterface />} />
-                      <Route path="profile" element={<UserProfile />} />
-                    </Route>
-                  </Routes>
-                </SessionManager>
+                <WebSocketProvider>
+                  <SessionManager>
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/" element={<MainLayout />}>
+                        <Route index element={<Navigate to="/dashboard" replace />} />
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="customers" element={<CustomerManagement />} />
+                        <Route path="orders" element={<OrderManagement />} />
+                        <Route path="routes" element={<RoutePlanning />} />
+                        <Route path="delivery-history" element={<DeliveryHistory />} />
+                        <Route path="driver" element={<DriverInterface />} />
+                        <Route path="profile" element={<UserProfile />} />
+                      </Route>
+                    </Routes>
+                  </SessionManager>
+                </WebSocketProvider>
               </NotificationProvider>
             </AuthProvider>
           </NavigationSetup>

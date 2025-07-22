@@ -19,6 +19,7 @@ from app.middleware.metrics import MetricsMiddleware
 from app.middleware.rate_limiting import RateLimitMiddleware
 from app.core.db_metrics import DatabaseMetricsCollector
 from app.core.env_validation import validate_environment
+from app.services.websocket_service import websocket_manager
 
 # Setup structured logging
 setup_logging()
@@ -50,10 +51,18 @@ async def lifespan(app: FastAPI):
     metrics_task = asyncio.create_task(db_metrics_collector.start())
     logger.info("Database metrics collector started")
     
+    # Initialize WebSocket manager
+    await websocket_manager.initialize()
+    logger.info("WebSocket manager initialized")
+    
     yield
     
     # Shutdown
     logger.info("Shutting down Lucky Gas backend service")
+    
+    # Close WebSocket connections
+    await websocket_manager.close()
+    logger.info("WebSocket connections closed")
     
     # Stop metrics collector
     db_metrics_collector.stop()
@@ -197,7 +206,7 @@ app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["pred
 app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
 app.include_router(google_api_dashboard.router, prefix="/api/v1/google-api", tags=["google_api_dashboard"])
-app.include_router(websocket.router, tags=["websocket"])
+app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocket"])
 
 
 @app.get("/")

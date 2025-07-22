@@ -1,334 +1,231 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
-from typing import Dict, Set, List, Optional
-from datetime import datetime
-import json
-import asyncio
-import warnings
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
+from fastapi.security import OAuth2PasswordBearer
+from typing import Optional
+import jwt
+import uuid
+import logging
+
+from app.core.config import settings
+from app.services.websocket_service import websocket_manager
+from app.db.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_async_session
-from app.core.security import decode_access_token
-from app.models.user import User
-
-# Deprecation warning
-warnings.warn(
-    "WebSocket endpoint is deprecated. Please migrate to Socket.IO at /socket.io",
-    DeprecationWarning,
-    stacklevel=2
-)
-
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 
-class ConnectionManager:
-    """Manages WebSocket connections and broadcasting"""
-    
-    def __init__(self):
-        # Active connections by user_id
-        self.active_connections: Dict[int, WebSocket] = {}
-        # User roles for authorization
-        self.user_roles: Dict[int, str] = {}
-        # Topic subscriptions
-        self.subscriptions: Dict[str, Set[int]] = {
-            "orders": set(),
-            "routes": set(),
-            "predictions": set(),
-            "drivers": set(),
-            "notifications": set()
-        }
-    
-    async def connect(self, websocket: WebSocket, user_id: int, role: str):
-        """Connect a user to WebSocket"""
-        await websocket.accept()
-        self.active_connections[user_id] = websocket
-        self.user_roles[user_id] = role
-        
-        # Auto-subscribe based on role
-        if role in ["super_admin", "manager"]:
-            # Managers see everything
-            for topic in self.subscriptions:
-                self.subscriptions[topic].add(user_id)
-        elif role == "office_staff":
-            # Office staff see orders, routes, predictions
-            self.subscriptions["orders"].add(user_id)
-            self.subscriptions["routes"].add(user_id)
-            self.subscriptions["predictions"].add(user_id)
-            self.subscriptions["notifications"].add(user_id)
-        elif role == "driver":
-            # Drivers see routes and driver updates
-            self.subscriptions["routes"].add(user_id)
-            self.subscriptions["drivers"].add(user_id)
-            self.subscriptions["notifications"].add(user_id)
-        
-        # Send connection success message
-        await websocket.send_json({
-            "type": "connection",
-            "status": "connected",
-            "user_id": user_id,
-            "role": role,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-    
-    def disconnect(self, user_id: int):
-        """Disconnect a user"""
-        if user_id in self.active_connections:
-            del self.active_connections[user_id]
-            del self.user_roles[user_id]
-            
-            # Remove from all subscriptions
-            for topic in self.subscriptions:
-                self.subscriptions[topic].discard(user_id)
-    
-    async def send_personal_message(self, message: dict, user_id: int):
-        """Send message to specific user"""
-        if user_id in self.active_connections:
-            try:
-                await self.active_connections[user_id].send_json(message)
-            except Exception as e:
-                print(f"Error sending message to user {user_id}: {e}")
-                self.disconnect(user_id)
-    
-    async def broadcast_to_topic(self, topic: str, message: dict):
-        """Broadcast message to all subscribers of a topic"""
-        if topic not in self.subscriptions:
-            return
-        
-        disconnected_users = []
-        for user_id in self.subscriptions[topic]:
-            if user_id in self.active_connections:
-                try:
-                    await self.active_connections[user_id].send_json(message)
-                except Exception as e:
-                    print(f"Error broadcasting to user {user_id}: {e}")
-                    disconnected_users.append(user_id)
-        
-        # Clean up disconnected users
-        for user_id in disconnected_users:
-            self.disconnect(user_id)
-    
-    async def broadcast_to_role(self, role: str, message: dict):
-        """Broadcast message to all users with specific role"""
-        disconnected_users = []
-        for user_id, user_role in self.user_roles.items():
-            if user_role == role and user_id in self.active_connections:
-                try:
-                    await self.active_connections[user_id].send_json(message)
-                except Exception as e:
-                    print(f"Error broadcasting to user {user_id}: {e}")
-                    disconnected_users.append(user_id)
-        
-        # Clean up disconnected users
-        for user_id in disconnected_users:
-            self.disconnect(user_id)
-    
-    async def broadcast_to_all(self, message: dict):
-        """Broadcast message to all connected users"""
-        disconnected_users = []
-        for user_id, connection in self.active_connections.items():
-            try:
-                await connection.send_json(message)
-            except Exception as e:
-                print(f"Error broadcasting to user {user_id}: {e}")
-                disconnected_users.append(user_id)
-        
-        # Clean up disconnected users
-        for user_id in disconnected_users:
-            self.disconnect(user_id)
-
-
-# Global connection manager instance
-manager = ConnectionManager()
-
-
-async def get_current_ws_user(
+async def get_current_user_ws(
     websocket: WebSocket,
-    token: Optional[str] = None,
-    db: AsyncSession = Depends(get_async_session)
-) -> Optional[User]:
-    """Authenticate WebSocket connection"""
+    token: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+) -> Optional[dict]:
+    """
+    Authenticate WebSocket connection via query parameter token
+    """
     if not token:
-        # Try to get token from query params
-        token = websocket.query_params.get("token")
-    
-    if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        await websocket.close(code=4001, reason="Missing authentication token")
         return None
     
     try:
-        # Decode token
-        payload = decode_access_token(token)
-        username = payload.get("sub")
-        if not username:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id = payload.get("sub")
+        if not user_id:
+            await websocket.close(code=4001, reason="Invalid token")
             return None
         
-        # Get user from database by username
-        from sqlalchemy import select
-        result = await db.execute(
-            select(User).where(User.username == username)
-        )
-        user = result.scalar_one_or_none()
+        # TODO: Get user from database
+        # For now, return mock user data
+        return {
+            "user_id": user_id,
+            "role": payload.get("role", "customer"),
+            "email": payload.get("email", "")
+        }
         
-        if not user or not user.is_active:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return None
-        
-        return user
-    except Exception:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    except jwt.ExpiredSignatureError:
+        await websocket.close(code=4001, reason="Token expired")
+        return None
+    except jwt.InvalidTokenError:
+        await websocket.close(code=4001, reason="Invalid token")
         return None
 
 
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    db: AsyncSession = Depends(get_async_session)
+    token: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
 ):
-    """Main WebSocket endpoint for real-time updates"""
+    """
+    Main WebSocket endpoint for real-time communication
+    
+    Connection URL: ws://localhost:8000/api/v1/websocket/ws?token=<JWT_TOKEN>
+    """
     # Authenticate user
-    user = await get_current_ws_user(websocket, db=db)
+    user = await get_current_user_ws(websocket, token, db)
     if not user:
         return
     
-    # Connect user
-    await manager.connect(websocket, user.id, user.role)
+    # Generate connection ID
+    connection_id = str(uuid.uuid4())
     
     try:
+        # Accept connection
+        await websocket_manager.connect(
+            websocket,
+            connection_id,
+            user["user_id"],
+            user["role"]
+        )
+        
+        logger.info(f"WebSocket connection established: {connection_id}")
+        
+        # Handle messages
         while True:
-            # Receive message from client
-            data = await websocket.receive_json()
-            
-            # Handle different message types
-            message_type = data.get("type")
-            
-            if message_type == "ping":
-                # Respond to ping
-                await websocket.send_json({
-                    "type": "pong",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
-            
-            elif message_type == "subscribe":
-                # Subscribe to additional topics
-                topic = data.get("topic")
-                if topic in manager.subscriptions:
-                    manager.subscriptions[topic].add(user.id)
-                    await websocket.send_json({
-                        "type": "subscribed",
-                        "topic": topic,
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
-            
-            elif message_type == "unsubscribe":
-                # Unsubscribe from topic
-                topic = data.get("topic")
-                if topic in manager.subscriptions:
-                    manager.subscriptions[topic].discard(user.id)
-                    await websocket.send_json({
-                        "type": "unsubscribed",
-                        "topic": topic,
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
-            
-            elif message_type == "driver_location":
-                # Driver location update
-                if user.role == "driver":
-                    location_data = {
-                        "type": "driver_location_update",
-                        "driver_id": user.id,
-                        "latitude": data.get("latitude"),
-                        "longitude": data.get("longitude"),
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                    # Broadcast to routes topic
-                    await manager.broadcast_to_topic("routes", location_data)
-            
-            elif message_type == "delivery_status":
-                # Delivery status update
-                if user.role in ["driver", "office_staff", "manager", "super_admin"]:
-                    status_data = {
-                        "type": "delivery_status_update",
-                        "order_id": data.get("order_id"),
-                        "status": data.get("status"),
-                        "updated_by": user.id,
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                    # Broadcast to orders topic
-                    await manager.broadcast_to_topic("orders", status_data)
-            
-    except WebSocketDisconnect:
-        manager.disconnect(user.id)
-    except Exception as e:
-        print(f"WebSocket error for user {user.id}: {e}")
-        manager.disconnect(user.id)
+            try:
+                # Receive message
+                message = await websocket.receive_json()
+                
+                # Process message
+                await websocket_manager.handle_message(connection_id, message)
+                
+            except WebSocketDisconnect:
+                logger.info(f"WebSocket disconnected: {connection_id}")
+                break
+            except Exception as e:
+                logger.error(f"WebSocket error: {e}")
+                break
+    
+    finally:
+        # Clean up connection
+        await websocket_manager.disconnect(connection_id)
 
 
-# Utility functions for sending notifications from other parts of the application
+@router.websocket("/ws/driver")
+async def driver_websocket_endpoint(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Dedicated WebSocket endpoint for driver mobile apps
+    Optimized for location updates and delivery status
+    """
+    # Authenticate driver
+    user = await get_current_user_ws(websocket, token, db)
+    if not user or user["role"] != "driver":
+        await websocket.close(code=4003, reason="Driver access only")
+        return
+    
+    connection_id = f"driver-{str(uuid.uuid4())}"
+    
+    try:
+        await websocket_manager.connect(
+            websocket,
+            connection_id,
+            user["user_id"],
+            "driver"
+        )
+        
+        # Send initial driver data
+        await websocket.send_json({
+            "type": "driver.init",
+            "driver_id": user["user_id"],
+            "active_route": None,  # TODO: Get from database
+            "pending_deliveries": []  # TODO: Get from database
+        })
+        
+        while True:
+            try:
+                message = await websocket.receive_json()
+                
+                # Handle driver-specific messages
+                if message.get("type") == "location.update":
+                    # Validate location data
+                    if "latitude" in message and "longitude" in message:
+                        await websocket_manager.handle_driver_location(
+                            user["user_id"],
+                            message
+                        )
+                else:
+                    await websocket_manager.handle_message(connection_id, message)
+                    
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Driver WebSocket error: {e}")
+                break
+    
+    finally:
+        await websocket_manager.disconnect(connection_id)
 
-async def notify_order_update(order_id: int, status: str, details: dict = None):
-    """Notify about order status update"""
-    message = {
-        "type": "order_update",
-        "order_id": order_id,
-        "status": status,
-        "details": details or {},
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await manager.broadcast_to_topic("orders", message)
+
+@router.websocket("/ws/office")
+async def office_websocket_endpoint(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Office staff WebSocket endpoint with full access to all events
+    """
+    # Authenticate office staff
+    user = await get_current_user_ws(websocket, token, db)
+    if not user or user["role"] not in ["office_staff", "manager", "super_admin"]:
+        await websocket.close(code=4003, reason="Office access only")
+        return
+    
+    connection_id = f"office-{str(uuid.uuid4())}"
+    
+    try:
+        await websocket_manager.connect(
+            websocket,
+            connection_id,
+            user["user_id"],
+            "office"
+        )
+        
+        # Send initial dashboard data
+        await websocket.send_json({
+            "type": "office.init",
+            "user_id": user["user_id"],
+            "role": user["role"],
+            "active_drivers": [],  # TODO: Get from Redis/database
+            "pending_orders": [],  # TODO: Get from database
+            "today_routes": []  # TODO: Get from database
+        })
+        
+        while True:
+            try:
+                message = await websocket.receive_json()
+                await websocket_manager.handle_message(connection_id, message)
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Office WebSocket error: {e}")
+                break
+    
+    finally:
+        await websocket_manager.disconnect(connection_id)
 
 
-async def notify_route_update(route_id: int, update_type: str, details: dict = None):
-    """Notify about route updates"""
-    message = {
-        "type": "route_update",
-        "route_id": route_id,
-        "update_type": update_type,
-        "details": details or {},
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await manager.broadcast_to_topic("routes", message)
-
-
-async def notify_prediction_ready(batch_id: str, summary: dict):
-    """Notify when predictions are ready"""
-    message = {
-        "type": "prediction_ready",
-        "batch_id": batch_id,
-        "summary": summary,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await manager.broadcast_to_topic("predictions", message)
-
-
-async def notify_driver_assigned(driver_id: int, route_id: int, details: dict = None):
-    """Notify driver about route assignment"""
-    message = {
-        "type": "route_assigned",
-        "route_id": route_id,
-        "details": details or {},
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await manager.send_personal_message(message, driver_id)
-
-
-async def send_notification(user_id: int, title: str, message: str, priority: str = "normal"):
-    """Send general notification to specific user"""
-    notification = {
-        "type": "notification",
-        "title": title,
-        "message": message,
-        "priority": priority,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await manager.send_personal_message(notification, user_id)
-
-
-async def broadcast_system_message(message: str, priority: str = "normal"):
-    """Broadcast system message to all users"""
-    system_message = {
-        "type": "system_message",
-        "message": message,
-        "priority": priority,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    await manager.broadcast_to_all(system_message)
+@router.post("/broadcast/{event_type}")
+async def broadcast_event(
+    event_type: str,
+    data: dict,
+    channel: Optional[str] = None
+):
+    """
+    HTTP endpoint to broadcast events via WebSocket
+    Used by other services to send real-time updates
+    """
+    await websocket_manager.publish_event(
+        channel or "system",
+        {
+            "type": event_type,
+            **data
+        }
+    )
+    
+    return {"success": True, "event_type": event_type}

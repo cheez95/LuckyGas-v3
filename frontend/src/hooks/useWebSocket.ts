@@ -1,125 +1,180 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { websocketService, WebSocketMessage, MessageHandler } from '../services/websocket.service';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { notification } from 'antd';
+import { useAuth } from '../contexts/AuthContext';
 
-interface UseWebSocketOptions {
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  onError?: (error: Event) => void;
-  autoConnect?: boolean;
+export interface WebSocketMessage {
+  type: string;
+  data?: any;
+  timestamp?: string;
+  [key: string]: any;
 }
 
-export const useWebSocket = (options: UseWebSocketOptions = {}) => {
-  const { onConnect, onDisconnect, onError, autoConnect = true } = options;
+interface UseWebSocketOptions {
+  endpoint?: 'ws' | 'ws/driver' | 'ws/office';
+  onMessage?: (message: WebSocketMessage) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  autoReconnect?: boolean;
+  reconnectInterval?: number;
+}
+
+export const useWebSocket = ({
+  endpoint = 'ws',
+  onMessage,
+  onConnect,
+  onDisconnect,
+  autoReconnect = true,
+  reconnectInterval = 5000,
+}: UseWebSocketOptions = {}) => {
+  const { token } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionState, setConnectionState] = useState<string>('disconnected');
-  const listenersRef = useRef<Map<string, MessageHandler>>(new Map());
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const websocketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const handleConnect = () => {
-      setIsConnected(true);
-      setConnectionState('connected');
-      onConnect?.();
-    };
-
-    const handleDisconnect = () => {
-      setIsConnected(false);
-      setConnectionState('disconnected');
-      onDisconnect?.();
-    };
-
-    const handleError = (error: Event) => {
-      onError?.(error);
-    };
-
-    // Add event listeners
-    websocketService.on('connected', handleConnect);
-    websocketService.on('disconnected', handleDisconnect);
-    websocketService.on('error', handleError);
-
-    // Check initial connection state
-    setIsConnected(websocketService.isConnected());
-    setConnectionState(websocketService.getConnectionState());
-
-    // Auto-connect if enabled
-    if (autoConnect && !websocketService.isConnected()) {
-      websocketService.connect();
+  const connect = useCallback(() => {
+    if (!token || websocketRef.current?.readyState === WebSocket.OPEN) {
+      return;
     }
 
-    // Cleanup
-    return () => {
-      websocketService.off('connected', handleConnect);
-      websocketService.off('disconnected', handleDisconnect);
-      websocketService.off('error', handleError);
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${
+      window.location.host
+    }/api/v1/websocket/${endpoint}?token=${token}`;
 
-      // Remove all message listeners
-      listenersRef.current.forEach((handler, event) => {
-        websocketService.off(event, handler);
-      });
-      listenersRef.current.clear();
+    const ws = new WebSocket(wsUrl);
+    websocketRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+      onConnect?.();
+
+      // Start heartbeat
+      heartbeatIntervalRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'heartbeat' }));
+        }
+      }, 30000); // 30 seconds
     };
-  }, [onConnect, onDisconnect, onError, autoConnect]);
 
-  const subscribe = useCallback((topic: string) => {
-    websocketService.subscribe(topic);
-  }, []);
+    ws.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        setLastMessage(message);
+        onMessage?.(message);
 
-  const unsubscribe = useCallback((topic: string) => {
-    websocketService.unsubscribe(topic);
+        // Handle specific message types
+        handleSystemMessages(message);
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      notification.error({
+        message: '連線錯誤',
+        description: '與伺服器的即時連線發生錯誤',
+      });
+    };
+
+    ws.onclose = (event) => {
+      console.log('WebSocket disconnected', event.code, event.reason);
+      setIsConnected(false);
+      onDisconnect?.();
+
+      // Clear heartbeat
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
+
+      // Auto reconnect
+      if (autoReconnect && event.code !== 1000) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log('Attempting to reconnect...');
+          connect();
+        }, reconnectInterval);
+      }
+    };
+  }, [token, endpoint, onMessage, onConnect, onDisconnect, autoReconnect, reconnectInterval]);
+
+  const disconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+
+    if (websocketRef.current) {
+      websocketRef.current.close(1000, 'User disconnect');
+      websocketRef.current = null;
+    }
   }, []);
 
   const sendMessage = useCallback((message: WebSocketMessage) => {
-    websocketService.send(message);
+    if (websocketRef.current?.readyState === WebSocket.OPEN) {
+      websocketRef.current.send(JSON.stringify(message));
+    } else {
+      console.error('WebSocket is not connected');
+    }
   }, []);
 
-  const on = useCallback(<T extends WebSocketMessage = WebSocketMessage>(
-    event: string,
-    handler: MessageHandler<T>
-  ) => {
-    // Store reference to handler
-    listenersRef.current.set(event, handler as MessageHandler);
-    
-    // Add listener
-    websocketService.on(event, handler);
+  const handleSystemMessages = (message: WebSocketMessage) => {
+    switch (message.type) {
+      case 'system.notification':
+        notification.info({
+          message: '系統通知',
+          description: message.data?.message || '系統訊息',
+        });
+        break;
 
-    // Return cleanup function
+      case 'maintenance.alert':
+        notification.warning({
+          message: '維護通知',
+          description: message.data?.message || '系統維護中',
+          duration: 0,
+        });
+        break;
+
+      case 'order.delivered':
+        notification.success({
+          message: '訂單完成',
+          description: `訂單 ${message.data?.order_id} 已送達`,
+        });
+        break;
+
+      case 'route.assigned':
+        notification.info({
+          message: '路線指派',
+          description: `新路線已指派給您`,
+        });
+        break;
+
+      // Add more system message handlers as needed
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      connect();
+    }
+
     return () => {
-      websocketService.off(event, handler);
-      listenersRef.current.delete(event);
+      disconnect();
     };
-  }, []);
-
-  const off = useCallback((event: string, handler: MessageHandler) => {
-    websocketService.off(event, handler);
-    listenersRef.current.delete(event);
-  }, []);
+  }, [token, connect, disconnect]);
 
   return {
     isConnected,
-    connectionState,
-    subscribe,
-    unsubscribe,
+    lastMessage,
     sendMessage,
-    on,
-    off,
-    service: websocketService,
-  };
-};
-
-// Hook for driver-specific WebSocket features
-export const useDriverWebSocket = () => {
-  const ws = useWebSocket();
-
-  const updateLocation = useCallback((latitude: number, longitude: number) => {
-    websocketService.updateDriverLocation(latitude, longitude);
-  }, []);
-
-  const updateDeliveryStatus = useCallback((orderId: number, status: string) => {
-    websocketService.updateDeliveryStatus(orderId, status);
-  }, []);
-
-  return {
-    ...ws,
-    updateLocation,
-    updateDeliveryStatus,
+    connect,
+    disconnect,
   };
 };
