@@ -41,4 +41,5 @@ dependencies = [
     "prometheus-fastapi-instrumentator>=6.1.0",
     "python-json-logger>=2.0.7",
     "gcloud>=0.18.3",
+    "gsutil>=5.35",
 ]

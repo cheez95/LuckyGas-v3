@@ -1,0 +1,34 @@
+--- gcp-test-integration.py.old	2025-07-22 06:00:00.000000000 +0800
++++ gcp-test-integration.py	2025-07-22 06:10:00.000000000 +0800
+@@ -8,6 +8,7 @@
+ import sys
+ import json
+ from datetime import datetime
++from pathlib import Path
+ from typing import Dict, List, Tuple
+ 
+ # Color codes for output
+@@ -238,8 +239,22 @@
+         print("   cd backend && uv pip install google-cloud-storage google-cloud-aiplatform")
+     
+     print("\nUseful Commands:")
+-    print("  - Monitor infrastructure: ./gcp-monitor.sh")
++    
++    # Check if monitoring script exists and is executable
++    monitor_script = Path(__file__).parent / "gcp-monitor.sh"
++    if monitor_script.exists():
++        if os.access(monitor_script, os.X_OK):
++            print("  - Monitor infrastructure: ./gcp-monitor.sh")
++        else:
++            print("  - Monitor infrastructure: bash gcp-monitor.sh")
++            print_status("warning", f"Note: {monitor_script.name} is not executable. Run: chmod +x {monitor_script.name}")
++    else:
++        print_status("warning", "Monitoring script not found: gcp-monitor.sh")
++    
+     print("  - Check costs: gcloud billing accounts list")
+     print("  - View logs: gcloud logging read --limit 10")
++    
++    # Add environment info for debugging
++    print(f"\n{BLUE}Environment Info:{NC}")
++    print(f"  - Platform: {sys.platform}")
++    print(f"  - Python: {sys.version.split()[0]}")

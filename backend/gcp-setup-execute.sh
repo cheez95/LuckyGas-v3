@@ -19,6 +19,10 @@ BILLING_ACCOUNT="011479-B04C2D-B0F925"
 REGION="asia-east1"
 SERVICE_ACCOUNT_EMAIL="lucky-gas-prod@${PROJECT_ID}.iam.gserviceaccount.com"
 
+# Enable verbose logging
+export CLOUDSDK_CORE_VERBOSITY=debug
+export CLOUDSDK_CORE_LOG_HTTP=true
+
 # Paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
@@ -35,6 +39,11 @@ DRY_RUN=${DRY_RUN:-false}
 # Initialize logging
 exec 1> >(tee -a "$EXECUTION_LOG")
 exec 2>&1
+
+# Set up detailed gcloud logging
+export CLOUDSDK_CORE_VERBOSITY=debug
+gcloud config set core/log_http true
+gcloud config set core/user_output_enabled true
 
 echo "GCP Setup Execution Started at $(date)"
 echo "============================================="
@@ -70,16 +79,42 @@ execute_command() {
     local description=${2:-"Executing command"}
     
     print_status "info" "$description"
+    print_status "info" "Command: $cmd"
     
     if [ "$DRY_RUN" = "true" ]; then
         print_status "info" "[DRY RUN] Would execute: $cmd"
         return 0
     else
+        # Add timeout and verbose flags for gcloud commands
+        if [[ $cmd == *"gcloud"* ]]; then
+            # Add verbosity and timeout flags
+            cmd="$cmd --verbosity=debug"
+            
+            # Add timeout for API enable commands
+            if [[ $cmd == *"services enable"* ]]; then
+                print_status "warning" "API enablement may take several minutes..."
+                # Use timeout command if available
+                if command -v gtimeout &> /dev/null; then
+                    cmd="gtimeout 600 $cmd"  # 10 minute timeout
+                elif command -v timeout &> /dev/null; then
+                    cmd="timeout 600 $cmd"   # 10 minute timeout
+                fi
+            fi
+        fi
+        
+        print_status "info" "Executing with verbose logging: $cmd"
+        local start_time=$(date +%s)
+        
         if eval "$cmd"; then
-            print_status "success" "Command completed successfully"
+            local end_time=$(date +%s)
+            local duration=$((end_time - start_time))
+            print_status "success" "Command completed successfully in ${duration}s"
             return 0
         else
-            print_status "error" "Command failed: $cmd"
+            local exit_code=$?
+            local end_time=$(date +%s)
+            local duration=$((end_time - start_time))
+            print_status "error" "Command failed with exit code $exit_code after ${duration}s: $cmd"
             return 1
         fi
     fi
@@ -178,9 +213,38 @@ validate_project() {
     fi
     
     # Enable initial APIs
-    print_status "info" "Enabling core APIs..."
-    execute_command "gcloud services enable compute.googleapis.com cloudresourcemanager.googleapis.com iam.googleapis.com" \
-        "Enabling core APIs"
+    print_status "info" "Enabling core APIs (this may take several minutes)..."
+    
+    # Enable APIs one by one for better debugging
+    local core_apis=("compute.googleapis.com" "cloudresourcemanager.googleapis.com" "iam.googleapis.com")
+    for api in "${core_apis[@]}"; do
+        print_status "info" "Checking if $api is already enabled..."
+        if gcloud services list --enabled --filter="name:$api" --format="value(name)" | grep -q "$api"; then
+            print_status "success" "$api is already enabled"
+        else
+            execute_command "gcloud services enable $api --async" \
+                "Enabling $api (async)"
+            
+            # Wait for operation to complete
+            print_status "info" "Waiting for $api to be fully enabled..."
+            local max_wait=300  # 5 minutes max wait
+            local waited=0
+            while [ $waited -lt $max_wait ]; do
+                if gcloud services list --enabled --filter="name:$api" --format="value(name)" | grep -q "$api"; then
+                    print_status "success" "$api is now enabled"
+                    break
+                fi
+                sleep 10
+                waited=$((waited + 10))
+                print_status "info" "Still waiting for $api... ($waited seconds)"
+            done
+            
+            if [ $waited -ge $max_wait ]; then
+                print_status "error" "Timeout waiting for $api to be enabled"
+                return 1
+            fi
+        fi
+    done
     
     save_checkpoint "project_setup" "completed"
     return 0
@@ -658,30 +722,52 @@ main() {
     local last_step=$(load_checkpoint)
     
     # Execute steps based on checkpoint
-    case $last_step in
-        "none")
-            validate_project || exit 1
-            ;&  # Fall through
-        "project_setup")
-            setup_service_account || exit 1
-            ;&  # Fall through
-        "service_account")
-            setup_apis_and_services || exit 1
-            ;&  # Fall through
-        "apis_and_services")
-            setup_security || exit 1
-            ;&  # Fall through
-        "security")
-            run_validation || exit 1
-            ;&  # Fall through
-        "validation")
-            generate_summary
-            ;;
-        *)
-            print_status "error" "Unknown checkpoint: $last_step"
-            exit 1
-            ;;
-    esac
+    # Using a more compatible approach for step execution
+    local execute_from_step=true
+    
+    if [ "$last_step" = "none" ] && [ "$execute_from_step" = "true" ]; then
+        validate_project || exit 1
+        last_step="project_setup"
+    fi
+    
+    if [ "$last_step" = "project_setup" ] && [ "$execute_from_step" = "true" ]; then
+        setup_service_account || exit 1
+        last_step="service_account"
+    fi
+    
+    if [ "$last_step" = "service_account" ] && [ "$execute_from_step" = "true" ]; then
+        setup_apis_and_services || exit 1
+        last_step="apis_and_services"
+    fi
+    
+    if [ "$last_step" = "apis_and_services" ] && [ "$execute_from_step" = "true" ]; then
+        setup_security || exit 1
+        last_step="security"
+    fi
+    
+    if [ "$last_step" = "security" ] && [ "$execute_from_step" = "true" ]; then
+        run_validation || exit 1
+        last_step="validation"
+    fi
+    
+    if [ "$last_step" = "validation" ] && [ "$execute_from_step" = "true" ]; then
+        generate_summary
+    fi
+    
+    # Check for unknown checkpoint
+    local valid_steps=("none" "project_setup" "service_account" "apis_and_services" "security" "validation")
+    local step_found=false
+    for step in "${valid_steps[@]}"; do
+        if [ "$last_step" = "$step" ]; then
+            step_found=true
+            break
+        fi
+    done
+    
+    if [ "$step_found" = "false" ]; then
+        print_status "error" "Unknown checkpoint: $last_step"
+        exit 1
+    fi
     
     print_status "success" "GCP setup execution completed successfully!"
 }

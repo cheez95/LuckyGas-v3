@@ -1,8 +1,13 @@
 """
-Custom Prometheus metrics for Lucky Gas monitoring
+Custom Prometheus metrics for Lucky Gas monitoring with Google Cloud Monitoring integration
 """
 from prometheus_client import Counter, Histogram, Gauge, Info, Summary
 from app.core.config import settings
+import os
+import logging
+from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Business metrics
 prediction_counter = Counter(
@@ -186,3 +191,106 @@ system_info.info({
     'framework': 'FastAPI',
     'project': settings.PROJECT_NAME
 })
+
+
+# Initialize Google Cloud Monitoring if available
+_cloud_metrics = None
+
+def get_cloud_metrics():
+    """Get or initialize Cloud Monitoring metrics collector"""
+    global _cloud_metrics
+    if _cloud_metrics is None and os.getenv("GCP_PROJECT_ID"):
+        try:
+            # Import at runtime to avoid dependency issues
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+            from infrastructure.monitoring.metrics_config import get_metrics_collector
+            _cloud_metrics = get_metrics_collector()
+            logger.info("Initialized Google Cloud Monitoring")
+        except Exception as e:
+            logger.warning(f"Could not initialize Cloud Monitoring: {e}")
+    return _cloud_metrics
+
+
+# Enhanced metric recording functions with Cloud Monitoring integration
+def record_prediction(customer_type: str, status: str):
+    """Record prediction generation in both Prometheus and Cloud Monitoring"""
+    prediction_counter.labels(customer_type=customer_type, status=status).inc()
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics and status == "success":
+        cloud_metrics.record_order_created("predicted", customer_type)
+
+
+def record_route_optimization(method: str, num_stops: int, duration: float, efficiency: float = 0.0):
+    """Record route optimization metrics"""
+    route_optimization_histogram.labels(method=method, num_stops=str(num_stops)).observe(duration)
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.record_route_optimization(duration, efficiency)
+
+
+def record_delivery_completed(driver_id: str, area: str, status: str = "completed"):
+    """Record delivery completion"""
+    driver_deliveries_counter.labels(driver_id=driver_id, status=status).inc()
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.record_delivery_completed(driver_id, area)
+
+
+def record_order_created(order_type: str, customer_type: str):
+    """Record order creation"""
+    orders_created_counter.labels(order_type=order_type, customer_type=customer_type).inc()
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.record_order_created(order_type, customer_type)
+
+
+def record_revenue(amount: float, payment_method: str, customer_type: str):
+    """Record revenue"""
+    revenue_counter.labels(payment_method=payment_method, customer_type=customer_type).inc(amount)
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.record_revenue(amount, customer_type, payment_method)
+
+
+def record_google_api_call(api_type: str, status: str, latency: float, cost: Optional[float] = None):
+    """Record Google API usage"""
+    google_api_calls_counter.labels(api_type=api_type, status=status).inc()
+    google_api_latency_histogram.labels(api_type=api_type).observe(latency)
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.record_google_api_call(api_type, status, cost)
+
+
+def record_api_request(method: str, endpoint: str, status_code: int, duration: float):
+    """Record API request metrics"""
+    api_request_counter.labels(method=method, endpoint=endpoint, status_code=str(status_code)).inc()
+    api_request_duration_histogram.labels(method=method, endpoint=endpoint).observe(duration)
+    
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.record_request(method, endpoint, status_code, duration)
+
+
+def set_cache_metrics(hits: int, misses: int):
+    """Set cache performance metrics"""
+    total = hits + misses
+    if total > 0:
+        hit_rate = (hits / total) * 100
+        cloud_metrics = get_cloud_metrics()
+        if cloud_metrics:
+            cloud_metrics.set_cache_hit_rate(hit_rate)
+
+
+def set_prediction_accuracy(accuracy: float):
+    """Set ML prediction accuracy"""
+    cloud_metrics = get_cloud_metrics()
+    if cloud_metrics:
+        cloud_metrics.set_prediction_accuracy(accuracy)

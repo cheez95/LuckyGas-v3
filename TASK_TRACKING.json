@@ -1,0 +1,102 @@
+{
+  "last_updated": "2025-07-22T15:51:44.214891",
+  "tasks": {
+    "FE-1.1": {
+      "status": "completed",
+      "progress": 100,
+      "blockers": []
+    },
+    "FE-1.2": {
+      "status": "completed",
+      "progress": 100,
+      "blockers": []
+    },
+    "FE-1.3": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "BE-1.1": {
+      "status": "completed",
+      "progress": 100,
+      "blockers": [
+        "GCP credentials needed"
+      ]
+    },
+    "BE-1.2": {
+      "status": "completed",
+      "progress": 100,
+      "blockers": []
+    },
+    "BE-1.3": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "FE-2.1": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "BE-2.1": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "BE-2.2": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "INT-2.1": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "FE-3.1": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "FE-3.2": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "INT-3.1": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "INT-3.2": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "INT-3.3": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "PROD-4.1": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "PROD-4.2": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "PROD-4.3": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    },
+    "PROD-4.4": {
+      "status": "pending",
+      "progress": 0,
+      "blockers": []
+    }
+  }
+}

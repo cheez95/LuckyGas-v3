@@ -95,6 +95,15 @@ const MainLayout: React.FC = () => {
 
   const userMenuItems = [
     {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: <span data-testid="profile-button">個人資料</span>,
+      onClick: () => navigate('/profile'),
+    },
+    {
+      type: 'divider',
+    },
+    {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: <span data-testid="logout-button">{t('app.logout')}</span>,
@@ -154,6 +163,19 @@ const MainLayout: React.FC = () => {
         selectedKeys={[location.pathname]}
         items={[
           ...menuItems,
+          {
+            key: 'divider-1',
+            type: 'divider',
+          },
+          {
+            key: 'profile',
+            icon: <UserOutlined />,
+            label: <span data-testid="mobile-profile-btn">個人資料</span>,
+            onClick: () => {
+              navigate('/profile');
+              setMobileMenuVisible(false);
+            },
+          },
           {
             key: 'logout',
             icon: <LogoutOutlined />,

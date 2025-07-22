@@ -106,6 +106,14 @@ const Login: React.FC = () => {
               {t('auth.login')}
             </Button>
           </Form.Item>
+          
+          <Form.Item>
+            <div style={{ textAlign: 'center' }}>
+              <a href="/forgot-password" style={{ fontSize: 14 }}>
+                忘記密碼？
+              </a>
+            </div>
+          </Form.Item>
         </Form>
         
         <div style={{ textAlign: 'center', marginTop: 16 }}>

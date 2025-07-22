@@ -19,6 +19,8 @@ import SessionManager from './components/common/SessionManager';
 
 // Pages/Components (to be created)
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import MainLayout from './components/MainLayout';
 import Dashboard from './components/dashboard/Dashboard';
 import CustomerList from './components/office/CustomerList';
@@ -26,6 +28,7 @@ import OrderList from './components/office/OrderList';
 import RouteManagement from './components/office/RouteManagement';
 import DeliveryHistory from './components/office/DeliveryHistory';
 import DriverInterface from './components/driver/DriverInterface';
+import UserProfile from './components/UserProfile';
 
 // Set dayjs locale
 dayjs.locale('zh-tw');
@@ -60,6 +63,8 @@ const App: React.FC = () => {
                 <SessionManager>
                   <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/" element={<MainLayout />}>
                       <Route index element={<Navigate to="/dashboard" replace />} />
                       <Route path="dashboard" element={<Dashboard />} />
@@ -68,6 +73,7 @@ const App: React.FC = () => {
                       <Route path="routes" element={<RouteManagement />} />
                       <Route path="delivery-history" element={<DeliveryHistory />} />
                       <Route path="driver" element={<DriverInterface />} />
+                      <Route path="profile" element={<UserProfile />} />
                     </Route>
                   </Routes>
                 </SessionManager>

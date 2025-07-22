@@ -1,0 +1,165 @@
+# Cost Alert Configuration for Lucky Gas GCP Project
+# This file defines budget alerts and monitoring rules
+
+project_id: vast-tributary-466619-m8
+billing_account: "011479-B04C2D-B0F925"
+
+# Budget Configurations
+budgets:
+  # Monthly total budget
+  monthly_total:
+    name: "Lucky Gas Monthly Budget"
+    amount: 1000  # USD
+    currency: "USD"
+    time_period: "MONTHLY"
+    thresholds:
+      - percent: 50
+        alert_channels: ["email"]
+        message: "Monthly spending has reached 50% of budget ($500)"
+      - percent: 75
+        alert_channels: ["email", "slack"]
+        message: "Monthly spending has reached 75% of budget ($750)"
+      - percent: 90
+        alert_channels: ["email", "slack", "pagerduty"]
+        message: "⚠️ CRITICAL: Monthly spending has reached 90% of budget ($900)"
+      - percent: 100
+        alert_channels: ["email", "slack", "pagerduty"]
+        message: "🚨 ALERT: Monthly budget exceeded!"
+    
+  # Daily spike detection
+  daily_spike:
+    name: "Lucky Gas Daily Spike Alert"
+    amount: 100  # USD per day
+    currency: "USD"
+    time_period: "DAILY"
+    thresholds:
+      - percent: 100
+        alert_channels: ["email", "slack"]
+        message: "Daily spending exceeded $100"
+      - percent: 200
+        alert_channels: ["email", "slack", "pagerduty"]
+        message: "🚨 Daily spending exceeded $200 (2x normal)"
+
+# Service-specific budgets
+service_budgets:
+  - name: "Vertex AI Budget"
+    service: "aiplatform.googleapis.com"
+    monthly_amount: 300
+    thresholds: [50, 80, 100]
+    
+  - name: "Cloud Storage Budget"
+    service: "storage-component.googleapis.com"
+    monthly_amount: 100
+    thresholds: [75, 100]
+    
+  - name: "Routes API Budget"
+    service: "routes.googleapis.com"
+    monthly_amount: 200
+    thresholds: [50, 75, 100]
+
+# Alert Channels Configuration
+alert_channels:
+  email:
+    type: "email"
+    recipients:
+      - "admin@luckygas.com"
+      - "finance@luckygas.com"
+    
+  slack:
+    type: "webhook"
+    webhook_url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    channel: "#gcp-alerts"
+    
+  pagerduty:
+    type: "pagerduty"
+    integration_key: "YOUR_PAGERDUTY_KEY"
+    severity: "critical"
+
+# Monitoring Rules
+monitoring_rules:
+  # Anomaly detection
+  cost_anomaly:
+    name: "Cost Anomaly Detection"
+    type: "anomaly"
+    lookback_days: 30
+    threshold_stddev: 2.0  # Alert if cost is 2 standard deviations above mean
+    services: ["all"]
+    alert_channels: ["email", "slack"]
+    
+  # Unused resources
+  unused_resources:
+    name: "Unused Resources Detection"
+    type: "zero_usage"
+    cost_threshold: 10  # Alert if resource costs > $10 with no usage
+    check_frequency: "weekly"
+    alert_channels: ["email"]
+    
+  # Regional cost optimization
+  region_optimization:
+    name: "Regional Cost Optimization"
+    type: "region_analysis"
+    preferred_regions: ["asia-east1", "asia-east2"]
+    cost_threshold: 50  # Alert if non-preferred region costs > $50
+    alert_channels: ["email"]
+
+# Cost Optimization Recommendations
+optimization_rules:
+  # Committed use recommendations
+  - name: "Committed Use Discount Opportunities"
+    condition: "on_demand_cost > 500 AND service IN ('Compute Engine', 'Cloud SQL')"
+    recommendation: "Consider purchasing committed use contracts for consistent workloads"
+    
+  # Storage lifecycle
+  - name: "Storage Lifecycle Optimization"
+    condition: "storage_age > 30 AND access_frequency < 1"
+    recommendation: "Move to Nearline or Coldline storage for cost savings"
+    
+  # Idle resource cleanup
+  - name: "Idle Resource Cleanup"
+    condition: "utilization < 5% AND cost > 20"
+    recommendation: "Consider removing or downsizing underutilized resources"
+
+# Reporting Configuration
+reporting:
+  # Weekly cost report
+  weekly_report:
+    enabled: true
+    day_of_week: "MONDAY"
+    recipients: ["admin@luckygas.com", "finance@luckygas.com"]
+    include:
+      - total_cost_summary
+      - top_10_services
+      - cost_trend_graph
+      - optimization_recommendations
+      
+  # Monthly executive summary
+  monthly_summary:
+    enabled: true
+    day_of_month: 1
+    recipients: ["executive@luckygas.com"]
+    include:
+      - executive_summary
+      - cost_vs_budget
+      - year_over_year_comparison
+      - forecast_next_month
+
+# Automated Actions (use with caution)
+automated_actions:
+  # Stop non-critical resources when budget exceeded
+  budget_exceeded_action:
+    enabled: false  # Set to true to enable
+    trigger: "monthly_budget > 95%"
+    actions:
+      - stop_dev_environments
+      - disable_non_critical_apis
+    require_approval: true
+    approval_timeout: "2h"
+    
+  # Scale down during off-hours
+  off_hours_scaling:
+    enabled: false
+    schedule: "0 20 * * *"  # 8 PM daily
+    actions:
+      - scale_down_compute_instances
+      - pause_batch_jobs
+    exclude_tags: ["production", "critical"]

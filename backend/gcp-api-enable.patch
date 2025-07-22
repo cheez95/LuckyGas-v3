@@ -1,0 +1,122 @@
+--- gcp-setup-execute.sh.old	2025-07-22 05:30:00.000000000 +0800
++++ gcp-setup-execute.sh	2025-07-22 05:45:00.000000000 +0800
+@@ -65,6 +65,24 @@
+     esac
+ }
+ 
++# Function to check if API is already enabled
++is_api_enabled() {
++    local api=$1
++    
++    if gcloud services list --enabled --filter="name:$api" --format="value(name)" 2>/dev/null | grep -q "$api"; then
++        return 0  # API is enabled
++    else
++        return 1  # API is not enabled
++    fi
++}
++
++# Function to enable API with proper checks and timeout
++enable_api_safe() {
++    local api=$1
++    local description=${2:-"API"}
++    
++    print_status "info" "Processing $description ($api)..."
++    
++    # First check if already enabled
++    if is_api_enabled "$api"; then
++        print_status "success" "$description is already enabled"
++        return 0
++    fi
++    
++    # Try to enable the API asynchronously
++    print_status "info" "Enabling $description..."
++    
++    # Use async flag and check status
++    if execute_command "gcloud services enable $api --async" "Enabling $api (async)"; then
++        # Wait for API to be enabled
++        local max_wait=300  # 5 minutes
++        local waited=0
++        
++        while [ $waited -lt $max_wait ]; do
++            if is_api_enabled "$api"; then
++                print_status "success" "$description enabled successfully after ${waited}s"
++                return 0
++            fi
++            sleep 5
++            waited=$((waited + 5))
++            
++            if [ $((waited % 30)) -eq 0 ]; then
++                print_status "info" "Still waiting for $api... (${waited}s elapsed)"
++            fi
++        done
++        
++        print_status "error" "Timeout waiting for $api after ${max_wait}s"
++        return 1
++    else
++        return 1
++    fi
++}
++
+ # Function to execute command with dry run support
+ execute_command() {
+     local cmd=$1
+@@ -179,32 +197,16 @@
+     fi
+     
+-    # Enable initial APIs
+-    print_status "info" "Enabling core APIs (this may take several minutes)..."
++    # Enable initial APIs one by one
++    print_status "info" "Enabling core APIs..."
+     
+-    # Enable APIs one by one for better debugging
+     local core_apis=("compute.googleapis.com" "cloudresourcemanager.googleapis.com" "iam.googleapis.com")
+     for api in "${core_apis[@]}"; do
+-        print_status "info" "Checking if $api is already enabled..."
+-        if gcloud services list --enabled --filter="name:$api" --format="value(name)" | grep -q "$api"; then
+-            print_status "success" "$api is already enabled"
+-        else
+-            execute_command "gcloud services enable $api --async" \
+-                "Enabling $api (async)"
+-            
+-            # Wait for operation to complete
+-            print_status "info" "Waiting for $api to be fully enabled..."
+-            local max_wait=300  # 5 minutes max wait
+-            local waited=0
+-            while [ $waited -lt $max_wait ]; do
+-                if gcloud services list --enabled --filter="name:$api" --format="value(name)" | grep -q "$api"; then
+-                    print_status "success" "$api is now enabled"
+-                    break
+-                fi
+-                sleep 10
+-                waited=$((waited + 10))
+-                print_status "info" "Still waiting for $api... ($waited seconds)"
+-            done
+-            
+-            if [ $waited -ge $max_wait ]; then
+-                print_status "error" "Timeout waiting for $api to be enabled"
+-                return 1
+-            fi
++        if [ "$DRY_RUN" = "true" ]; then
++            print_status "info" "[DRY RUN] Would enable $api"
++        else
++            if ! enable_api_safe "$api" "$api"; then
++                print_status "error" "Failed to enable $api"
++                return 1
++            fi
+         fi
+@@ -322,8 +324,14 @@
+     )
+     
+     for api in "${apis[@]}"; do
+-        execute_command "gcloud services enable $api" "Enabling $api"
++        if [ "$DRY_RUN" = "true" ]; then
++            print_status "info" "[DRY RUN] Would enable $api"
++        else
++            if ! enable_api_safe "$api" "$api"; then
++                print_status "error" "Failed to enable $api"
++                return 1
++            fi
++        fi
+     done
+     
+     # Initialize Vertex AI

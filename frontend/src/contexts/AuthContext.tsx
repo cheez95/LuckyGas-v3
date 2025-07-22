@@ -116,9 +116,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [navigate]);
 
   const refreshAccessToken = useCallback(async () => {
-    // Refresh token not supported yet
-    throw new Error('Token refresh not implemented');
-  }, []);
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    try {
+      const response = await authService.refreshToken(refreshToken);
+      
+      // Update state with new token
+      setState(prev => ({
+        ...prev,
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+      }));
+      
+      return response.access_token;
+    } catch (error) {
+      // If refresh fails, clear everything and redirect to login
+      logout();
+      throw error;
+    }
+  }, [logout]);
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));

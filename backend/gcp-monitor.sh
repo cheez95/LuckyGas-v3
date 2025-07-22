@@ -63,6 +63,22 @@ print_status() {
     esac
 }
 
+# Function to convert ISO date to epoch seconds (portable for macOS and Linux)
+date_to_epoch() {
+    local date_string="$1"
+    
+    # Check if we're on macOS or Linux
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # macOS uses -j flag and different format
+        # Convert ISO format to macOS format
+        local formatted_date=$(echo "$date_string" | sed -E 's/([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z?/\1\2\3\4\5\6/')
+        date -j -f "%Y%m%d%H%M%S" "$formatted_date" "+%s" 2>/dev/null || echo "0"
+    else
+        # Linux/GNU date
+        date -d "$date_string" +%s 2>/dev/null || echo "0"
+    fi
+}
+
 # Function to check service health
 check_service_health() {
     print_status "info" "Checking service health..."
@@ -97,9 +113,15 @@ check_service_health() {
             --sort-by="validAfterTime" | head -1)
         
         if [ -n "$oldest_key" ]; then
-            local key_age_days=$(( ($(date +%s) - $(date -d "$oldest_key" +%s)) / 86400 ))
-            if [ "$key_age_days" -gt 90 ]; then
-                print_status "warning" "Service account key older than 90 days ($key_age_days days)"
+            # Use portable date conversion
+            local key_epoch=$(date_to_epoch "$oldest_key")
+            if [ "$key_epoch" -ne 0 ]; then
+                local key_age_days=$(( ($(date +%s) - key_epoch) / 86400 ))
+                if [ "$key_age_days" -gt 90 ]; then
+                    print_status "warning" "Service account key older than 90 days ($key_age_days days)"
+                fi
+            else
+                print_status "warning" "Could not parse key date: $oldest_key"
             fi
         fi
     else

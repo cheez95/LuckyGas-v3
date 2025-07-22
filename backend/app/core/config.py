@@ -3,6 +3,7 @@ from pydantic import field_validator, Field, model_validator, BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import secrets
 import re
+import os
 from enum import Enum
 
 
@@ -79,7 +80,7 @@ class DatabaseConfig(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=".env" if os.getenv("ENVIRONMENT", "development") == "development" else f".env.{os.getenv('ENVIRONMENT', 'development')}",
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"
@@ -289,3 +290,34 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# Import secrets manager after settings initialization
+def load_secrets_from_manager():
+    """Load secrets from Google Secret Manager if available."""
+    try:
+        from .secrets_manager import get_secrets_manager
+        sm = get_secrets_manager()
+        
+        # List of secrets to potentially load from Secret Manager
+        secret_mappings = {
+            "database-password": "POSTGRES_PASSWORD",
+            "jwt-secret-key": "SECRET_KEY",
+            "google-maps-api-key": "GOOGLE_MAPS_API_KEY",
+            "first-superuser-password": "FIRST_SUPERUSER_PASSWORD",
+        }
+        
+        for secret_id, env_var in secret_mappings.items():
+            secret_value = sm.get_secret(secret_id)
+            if secret_value and hasattr(settings, env_var):
+                setattr(settings, env_var, secret_value)
+                
+    except Exception as e:
+        # Log but don't fail if Secret Manager is not available
+        import logging
+        logging.warning(f"Could not load secrets from Secret Manager: {e}")
+
+
+# Load secrets if in staging or production
+if settings.ENVIRONMENT in [Environment.STAGING, Environment.PRODUCTION]:
+    load_secrets_from_manager()

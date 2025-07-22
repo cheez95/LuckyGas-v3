@@ -8,6 +8,11 @@ export interface User {
   role: UserRole;
   is_active: boolean;
   is_superuser: boolean;
+  phone?: string;
+  avatar_url?: string;
+  last_login?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type UserRole = 'super_admin' | 'manager' | 'office_staff' | 'driver' | 'customer';
