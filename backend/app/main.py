@@ -16,6 +16,7 @@ from app.core.database import create_db_and_tables, engine
 from app.core.logging import setup_logging, get_logger
 from app.middleware.logging import LoggingMiddleware, CorrelationIdMiddleware
 from app.middleware.metrics import MetricsMiddleware
+from app.middleware.rate_limiting import RateLimitMiddleware
 from app.core.db_metrics import DatabaseMetricsCollector
 from app.core.env_validation import validate_environment
 
@@ -68,24 +69,64 @@ app = FastAPI(
     title="Lucky Gas Delivery Management System",
     description="幸福氣配送管理系統 API",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
+    openapi_url="/api/v1/openapi.json"
 )
 
 # Mount Socket.IO app
 app.mount("/socket.io", socket_app)
 
-# Configure CORS with restricted settings
+# Configure CORS with enhanced settings
+cors_origins = settings.get_all_cors_origins()
+
+# Add environment-specific CORS origins
+if settings.is_development():
+    # Additional development origins
+    cors_origins.extend([
+        "http://localhost:*",
+        "http://127.0.0.1:*"
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.get_all_cors_origins(),
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-    expose_headers=["X-Request-ID", "X-Process-Time"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Request-ID",
+        "X-CSRF-Token",
+        "X-Requested-With",
+        "Accept",
+        "Accept-Language",
+        "Accept-Encoding",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    ],
+    expose_headers=[
+        "X-Request-ID",
+        "X-Process-Time",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+        "X-Total-Count"
+    ],
+    max_age=3600  # Cache preflight requests for 1 hour
 )
 
 # Add GZip compression middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Add rate limiting middleware
+rate_limit_config = settings.get_rate_limit()
+app.add_middleware(
+    RateLimitMiddleware,
+    default_limit=rate_limit_config["calls"],
+    window_seconds=rate_limit_config["period"]
+)
 
 # Add logging middleware (should be early in the chain)
 app.add_middleware(LoggingMiddleware)

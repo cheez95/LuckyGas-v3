@@ -17,15 +17,15 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import SessionManager from './components/common/SessionManager';
 
-// Pages/Components (to be created)
+// Pages/Components
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import MainLayout from './components/MainLayout';
 import Dashboard from './components/dashboard/Dashboard';
-import CustomerList from './components/office/CustomerList';
-import OrderList from './components/office/OrderList';
-import RouteManagement from './components/office/RouteManagement';
+import CustomerManagement from './pages/office/CustomerManagement';
+import OrderManagement from './pages/office/OrderManagement';
+import RoutePlanning from './pages/office/RoutePlanning';
 import DeliveryHistory from './components/office/DeliveryHistory';
 import DriverInterface from './components/driver/DriverInterface';
 import UserProfile from './components/UserProfile';
@@ -68,9 +68,9 @@ const App: React.FC = () => {
                     <Route path="/" element={<MainLayout />}>
                       <Route index element={<Navigate to="/dashboard" replace />} />
                       <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="customers" element={<CustomerList />} />
-                      <Route path="orders" element={<OrderList />} />
-                      <Route path="routes" element={<RouteManagement />} />
+                      <Route path="customers" element={<CustomerManagement />} />
+                      <Route path="orders" element={<OrderManagement />} />
+                      <Route path="routes" element={<RoutePlanning />} />
                       <Route path="delivery-history" element={<DeliveryHistory />} />
                       <Route path="driver" element={<DriverInterface />} />
                       <Route path="profile" element={<UserProfile />} />

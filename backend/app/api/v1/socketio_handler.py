@@ -13,18 +13,29 @@ import logging
 from app.core.database import async_session_maker
 from app.core.security import decode_access_token
 from app.core.metrics import background_tasks_counter
+from app.core.config import settings
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
+# Get CORS origins from settings
+cors_origins = settings.get_all_cors_origins()
+if settings.is_development():
+    # Add wildcard for development convenience
+    cors_origins.append("http://localhost:*")
+    cors_origins.append("http://127.0.0.1:*")
+
 # Create async Socket.IO server
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins='*',  # Configure based on settings
+    cors_allowed_origins=cors_origins,  # Use settings-based CORS
     logger=logger,
-    engineio_logger=False,  # Set to True for debugging
+    engineio_logger=settings.is_development(),  # Enable debug logging in development
     ping_timeout=60,
     ping_interval=25,
+    max_http_buffer_size=1e6,  # 1MB max message size
+    async_handlers=True,
+    namespaces=['/']  # Default namespace
 )
 
 # Create ASGI app
