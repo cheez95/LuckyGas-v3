@@ -40,6 +40,9 @@ import DeliveryScanner from './pages/driver/DeliveryScanner';
 import CustomerPortal from './pages/customer/CustomerPortal';
 import OrderTracking from './pages/customer/OrderTracking';
 
+// Analytics Pages
+import ReportingDashboard from './pages/analytics/ReportingDashboard';
+
 // Set dayjs locale
 dayjs.locale('zh-tw');
 
@@ -88,6 +91,7 @@ const App: React.FC = () => {
                         <Route path="driver/scan" element={<DeliveryScanner />} />
                         <Route path="customer" element={<CustomerPortal />} />
                         <Route path="customer/track/:orderId" element={<OrderTracking />} />
+                        <Route path="analytics" element={<ReportingDashboard />} />
                         <Route path="profile" element={<UserProfile />} />
                       </Route>
                     </Routes>
