@@ -31,6 +31,15 @@ import DeliveryHistory from './components/office/DeliveryHistory';
 import DriverInterface from './components/driver/DriverInterface';
 import UserProfile from './components/UserProfile';
 
+// Driver Pages
+import DriverDashboard from './pages/driver/DriverDashboard';
+import DriverNavigation from './pages/driver/DriverNavigation';
+import DeliveryScanner from './pages/driver/DeliveryScanner';
+
+// Customer Pages
+import CustomerPortal from './pages/customer/CustomerPortal';
+import OrderTracking from './pages/customer/OrderTracking';
+
 // Set dayjs locale
 dayjs.locale('zh-tw');
 
@@ -74,7 +83,11 @@ const App: React.FC = () => {
                         <Route path="orders" element={<OrderManagement />} />
                         <Route path="routes" element={<RoutePlanning />} />
                         <Route path="delivery-history" element={<DeliveryHistory />} />
-                        <Route path="driver" element={<DriverInterface />} />
+                        <Route path="driver" element={<DriverDashboard />} />
+                        <Route path="driver/navigation" element={<DriverNavigation />} />
+                        <Route path="driver/scan" element={<DeliveryScanner />} />
+                        <Route path="customer" element={<CustomerPortal />} />
+                        <Route path="customer/track/:orderId" element={<OrderTracking />} />
                         <Route path="profile" element={<UserProfile />} />
                       </Route>
                     </Routes>

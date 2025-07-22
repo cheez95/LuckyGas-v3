@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import { api } from '../../services/api';
 import dayjs from 'dayjs';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 
 interface Order {
   id: string;
@@ -56,6 +57,31 @@ const OrderManagement: React.FC = () => {
     pendingOrders: 0,
     todayDeliveries: 0,
     monthlyRevenue: 0,
+  });
+
+  // Real-time updates
+  const { subscribeToOrder } = useRealtimeUpdates({
+    onOrderUpdate: (updatedOrder) => {
+      setOrders(prevOrders => {
+        const index = prevOrders.findIndex(o => o.id === updatedOrder.id);
+        if (index >= 0) {
+          const newOrders = [...prevOrders];
+          newOrders[index] = { ...newOrders[index], ...updatedOrder };
+          return newOrders;
+        } else {
+          return [updatedOrder, ...prevOrders];
+        }
+      });
+      
+      // Update selected order if it's the one being viewed
+      if (selectedOrder?.id === updatedOrder.id) {
+        setSelectedOrder(prev => ({ ...prev, ...updatedOrder }));
+      }
+      
+      // Refresh statistics
+      fetchStatistics();
+    },
+    enableNotifications: true,
   });
 
   useEffect(() => {
