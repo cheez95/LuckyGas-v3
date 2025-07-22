@@ -1,0 +1,292 @@
+# Lucky Gas Monitoring Dashboard Configuration
+# Google Cloud Monitoring Dashboard as Code
+
+displayName: "Lucky Gas Operations Dashboard"
+mosaicLayout:
+  columns: 12
+  tiles:
+    # System Health Overview
+    - width: 4
+      height: 4
+      widget:
+        title: "System Health"
+        scorecard:
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count"'
+              aggregation:
+                alignmentPeriod: "60s"
+                perSeriesAligner: "ALIGN_RATE"
+                crossSeriesReducer: "REDUCE_SUM"
+          gaugeView:
+            lowerBound: 0
+            upperBound: 100
+
+    # Request Rate
+    - xPos: 4
+      width: 4
+      height: 4
+      widget:
+        title: "Request Rate (req/s)"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count"'
+                  aggregation:
+                    alignmentPeriod: "60s"
+                    perSeriesAligner: "ALIGN_RATE"
+                    crossSeriesReducer: "REDUCE_SUM"
+                    groupByFields: ["resource.service_name"]
+                plotType: "LINE"
+          timeshiftDuration: "0s"
+          yAxis:
+            label: "requests/sec"
+            scale: "LINEAR"
+
+    # Error Rate
+    - xPos: 8
+      width: 4
+      height: 4
+      widget:
+        title: "Error Rate"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count" AND metric.label.response_code_class="5xx"'
+                  aggregation:
+                    alignmentPeriod: "60s"
+                    perSeriesAligner: "ALIGN_RATE"
+                    crossSeriesReducer: "REDUCE_SUM"
+                plotType: "LINE"
+                targetAxis: "Y1"
+          yAxis:
+            label: "errors/sec"
+            scale: "LINEAR"
+
+    # Response Time P95
+    - yPos: 4
+      width: 6
+      height: 4
+      widget:
+        title: "Response Time P95 (ms)"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_latencies"'
+                  aggregation:
+                    alignmentPeriod: "60s"
+                    perSeriesAligner: "ALIGN_PERCENTILE_95"
+                    crossSeriesReducer: "REDUCE_MEAN"
+                    groupByFields: ["resource.service_name"]
+                plotType: "LINE"
+          yAxis:
+            label: "milliseconds"
+            scale: "LINEAR"
+
+    # CPU Utilization
+    - xPos: 6
+      yPos: 4
+      width: 6
+      height: 4
+      widget:
+        title: "CPU Utilization"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/container/cpu/utilizations"'
+                  aggregation:
+                    alignmentPeriod: "60s"
+                    perSeriesAligner: "ALIGN_MEAN"
+                    crossSeriesReducer: "REDUCE_MEAN"
+                    groupByFields: ["resource.service_name"]
+                plotType: "LINE"
+          yAxis:
+            label: "percentage"
+            scale: "LINEAR"
+
+    # Memory Usage
+    - yPos: 8
+      width: 6
+      height: 4
+      widget:
+        title: "Memory Usage"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/container/memory/utilizations"'
+                  aggregation:
+                    alignmentPeriod: "60s"
+                    perSeriesAligner: "ALIGN_MEAN"
+                    crossSeriesReducer: "REDUCE_MEAN"
+                    groupByFields: ["resource.service_name"]
+                plotType: "LINE"
+          yAxis:
+            label: "percentage"
+            scale: "LINEAR"
+
+    # Database Connections
+    - xPos: 6
+      yPos: 8
+      width: 6
+      height: 4
+      widget:
+        title: "Database Connections"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'resource.type="cloudsql_database" AND metric.type="cloudsql.googleapis.com/database/postgresql/num_backends"'
+                  aggregation:
+                    alignmentPeriod: "60s"
+                    perSeriesAligner: "ALIGN_MEAN"
+                plotType: "LINE"
+          yAxis:
+            label: "connections"
+            scale: "LINEAR"
+
+    # Redis Memory Usage
+    - yPos: 12
+      width: 4
+      height: 4
+      widget:
+        title: "Redis Memory Usage"
+        scorecard:
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'resource.type="redis_instance" AND metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
+              aggregation:
+                alignmentPeriod: "60s"
+                perSeriesAligner: "ALIGN_MEAN"
+          sparkChartView:
+            sparkChartType: "SPARK_LINE"
+
+    # Active Orders
+    - xPos: 4
+      yPos: 12
+      width: 4
+      height: 4
+      widget:
+        title: "Active Orders"
+        scorecard:
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'metric.type="custom.googleapis.com/luckygas/active_orders"'
+              aggregation:
+                alignmentPeriod: "60s"
+                perSeriesAligner: "ALIGN_MEAN"
+          sparkChartView:
+            sparkChartType: "SPARK_BAR"
+
+    # WebSocket Connections
+    - xPos: 8
+      yPos: 12
+      width: 4
+      height: 4
+      widget:
+        title: "WebSocket Connections"
+        scorecard:
+          timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'metric.type="custom.googleapis.com/luckygas/websocket_connections"'
+              aggregation:
+                alignmentPeriod: "60s"
+                perSeriesAligner: "ALIGN_MEAN"
+                crossSeriesReducer: "REDUCE_SUM"
+                groupByFields: ["metric.label.connection_type"]
+
+    # Business Metrics Section
+    - yPos: 16
+      width: 12
+      height: 1
+      widget:
+        title: "Business Metrics"
+        text:
+          content: "## Business Performance Indicators"
+          format: "MARKDOWN"
+
+    # Daily Orders
+    - yPos: 17
+      width: 6
+      height: 4
+      widget:
+        title: "Daily Orders"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'metric.type="custom.googleapis.com/luckygas/orders_created"'
+                  aggregation:
+                    alignmentPeriod: "3600s"
+                    perSeriesAligner: "ALIGN_SUM"
+                    crossSeriesReducer: "REDUCE_SUM"
+                plotType: "STACKED_BAR"
+          yAxis:
+            label: "orders"
+            scale: "LINEAR"
+
+    # Delivery Performance
+    - xPos: 6
+      yPos: 17
+      width: 6
+      height: 4
+      widget:
+        title: "Average Delivery Time (minutes)"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'metric.type="custom.googleapis.com/luckygas/delivery_duration_minutes"'
+                  aggregation:
+                    alignmentPeriod: "3600s"
+                    perSeriesAligner: "ALIGN_MEAN"
+                    crossSeriesReducer: "REDUCE_MEAN"
+                    groupByFields: ["metric.label.route_type"]
+                plotType: "LINE"
+          yAxis:
+            label: "minutes"
+            scale: "LINEAR"
+
+    # AI Prediction Accuracy
+    - yPos: 21
+      width: 6
+      height: 4
+      widget:
+        title: "AI Prediction Accuracy"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'metric.type="custom.googleapis.com/luckygas/prediction_accuracy"'
+                  aggregation:
+                    alignmentPeriod: "3600s"
+                    perSeriesAligner: "ALIGN_MEAN"
+                    groupByFields: ["metric.label.model_type"]
+                plotType: "LINE"
+          yAxis:
+            label: "accuracy %"
+            scale: "LINEAR"
+
+    # Revenue Tracking
+    - xPos: 6
+      yPos: 21
+      width: 6
+      height: 4
+      widget:
+        title: "Daily Revenue (TWD)"
+        xyChart:
+          dataSets:
+            - timeSeriesQuery:
+                timeSeriesFilter:
+                  filter: 'metric.type="custom.googleapis.com/luckygas/revenue_twd"'
+                  aggregation:
+                    alignmentPeriod: "86400s"
+                    perSeriesAligner: "ALIGN_SUM"
+                plotType: "STACKED_AREA"
+          yAxis:
+            label: "TWD"
+            scale: "LINEAR"

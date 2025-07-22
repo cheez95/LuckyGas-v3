@@ -1,0 +1,300 @@
+# Lucky Gas Alert Policies Configuration
+# Google Cloud Monitoring Alert Policies
+
+alertPolicies:
+  # High Error Rate Alert
+  - displayName: "High Error Rate"
+    conditions:
+      - displayName: "5xx errors > 5%"
+        conditionThreshold:
+          filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_count"'
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: "ALIGN_RATE"
+              crossSeriesReducer: "REDUCE_SUM"
+              groupByFields: ["resource.service_name"]
+          comparison: "COMPARISON_GT"
+          thresholdValue: 0.05
+          duration: "180s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+      - "slack"
+    alertStrategy:
+      autoClose: "1800s"
+    severity: "ERROR"
+
+  # High Response Time Alert
+  - displayName: "High Response Time"
+    conditions:
+      - displayName: "P95 latency > 1000ms"
+        conditionThreshold:
+          filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/request_latencies"'
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: "ALIGN_PERCENTILE_95"
+              crossSeriesReducer: "REDUCE_MEAN"
+              groupByFields: ["resource.service_name"]
+          comparison: "COMPARISON_GT"
+          thresholdValue: 1000
+          duration: "300s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+      - "pagerduty"
+    alertStrategy:
+      autoClose: "1800s"
+    severity: "WARNING"
+
+  # Service Down Alert
+  - displayName: "Service Unavailable"
+    conditions:
+      - displayName: "Uptime check failing"
+        conditionThreshold:
+          filter: 'resource.type="uptime_url" AND metric.type="monitoring.googleapis.com/uptime_check/check_passed"'
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: "ALIGN_FRACTION_TRUE"
+              crossSeriesReducer: "REDUCE_MEAN"
+              groupByFields: ["resource.host"]
+          comparison: "COMPARISON_LT"
+          thresholdValue: 0.9
+          duration: "180s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+      - "pagerduty"
+      - "slack"
+    alertStrategy:
+      autoClose: "600s"
+      notificationRateLimit:
+        period: "300s"
+    severity: "CRITICAL"
+
+  # High CPU Usage Alert
+  - displayName: "High CPU Utilization"
+    conditions:
+      - displayName: "CPU > 80%"
+        conditionThreshold:
+          filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/container/cpu/utilizations"'
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: "ALIGN_MEAN"
+              crossSeriesReducer: "REDUCE_MEAN"
+              groupByFields: ["resource.service_name"]
+          comparison: "COMPARISON_GT"
+          thresholdValue: 0.8
+          duration: "600s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+    alertStrategy:
+      autoClose: "3600s"
+    severity: "WARNING"
+
+  # High Memory Usage Alert
+  - displayName: "High Memory Utilization"
+    conditions:
+      - displayName: "Memory > 85%"
+        conditionThreshold:
+          filter: 'resource.type="cloud_run_revision" AND metric.type="run.googleapis.com/container/memory/utilizations"'
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: "ALIGN_MEAN"
+              crossSeriesReducer: "REDUCE_MEAN"
+              groupByFields: ["resource.service_name"]
+          comparison: "COMPARISON_GT"
+          thresholdValue: 0.85
+          duration: "600s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+    alertStrategy:
+      autoClose: "3600s"
+    severity: "WARNING"
+
+  # Database Connection Pool Exhaustion
+  - displayName: "Database Connection Pool Full"
+    conditions:
+      - displayName: "Connections > 90% of max"
+        conditionThreshold:
+          filter: 'resource.type="cloudsql_database" AND metric.type="cloudsql.googleapis.com/database/postgresql/num_backends"'
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: "ALIGN_MAX"
+          comparison: "COMPARISON_GT"
+          thresholdValue: 180  # 90% of 200 max connections
+          duration: "300s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+      - "pagerduty"
+    alertStrategy:
+      autoClose: "1800s"
+    severity: "ERROR"
+
+  # Redis Memory Alert
+  - displayName: "Redis Memory High"
+    conditions:
+      - displayName: "Redis memory > 80%"
+        conditionThreshold:
+          filter: 'resource.type="redis_instance" AND metric.type="redis.googleapis.com/stats/memory/usage_ratio"'
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: "ALIGN_MEAN"
+          comparison: "COMPARISON_GT"
+          thresholdValue: 0.8
+          duration: "600s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+    alertStrategy:
+      autoClose: "3600s"
+    severity: "WARNING"
+
+  # Business Metrics Alerts
+  - displayName: "Low Order Volume"
+    conditions:
+      - displayName: "Orders < 50% of average"
+        conditionThreshold:
+          filter: 'metric.type="custom.googleapis.com/luckygas/orders_created"'
+          aggregations:
+            - alignmentPeriod: "3600s"
+              perSeriesAligner: "ALIGN_SUM"
+          comparison: "COMPARISON_LT"
+          thresholdValue: 50  # Adjust based on actual volume
+          duration: "7200s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+    alertStrategy:
+      autoClose: "14400s"
+    severity: "INFO"
+
+  # AI Prediction Accuracy Alert
+  - displayName: "AI Prediction Accuracy Low"
+    conditions:
+      - displayName: "Accuracy < 80%"
+        conditionThreshold:
+          filter: 'metric.type="custom.googleapis.com/luckygas/prediction_accuracy"'
+          aggregations:
+            - alignmentPeriod: "3600s"
+              perSeriesAligner: "ALIGN_MEAN"
+              crossSeriesReducer: "REDUCE_MEAN"
+              groupByFields: ["metric.label.model_type"]
+          comparison: "COMPARISON_LT"
+          thresholdValue: 0.8
+          duration: "7200s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+    alertStrategy:
+      autoClose: "86400s"
+    severity: "WARNING"
+
+  # WebSocket Connection Drop Alert
+  - displayName: "WebSocket Connections Dropped"
+    conditions:
+      - displayName: "Connections dropped > 20%"
+        conditionThreshold:
+          filter: 'metric.type="custom.googleapis.com/luckygas/websocket_connections"'
+          aggregations:
+            - alignmentPeriod: "300s"
+              perSeriesAligner: "ALIGN_PERCENT_CHANGE"
+              crossSeriesReducer: "REDUCE_SUM"
+          comparison: "COMPARISON_LT"
+          thresholdValue: -0.2
+          duration: "600s"
+          trigger:
+            count: 1
+    combiner: "OR"
+    notificationChannels:
+      - "email"
+      - "slack"
+    alertStrategy:
+      autoClose: "1800s"
+    severity: "WARNING"
+
+# Notification Channels Configuration
+notificationChannels:
+  email:
+    type: "email"
+    displayName: "Lucky Gas Alerts Email"
+    labels:
+      email_address: "alerts@luckygas.tw"
+    enabled: true
+
+  slack:
+    type: "slack"
+    displayName: "Lucky Gas Slack Alerts"
+    labels:
+      channel_name: "#alerts"
+      url: "${SLACK_WEBHOOK_URL}"
+    enabled: true
+
+  pagerduty:
+    type: "pagerduty"
+    displayName: "Lucky Gas PagerDuty"
+    labels:
+      service_key: "${PAGERDUTY_SERVICE_KEY}"
+    enabled: true
+
+# Uptime Checks Configuration
+uptimeCheckConfigs:
+  - displayName: "Lucky Gas Frontend"
+    monitoredResource:
+      type: "uptime_url"
+      labels:
+        host: "app.luckygas.tw"
+        project_id: "${PROJECT_ID}"
+    httpCheck:
+      path: "/"
+      port: 443
+      requestMethod: "GET"
+      useSsl: true
+      validateSsl: true
+    period: "60s"
+    timeout: "10s"
+    selectedRegions:
+      - "ASIA_PACIFIC"
+      - "USA"
+      - "EUROPE"
+
+  - displayName: "Lucky Gas Backend API"
+    monitoredResource:
+      type: "uptime_url"
+      labels:
+        host: "app.luckygas.tw"
+        project_id: "${PROJECT_ID}"
+    httpCheck:
+      path: "/api/v1/health"
+      port: 443
+      requestMethod: "GET"
+      useSsl: true
+      validateSsl: true
+      acceptedResponseStatusCodes:
+        - statusValue: 200
+    period: "60s"
+    timeout: "10s"
+    selectedRegions:
+      - "ASIA_PACIFIC"
+      - "USA"
+      - "EUROPE"
