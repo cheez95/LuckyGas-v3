@@ -5,7 +5,7 @@ from cryptography.fernet import Fernet
 from abc import ABC, abstractmethod
 import os
 import json
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -17,6 +17,9 @@ except ImportError:
     HAS_GCP_SECRET_MANAGER = False
     
 logger = logging.getLogger(__name__)
+
+# Singleton instance storage
+_api_key_manager_instance = None
 
 
 class APIKeyManager(ABC):
@@ -40,6 +43,11 @@ class APIKeyManager(ABC):
     @abstractmethod
     async def delete_key(self, key_name: str) -> bool:
         """Delete an API key"""
+        pass
+    
+    @abstractmethod
+    async def list_keys(self) -> List[str]:
+        """List all API key names"""
         pass
 
 
@@ -226,6 +234,32 @@ class LocalEncryptedKeyManager(APIKeyManager):
                 f"operation=delete_key, status=error, error_type={type(e).__name__}"
             )
             return False
+    
+    async def list_keys(self) -> List[str]:
+        """List all API key names"""
+        if not self.keys_file.exists():
+            logger.info("No encrypted keys file found")
+            return []
+        
+        try:
+            with open(self.keys_file, 'r') as f:
+                encrypted_keys = json.load(f)
+            
+            keys = list(encrypted_keys.keys())
+            logger.info(
+                f"API_KEY_LIST: count={len(keys)}, "
+                f"access_time={datetime.now().isoformat()}, "
+                f"operation=list_keys, status=success"
+            )
+            return keys
+        except Exception as e:
+            logger.error(f"Error listing keys: {e}")
+            logger.info(
+                f"API_KEY_LIST: "
+                f"access_time={datetime.now().isoformat()}, "
+                f"operation=list_keys, status=error, error_type={type(e).__name__}"
+            )
+            return []
 
 
 class GCPSecretManager(APIKeyManager):
@@ -383,17 +417,56 @@ class GCPSecretManager(APIKeyManager):
                 f"error_type={type(e).__name__}"
             )
             return False
+    
+    async def list_keys(self) -> List[str]:
+        """List all API key names from Google Secret Manager"""
+        try:
+            parent = f"projects/{self.project_id}"
+            
+            # List all secrets
+            secrets = []
+            for secret in self.client.list_secrets(request={"parent": parent}):
+                # Extract secret name from the full resource name
+                # Format: projects/{project}/secrets/{secret_name}
+                secret_name = secret.name.split('/')[-1]
+                
+                # Only include API keys (following naming convention)
+                if secret_name.startswith('api-key-'):
+                    # Remove the prefix to get the key name
+                    key_name = secret_name[8:]  # Remove 'api-key-'
+                    secrets.append(key_name)
+            
+            logger.info(
+                f"API_KEY_LIST: count={len(secrets)}, "
+                f"access_time={datetime.now().isoformat()}, "
+                f"operation=list_keys, status=success, provider=gcp_secret_manager"
+            )
+            return secrets
+        except Exception as e:
+            logger.error(f"Failed to list secrets: {e}")
+            logger.info(
+                f"API_KEY_LIST: "
+                f"access_time={datetime.now().isoformat()}, "
+                f"operation=list_keys, status=error, provider=gcp_secret_manager, "
+                f"error_type={type(e).__name__}"
+            )
+            return []
 
 
 # Factory function to get appropriate key manager
 def _get_api_key_manager_impl(environment: str, project_id: Optional[str] = None) -> APIKeyManager:
     """Get the appropriate API key manager based on environment"""
-    if environment == "production" and project_id:
-        logger.info("Using GCP Secret Manager for API keys")
-        return GCPSecretManager(project_id)
-    else:
-        logger.info("Using local encrypted storage for API keys")
-        return LocalEncryptedKeyManager()
+    global _api_key_manager_instance
+    
+    if _api_key_manager_instance is None:
+        if environment == "production" and project_id:
+            logger.info("Using GCP Secret Manager for API keys")
+            _api_key_manager_instance = GCPSecretManager(project_id)
+        else:
+            logger.info("Using local encrypted storage for API keys")
+            _api_key_manager_instance = LocalEncryptedKeyManager()
+    
+    return _api_key_manager_instance
 
 
 async def get_api_key_manager() -> APIKeyManager:

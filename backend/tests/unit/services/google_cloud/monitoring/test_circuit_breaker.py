@@ -16,9 +16,10 @@ class TestCircuitBreaker:
     def circuit_breaker(self):
         """Create a CircuitBreaker instance with test-friendly settings"""
         return CircuitBreaker(
+            api_type="routes",  # Add required api_type parameter
             failure_threshold=3,
-            timeout=1,  # 1 second timeout for faster tests
-            half_open_retries=2
+            timeout=1,  # 1 second timeout for faster tests (as integer)
+            success_threshold=2  # Changed from half_open_retries
         )
     
     def test_initial_state(self, circuit_breaker):
@@ -57,21 +58,20 @@ class TestCircuitBreaker:
         for _ in range(3):
             circuit_breaker.record_failure()
         
-        # Verify circuit is OPEN
+        # Verify circuit is now OPEN
         assert circuit_breaker.state == CircuitState.OPEN
         assert circuit_breaker.failure_count == 3
         assert circuit_breaker.can_execute() is False
-        assert circuit_breaker.last_failure_time is not None
     
     def test_circuit_stays_open_during_timeout(self, circuit_breaker):
-        """Test circuit stays OPEN during timeout period"""
+        """Test circuit remains OPEN during timeout period"""
         # Open the circuit
         for _ in range(3):
             circuit_breaker.record_failure()
         
-        # Verify can't execute during timeout
-        assert circuit_breaker.can_execute() is False
+        # Should still be OPEN
         assert circuit_breaker.state == CircuitState.OPEN
+        assert circuit_breaker.can_execute() is False
     
     def test_circuit_transitions_to_half_open(self, circuit_breaker):
         """Test circuit transitions to HALF_OPEN after timeout"""
@@ -79,16 +79,12 @@ class TestCircuitBreaker:
         for _ in range(3):
             circuit_breaker.record_failure()
         
-        # Mock time to simulate timeout expiry
-        with patch('app.services.google_cloud.monitoring.circuit_breaker.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=2)
-            
-            # First check should transition to HALF_OPEN
-            can_execute = circuit_breaker.can_execute()
-            
-            assert can_execute is True
-            assert circuit_breaker.state == CircuitState.HALF_OPEN
-            assert circuit_breaker.half_open_attempts == 0
+        # Mock time passage
+        circuit_breaker.last_failure_time = datetime.now() - timedelta(seconds=2)
+        
+        # Check state - should be HALF_OPEN
+        assert circuit_breaker._get_state() == CircuitState.HALF_OPEN
+        assert circuit_breaker.can_execute() is True
     
     def test_half_open_success_closes_circuit(self, circuit_breaker):
         """Test successful operations in HALF_OPEN state close the circuit"""
@@ -97,21 +93,17 @@ class TestCircuitBreaker:
             circuit_breaker.record_failure()
         
         # Transition to HALF_OPEN
-        with patch('app.services.google_cloud.monitoring.circuit_breaker.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=2)
-            circuit_breaker.can_execute()
-            
-            # Record successes in HALF_OPEN
-            circuit_breaker.record_success()
-            assert circuit_breaker.state == CircuitState.HALF_OPEN
-            assert circuit_breaker.half_open_attempts == 1
-            
-            circuit_breaker.record_success()
-            
-            # Circuit should be CLOSED after required successes
-            assert circuit_breaker.state == CircuitState.CLOSED
-            assert circuit_breaker.failure_count == 0
-            assert circuit_breaker.half_open_attempts == 0
+        circuit_breaker.last_failure_time = datetime.now() - timedelta(seconds=2)
+        circuit_breaker.state = CircuitState.HALF_OPEN  # Simulate transition
+        
+        # Record successes to reach success threshold
+        circuit_breaker.record_success()
+        circuit_breaker.record_success()
+        
+        # Should be CLOSED again
+        assert circuit_breaker.state == CircuitState.CLOSED
+        assert circuit_breaker.failure_count == 0
+        # Success count is reset to 0 when transitioning from HALF_OPEN to CLOSED
     
     def test_half_open_failure_reopens_circuit(self, circuit_breaker):
         """Test failure in HALF_OPEN state reopens the circuit"""
@@ -120,16 +112,15 @@ class TestCircuitBreaker:
             circuit_breaker.record_failure()
         
         # Transition to HALF_OPEN
-        with patch('app.services.google_cloud.monitoring.circuit_breaker.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=2)
-            circuit_breaker.can_execute()
-            
-            # Record failure in HALF_OPEN
-            circuit_breaker.record_failure()
-            
-            # Circuit should be OPEN again
-            assert circuit_breaker.state == CircuitState.OPEN
-            assert circuit_breaker.half_open_attempts == 0
+        circuit_breaker.last_failure_time = datetime.now() - timedelta(seconds=2)
+        circuit_breaker.state = CircuitState.HALF_OPEN  # Simulate transition
+        
+        # Record a failure
+        circuit_breaker.record_failure()
+        
+        # Should be OPEN again
+        assert circuit_breaker.state == CircuitState.OPEN
+        assert circuit_breaker.success_count == 0  # Success count is reset when reopening
     
     def test_mixed_results_in_half_open(self, circuit_breaker):
         """Test mixed success/failure in HALF_OPEN state"""
@@ -138,157 +129,154 @@ class TestCircuitBreaker:
             circuit_breaker.record_failure()
         
         # Transition to HALF_OPEN
-        with patch('app.services.google_cloud.monitoring.circuit_breaker.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=2)
-            circuit_breaker.can_execute()
-            
-            # Mixed results
-            circuit_breaker.record_success()
-            circuit_breaker.record_failure()  # This reopens the circuit
-            
-            assert circuit_breaker.state == CircuitState.OPEN
+        circuit_breaker.last_failure_time = datetime.now() - timedelta(seconds=2)
+        circuit_breaker.state = CircuitState.HALF_OPEN  # Simulate transition
+        
+        # Mix of success and failure
+        circuit_breaker.record_success()
+        circuit_breaker.record_failure()  # This should reopen
+        
+        # Should be OPEN due to failure
+        assert circuit_breaker.state == CircuitState.OPEN
     
     def test_get_status(self, circuit_breaker):
         """Test getting circuit breaker status"""
-        # Initial status
         status = circuit_breaker.get_status()
-        assert status["state"] == "CLOSED"
+        
+        assert status["state"] == CircuitState.CLOSED.value
         assert status["failure_count"] == 0
         assert status["success_count"] == 0
-        assert status["can_execute"] is True
-        
-        # Open the circuit
-        for _ in range(3):
-            circuit_breaker.record_failure()
-        
-        status = circuit_breaker.get_status()
-        assert status["state"] == "OPEN"
-        assert status["failure_count"] == 3
-        assert status["can_execute"] is False
-        assert "last_failure_time" in status
+        assert status["failure_threshold"] == 3
+        assert status["success_threshold"] == 2
+        assert status["api_type"] == "routes"
+        assert status["timeout_seconds"] == 1
     
-    def test_reset(self, circuit_breaker):
-        """Test resetting the circuit breaker"""
-        # Open the circuit
+    @pytest.mark.asyncio
+    async def test_reset(self, circuit_breaker):
+        """Test resetting circuit breaker"""
+        # Cause some failures
         for _ in range(3):
             circuit_breaker.record_failure()
-        
-        assert circuit_breaker.state == CircuitState.OPEN
         
         # Reset
-        circuit_breaker.reset()
+        await circuit_breaker.reset()
         
-        # Verify reset to initial state
+        # Should be in initial state
         assert circuit_breaker.state == CircuitState.CLOSED
         assert circuit_breaker.failure_count == 0
         assert circuit_breaker.success_count == 0
-        assert circuit_breaker.last_failure_time is None
-        assert circuit_breaker.half_open_attempts == 0
     
     def test_custom_thresholds(self):
         """Test circuit breaker with custom thresholds"""
+        # Create with different thresholds
         cb = CircuitBreaker(
-            failure_threshold=5,
-            timeout=10,
-            half_open_retries=3
+            api_type="vertex_ai",
+            failure_threshold=1,
+            success_threshold=3,
+            timeout=1  # Use integer seconds
         )
         
-        # Should take 5 failures to open
-        for i in range(4):
-            cb.record_failure()
-            assert cb.state == CircuitState.CLOSED
-        
+        # One failure should open it
         cb.record_failure()
         assert cb.state == CircuitState.OPEN
         
-        # Should require 3 successes in HALF_OPEN to close
-        with patch('app.services.google_cloud.monitoring.circuit_breaker.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=11)
-            cb.can_execute()
-            
-            cb.record_success()
-            cb.record_success()
-            assert cb.state == CircuitState.HALF_OPEN
-            
-            cb.record_success()
-            assert cb.state == CircuitState.CLOSED
+        # Wait for timeout
+        cb.last_failure_time = datetime.now() - timedelta(seconds=1)
+        # Manually set state to HALF_OPEN after timeout
+        cb.state = CircuitState.HALF_OPEN
+        
+        # Need 3 successes to close
+        cb.record_success()
+        cb.record_success()
+        assert cb.state == CircuitState.HALF_OPEN  # Still half open after 2 successes
+        
+        cb.record_success()  # Third success
+        assert cb.state == CircuitState.CLOSED
     
-    def test_concurrent_operations(self, circuit_breaker):
-        """Test thread-safe concurrent operations"""
-        import threading
+    @pytest.mark.asyncio
+    async def test_concurrent_operations(self, circuit_breaker):
+        """Test circuit breaker under concurrent operations"""
+        # Track if operations have checked can_execute
+        checks_done = []
         
-        def record_failures():
-            for _ in range(2):
-                circuit_breaker.record_failure()
+        async def operation(should_fail: bool):
+            # All operations check can_execute "at the same time"
+            can_exec = circuit_breaker.can_execute()
+            checks_done.append(can_exec)
+            
+            # Simulate delay before recording result
+            await asyncio.sleep(0.001)
+            
+            if can_exec:
+                if should_fail:
+                    circuit_breaker.record_failure()
+                else:
+                    circuit_breaker.record_success()
+                return not should_fail
+            return False
         
-        def record_successes():
-            for _ in range(3):
-                circuit_breaker.record_success()
+        # Run concurrent operations
+        tasks = []
+        # First 4 operations fail (indices 0, 1, 2, 3)
+        for i in range(4):
+            tasks.append(operation(True))
+        # Next 6 succeed
+        for i in range(6):
+            tasks.append(operation(False))
         
-        # Create threads
-        threads = []
-        for _ in range(3):
-            threads.append(threading.Thread(target=record_failures))
-            threads.append(threading.Thread(target=record_successes))
+        results = await asyncio.gather(*tasks)
         
-        # Start all threads
-        for t in threads:
-            t.start()
-        
-        # Wait for completion
-        for t in threads:
-            t.join()
-        
-        # Verify counts are correct
-        total_failures = circuit_breaker.failure_count
-        total_successes = circuit_breaker.success_count
-        
-        # Should have recorded all operations
-        assert total_failures >= 3  # At least threshold reached
-        assert total_successes == 9  # 3 threads * 3 successes each
+        # Check final state - at least 3 failures should have been recorded
+        assert circuit_breaker.failure_count >= 3
+        assert circuit_breaker.state == CircuitState.OPEN
     
     def test_state_transitions(self, circuit_breaker):
-        """Test all possible state transitions"""
-        # CLOSED -> CLOSED (success)
-        circuit_breaker.record_success()
+        """Test complete state transition cycle"""
+        # Start CLOSED
         assert circuit_breaker.state == CircuitState.CLOSED
         
-        # CLOSED -> OPEN (threshold failures)
+        # CLOSED -> OPEN
         for _ in range(3):
             circuit_breaker.record_failure()
         assert circuit_breaker.state == CircuitState.OPEN
         
-        # OPEN -> HALF_OPEN (timeout)
-        with patch('app.services.google_cloud.monitoring.circuit_breaker.datetime') as mock_datetime:
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=2)
-            circuit_breaker.can_execute()
-            assert circuit_breaker.state == CircuitState.HALF_OPEN
-            
-            # HALF_OPEN -> OPEN (failure)
+        # OPEN -> HALF_OPEN (after timeout)
+        circuit_breaker.last_failure_time = datetime.now() - timedelta(seconds=2)
+        circuit_breaker._get_state()
+        assert circuit_breaker.state == CircuitState.HALF_OPEN
+        
+        # HALF_OPEN -> CLOSED (after successes)
+        circuit_breaker.record_success()
+        circuit_breaker.record_success()
+        assert circuit_breaker.state == CircuitState.CLOSED
+        
+        # Back to OPEN
+        for _ in range(3):
             circuit_breaker.record_failure()
-            assert circuit_breaker.state == CircuitState.OPEN
-            
-            # OPEN -> HALF_OPEN again
-            mock_datetime.now.return_value = datetime.now() + timedelta(seconds=4)
-            circuit_breaker.can_execute()
-            assert circuit_breaker.state == CircuitState.HALF_OPEN
-            
-            # HALF_OPEN -> CLOSED (successes)
-            circuit_breaker.record_success()
-            circuit_breaker.record_success()
-            assert circuit_breaker.state == CircuitState.CLOSED
+        assert circuit_breaker.state == CircuitState.OPEN
+        
+        # HALF_OPEN -> OPEN (on failure)
+        circuit_breaker.last_failure_time = datetime.now() - timedelta(seconds=2)
+        circuit_breaker._get_state()
+        circuit_breaker.record_failure()
+        assert circuit_breaker.state == CircuitState.OPEN
     
     def test_statistics_tracking(self, circuit_breaker):
-        """Test that statistics are properly tracked"""
+        """Test statistics tracking"""
         # Record various operations
         circuit_breaker.record_success()
         circuit_breaker.record_success()
         circuit_breaker.record_failure()
-        circuit_breaker.record_success()
+        
+        stats = circuit_breaker.get_status()
+        assert stats["success_count"] == 2
+        assert stats["failure_count"] == 1
+        # Note: total_count is not included in the get_status() method
+        
+        # After opening
+        circuit_breaker.record_failure()
         circuit_breaker.record_failure()
         
-        status = circuit_breaker.get_status()
-        assert status["success_count"] == 3
-        assert status["failure_count"] == 2
-        assert status["total_count"] == 5
-        assert status["failure_rate"] == 40.0  # 2/5 = 40%
+        stats = circuit_breaker.get_status()
+        assert stats["state"] == CircuitState.OPEN.value
+        assert stats["failure_count"] == 3

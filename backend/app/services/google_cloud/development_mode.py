@@ -233,6 +233,9 @@ class DevelopmentModeManager:
         """Get information about current services"""
         info = {
             "mode": self.mode.value,
+            "is_production": self.is_production(),
+            "is_development": self.is_development(),
+            "is_offline": self.is_offline(),
             "services": {},
             "warnings": []
         }

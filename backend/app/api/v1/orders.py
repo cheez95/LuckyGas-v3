@@ -251,7 +251,9 @@ async def create_order_v2(
     order_data = order_create.model_dump(exclude={'order_items'})
     
     # Generate order number
-    order_data["order_number"] = generate_order_number()
+    from datetime import datetime
+    timestamp = datetime.now()
+    order_data["order_number"] = f"ORD-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
     
     # Use customer's address if not specified
     if not order_data.get("delivery_address"):

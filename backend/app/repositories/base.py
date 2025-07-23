@@ -317,7 +317,7 @@ class CachedRepository(BaseRepository[ModelType]):
         Args:
             id: Primary key value
         """
-        from app.core.cache import invalidate_cache
+        from app.core.cache import cache
         
         cache_key = f"{self.cache_prefix}:{id}"
-        await invalidate_cache(cache_key)
+        await cache.invalidate(cache_key)

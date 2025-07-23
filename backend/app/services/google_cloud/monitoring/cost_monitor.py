@@ -62,8 +62,8 @@ class GoogleAPICostMonitor:
         """Record an API call and update costs"""
         await self._ensure_redis()
         
-        # Update metrics
-        google_api_calls_counter.labels(api=api_type, endpoint=endpoint).inc()
+        # Update metrics (for now, just mark as 'allowed' - budget check happens later)
+        google_api_calls_counter.labels(api_type=api_type, status="allowed").inc()
         
         # Calculate cost (per call, not per 1000)
         cost_per_call = self.COST_PER_1000_CALLS.get(api_type, Decimal("0")) / 1000
@@ -166,15 +166,20 @@ class GoogleAPICostMonitor:
     
     async def _get_period_total(self, period: str, period_key: str) -> Decimal:
         """Get total cost for a time period across all API types"""
-        total = Decimal("0")
-        
-        for api_type in self.COST_PER_1000_CALLS.keys():
-            key = f"api_cost:{period}:{period_key}:{api_type}"
-            cost = await self.redis.get(key)
-            if cost:
-                total += Decimal(cost)
-        
-        return total
+        try:
+            total = Decimal("0")
+            
+            for api_type in self.COST_PER_1000_CALLS.keys():
+                key = f"api_cost:{period}:{period_key}:{api_type}"
+                cost = await self.redis.get(key)
+                if cost:
+                    total += Decimal(cost.decode() if isinstance(cost, bytes) else cost)
+            
+            return total
+        except (redis.ConnectionError, redis.RedisError) as e:
+            # If Redis is unavailable, return 0 to avoid blocking calls
+            logger.warning(f"Redis error in _get_period_total, returning 0: {e}")
+            return Decimal("0")
     
     async def _create_alert(self, level: str, message: str, data: Dict) -> Optional[Dict]:
         """Create an alert with rate limiting"""
@@ -210,29 +215,34 @@ class GoogleAPICostMonitor:
         Check if API call should be blocked due to budget limits
         Returns: True if allowed, False if blocked
         """
-        await self._ensure_redis()
-        
-        now = datetime.now()
-        
-        # Check hourly limit first (more restrictive)
-        hourly_total = await self._get_period_total("hour", now.strftime("%Y-%m-%d-%H"))
-        if hourly_total >= self.THRESHOLDS["hourly_critical"]:
-            logger.error(
-                f"Blocking {api_type} API call - hourly budget exceeded: ${hourly_total:.2f}"
-            )
-            google_api_calls_counter.labels(api=api_type, endpoint="blocked_budget").inc()
-            return False
-        
-        # Check daily limit
-        daily_total = await self._get_period_total("day", now.strftime("%Y-%m-%d"))
-        if daily_total >= self.THRESHOLDS["daily_critical"]:
-            logger.error(
-                f"Blocking {api_type} API call - daily budget exceeded: ${daily_total:.2f}"
-            )
-            google_api_calls_counter.labels(api=api_type, endpoint="blocked_budget").inc()
-            return False
-        
-        return True
+        try:
+            await self._ensure_redis()
+            
+            now = datetime.now()
+            
+            # Check hourly limit first (more restrictive)
+            hourly_total = await self._get_period_total("hour", now.strftime("%Y-%m-%d-%H"))
+            if hourly_total >= self.THRESHOLDS["hourly_critical"]:
+                logger.error(
+                    f"Blocking {api_type} API call - hourly budget exceeded: ${hourly_total:.2f}"
+                )
+                google_api_calls_counter.labels(api_type=api_type, status="blocked_budget").inc()
+                return False
+            
+            # Check daily limit
+            daily_total = await self._get_period_total("day", now.strftime("%Y-%m-%d"))
+            if daily_total >= self.THRESHOLDS["daily_critical"]:
+                logger.error(
+                    f"Blocking {api_type} API call - daily budget exceeded: ${daily_total:.2f}"
+                )
+                google_api_calls_counter.labels(api_type=api_type, status="blocked_budget").inc()
+                return False
+            
+            return True
+        except (redis.ConnectionError, redis.RedisError) as e:
+            # If Redis is unavailable, allow the call but log the error
+            logger.warning(f"Redis error in enforce_budget_limit, allowing call: {e}")
+            return True
     
     async def get_cost_report(self, period: str = "daily") -> Dict[str, any]:
         """Generate cost report for specified period"""
@@ -268,6 +278,9 @@ class GoogleAPICostMonitor:
             cost_key = f"api_cost:{period}:{period_key}:{api_type}"
             cost = await self.redis.get(cost_key)
             if cost:
+                # Handle bytes response from Redis
+                if isinstance(cost, bytes):
+                    cost = cost.decode('utf-8')
                 cost_decimal = Decimal(cost)
                 report["costs_by_api"][api_type] = float(cost_decimal)
                 total_cost += cost_decimal
@@ -276,6 +289,9 @@ class GoogleAPICostMonitor:
             count_key = f"api_count:{period}:{period_key}:{api_type}"
             count = await self.redis.get(count_key)
             if count:
+                # Handle bytes response from Redis
+                if isinstance(count, bytes):
+                    count = count.decode('utf-8')
                 count_int = int(count)
                 report["counts_by_api"][api_type] = count_int
                 total_calls += count_int
@@ -302,42 +318,54 @@ class GoogleAPICostMonitor:
         end_time: datetime
     ) -> Dict[str, any]:
         """Get detailed usage for a specific API type and time range"""
-        await self._ensure_redis()
-        
-        usage = {
-            "api_type": api_type,
-            "start_time": start_time.isoformat(),
-            "end_time": end_time.isoformat(),
-            "hourly_breakdown": [],
-            "total_cost": 0.0,
-            "total_calls": 0
-        }
-        
-        # Iterate through hours in the range
-        current = start_time.replace(minute=0, second=0, microsecond=0)
-        while current <= end_time:
-            hour_key = current.strftime("%Y-%m-%d-%H")
+        try:
+            await self._ensure_redis()
             
-            # Get cost and count for this hour
-            cost_key = f"api_cost:hour:{hour_key}:{api_type}"
-            count_key = f"api_count:hour:{hour_key}:{api_type}"
+            usage = {
+                "api_type": api_type,
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "hourly_breakdown": [],
+                "total_cost": 0.0,
+                "total_calls": 0
+            }
             
-            cost = await self.redis.get(cost_key)
-            count = await self.redis.get(count_key)
+            # Iterate through hours in the range
+            current = start_time.replace(minute=0, second=0, microsecond=0)
+            while current <= end_time:
+                hour_key = current.strftime("%Y-%m-%d-%H")
+                
+                # Get cost and count for this hour
+                cost_key = f"api_cost:hour:{hour_key}:{api_type}"
+                count_key = f"api_count:hour:{hour_key}:{api_type}"
+                
+                cost = await self.redis.get(cost_key)
+                count = await self.redis.get(count_key)
+                
+                if cost or count:
+                    hour_data = {
+                        "hour": hour_key,
+                        "cost": float(cost.decode() if isinstance(cost, bytes) else cost) if cost else 0.0,
+                        "calls": int(float(count.decode() if isinstance(count, bytes) else count)) if count else 0
+                    }
+                    usage["hourly_breakdown"].append(hour_data)
+                    usage["total_cost"] += hour_data["cost"]
+                    usage["total_calls"] += hour_data["calls"]
+                
+                current += timedelta(hours=1)
             
-            if cost or count:
-                hour_data = {
-                    "hour": hour_key,
-                    "cost": float(cost) if cost else 0.0,
-                    "calls": int(count) if count else 0
-                }
-                usage["hourly_breakdown"].append(hour_data)
-                usage["total_cost"] += hour_data["cost"]
-                usage["total_calls"] += hour_data["calls"]
-            
-            current += timedelta(hours=1)
-        
-        return usage
+            return usage
+        except (redis.ConnectionError, redis.RedisError) as e:
+            # If Redis is unavailable, return empty but valid structure
+            logger.warning(f"Redis error in get_detailed_usage, returning empty data: {e}")
+            return {
+                "api_type": api_type,
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "hourly_breakdown": [],
+                "total_cost": 0.0,
+                "total_calls": 0
+            }
     
     async def reset_budgets(self, period: Optional[str] = None) -> bool:
         """Reset budget tracking (admin function)"""

@@ -9,6 +9,7 @@ from app.models.delivery_history_item import DeliveryHistoryItem
 from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 from app.models.customer_inventory import CustomerInventory
 from app.models.order_item import OrderItem
+from app.models.prediction_batch import PredictionBatch
 
 __all__ = [
     "User",
@@ -26,5 +27,6 @@ __all__ = [
     "DeliveryMethod",
     "ProductAttribute",
     "CustomerInventory",
-    "OrderItem"
+    "OrderItem",
+    "PredictionBatch"
 ]

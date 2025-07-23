@@ -1,0 +1,15 @@
+[0;34m🔧 Lucky Gas Test Infrastructure Fix Script[0m
+
+[0;34mStarting test infrastructure fixes...[0m
+
+[1;33mChecking PostgreSQL status...[0m
+[1;33m⚠️  pg_isready not found, assuming PostgreSQL is running[0m
+[1;33mSetting up test database...[0m
+./scripts/fix-test-infrastructure.sh: line 41: psql: command not found
+Creating user 'luckygas'...
+./scripts/fix-test-infrastructure.sh: line 45: createuser: command not found
+User might already exist
+./scripts/fix-test-infrastructure.sh: line 49: psql: command not found
+./scripts/fix-test-infrastructure.sh: line 52: psql: command not found
+Creating database 'luckygas_test'...
+./scripts/fix-test-infrastructure.sh: line 56: createdb: command not found

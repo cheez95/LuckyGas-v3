@@ -306,8 +306,11 @@ class OrderV2(OrderBaseV2):
     
     # Apply validators
     @field_validator('customer_phone')
-    def validate_phone(cls, v: str) -> str:
-        return TaiwanValidators.validate_phone_number(v) if v else v
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v and isinstance(v, str):
+            return TaiwanValidators.validate_phone_number(v)
+        return v
     
     @field_validator('final_amount')
     def validate_amount(cls, v: float) -> float:

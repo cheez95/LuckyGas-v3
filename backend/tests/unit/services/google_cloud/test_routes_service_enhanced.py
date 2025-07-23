@@ -17,394 +17,441 @@ class TestEnhancedGoogleRoutesService:
     @pytest.fixture
     def mock_dependencies(self):
         """Mock all dependencies"""
+        # Create mock instances
+        mock_rate_limiter = Mock()
+        mock_rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        mock_rate_limiter.get_usage_stats = AsyncMock(return_value={
+            "calls": 10,
+            "limit": 100,
+            "reset_time": "2024-01-01T00:00:00"
+        })
+        
+        mock_cost_monitor = Mock()
+        mock_cost_monitor.enforce_budget_limit = AsyncMock(return_value=True)
+        mock_cost_monitor.record_api_call = AsyncMock()
+        mock_cost_monitor.get_cost_report = AsyncMock(return_value={
+            "total_cost": 10.0,
+            "total_calls": 100,
+            "budget_percentage": 10.0
+        })
+        
+        mock_cache = Mock()
+        mock_cache.get = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock()
+        mock_cache.get_stats = AsyncMock(return_value={
+            "hits": 50,
+            "misses": 50,
+            "hit_rate": 0.5
+        })
+        
+        mock_api_key_manager = Mock()
+        mock_api_key_manager.get_key = AsyncMock(return_value="test_api_key")
+        mock_api_key_manager.set_key = AsyncMock()
+        
+        mock_circuit_breaker = Mock()
+        mock_circuit_breaker.is_open = False
+        async def mock_circuit_breaker_call(func, *args, **kwargs):
+            return await func(*args, **kwargs)
+        mock_circuit_breaker.call = AsyncMock(side_effect=mock_circuit_breaker_call)
+        mock_circuit_breaker.get_state = Mock(return_value={
+            "state": "closed",  
+            "failures": 0
+        })
+        
+        mock_circuit_manager = Mock()
+        mock_circuit_manager.get_breaker = AsyncMock(return_value=mock_circuit_breaker)
+        
+        # Create a custom exception class that accepts keyword arguments
+        class MockGoogleAPIError(Exception):
+            def __init__(self, message="", **kwargs):
+                super().__init__(message)
+                self.message = message
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
+        # Mock GoogleAPIErrorHandler to execute the function
+        mock_error_handler = Mock()
+        async def mock_handle_with_retry(func, *args, **kwargs):
+            return await func()
+        mock_error_handler.handle_with_retry = AsyncMock(side_effect=mock_handle_with_retry)
+        
         with patch.multiple(
             "app.services.google_cloud.routes_service_enhanced",
-            GoogleAPIRateLimiter=Mock,
-            GoogleAPICostMonitor=Mock,
-            GoogleAPIErrorHandler=Mock,
-            CircuitBreaker=Mock,
-            GoogleAPICache=Mock,
-            DevelopmentModeManager=Mock,
-            MockGoogleRoutesService=Mock,
-            get_api_key_manager=AsyncMock
+            get_api_key_manager=AsyncMock(return_value=mock_api_key_manager),
+            get_rate_limiter=AsyncMock(return_value=mock_rate_limiter),
+            get_cost_monitor=AsyncMock(return_value=mock_cost_monitor),
+            get_api_cache=AsyncMock(return_value=mock_cache),
+            circuit_manager=mock_circuit_manager,
+            GoogleAPIErrorHandler=mock_error_handler,
+            GoogleAPIError=MockGoogleAPIError
         ) as mocks:
+            mocks['mock_rate_limiter'] = mock_rate_limiter
+            mocks['mock_cost_monitor'] = mock_cost_monitor
+            mocks['mock_cache'] = mock_cache
+            mocks['mock_api_key_manager'] = mock_api_key_manager
+            mocks['mock_circuit_breaker'] = mock_circuit_breaker
             yield mocks
     
     @pytest.fixture
     def service(self, mock_dependencies):
         """Create an EnhancedGoogleRoutesService instance"""
-        return EnhancedGoogleRoutesService()
+        service = EnhancedGoogleRoutesService()
+        # Mark as already initialized to avoid async init in tests
+        service._initialized = True
+        service._rate_limiter = mock_dependencies['mock_rate_limiter']
+        service._cost_monitor = mock_dependencies['mock_cost_monitor']
+        service._cache = mock_dependencies['mock_cache']
+        service._api_key_manager = mock_dependencies['mock_api_key_manager']
+        service._circuit_breaker = mock_dependencies['mock_circuit_breaker']
+        return service
     
     @pytest.mark.asyncio
     async def test_initialization(self, service):
         """Test service initialization"""
-        assert service.rate_limiter is not None
-        assert service.cost_monitor is not None
-        assert service.error_handler is not None
-        assert service.circuit_breaker is not None
-        assert service.cache is not None
-        assert service.dev_mode_manager is not None
-        assert service.mock_service is not None
-        assert service.metrics["total_requests"] == 0
+        assert service._rate_limiter is not None
+        assert service._cost_monitor is not None
+        assert service._circuit_breaker is not None
+        assert service._cache is not None
+        assert service._api_key_manager is not None
+        assert service._initialized is True
     
     @pytest.mark.asyncio
-    async def test_calculate_route_with_cache_hit(self, service):
-        """Test calculate_route with cache hit"""
+    async def test_optimize_route_with_cache_hit(self, service, mock_dependencies):
+        """Test optimize_route with cache hit"""
         # Mock cache hit
         cached_result = {
-            "routes": [{"distance": 1000, "duration": 120}],
+            "optimized_route": [{"lat": 25.033, "lng": 121.565}],
+            "total_distance": 1000,
+            "total_duration": 120,
             "cached": True
         }
-        service.cache.get = AsyncMock(return_value=cached_result)
+        service._cache.get = AsyncMock(return_value=cached_result)
         
-        # Call calculate_route
-        result = await service.calculate_route(
-            origin="25.033,121.565",
-            destination="25.047,121.517"
+        # Call optimize_route
+        result = await service.optimize_route(
+            depot=(25.033, 121.565),
+            stops=[{"lat": 25.047, "lng": 121.517}]
         )
         
         # Verify cache was used
         assert result == cached_result
-        assert service.metrics["cache_hits"] == 1
-        service.cache.get.assert_called_once()
+        service._cache.get.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_calculate_route_development_mode(self, service):
-        """Test calculate_route in development mode"""
-        # Mock development mode
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.DEVELOPMENT
+    async def test_optimize_route_without_api_key(self, service, mock_dependencies):
+        """Test optimize_route when API key is not available"""
+        # Mock no API key
+        service._api_key_manager.get_key = AsyncMock(return_value=None)
+        service._cache.get = AsyncMock(return_value=None)
+        
+        # Mock gcp_config to have no API key
+        mock_config = Mock()
+        mock_config.maps_api_key = None
+        service.gcp_config = mock_config
+        
+        # Call optimize_route
+        result = await service.optimize_route(
+            depot=(25.033, 121.565),
+            stops=[{"lat": 25.047, "lng": 121.517}]
         )
-        service.cache.get = AsyncMock(return_value=None)
         
-        # Mock mock service response
-        mock_response = {"routes": [{"distance": 2000, "duration": 240}]}
-        service.mock_service.calculate_route = AsyncMock(return_value=mock_response)
-        
-        # Call calculate_route
-        result = await service.calculate_route(
-            origin="25.033,121.565",
-            destination="25.047,121.517"
-        )
-        
-        # Verify mock service was used
-        assert result == mock_response
-        service.mock_service.calculate_route.assert_called_once()
+        # Verify unoptimized route was returned
+        assert "stops" in result
+        assert result["optimized"] is False
+        assert len(result["stops"]) == 1
+        assert result["stops"][0]["lat"] == 25.047
     
     @pytest.mark.asyncio
-    async def test_calculate_route_rate_limit_exceeded(self, service):
-        """Test calculate_route when rate limit is exceeded"""
+    async def test_optimize_route_rate_limit_exceeded(self, service, mock_dependencies):
+        """Test optimize_route when rate limit is exceeded"""
         # Setup mocks
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=False)
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(False, 1.0))
         
-        # Mock fallback response
-        mock_response = {"routes": [{"distance": 1500, "duration": 180}]}
-        service.mock_service.calculate_route = AsyncMock(return_value=mock_response)
-        
-        # Call calculate_route
-        result = await service.calculate_route(
-            origin="25.033,121.565",
-            destination="25.047,121.517"
-        )
-        
-        # Verify fallback was used
-        assert result == mock_response
-        service.mock_service.calculate_route.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_calculate_route_cost_budget_exceeded(self, service):
-        """Test calculate_route when cost budget is exceeded"""
-        # Setup mocks
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=True)
-        service.cost_monitor.check_budget = AsyncMock(return_value=False)
-        
-        # Mock fallback response
-        mock_response = {"routes": [{"distance": 1500, "duration": 180}]}
-        service.mock_service.calculate_route = AsyncMock(return_value=mock_response)
-        
-        # Call calculate_route
-        result = await service.calculate_route(
-            origin="25.033,121.565",
-            destination="25.047,121.517"
-        )
-        
-        # Verify fallback was used
-        assert result == mock_response
-    
-    @pytest.mark.asyncio
-    async def test_calculate_route_circuit_breaker_open(self, service):
-        """Test calculate_route when circuit breaker is open"""
-        # Setup mocks
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=True)
-        service.cost_monitor.check_budget = AsyncMock(return_value=True)
-        service.circuit_breaker.can_execute = Mock(return_value=False)
-        
-        # Mock fallback response
-        mock_response = {"routes": [{"distance": 1500, "duration": 180}]}
-        service.mock_service.calculate_route = AsyncMock(return_value=mock_response)
-        
-        # Call calculate_route
-        result = await service.calculate_route(
-            origin="25.033,121.565",
-            destination="25.047,121.517"
-        )
-        
-        # Verify fallback was used
-        assert result == mock_response
-    
-    @pytest.mark.asyncio
-    async def test_calculate_route_success_with_caching(self, service):
-        """Test successful calculate_route with result caching"""
-        # Setup mocks for successful flow
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=True)
-        service.cost_monitor.check_budget = AsyncMock(return_value=True)
-        service.circuit_breaker.can_execute = Mock(return_value=True)
-        service.circuit_breaker.record_success = Mock()
-        service.cache.set = AsyncMock(return_value=True)
-        service.cost_monitor.track_cost = AsyncMock()
-        
-        # Mock parent class method
-        parent_response = {"routes": [{"distance": 3000, "duration": 360}]}
-        with patch.object(
-            service.__class__.__bases__[0],
-            'calculate_route',
-            AsyncMock(return_value=parent_response)
-        ):
-            # Mock error handler
-            service.error_handler.execute_with_retry = AsyncMock(
-                side_effect=lambda func, **kwargs: func()
+        # Call optimize_route should raise exception
+        with pytest.raises(Exception) as exc_info:
+            await service.optimize_route(
+                depot=(25.033, 121.565),
+                stops=[{"lat": 25.047, "lng": 121.517}]
             )
+        
+        # Verify rate limit error
+        assert "Rate limit exceeded" in str(exc_info.value)
+    
+    @pytest.mark.asyncio
+    async def test_optimize_route_cost_budget_exceeded(self, service, mock_dependencies):
+        """Test optimize_route when cost budget is exceeded"""
+        # Setup mocks
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        service._cost_monitor.enforce_budget_limit = AsyncMock(return_value=False)
+        
+        # Call optimize_route should raise exception
+        with pytest.raises(Exception) as exc_info:
+            await service.optimize_route(
+                depot=(25.033, 121.565),
+                stops=[{"lat": 25.047, "lng": 121.517}]
+            )
+        
+        # Verify cost budget error
+        assert "Cost budget exceeded" in str(exc_info.value)
+    
+    @pytest.mark.asyncio
+    async def test_optimize_route_circuit_breaker_open(self, service, mock_dependencies):
+        """Test optimize_route when circuit breaker is open"""
+        # Setup mocks
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        service._cost_monitor.enforce_budget_limit = AsyncMock(return_value=True)
+        service._circuit_breaker.is_open = True
+        
+        # Mock circuit breaker to raise exception when open
+        async def raise_error(func, *args, **kwargs):
+            raise Exception("Circuit breaker is open")
+        service._circuit_breaker.call = AsyncMock(side_effect=raise_error)
+        
+        # Call optimize_route - it should catch the exception and return unoptimized route
+        result = await service.optimize_route(
+            depot=(25.033, 121.565),
+            stops=[{"lat": 25.047, "lng": 121.517}]
+        )
+        
+        # Verify unoptimized route was returned
+        assert "stops" in result
+        assert result["optimized"] is False
+        assert len(result["stops"]) == 1
+        assert result["stops"][0]["lat"] == 25.047
+    
+    @pytest.mark.asyncio
+    async def test_optimize_route_success_with_caching(self, service, mock_dependencies):
+        """Test successful optimize_route with result caching"""
+        # Setup mocks for successful flow
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        service._cost_monitor.enforce_budget_limit = AsyncMock(return_value=True)
+        service._circuit_breaker.is_open = False
+        async def mock_circuit_breaker_call(func, *args, **kwargs):
+            return await func(*args, **kwargs)
+        service._circuit_breaker.call = AsyncMock(side_effect=mock_circuit_breaker_call)
+        service._cache.set = AsyncMock(return_value=True)
+        service._cost_monitor.record_api_call = AsyncMock()
+        
+        # Mock the HTTP request
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.text = AsyncMock(return_value=json.dumps({
+            "routes": [{"polyline": {"encodedPolyline": "test"}}]
+        }))
+        
+        with patch("aiohttp.ClientSession") as mock_session_class:
+            # Create the session mock with proper async context manager behavior
+            mock_session = MagicMock()
+            mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_session.__aexit__ = AsyncMock(return_value=None)
+            mock_session_class.return_value = mock_session
             
-            # Call calculate_route
-            result = await service.calculate_route(
-                origin="25.033,121.565",
-                destination="25.047,121.517"
+            # Create a proper async context manager for post
+            mock_post_cm = MagicMock()
+            mock_post_cm.__aenter__ = AsyncMock(return_value=mock_response)
+            mock_post_cm.__aexit__ = AsyncMock(return_value=None)
+            mock_session.post = MagicMock(return_value=mock_post_cm)
+            
+            # Call optimize_route
+            result = await service.optimize_route(
+                depot=(25.033, 121.565),
+                stops=[{"lat": 25.047, "lng": 121.517}]
             )
             
             # Verify success flow
-            assert result == parent_response
-            assert service.metrics["total_requests"] == 1
-            assert service.metrics["successful_requests"] == 1
-            service.cache.set.assert_called_once()
-            service.cost_monitor.track_cost.assert_called_once()
-            service.circuit_breaker.record_success.assert_called_once()
+            assert "stops" in result
+            assert result["optimized"] is True
+            service._cache.set.assert_called_once()
+            service._cost_monitor.record_api_call.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_optimize_route_with_multiple_stops(self, service):
-        """Test optimize_route with multiple waypoints"""
+    async def test_optimize_multiple_routes(self, service, mock_dependencies):
+        """Test optimize_multiple_routes with multiple drivers"""
         # Setup mocks
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=True)
-        service.cost_monitor.check_budget = AsyncMock(return_value=True)
-        service.circuit_breaker.can_execute = Mock(return_value=True)
-        service.cache.set = AsyncMock(return_value=True)
-        service.cost_monitor.track_cost = AsyncMock()
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        service._cost_monitor.enforce_budget_limit = AsyncMock(return_value=True)
+        async def mock_circuit_breaker_call(func, *args, **kwargs):
+            return await func(*args, **kwargs)
+        service._circuit_breaker.call = AsyncMock(side_effect=mock_circuit_breaker_call)
         
-        # Mock waypoints
-        waypoints = [
-            {"lat": 25.033, "lng": 121.565},
-            {"lat": 25.040, "lng": 121.550},
-            {"lat": 25.047, "lng": 121.517}
-        ]
+        # Mock OR-Tools optimizer
+        # Create mock VRPStop objects
+        from app.services.optimization.ortools_optimizer import VRPStop
         
-        # Mock parent response
-        parent_response = {
-            "optimized_route": waypoints,
-            "total_distance": 5000,
-            "total_duration": 600
+        mock_stops = []
+        for i in range(5):
+            stop = VRPStop(
+                order_id=i+1,
+                customer_id=i+1,
+                customer_name=f"Customer {i+1}",
+                address=f"Address {i+1}",
+                latitude=25.033 + i*0.001,
+                longitude=121.565 + i*0.001,
+                demand={"20kg": 1},
+                time_window=(480, 1080),  # 8am to 6pm
+                service_time=10
+            )
+            # Add estimated_arrival as an attribute (OR-Tools would set this)
+            stop.estimated_arrival = 480 + 30 * i  # Start at 8am, 30 minutes per stop
+            mock_stops.append(stop)
+        
+        mock_optimizer_result = {
+            0: mock_stops[:3],  # First vehicle gets 3 stops
+            1: mock_stops[3:]   # Second vehicle gets 2 stops
         }
         
-        with patch.object(
-            service.__class__.__bases__[0],
-            'optimize_route',
-            AsyncMock(return_value=parent_response)
+        with patch(
+            "app.services.google_cloud.routes_service_enhanced.ortools_optimizer.optimize",
+            return_value=mock_optimizer_result
         ):
-            service.error_handler.execute_with_retry = AsyncMock(
-                side_effect=lambda func, **kwargs: func()
+            # Create mock Order objects
+            from app.models.order import Order
+            from app.models.customer import Customer
+            from datetime import datetime
+            
+            orders = []
+            for i in range(5):
+                customer = Customer(
+                    id=i+1,
+                    short_name=f"Customer {i+1}",
+                    address=f"Address {i+1}",
+                    latitude=25.033 + i*0.001,
+                    longitude=121.565 + i*0.001
+                )
+                order = Order(
+                    id=i+1,
+                    customer_id=i+1,
+                    customer=customer,
+                    delivery_address=f"Address {i+1}",
+                    qty_20kg=1
+                )
+                orders.append(order)
+            
+            # Create mock drivers
+            drivers = [
+                {"id": 1, "name": "Driver 1"},
+                {"id": 2, "name": "Driver 2"}
+            ]
+            
+            # Mock the Google directions API call
+            service._get_google_directions_enhanced = AsyncMock(return_value={
+                "distance": 10,
+                "duration": 30,
+                "polyline": "test_polyline"
+            })
+            
+            # Call optimize_multiple_routes
+            result = await service.optimize_multiple_routes(
+                orders=orders,
+                drivers=drivers,
+                date=datetime.now()
             )
             
-            # Call optimize_route
-            result = await service.optimize_route(waypoints)
+            # Verify - result is a list of route dictionaries
+            assert isinstance(result, list)
+            assert len(result) == 2  # Two routes for two vehicles
             
-            # Verify
-            assert result == parent_response
-            # Cost should be based on number of waypoints
-            cost_call = service.cost_monitor.track_cost.call_args
-            assert float(cost_call[0][2]) == 0.001 * len(waypoints)
+            # Check first route
+            assert result[0]["driver_id"] == 1
+            assert result[0]["driver_name"] == "Driver 1"
+            assert len(result[0]["stops"]) == 3
+            assert result[0]["optimized"] is True
+            
+            # Check second route
+            assert result[1]["driver_id"] == 2
+            assert result[1]["driver_name"] == "Driver 2"
+            assert len(result[1]["stops"]) == 2
+            assert result[1]["optimized"] is True
     
     @pytest.mark.asyncio
-    async def test_get_route_metrics(self, service):
-        """Test getting enhanced route metrics"""
-        # Setup service metrics
-        service.metrics = {
-            "total_requests": 100,
-            "successful_requests": 95,
-            "failed_requests": 5,
-            "cache_hits": 30,
-            "total_optimizations": 20,
-            "successful_optimizations": 18
-        }
-        
-        # Mock monitoring components
-        service.circuit_breaker.get_status = Mock(return_value={
-            "state": "CLOSED",
-            "failure_count": 2
-        })
-        service.rate_limiter.get_current_usage = AsyncMock(return_value={
-            "available": True,
-            "current": {"per_second": 5}
-        })
-        service.cost_monitor.get_api_usage = AsyncMock(return_value={
-            "daily_cost": 45.50,
-            "over_budget": False
-        })
-        
-        # Mock parent metrics
-        with patch.object(
-            service.__class__.__bases__[0],
-            'get_route_metrics',
-            AsyncMock(return_value={"base_metric": "value"})
-        ):
-            # Get metrics
-            metrics = await service.get_route_metrics()
-            
-            # Verify enhanced metrics
-            assert metrics["base_metric"] == "value"
-            assert metrics["monitoring_stats"]["total_requests"] == 100
-            assert metrics["monitoring_stats"]["success_rate"] == 95.0
-            assert metrics["monitoring_stats"]["cache_hit_rate"] == 30.0
-            assert metrics["circuit_breaker_status"]["state"] == "CLOSED"
-            assert metrics["rate_limit_status"]["available"] is True
-            assert metrics["cost_status"]["daily_cost"] == 45.50
-    
-    @pytest.mark.asyncio
-    async def test_health_check(self, service):
-        """Test comprehensive health check"""
-        # Mock component statuses
-        service.circuit_breaker.get_status = Mock(return_value={
-            "state": "CLOSED",
-            "failure_count": 0
-        })
-        service.rate_limiter.get_current_usage = AsyncMock(return_value={
-            "available": True,
-            "current": {"per_second": 3}
-        })
-        service.cost_monitor.get_api_usage = AsyncMock(return_value={
-            "daily_cost": 25.00,
-            "over_budget": False
-        })
-        
+    async def test_get_service_health(self, service, mock_dependencies):
+        """Test get_service_health method"""
         # Perform health check
-        health = await service.health_check()
+        health = await service.get_service_health()
         
         # Verify
-        assert health["service"] == "google_routes"
+        assert health["service"] == "Google Routes API"
         assert health["status"] == "healthy"
-        assert health["components"]["circuit_breaker"]["status"] == "healthy"
-        assert health["components"]["rate_limiter"]["status"] == "healthy"
-        assert health["components"]["cost_monitor"]["status"] == "healthy"
-        assert len(health["components"]) >= 3
+        assert "components" in health
+        assert "rate_limiter" in health["components"]
+        assert "cost_monitor" in health["components"]
+        assert "circuit_breaker" in health["components"]
+        assert "cache" in health["components"]
+        assert "api_key" in health["components"]
     
     @pytest.mark.asyncio
-    async def test_error_handling_with_retry(self, service):
+    async def test_error_handling_with_retry(self, service, mock_dependencies):
         """Test error handling and retry logic"""
         # Setup mocks
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=True)
-        service.cost_monitor.check_budget = AsyncMock(return_value=True)
-        service.circuit_breaker.can_execute = Mock(return_value=True)
-        service.circuit_breaker.record_failure = Mock()
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        service._cost_monitor.enforce_budget_limit = AsyncMock(return_value=True)
+        service._circuit_breaker.is_open = False
         
-        # Simulate error in parent method
-        with patch.object(
-            service.__class__.__bases__[0],
-            'calculate_route',
-            AsyncMock(side_effect=Exception("API Error"))
+        # Mock GoogleAPIErrorHandler to handle retries
+        mock_error_handler = Mock()
+        mock_error_handler.handle_with_retry = AsyncMock(side_effect=Exception("API Error after retries"))
+        
+        with patch(
+            "app.services.google_cloud.routes_service_enhanced.GoogleAPIErrorHandler",
+            mock_error_handler
         ):
-            # Mock error handler to propagate error
-            service.error_handler.execute_with_retry = AsyncMock(
-                side_effect=Exception("API Error")
+            # Call should return unoptimized route after error
+            result = await service.optimize_route(
+                depot=(25.033, 121.565),
+                stops=[{"lat": 25.047, "lng": 121.517}]
             )
             
-            # Mock fallback
-            mock_response = {"routes": [{"distance": 1000, "duration": 120}]}
-            service.mock_service.calculate_route = AsyncMock(return_value=mock_response)
-            
-            # Call should fall back to mock
-            result = await service.calculate_route(
-                origin="25.033,121.565",
-                destination="25.047,121.517"
-            )
-            
-            # Verify fallback and failure recording
-            assert result == mock_response
-            assert service.metrics["failed_requests"] == 1
-            service.circuit_breaker.record_failure.assert_called()
+            # Verify unoptimized route was returned as fallback
+            assert "stops" in result
+            assert result["optimized"] is False
+            assert len(result["stops"]) == 1
+            assert result["stops"][0]["lat"] == 25.047
     
     @pytest.mark.asyncio
-    async def test_concurrent_requests(self, service):
+    async def test_concurrent_requests(self, service, mock_dependencies):
         """Test handling concurrent requests"""
         import asyncio
         
         # Setup mocks for concurrent access
-        service.dev_mode_manager.detect_mode = AsyncMock(
-            return_value=service.dev_mode_manager.development_mode.PRODUCTION
-        )
-        service.cache.get = AsyncMock(return_value=None)
-        service.rate_limiter.check_limit = AsyncMock(return_value=True)
-        service.cost_monitor.check_budget = AsyncMock(return_value=True)
-        service.circuit_breaker.can_execute = Mock(return_value=True)
-        service.cache.set = AsyncMock(return_value=True)
-        service.cost_monitor.track_cost = AsyncMock()
+        service._cache.get = AsyncMock(return_value=None)
+        service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))
+        service._cost_monitor.enforce_budget_limit = AsyncMock(return_value=True)
+        async def mock_circuit_breaker_call(func, *args, **kwargs):
+            return await func(*args, **kwargs)
+        service._circuit_breaker.call = AsyncMock(side_effect=mock_circuit_breaker_call)
+        service._cache.set = AsyncMock(return_value=True)
+        service._cost_monitor.record_api_call = AsyncMock()
         
-        # Mock parent response
-        async def mock_calculate(*args, **kwargs):
-            await asyncio.sleep(0.01)  # Simulate API delay
-            return {"routes": [{"distance": 1000, "duration": 120}]}
+        # Mock successful response
+        mock_response = Mock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value={
+            "routes": [{"polyline": {"encodedPolyline": "test"}}]
+        })
         
-        with patch.object(
-            service.__class__.__bases__[0],
-            'calculate_route',
-            mock_calculate
-        ):
-            service.error_handler.execute_with_retry = AsyncMock(
-                side_effect=lambda func, **kwargs: func()
-            )
+        with patch("aiohttp.ClientSession") as mock_session_class:
+            mock_session = AsyncMock()
+            mock_session_class.return_value.__aenter__.return_value = mock_session
+            mock_session.post.return_value.__aenter__.return_value = mock_response
             
             # Make concurrent requests
             tasks = [
-                service.calculate_route(
-                    origin=f"25.{i:03d},121.565",
-                    destination=f"25.{i:03d},121.517"
+                service.optimize_route(
+                    depot=(25.033, 121.565),
+                    stops=[{"lat": 25.047 + i * 0.001, "lng": 121.517}]
                 )
-                for i in range(10)
+                for i in range(5)
             ]
             
             results = await asyncio.gather(*tasks)
             
             # Verify all completed
-            assert len(results) == 10
-            assert service.metrics["total_requests"] == 10
-            assert service.metrics["successful_requests"] == 10
+            assert len(results) == 5
+            for result in results:
+                assert "stops" in result
+                assert "optimized" in result

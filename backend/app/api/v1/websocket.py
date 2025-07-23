@@ -7,7 +7,7 @@ import logging
 
 from app.core.config import settings
 from app.services.websocket_service import websocket_manager
-from app.db.database import get_db
+from app.api.deps import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()

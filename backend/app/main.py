@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 import time
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products, google_api_dashboard
+from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard
 from app.api.v1.socketio_handler import sio, socket_app
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
@@ -166,15 +166,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "path": request.url.path,
             "method": request.method,
             "errors": exc.errors(),
-            "body": exc.body
+            "body": str(exc.body) if exc.body else None
         }
     )
+    # Convert validation errors to serializable format
+    errors = []
+    for error in exc.errors():
+        serializable_error = {
+            "loc": error.get("loc", []),
+            "msg": str(error.get("msg", "")),
+            "type": str(error.get("type", ""))
+        }
+        errors.append(serializable_error)
+    
     return JSONResponse(
         status_code=422,
         content={
             "detail": "資料驗證失敗",
-            "errors": exc.errors(),
-            "body": exc.body
+            "errors": errors
         }
     )
 
@@ -201,7 +210,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
-app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
+# Include both route routers - optimization and CRUD
+app.include_router(routes_crud.router, prefix="/api/v1/routes", tags=["routes"])
+app.include_router(routes.router, prefix="/api/v1/routes", tags=["route_optimization"])
 app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["predictions"])
 app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
@@ -217,6 +228,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "message": "系統正常運行"}
+
+
+@app.get("/api/v1/health")
+async def api_v1_health_check():
+    """Health check endpoint for API v1."""
+    return {"status": "healthy", "message": "系統正常運行", "version": "1.0.0"}
 
 # Add Prometheus metrics
 instrumentator = Instrumentator()

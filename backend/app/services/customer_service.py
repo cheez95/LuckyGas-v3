@@ -179,7 +179,8 @@ class CustomerService:
             # Track cache operation
             cache_operations_counter.labels(
                 operation="list",
-                status="success"
+                status="success",
+                api_type="general"
             ).inc()
             
             return customers, total

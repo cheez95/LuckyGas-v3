@@ -53,3 +53,14 @@ class TokenData(BaseModel):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+    
+    @field_validator('new_password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('密碼長度必須至少8個字符')
+        return v

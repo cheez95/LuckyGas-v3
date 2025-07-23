@@ -38,7 +38,7 @@ orders_created_counter = Counter(
 cache_operations_counter = Counter(
     'lucky_gas_cache_operations_total',
     'Total number of cache operations',
-    ['operation', 'status']
+    ['operation', 'status', 'api_type']
 )
 
 background_tasks_counter = Counter(

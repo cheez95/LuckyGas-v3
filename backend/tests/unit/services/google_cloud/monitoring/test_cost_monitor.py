@@ -17,9 +17,8 @@ class TestGoogleAPICostMonitor:
     @pytest.fixture
     def mock_redis(self):
         """Mock Redis client"""
-        with patch("app.services.google_cloud.monitoring.cost_monitor.redis.from_url") as mock:
-            mock_client = AsyncMock()
-            mock.return_value = mock_client
+        mock_client = AsyncMock()
+        with patch("app.services.google_cloud.monitoring.cost_monitor.get_redis_client", AsyncMock(return_value=mock_client)):
             yield mock_client
     
     @pytest.fixture
@@ -31,43 +30,60 @@ class TestGoogleAPICostMonitor:
     async def test_track_cost(self, cost_monitor, mock_redis):
         """Test tracking API cost"""
         # Mock Redis responses
-        mock_redis.incrbyfloat = AsyncMock(side_effect=[10.50, 100.50, 500.50])
+        mock_redis.incrbyfloat = AsyncMock()
         mock_redis.expire = AsyncMock()
-        mock_redis.rpush = AsyncMock()
-        mock_redis.ltrim = AsyncMock()
+        mock_redis.incr = AsyncMock()
+        mock_redis.hset = AsyncMock()
+        mock_redis.get = AsyncMock(return_value=None)  # No existing costs for threshold check
         
         # Track cost
-        await cost_monitor.track_cost(
-            "routes",
-            "route_optimization",
-            Decimal("10.50"),
-            {"route_id": "12345"}
+        result = await cost_monitor.record_api_call(
+            api_type="routes",
+            endpoint="route_optimization",
+            response_size=1024,
+            processing_time=0.5
         )
         
-        # Verify daily, monthly, yearly increments
+        # Verify cost tracking (hour, day, month)
         assert mock_redis.incrbyfloat.call_count == 3
-        incr_calls = mock_redis.incrbyfloat.call_args_list
-        assert float(incr_calls[0][0][1]) == 10.50
+        # Cost per call for routes = $5 per 1000 = $0.005 per call
+        expected_cost = 0.005
+        for call in mock_redis.incrbyfloat.call_args_list:
+            assert float(call[0][1]) == expected_cost
         
         # Verify expiration set
-        assert mock_redis.expire.call_count >= 1
+        assert mock_redis.expire.call_count >= 3
         
-        # Verify cost log
-        mock_redis.rpush.assert_called_once()
-        log_data = json.loads(mock_redis.rpush.call_args[0][1])
-        assert log_data["api_type"] == "routes"
-        assert log_data["operation"] == "route_optimization"
-        assert float(log_data["amount"]) == 10.50
-        assert log_data["metadata"]["route_id"] == "12345"
+        # Verify metadata stored
+        mock_redis.hset.assert_called_once()
+        
+        # Verify result
+        assert result["api_type"] == "routes"
+        assert result["endpoint"] == "route_optimization"
+        assert result["cost"] == expected_cost
     
     @pytest.mark.asyncio
     async def test_check_budget_under_limit(self, cost_monitor, mock_redis):
         """Test budget check when under limit"""
         # Mock Redis get - under daily limit
-        mock_redis.get = AsyncMock(return_value=b"45.00")
+        # The method checks hourly first, and _get_period_total loops through all API types
+        mock_redis.get = AsyncMock(side_effect=[
+            # First call for hourly total - checking all 5 API types
+            b"8.00",  # routes
+            None,     # geocoding
+            None,     # places
+            None,     # vertex_ai
+            None,     # distance_matrix
+            # Second call for daily total - checking all 5 API types
+            b"45.00", # routes
+            None,     # geocoding
+            None,     # places
+            None,     # vertex_ai
+            None,     # distance_matrix
+        ])
         
         # Check budget
-        allowed = await cost_monitor.check_budget("routes", Decimal("5.00"))
+        allowed = await cost_monitor.enforce_budget_limit("routes")
         
         # Verify
         assert allowed is True
@@ -76,10 +92,23 @@ class TestGoogleAPICostMonitor:
     async def test_check_budget_over_warning(self, cost_monitor, mock_redis):
         """Test budget check when over warning threshold"""
         # Mock Redis get - over warning but under critical
-        mock_redis.get = AsyncMock(return_value=b"55.00")
+        mock_redis.get = AsyncMock(side_effect=[
+            # First call for hourly total - over warning (>$5) but under critical (<$10)
+            b"6.00",  # routes - $6/hour is over warning threshold of $5
+            None,     # geocoding
+            None,     # places
+            None,     # vertex_ai
+            None,     # distance_matrix
+            # Second call for daily total
+            b"55.00", # routes
+            None,     # geocoding
+            None,     # places
+            None,     # vertex_ai
+            None,     # distance_matrix
+        ])
         
         # Check budget
-        allowed = await cost_monitor.check_budget("routes", Decimal("10.00"))
+        allowed = await cost_monitor.enforce_budget_limit("routes")
         
         # Verify - should still allow but with warning
         assert allowed is True
@@ -88,12 +117,19 @@ class TestGoogleAPICostMonitor:
     async def test_check_budget_over_critical(self, cost_monitor, mock_redis):
         """Test budget check when over critical threshold"""
         # Mock Redis get - over critical limit
-        mock_redis.get = AsyncMock(return_value=b"105.00")
+        mock_redis.get = AsyncMock(side_effect=[
+            # First call for hourly total - over critical (>$10)
+            b"15.00", # routes - $15/hour is over critical threshold of $10
+            None,     # geocoding
+            None,     # places
+            None,     # vertex_ai
+            None,     # distance_matrix
+        ])
         
         # Check budget
-        allowed = await cost_monitor.check_budget("routes", Decimal("10.00"))
+        allowed = await cost_monitor.enforce_budget_limit("routes")
         
-        # Verify - should deny
+        # Verify - should deny (stops at hourly check)
         assert allowed is False
     
     @pytest.mark.asyncio
@@ -103,7 +139,7 @@ class TestGoogleAPICostMonitor:
         mock_redis.get = AsyncMock(return_value=None)
         
         # Check budget
-        allowed = await cost_monitor.check_budget("routes", Decimal("10.00"))
+        allowed = await cost_monitor.enforce_budget_limit("routes")
         
         # Verify
         assert allowed is True
@@ -111,146 +147,179 @@ class TestGoogleAPICostMonitor:
     @pytest.mark.asyncio
     async def test_get_cost_summary(self, cost_monitor, mock_redis):
         """Test getting cost summary"""
-        # Mock Redis responses
+        # Mock Redis responses - get_cost_report loops through each API type
+        # For each API, it gets cost and count
         mock_redis.get = AsyncMock(side_effect=[
-            b"45.50",   # daily
-            b"450.00",  # monthly
-            b"5000.00"  # yearly
+            # Routes API cost and count
+            b"45.50", b"9100",
+            # Geocoding API cost and count
+            None, None,
+            # Places API cost and count
+            None, None,
+            # Vertex AI cost and count
+            None, None,
+            # Distance matrix cost and count
+            None, None
         ])
         
-        # Mock cost logs
-        cost_logs = [
-            json.dumps({
-                "timestamp": datetime.now().isoformat(),
-                "api_type": "routes",
-                "operation": "optimize",
-                "amount": "10.50",
-                "metadata": {}
-            }),
-            json.dumps({
-                "timestamp": datetime.now().isoformat(),
-                "api_type": "routes",
-                "operation": "matrix",
-                "amount": "5.00",
-                "metadata": {}
-            })
-        ]
-        mock_redis.lrange = AsyncMock(return_value=[log.encode() for log in cost_logs])
-        
         # Get summary
-        summary = await cost_monitor.get_cost_summary("routes")
+        summary = await cost_monitor.get_cost_report("daily")
         
-        # Verify
-        assert summary["api_type"] == "routes"
-        assert float(summary["daily_total"]) == 45.50
-        assert float(summary["monthly_total"]) == 450.00
-        assert float(summary["yearly_total"]) == 5000.00
-        assert len(summary["recent_operations"]) == 2
-        assert summary["budget_status"]["daily_remaining"] == "54.50"
-        assert summary["budget_status"]["is_over_warning"] is False
-        assert summary["budget_status"]["is_over_critical"] is False
+        # Verify - get_cost_report returns overall costs, not per API
+        assert summary["period"] == "daily"
+        assert "costs_by_api" in summary
+        assert "counts_by_api" in summary
+        assert "total_cost" in summary
+        assert "budget_limit" in summary
+        assert "budget_remaining" in summary
+        
+        # Check specific values
+        assert summary["costs_by_api"].get("routes") == 45.50
+        assert summary["total_cost"] == 45.50
+        assert summary["budget_limit"] == 50.0  # Daily warning threshold
     
     @pytest.mark.asyncio
     async def test_get_cost_summary_over_budget(self, cost_monitor, mock_redis):
         """Test cost summary when over budget"""
-        # Mock Redis responses - over critical
+        # Mock Redis responses - over critical for all API types
         mock_redis.get = AsyncMock(side_effect=[
-            b"150.00",  # daily (over critical)
-            b"1500.00", # monthly
-            b"15000.00" # yearly
+            # Routes API cost and count (over critical)
+            b"150.00", b"30000",
+            # Geocoding API cost and count
+            None, None,
+            # Places API cost and count
+            None, None,
+            # Vertex AI cost and count
+            None, None,
+            # Distance matrix cost and count
+            None, None
         ])
-        mock_redis.lrange = AsyncMock(return_value=[])
         
         # Get summary
-        summary = await cost_monitor.get_cost_summary("routes")
+        summary = await cost_monitor.get_cost_report("daily")
         
-        # Verify
-        assert summary["budget_status"]["is_over_warning"] is True
-        assert summary["budget_status"]["is_over_critical"] is True
-        assert float(summary["budget_status"]["daily_remaining"]) == -50.00
+        # Verify warnings for over budget
+        assert "warnings" in summary
+        assert len(summary["warnings"]) > 0  # Should have warnings about exceeding budget
+        assert summary["budget_percentage"] > 100  # Over 100% of budget
     
     @pytest.mark.asyncio
     async def test_get_api_usage(self, cost_monitor, mock_redis):
         """Test getting API usage statistics"""
-        # Mock Redis responses
+        # Mock Redis responses - needs both cost and count for each hour
         mock_redis.get = AsyncMock(side_effect=[
-            b"75.00",   # daily
-            b"750.00",  # monthly
-            b"7500.00"  # yearly
+            # First hour - cost and count
+            b"75.00",   # cost
+            b"15000",   # count
+            # Second hour - cost and count
+            b"50.00",   # cost
+            b"10000",   # count
+            # Third hour - cost and count
+            b"25.00",   # cost
+            b"5000"     # count
         ])
         
-        # Get usage
-        usage = await cost_monitor.get_api_usage("routes")
+        # Get usage for a time range
+        start_time = datetime.now() - timedelta(hours=2)
+        end_time = datetime.now()
+        usage = await cost_monitor.get_detailed_usage(
+            api_type="routes",
+            start_time=start_time,
+            end_time=end_time
+        )
         
-        # Verify
+        # Verify structure
         assert usage["api_type"] == "routes"
-        assert float(usage["daily_cost"]) == 75.00
-        assert usage["daily_percentage"] == 75.0  # 75% of $100 budget
-        assert usage["over_budget"] is False
-        assert float(usage["thresholds"]["daily_warning"]) == 50.00
-        assert float(usage["thresholds"]["daily_critical"]) == 100.00
+        assert "hourly_breakdown" in usage
+        assert "total_cost" in usage
+        assert "total_calls" in usage
+        assert len(usage["hourly_breakdown"]) == 3
+        assert usage["total_cost"] == 150.00  # 75 + 50 + 25
+        assert usage["total_calls"] == 30000  # 15000 + 10000 + 5000
     
     @pytest.mark.asyncio
     async def test_reset_daily_costs(self, cost_monitor, mock_redis):
         """Test resetting daily costs"""
-        # Mock Redis scan and delete
-        mock_redis.scan = AsyncMock(return_value=(0, [
-            b"cost:routes:daily:2024-01-20",
-            b"cost:geocoding:daily:2024-01-20"
-        ]))
-        mock_redis.delete = AsyncMock(return_value=2)
+        # Create a proper async iterator mock
+        async def async_scan_iter(*args, **kwargs):
+            for key in [
+                b"api_cost:day:2024-01-20:routes",
+                b"api_cost:day:2024-01-20:geocoding"
+            ]:
+                yield key
+        
+        # Mock Redis scan_iter and delete
+        mock_redis.scan_iter = async_scan_iter
+        mock_redis.delete = AsyncMock(return_value=1)
         
         # Reset costs
-        count = await cost_monitor.reset_daily_costs()
+        result = await cost_monitor.reset_budgets("day")
         
         # Verify
-        assert count == 2
-        mock_redis.delete.assert_called_once()
+        assert result is True
+        assert mock_redis.delete.call_count >= 1
     
     @pytest.mark.asyncio
     async def test_get_detailed_report(self, cost_monitor, mock_redis):
         """Test getting detailed cost report"""
-        # Mock Redis responses
+        # Mock Redis responses - get_cost_report calls get for each API type in sequence
+        # For daily report, it gets cost and count for each API type
         mock_redis.get = AsyncMock(side_effect=[
-            # Routes API
-            b"45.00", b"450.00", b"4500.00",
-            # Geocoding API
-            b"20.00", b"200.00", b"2000.00",
-            # Vertex AI
-            b"100.00", b"1000.00", b"10000.00"
+            # Routes API cost and count
+            b"45.00", b"9000",
+            # Geocoding API cost and count
+            b"20.00", b"4000",
+            # Places API cost and count (not in original test but part of COST_PER_1000_CALLS)
+            None, None,
+            # Vertex AI cost and count
+            b"100.00", b"100000",
+            # Distance matrix cost and count
+            None, None
         ])
         
         # Get report
-        report = await cost_monitor.get_detailed_report()
+        report = await cost_monitor.get_cost_report("daily")
         
-        # Verify
-        assert "routes" in report
-        assert "geocoding" in report
-        assert "vertex_ai" in report
+        # Verify structure
+        assert "costs_by_api" in report
+        assert "counts_by_api" in report
+        assert "total_cost" in report
+        assert "total_calls" in report
+        assert "budget_limit" in report
+        assert "budget_remaining" in report
+        assert "budget_percentage" in report
         
-        assert float(report["routes"]["daily"]) == 45.00
-        assert float(report["geocoding"]["daily"]) == 20.00
-        assert float(report["vertex_ai"]["daily"]) == 100.00
-        
-        assert float(report["total"]["daily"]) == 165.00
-        assert float(report["total"]["monthly"]) == 1650.00
-        assert float(report["total"]["yearly"]) == 16500.00
+        # Verify specific values
+        assert report["costs_by_api"].get("routes") == 45.00
+        assert report["costs_by_api"].get("geocoding") == 20.00
+        assert report["costs_by_api"].get("vertex_ai") == 100.00
+        assert report["total_cost"] == 165.00
     
     @pytest.mark.asyncio
     async def test_different_api_cost_rates(self, cost_monitor, mock_redis):
         """Test different cost rates for different APIs"""
         mock_redis.incrbyfloat = AsyncMock()
         mock_redis.expire = AsyncMock()
-        mock_redis.rpush = AsyncMock()
-        mock_redis.ltrim = AsyncMock()
+        mock_redis.incr = AsyncMock()
+        mock_redis.hset = AsyncMock()
+        mock_redis.get = AsyncMock(return_value=None)  # No existing costs for threshold checks
         
         # Track costs for different APIs
-        await cost_monitor.track_cost("routes", "optimize", Decimal("0.01"), {})
-        await cost_monitor.track_cost("geocoding", "geocode", Decimal("0.005"), {})
-        await cost_monitor.track_cost("vertex_ai", "predict", Decimal("0.05"), {})
+        await cost_monitor.record_api_call(api_type="routes", endpoint="optimize")
+        await cost_monitor.record_api_call(api_type="geocoding", endpoint="geocode")
+        await cost_monitor.record_api_call(api_type="vertex_ai", endpoint="predict")
         
-        # Verify all were tracked
+        # Verify all were tracked (3 APIs * 3 time windows for costs)
         assert mock_redis.incrbyfloat.call_count == 9  # 3 APIs * 3 periods each
+        
+        # Verify the correct costs were recorded
+        calls = mock_redis.incrbyfloat.call_args_list
+        # Routes: $5 per 1000 = $0.005 per call
+        assert float(calls[0][0][1]) == 0.005
+        # Geocoding: $5 per 1000 = $0.005 per call
+        assert float(calls[3][0][1]) == 0.005
+        # Vertex AI: $1 per 1000 = $0.001 per call
+        assert float(calls[6][0][1]) == 0.001
     
     @pytest.mark.asyncio
     async def test_concurrent_cost_tracking(self, cost_monitor, mock_redis):
@@ -259,19 +328,19 @@ class TestGoogleAPICostMonitor:
         
         mock_redis.incrbyfloat = AsyncMock(return_value=50.0)
         mock_redis.expire = AsyncMock()
-        mock_redis.rpush = AsyncMock()
-        mock_redis.ltrim = AsyncMock()
+        mock_redis.incr = AsyncMock()
+        mock_redis.hset = AsyncMock()
+        mock_redis.get = AsyncMock(return_value=None)  # No existing costs
         
         # Track costs concurrently
         tasks = [
-            cost_monitor.track_cost("routes", "optimize", Decimal("10.00"), {})
+            cost_monitor.record_api_call("routes", "optimize")
             for _ in range(5)
         ]
         await asyncio.gather(*tasks)
         
         # Verify
         assert mock_redis.incrbyfloat.call_count == 15  # 5 requests * 3 periods
-        assert mock_redis.rpush.call_count == 5
     
     @pytest.mark.asyncio
     async def test_redis_error_handling(self, cost_monitor, mock_redis):
@@ -280,10 +349,16 @@ class TestGoogleAPICostMonitor:
         mock_redis.get = AsyncMock(side_effect=redis.ConnectionError("Connection failed"))
         
         # Check budget - should allow on error
-        allowed = await cost_monitor.check_budget("routes", Decimal("10.00"))
+        allowed = await cost_monitor.enforce_budget_limit("routes")
         assert allowed is True
         
-        # Get usage - should return safe defaults
-        usage = await cost_monitor.get_api_usage("routes")
-        assert usage["daily_cost"] == 0.0
-        assert usage["over_budget"] is False
+        # Get usage - should return structure even with error
+        start_time = datetime.now() - timedelta(hours=1)
+        end_time = datetime.now()
+        usage = await cost_monitor.get_detailed_usage(
+            api_type="routes",
+            start_time=start_time,
+            end_time=end_time
+        )
+        assert usage["api_type"] == "routes"
+        assert "hourly_breakdown" in usage

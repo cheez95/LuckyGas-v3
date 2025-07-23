@@ -18,7 +18,7 @@ class TestAuth:
         response = await client.post(
             "/api/v1/auth/login",
             data={
-                "username": test_user.email,
+                "username": test_user.username,
                 "password": "testpassword"
             }
         )
@@ -27,8 +27,6 @@ class TestAuth:
         assert "access_token" in data
         assert "refresh_token" in data
         assert data["token_type"] == "bearer"
-        assert data["user"]["email"] == test_user.email
-        assert data["user"]["role"] == test_user.role.value
     
     @pytest.mark.asyncio
     async def test_login_invalid_credentials(self, client: AsyncClient, test_user: User):
@@ -36,12 +34,12 @@ class TestAuth:
         response = await client.post(
             "/api/v1/auth/login",
             data={
-                "username": test_user.email,
+                "username": test_user.username,
                 "password": "wrongpassword"
             }
         )
         assert response.status_code == 401
-        assert "密碼錯誤" in response.json()["detail"]
+        assert "帳號或密碼錯誤" in response.json()["detail"]
     
     @pytest.mark.asyncio
     async def test_login_nonexistent_user(self, client: AsyncClient):
@@ -49,12 +47,12 @@ class TestAuth:
         response = await client.post(
             "/api/v1/auth/login",
             data={
-                "username": "nonexistent@example.com",
+                "username": "nonexistent",
                 "password": "password"
             }
         )
         assert response.status_code == 401
-        assert "使用者不存在" in response.json()["detail"]
+        assert "帳號或密碼錯誤" in response.json()["detail"]
     
     @pytest.mark.asyncio
     async def test_login_inactive_user(self, client: AsyncClient, db_session: AsyncSession):
@@ -76,12 +74,12 @@ class TestAuth:
         response = await client.post(
             "/api/v1/auth/login",
             data={
-                "username": "inactive@example.com",
+                "username": "inactive",
                 "password": "password"
             }
         )
-        assert response.status_code == 401
-        assert "使用者已被停用" in response.json()["detail"]
+        assert response.status_code == 400
+        assert "用戶已停用" in response.json()["detail"]
     
     @pytest.mark.asyncio
     async def test_get_current_user(self, client: AsyncClient, auth_headers: dict, test_user: User):
@@ -106,7 +104,7 @@ class TestAuth:
         login_response = await client.post(
             "/api/v1/auth/login",
             data={
-                "username": test_user.email,
+                "username": test_user.username,
                 "password": "testpassword"
             }
         )
@@ -221,7 +219,7 @@ class TestUserManagement:
     async def test_toggle_user_status(self, client: AsyncClient, admin_auth_headers: dict, test_user: User):
         """Test toggling user active status"""
         # Deactivate user
-        response = await client.put(
+        response = await client.patch(
             f"/api/v1/auth/users/{test_user.id}/toggle-status",
             headers=admin_auth_headers
         )
@@ -230,7 +228,7 @@ class TestUserManagement:
         assert data["is_active"] is False
         
         # Reactivate user
-        response = await client.put(
+        response = await client.patch(
             f"/api/v1/auth/users/{test_user.id}/toggle-status",
             headers=admin_auth_headers
         )

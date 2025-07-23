@@ -68,6 +68,14 @@ class Customer(Base):
     # Customer type
     customer_type = Column(String(50))  # 類型 (學校, 商業, etc.)
     
+    # Contact information
+    phone = Column(String(15))  # 電話
+    tax_id = Column(String(8))  # 統一編號
+    
+    # Location
+    latitude = Column(Float)  # 緯度
+    longitude = Column(Float)  # 經度
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

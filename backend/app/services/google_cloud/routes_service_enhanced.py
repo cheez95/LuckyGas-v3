@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import asyncio
 import aiohttp
 import json
+import os
 from dataclasses import dataclass
 import logging
 
@@ -129,9 +130,10 @@ class EnhancedGoogleRoutesService(GoogleRoutesService):
             return cached_result
         
         # Check rate limits
-        if not await self._rate_limiter.check_rate_limit("routes"):
+        allowed, wait_time = await self._rate_limiter.check_rate_limit("routes")
+        if not allowed:
             raise GoogleAPIError(
-                message="Rate limit exceeded for Routes API",
+                message=f"Rate limit exceeded for Routes API. Wait {wait_time:.1f}s",
                 status_code=429,
                 api_type="routes",
                 endpoint="optimize_route"
@@ -241,9 +243,11 @@ class EnhancedGoogleRoutesService(GoogleRoutesService):
         
         # Check rate limits for batch operation
         expected_api_calls = len(drivers)  # One call per driver for directions
-        if not await self._rate_limiter.check_rate_limit("routes", count=expected_api_calls):
+        # Check rate limit for the first call
+        allowed, wait_time = await self._rate_limiter.check_rate_limit("routes")
+        if not allowed:
             raise GoogleAPIError(
-                message=f"Rate limit would be exceeded for {expected_api_calls} route optimizations",
+                message=f"Rate limit exceeded for Routes API. Wait {wait_time:.1f}s before attempting {expected_api_calls} route optimizations",
                 status_code=429,
                 api_type="routes",
                 endpoint="optimize_multiple_routes"
@@ -374,8 +378,9 @@ class EnhancedGoogleRoutesService(GoogleRoutesService):
             return cached_result
         
         # Check rate limit
-        if not await self._rate_limiter.check_rate_limit("routes"):
-            logger.warning("Rate limit reached, returning estimated directions")
+        allowed, wait_time = await self._rate_limiter.check_rate_limit("routes")
+        if not allowed:
+            logger.warning(f"Rate limit reached (wait {wait_time:.1f}s), returning estimated directions")
             return self._estimate_directions(depot, stops)
         
         # Execute with circuit breaker
@@ -508,6 +513,81 @@ class EnhancedGoogleRoutesService(GoogleRoutesService):
             "polyline": ""  # No polyline for estimates
         }
     
+    async def calculate_route(self, origin: str, destination: str) -> Dict[str, Any]:
+        """
+        Calculate a simple route between two points
+        
+        Args:
+            origin: Origin coordinates as "lat,lng" string
+            destination: Destination coordinates as "lat,lng" string
+            
+        Returns:
+            Route information with distance and duration
+        """
+        await self._ensure_initialized()
+        
+        # Check if in development mode
+        if os.getenv("DEVELOPMENT_MODE", "").lower() == "development":
+            # Return mock data for development mode
+            return {
+                "routes": [{
+                    "distance": 5234,  # meters
+                    "duration": 720,   # seconds (12 minutes)
+                    "polyline": "ipkcFfichVnP@j@kBiD{FqCcBuBqAsAqE_DmGyIoB}C"
+                }]
+            }
+        
+        # For production mode, we need to implement a proper route calculation
+        # Since we don't have a specific method for simple A-to-B routing,
+        # we'll use the optimize_route method with a single stop
+        
+        # Parse coordinates
+        origin_parts = origin.split(",")
+        dest_parts = destination.split(",")
+        
+        # Create a single stop for the destination
+        stops = [{
+            "order_id": 0,
+            "customer_id": 0,
+            "customer_name": "Destination",
+            "address": "Destination",
+            "lat": float(dest_parts[0]),
+            "lng": float(dest_parts[1]),
+            "priority": 1,
+            "service_time": 0,
+            "products": {}
+        }]
+        
+        # Use optimize_route with single stop
+        result = await self.optimize_route(
+            depot=(float(origin_parts[0]), float(origin_parts[1])),
+            stops=stops,
+            vehicle_capacity=100
+        )
+        
+        # Transform the result to match expected format
+        if result and "total_distance" in result:
+            # Parse duration from string format (e.g., "720s")
+            duration_str = result.get("total_duration", "0s")
+            duration = int(duration_str.rstrip("s")) if isinstance(duration_str, str) else 0
+            
+            return {
+                "routes": [{
+                    "distance": result.get("total_distance", 0),
+                    "duration": duration,
+                    "polyline": result.get("polyline", "")
+                }]
+            }
+        
+        # Return default if no route found
+        return {
+            "routes": [{
+                "distance": 0,
+                "duration": 0,
+                "polyline": ""
+            }]
+        }
+    
     async def get_service_health(self) -> Dict[str, Any]:
         """Get health status of the routes service"""
         await self._ensure_initialized()
@@ -526,7 +606,7 @@ class EnhancedGoogleRoutesService(GoogleRoutesService):
         }
         
         # Check rate limiter
-        rate_limit_info = await self._rate_limiter.get_current_usage("routes")
+        rate_limit_info = await self._rate_limiter.get_usage_stats("routes")
         health["components"]["rate_limiter"] = rate_limit_info
         
         # Check cost monitor

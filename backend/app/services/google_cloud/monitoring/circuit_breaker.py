@@ -224,6 +224,71 @@ class CircuitBreaker:
     def is_half_open(self) -> bool:
         """Check if circuit is half-open"""
         return self.state == CircuitState.HALF_OPEN
+    
+    def can_execute(self) -> bool:
+        """Check if circuit allows execution"""
+        if self.state == CircuitState.CLOSED:
+            return True
+        elif self.state == CircuitState.OPEN:
+            if self._should_attempt_reset():
+                self.state = CircuitState.HALF_OPEN
+                self.success_count = 0
+                self._update_state_metric()
+                return True
+            return False
+        else:  # HALF_OPEN
+            return True
+    
+    def record_success(self):
+        """Manually record a successful operation (for testing)"""
+        # Use a separate lock for synchronous methods
+        import threading
+        if not hasattr(self, '_sync_lock'):
+            self._sync_lock = threading.Lock()
+        with self._sync_lock:
+            if self.state == CircuitState.HALF_OPEN:
+                self.success_count += 1
+                if self.success_count >= self.success_threshold:
+                    self.state = CircuitState.CLOSED
+                    self.failure_count = 0
+                    self.success_count = 0
+                    self._update_state_metric()
+            elif self.state == CircuitState.CLOSED:
+                self.failure_count = 0
+                self.success_count += 1
+    
+    def record_failure(self):
+        """Manually record a failed operation (for testing)"""
+        # Use a separate lock for synchronous methods
+        import threading
+        if not hasattr(self, '_sync_lock'):
+            self._sync_lock = threading.Lock()
+        with self._sync_lock:
+            self.failure_count += 1
+            self.last_failure_time = datetime.now()
+            circuit_failures_counter.labels(api_type=self.api_type).inc()
+            
+            if self.state == CircuitState.CLOSED:
+                if self.failure_count >= self.failure_threshold:
+                    self.state = CircuitState.OPEN
+                    self._update_state_metric()
+            elif self.state == CircuitState.HALF_OPEN:
+                self.state = CircuitState.OPEN
+                self.success_count = 0
+                self._update_state_metric()
+    
+    def _get_state(self) -> CircuitState:
+        """Get current state with automatic transition check"""
+        if self.state == CircuitState.OPEN and self._should_attempt_reset():
+            self.state = CircuitState.HALF_OPEN
+            self.success_count = 0
+            self._update_state_metric()
+            return CircuitState.HALF_OPEN
+        return self.state
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get comprehensive status (alias for get_state for compatibility)"""
+        return self.get_state()
 
 
 class CircuitBreakerManager:

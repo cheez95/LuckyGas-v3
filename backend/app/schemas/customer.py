@@ -199,20 +199,23 @@ class CustomerBase(BaseModel):
         return v
     
     @field_validator('phone')
-    def validate_phone(cls, v):
-        if v is not None:
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and isinstance(v, str):
             return TaiwanValidators.validate_phone_number(v)
         return v
     
     @field_validator('tax_id')
-    def validate_tax_id(cls, v):
-        if v is not None:
+    @classmethod
+    def validate_tax_id(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and isinstance(v, str):
             return TaiwanValidators.validate_tax_id(v)
         return v
     
     @field_validator('address')
-    def validate_address(cls, v):
-        if v:
+    @classmethod
+    def validate_address(cls, v: Optional[str]) -> Optional[str]:
+        if v and isinstance(v, str):
             return TaiwanValidators.validate_address(v)
         return v
     
@@ -274,11 +277,38 @@ class CustomerUpdate(BaseModel):
     latitude: Optional[float] = Field(None, alias="緯度", ge=-90, le=90)
     longitude: Optional[float] = Field(None, alias="經度", ge=-180, le=180)
     
-    # Apply same validators
-    _validate_phone = field_validator('phone')(CustomerBase.validate_phone)
-    _validate_tax_id = field_validator('tax_id')(CustomerBase.validate_tax_id)
-    _validate_address = field_validator('address')(CustomerBase.validate_address)
-    _validate_time = field_validator('delivery_time_start', 'delivery_time_end')(CustomerBase.validate_time_format)
+    # Apply validators
+    @field_validator('phone')
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and isinstance(v, str):
+            return TaiwanValidators.validate_phone_number(v)
+        return v
+    
+    @field_validator('tax_id')
+    @classmethod
+    def validate_tax_id(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and isinstance(v, str):
+            return TaiwanValidators.validate_tax_id(v)
+        return v
+    
+    @field_validator('address')
+    @classmethod
+    def validate_address(cls, v: Optional[str]) -> Optional[str]:
+        if v and isinstance(v, str):
+            return TaiwanValidators.validate_address(v)
+        return v
+    
+    @field_validator('delivery_time_start', 'delivery_time_end')
+    @classmethod
+    def validate_time_format(cls, v: Optional[str]) -> Optional[str]:
+        if v:
+            if not re.match(r'^\d{2}:\d{2}$', v):
+                raise ValueError('時間格式必須為 HH:MM')
+            hour, minute = map(int, v.split(':'))
+            if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+                raise ValueError('無效的時間值')
+        return v
     
     model_config = ConfigDict(populate_by_name=True)
 

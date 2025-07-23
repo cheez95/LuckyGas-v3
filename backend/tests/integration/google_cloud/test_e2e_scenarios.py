@@ -2,6 +2,7 @@
 End-to-end integration tests for Google API scenarios
 """
 import pytest
+import pytest_asyncio
 from unittest.mock import Mock, patch, AsyncMock
 import os
 from datetime import datetime, timedelta
@@ -16,7 +17,8 @@ from app.main import app
 from app.core.database import get_async_session
 from app.models.customer import Customer
 from app.models.order import Order
-from app.services.google_cloud.routes_service_enhanced import enhanced_routes_service
+from app.services.google_cloud.routes_service_enhanced import get_enhanced_routes_service
+enhanced_routes_service = get_enhanced_routes_service()
 from app.services.google_cloud.vertex_ai_service_enhanced import enhanced_vertex_ai_service
 
 
@@ -24,7 +26,7 @@ from app.services.google_cloud.vertex_ai_service_enhanced import enhanced_vertex
 class TestE2EScenarios:
     """End-to-end test scenarios"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def test_db(self):
         """Create test database"""
         # Use in-memory SQLite for tests

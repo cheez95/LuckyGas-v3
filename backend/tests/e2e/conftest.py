@@ -2,6 +2,7 @@
 Configuration and fixtures for E2E tests using Playwright
 """
 import pytest
+import pytest_asyncio
 import asyncio
 from typing import Dict, Generator
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
@@ -15,27 +16,23 @@ HEADLESS = os.getenv("E2E_HEADLESS", "true").lower() == "true"
 SLOW_MO = int(os.getenv("E2E_SLOW_MO", "0"))  # Milliseconds to slow down operations
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create event loop for async tests"""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# Event loop fixture removed - using the one from tests/conftest.py
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def browser():
     """Create browser instance for tests"""
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            headless=HEADLESS,
-            slow_mo=SLOW_MO
-        )
-        yield browser
-        await browser.close()
+    p = await async_playwright().start()
+    browser = await p.chromium.launch(
+        headless=HEADLESS,
+        slow_mo=SLOW_MO
+    )
+    yield browser
+    await browser.close()
+    await p.stop()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def context(browser: Browser) -> BrowserContext:
     """Create browser context for each test"""
     context = await browser.new_context(
@@ -54,7 +51,7 @@ async def context(browser: Browser) -> BrowserContext:
     await context.close()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def page(context: BrowserContext) -> Page:
     """Create page for each test"""
     page = await context.new_page()
@@ -104,7 +101,7 @@ def office_credentials() -> Dict[str, str]:
 
 
 # Authenticated page fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def authenticated_page(page: Page, test_credentials: Dict[str, str]) -> Page:
     """Create authenticated page for office staff"""
     # Login
@@ -119,7 +116,7 @@ async def authenticated_page(page: Page, test_credentials: Dict[str, str]) -> Pa
     return page
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_authenticated_page(page: Page, admin_credentials: Dict[str, str]) -> Page:
     """Create authenticated page for admin"""
     # Login
@@ -134,7 +131,7 @@ async def admin_authenticated_page(page: Page, admin_credentials: Dict[str, str]
     return page
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def driver_authenticated_page(page: Page, driver_credentials: Dict[str, str]) -> Page:
     """Create authenticated page for driver"""
     # Login
@@ -167,7 +164,7 @@ def format_currency():
 
 
 # Screenshot helper
-@pytest.fixture
+@pytest_asyncio.fixture
 async def take_screenshot(page: Page):
     """Helper to take screenshots during tests"""
     async def _take_screenshot(name: str):
@@ -183,7 +180,7 @@ async def take_screenshot(page: Page):
 
 
 # API helper for test data setup
-@pytest.fixture
+@pytest_asyncio.fixture
 async def api_client():
     """Create API client for test data setup"""
     import httpx
@@ -192,7 +189,7 @@ async def api_client():
         yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def create_test_customer(api_client, admin_credentials):
     """Helper to create test customers via API"""
     async def _create_customer(customer_data: Dict) -> Dict:
@@ -217,7 +214,7 @@ async def create_test_customer(api_client, admin_credentials):
     return _create_customer
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def create_test_order(api_client, admin_credentials):
     """Helper to create test orders via API"""
     async def _create_order(order_data: Dict) -> Dict:
@@ -243,7 +240,7 @@ async def create_test_order(api_client, admin_credentials):
 
 
 # Cleanup fixture
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def cleanup_screenshots():
     """Clean up old screenshots before tests"""
     screenshot_dir = "tests/e2e/screenshots"

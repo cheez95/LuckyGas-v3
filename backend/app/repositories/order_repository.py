@@ -43,8 +43,7 @@ class OrderRepository(BaseRepository[Order]):
             .where(Order.id == order_id)
             .options(
                 joinedload(Order.customer),
-                selectinload(Order.order_items).joinedload(OrderItem.gas_product),
-                joinedload(Order.route)
+                selectinload(Order.order_items).joinedload(OrderItem.gas_product)
             )
         )
         
@@ -352,7 +351,7 @@ class OrderRepository(BaseRepository[Order]):
             select(Order)
             .where(
                 and_(
-                    Order.payment_status == PaymentStatus.PENDING,
+                    Order.payment_status == PaymentStatus.UNPAID,
                     Order.status == OrderStatus.DELIVERED,
                     Order.delivered_at <= cutoff_date
                 )
@@ -434,7 +433,7 @@ class OrderRepository(BaseRepository[Order]):
             "scheduled_date": scheduled_date,
             "order_number": order_number,
             "status": OrderStatus.PENDING,
-            "payment_status": PaymentStatus.PENDING
+            "payment_status": PaymentStatus.UNPAID
         }
         
         order = await self.create(**order_data)

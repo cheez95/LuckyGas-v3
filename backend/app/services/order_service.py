@@ -61,11 +61,10 @@ class OrderService:
         order_dict.update({
             "order_number": order_number,
             "status": OrderStatus.PENDING,
-            "payment_status": PaymentStatus.PENDING,
+            "payment_status": PaymentStatus.UNPAID,
             "total_amount": pricing["total_amount"],
             "discount_amount": pricing["discount_amount"],
-            "final_amount": pricing["final_amount"],
-            "created_by": created_by
+            "final_amount": pricing["final_amount"]
         })
         
         # Use delivery address from order or customer

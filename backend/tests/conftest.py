@@ -1,11 +1,15 @@
 """
 Test configuration and fixtures
 """
+# Import test environment setup first
+from . import test_env_setup
+
 import pytest
+import pytest_asyncio
 import asyncio
-from typing import AsyncGenerator, Generator, Dict, Any
+from typing import AsyncGenerator, Dict, Any
 from datetime import datetime, timedelta
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 import redis.asyncio as redis
@@ -19,7 +23,7 @@ from app.models.customer import Customer
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.gas_product import GasProduct
 from app.models.route import Route
-from app.models.driver import Driver
+# Driver is a User with role='driver', not a separate model
 from app.core.security import get_password_hash, create_access_token
 from app.core.cache import get_redis_client
 from app.services.customer_service import CustomerService
@@ -33,15 +37,11 @@ settings = test_settings
 TEST_DATABASE_URL = test_settings.DATABASE_URL
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# Event loop is managed by pytest-asyncio in strict mode
+# No custom event_loop fixture needed
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def engine():
     """Create test database engine"""
     engine = create_async_engine(
@@ -52,7 +52,7 @@ async def engine():
     await engine.dispose()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     """Create test database session"""
     async with engine.begin() as conn:
@@ -66,10 +66,14 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     )
     
     async with async_session_maker() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await session.rollback()
+            await session.close()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create test client with database override"""
     
@@ -78,13 +82,14 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     
     app.dependency_overrides[get_async_session] = override_get_db
     
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(db_session: AsyncSession) -> User:
     """Create test user"""
     user = User(
@@ -101,7 +106,7 @@ async def test_user(db_session: AsyncSession) -> User:
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_admin(db_session: AsyncSession) -> User:
     """Create test admin user"""
     admin = User(
@@ -118,7 +123,7 @@ async def test_admin(db_session: AsyncSession) -> User:
     return admin
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_driver(db_session: AsyncSession) -> User:
     """Create test driver user"""
     driver = User(
@@ -135,24 +140,24 @@ async def test_driver(db_session: AsyncSession) -> User:
     return driver
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_headers(test_user: User) -> dict:
     """Create authentication headers for test user"""
-    access_token = create_access_token(data={"sub": test_user.email})
+    access_token = create_access_token(data={"sub": test_user.username, "role": test_user.role.value})
     return {"Authorization": f"Bearer {access_token}"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_auth_headers(test_admin: User) -> dict:
     """Create authentication headers for admin user"""
-    access_token = create_access_token(data={"sub": test_admin.email})
+    access_token = create_access_token(data={"sub": test_admin.username, "role": test_admin.role.value})
     return {"Authorization": f"Bearer {access_token}"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def driver_auth_headers(test_driver: User) -> dict:
     """Create authentication headers for driver user"""
-    access_token = create_access_token(data={"sub": test_driver.email})
+    access_token = create_access_token(data={"sub": test_driver.username, "role": test_driver.role.value})
     return {"Authorization": f"Bearer {access_token}"}
 
 
@@ -164,36 +169,43 @@ def sample_customer_data():
         "customer_code": "C001",
         "short_name": "測試客戶",
         "invoice_title": "測試公司",
-        "tax_id": "12345678",
-        "address": "台北市信義區測試路123號",
-        "phone1": "0912-345-678",
-        "contact_person": "王小明",
+        "tax_id": "53212539",  # Valid Taiwan tax ID with proper checksum
+        "address": "台北市信義區信義路五段123號",
+        "phone": "0912-345-678",
         "area": "信義區",
-        "is_corporate": True
+        "customer_type": "商業"
     }
 
 
 @pytest.fixture
 def sample_order_data():
     """Sample order data for testing"""
+    # Use a date 7 days in the future
+    from datetime import datetime, timedelta
+    future_date = datetime.now() + timedelta(days=7)
     return {
         "customer_id": 1,
-        "scheduled_date": "2024-12-25",
+        "scheduled_date": future_date.isoformat(),
         "qty_50kg": 2,
         "qty_20kg": 1,
         "qty_16kg": 0,
         "qty_10kg": 0,
         "qty_4kg": 3,
+        "delivery_address": "台北市信義區測試路123號",
         "delivery_notes": "請於下午送達",
-        "is_urgent": False
+        "is_urgent": False,
+        "payment_method": "現金"
     }
 
 
 @pytest.fixture
 def sample_route_data():
     """Sample route data for testing"""
+    # Use a date 7 days in the future
+    from datetime import datetime, timedelta
+    future_date = datetime.now() + timedelta(days=7)
     return {
-        "route_date": "2024-12-25",
+        "route_date": future_date.strftime("%Y-%m-%d"),
         "area": "信義區",
         "driver_id": 1,
         "vehicle_id": 1,
@@ -202,7 +214,7 @@ def sample_route_data():
 
 
 # Redis fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def redis_client():
     """Create test Redis client"""
     client = await redis.from_url(test_settings.REDIS_URL, decode_responses=True)
@@ -223,13 +235,13 @@ def mock_redis_client():
 
 
 # Service fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def customer_service(db_session: AsyncSession) -> CustomerService:
     """Create customer service instance"""
     return CustomerService(db_session)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def order_service(db_session: AsyncSession) -> OrderService:
     """Create order service instance"""
     return OrderService(db_session)
@@ -270,7 +282,7 @@ def mock_vertex_ai_service():
 
 
 # Model factories
-@pytest.fixture
+@pytest_asyncio.fixture
 async def gas_product_factory(db_session: AsyncSession):
     """Factory for creating gas products"""
     async def create_gas_product(
@@ -295,7 +307,7 @@ async def gas_product_factory(db_session: AsyncSession):
     return create_gas_product
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def customer_factory(db_session: AsyncSession):
     """Factory for creating customers"""
     async def create_customer(
@@ -331,7 +343,7 @@ async def customer_factory(db_session: AsyncSession):
     return create_customer
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def order_factory(db_session: AsyncSession):
     """Factory for creating orders"""
     async def create_order(
@@ -348,7 +360,7 @@ async def order_factory(db_session: AsyncSession):
             "customer_id": customer_id,
             "scheduled_date": scheduled_date,
             "status": status,
-            "payment_status": kwargs.get("payment_status", PaymentStatus.PENDING),
+            "payment_status": kwargs.get("payment_status", PaymentStatus.UNPAID),
             "qty_50kg": kwargs.get("qty_50kg", 0),
             "qty_20kg": kwargs.get("qty_20kg", 0),
             "qty_16kg": kwargs.get("qty_16kg", 0),
@@ -372,35 +384,11 @@ async def order_factory(db_session: AsyncSession):
     return create_order
 
 
-@pytest.fixture
-async def driver_factory(db_session: AsyncSession):
-    """Factory for creating drivers"""
-    async def create_driver(
-        user_id: int,
-        driver_code: str = None,
-        **kwargs
-    ) -> Driver:
-        if not driver_code:
-            driver_code = f"D{datetime.now().microsecond:04d}"
-        
-        driver = Driver(
-            user_id=user_id,
-            driver_code=driver_code,
-            full_name=kwargs.get("full_name", "測試司機"),
-            phone=kwargs.get("phone", "0987-654-321"),
-            vehicle_number=kwargs.get("vehicle_number", "ABC-123"),
-            is_active=kwargs.get("is_active", True)
-        )
-        db_session.add(driver)
-        await db_session.commit()
-        await db_session.refresh(driver)
-        return driver
-    
-    return create_driver
+# Note: Driver factory removed as drivers are Users with role='driver', not a separate model
 
 
 # Authenticated client fixtures
-@pytest.fixture
+@pytest_asyncio.fixture
 async def authenticated_client(
     client: AsyncClient,
     auth_headers: Dict[str, str]
@@ -410,7 +398,7 @@ async def authenticated_client(
     return client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_client(
     client: AsyncClient,
     admin_auth_headers: Dict[str, str]
@@ -420,7 +408,7 @@ async def admin_client(
     return client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def driver_client(
     client: AsyncClient,
     driver_auth_headers: Dict[str, str]
@@ -431,7 +419,7 @@ async def driver_client(
 
 
 # Cleanup fixture
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def cleanup_database(db_session: AsyncSession):
     """Ensure database is clean after each test"""
     yield

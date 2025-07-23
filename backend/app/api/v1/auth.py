@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any
+from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,8 +8,8 @@ from sqlalchemy import select
 from app.api.deps import get_db, get_current_user
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, verify_password, get_password_hash, decode_refresh_token
-from app.models.user import User as UserModel
-from app.schemas.user import User, Token, UserCreate, RefreshTokenRequest
+from app.models.user import User as UserModel, UserRole
+from app.schemas.user import User, Token, UserCreate, RefreshTokenRequest, ChangePasswordRequest
 
 router = APIRouter()
 
@@ -152,3 +152,163 @@ async def read_users_me(
     Get current user
     """
     return current_user
+
+
+@router.get("/users", response_model=List[User])
+async def list_users(
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    List all users (admin only)
+    """
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != UserRole.MANAGER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="權限不足"
+        )
+    
+    result = await db.execute(
+        select(UserModel).offset(skip).limit(limit)
+    )
+    users = result.scalars().all()
+    return users
+
+
+@router.post("/users", response_model=User)
+async def create_user(
+    user_in: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+) -> Any:
+    """
+    Create new user (admin only)
+    """
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != UserRole.MANAGER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="權限不足"
+        )
+    
+    # Check if user exists
+    result = await db.execute(
+        select(UserModel).where(
+            (UserModel.email == user_in.email) | 
+            (UserModel.username == user_in.username)
+        )
+    )
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail="該電子郵件或用戶名已被註冊"
+        )
+    
+    # Create new user
+    db_user = UserModel(
+        email=user_in.email,
+        username=user_in.username,
+        full_name=user_in.full_name,
+        hashed_password=get_password_hash(user_in.password),
+        role=user_in.role,
+        is_active=user_in.is_active
+    )
+    
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    
+    return db_user
+
+
+@router.put("/users/{user_id}", response_model=User)
+async def update_user(
+    user_id: int,
+    user_update: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+) -> Any:
+    """
+    Update user (admin only)
+    """
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != UserRole.MANAGER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="權限不足"
+        )
+    
+    result = await db.execute(
+        select(UserModel).where(UserModel.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="用戶不存在"
+        )
+    
+    # Update user fields
+    for field, value in user_update.items():
+        if hasattr(user, field) and field != "id" and field != "hashed_password":
+            setattr(user, field, value)
+    
+    await db.commit()
+    await db.refresh(user)
+    
+    return user
+
+
+@router.patch("/users/{user_id}/toggle-status", response_model=User)
+async def toggle_user_status(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+) -> Any:
+    """
+    Toggle user active status (admin only)
+    """
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != UserRole.MANAGER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="權限不足"
+        )
+    
+    result = await db.execute(
+        select(UserModel).where(UserModel.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="用戶不存在"
+        )
+    
+    user.is_active = not user.is_active
+    await db.commit()
+    await db.refresh(user)
+    
+    return user
+
+
+@router.post("/change-password")
+async def change_password(
+    password_data: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+) -> Any:
+    """
+    Change current user's password
+    """
+    if not verify_password(password_data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail="目前密碼錯誤"
+        )
+    
+    current_user.hashed_password = get_password_hash(password_data.new_password)
+    await db.commit()
+    
+    return {"message": "密碼已成功更改"}

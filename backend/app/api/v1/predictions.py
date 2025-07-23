@@ -4,8 +4,7 @@ from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 import logging
 
-from app.db.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.schemas.prediction import (
     DemandPredictionRequest,

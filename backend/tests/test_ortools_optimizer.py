@@ -8,7 +8,7 @@ from app.services.optimization import ortools_optimizer, VRPStop, VRPVehicle
 def test_ortools_basic_optimization():
     """Test basic route optimization with OR-Tools"""
     
-    # Create test stops
+    # Create test stops with time windows relative to 8AM start
     stops = [
         VRPStop(
             order_id=1,
@@ -18,7 +18,7 @@ def test_ortools_basic_optimization():
             latitude=25.0330,
             longitude=121.5600,
             demand={"50kg": 2, "20kg": 1},
-            time_window=(8 * 60, 12 * 60),  # 8 AM to 12 PM
+            time_window=(0, 4 * 60),  # 8 AM to 12 PM (0-240 minutes from 8AM)
             service_time=15
         ),
         VRPStop(
@@ -29,7 +29,7 @@ def test_ortools_basic_optimization():
             latitude=25.0415,
             longitude=121.5435,
             demand={"20kg": 3, "10kg": 2},
-            time_window=(9 * 60, 17 * 60),  # 9 AM to 5 PM
+            time_window=(1 * 60, 8 * 60),  # 9 AM to 4 PM (60-480 minutes from 8AM)
             service_time=20
         ),
         VRPStop(
@@ -40,7 +40,7 @@ def test_ortools_basic_optimization():
             latitude=25.0520,
             longitude=121.5425,
             demand={"50kg": 1, "4kg": 5},
-            time_window=(10 * 60, 16 * 60),  # 10 AM to 4 PM
+            time_window=(2 * 60, 8 * 60),  # 10 AM to 4 PM (120-480 minutes from 8AM)
             service_time=10
         )
     ]
@@ -95,7 +95,7 @@ def test_ortools_basic_optimization():
 def test_ortools_with_time_windows():
     """Test route optimization with strict time windows"""
     
-    # Create stops with tight time windows
+    # Create stops with tight but achievable time windows
     stops = [
         VRPStop(
             order_id=1,
@@ -105,7 +105,7 @@ def test_ortools_with_time_windows():
             latitude=25.0330,
             longitude=121.5600,
             demand={"50kg": 1},
-            time_window=(8 * 60, 9 * 60),  # 8-9 AM only
+            time_window=(0, 2 * 60),  # 8-10 AM (0-120 minutes from 8AM start)
             service_time=15
         ),
         VRPStop(
@@ -116,7 +116,7 @@ def test_ortools_with_time_windows():
             latitude=25.0415,
             longitude=121.5435,
             demand={"20kg": 2},
-            time_window=(14 * 60, 16 * 60),  # 2-4 PM only
+            time_window=(3 * 60, 6 * 60),  # 11 AM-2 PM (180-360 minutes from 8AM start)
             service_time=20
         )
     ]

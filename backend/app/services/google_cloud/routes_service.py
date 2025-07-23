@@ -468,9 +468,9 @@ class GoogleRoutesService:
         """Extract product demands from order"""
         demand = {}
         for size in [50, 20, 16, 10, 4]:
-            qty_field = f"quantity_{size}kg"
+            qty_field = f"qty_{size}kg"
             if hasattr(order, qty_field):
-                qty = getattr(order, qty_field, 0)
+                qty = getattr(order, qty_field, 0) or 0
                 if qty > 0:
                     demand[f"{size}kg"] = qty
         return demand
@@ -502,9 +502,10 @@ class GoogleRoutesService:
         # Add time based on cylinder count
         total_cylinders = 0
         for size in [50, 20, 16, 10, 4]:
-            qty_field = f"quantity_{size}kg"
+            qty_field = f"qty_{size}kg"
             if hasattr(order, qty_field):
-                total_cylinders += getattr(order, qty_field, 0)
+                qty = getattr(order, qty_field, 0) or 0
+                total_cylinders += qty
         
         # 2 minutes per cylinder
         cylinder_time = total_cylinders * 2
@@ -516,9 +517,9 @@ class GoogleRoutesService:
         products = {}
         
         for size in [50, 20, 16, 10, 4]:
-            qty_field = f"quantity_{size}kg"
+            qty_field = f"qty_{size}kg"
             if hasattr(order, qty_field):
-                qty = getattr(order, qty_field, 0)
+                qty = getattr(order, qty_field, 0) or 0
                 if qty > 0:
                     products[f"{size}kg"] = qty
         

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer import Customer
 from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.gas_product import GasProduct, CylinderType
+from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 from app.models.order_item import OrderItem
 
 
@@ -39,19 +39,31 @@ class TestOrders:
         sample_order_data["customer_id"] = customer.id
         
         response = await client.post(
-            "/api/v1/orders",
+            "/api/v1/orders/",
             json=sample_order_data,
             headers=auth_headers
         )
+        if response.status_code != 200:
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.json()}")
         assert response.status_code == 200
         data = response.json()
-        assert data["customer_id"] == customer.id
-        assert data["qty_50kg"] == sample_order_data["qty_50kg"]
-        assert data["qty_20kg"] == sample_order_data["qty_20kg"]
-        assert data["qty_4kg"] == sample_order_data["qty_4kg"]
-        assert data["order_number"].startswith("ORD-")
-        assert data["total_amount"] > 0
-        assert data["status"] == OrderStatus.PENDING.value
+        # Handle both English field names and Chinese aliases
+        customer_id = data.get("customer_id") or data.get("客戶編號")
+        qty_50kg = data.get("qty_50kg") or data.get("50公斤數量")
+        qty_20kg = data.get("qty_20kg") or data.get("20公斤數量")
+        qty_4kg = data.get("qty_4kg") or data.get("4公斤數量")
+        order_number = data.get("order_number") or data.get("訂單號碼")
+        total_amount = data.get("total_amount") or data.get("總金額")
+        status = data.get("status") or data.get("訂單狀態")
+        
+        assert customer_id == customer.id
+        assert qty_50kg == sample_order_data["qty_50kg"]
+        assert qty_20kg == sample_order_data["qty_20kg"]
+        assert qty_4kg == sample_order_data["qty_4kg"]
+        assert order_number.startswith("ORD-")
+        assert total_amount > 0
+        assert status == OrderStatus.PENDING.value
     
     @pytest.mark.asyncio
     async def test_create_order_nonexistent_customer(
@@ -64,7 +76,7 @@ class TestOrders:
         sample_order_data["customer_id"] = 99999
         
         response = await client.post(
-            "/api/v1/orders",
+            "/api/v1/orders/",
             json=sample_order_data,
             headers=auth_headers
         )
@@ -112,7 +124,7 @@ class TestOrders:
         
         # Test listing all orders
         response = await client.get(
-            "/api/v1/orders",
+            "/api/v1/orders/",
             headers=auth_headers
         )
         assert response.status_code == 200
@@ -121,27 +133,33 @@ class TestOrders:
         
         # Test with status filter
         response = await client.get(
-            "/api/v1/orders",
+            "/api/v1/orders/",
             params={"status": OrderStatus.PENDING.value},
             headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
-        assert all(order["status"] == OrderStatus.PENDING.value for order in data)
+        # Handle both English and Chinese field names
+        for order in data:
+            status = order.get("status") or order.get("訂單狀態")
+            assert status == OrderStatus.PENDING.value
         
         # Test with urgent filter
         response = await client.get(
-            "/api/v1/orders",
+            "/api/v1/orders/",
             params={"is_urgent": True},
             headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
-        assert all(order["is_urgent"] is True for order in data)
+        # Handle both English and Chinese field names
+        for order in data:
+            is_urgent = order.get("is_urgent") or order.get("緊急訂單")
+            assert is_urgent is True
         
         # Test with date range
         response = await client.get(
-            "/api/v1/orders",
+            "/api/v1/orders/",
             params={
                 "date_from": today.isoformat(),
                 "date_to": (today + timedelta(days=2)).isoformat()
@@ -432,14 +450,20 @@ class TestOrdersV2:
         
         # Create gas products
         product_50kg = GasProduct(
-            display_name="50公斤桶裝瓦斯",
-            cylinder_type=CylinderType.KG_50,
+            delivery_method=DeliveryMethod.CYLINDER,
+            size_kg=50,
+            attribute=ProductAttribute.REGULAR,
+            sku="CYL-50-REG",
+            name_zh="50公斤桶裝瓦斯",
             unit_price=2500,
             is_available=True
         )
         product_20kg = GasProduct(
-            display_name="20公斤桶裝瓦斯",
-            cylinder_type=CylinderType.KG_20,
+            delivery_method=DeliveryMethod.CYLINDER,
+            size_kg=20,
+            attribute=ProductAttribute.REGULAR,
+            sku="CYL-20-REG",
+            name_zh="20公斤桶裝瓦斯",
             unit_price=1200,
             is_available=True
         )
@@ -450,19 +474,25 @@ class TestOrdersV2:
         await db_session.refresh(product_50kg)
         await db_session.refresh(product_20kg)
         
+        # Use a future date
+        from datetime import datetime, timedelta
+        future_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        
         order_data = {
             "customer_id": customer.id,
-            "scheduled_date": "2024-12-25",
+            "scheduled_date": future_date,
             "order_items": [
                 {
                     "gas_product_id": product_50kg.id,
                     "quantity": 2,
+                    "unit_price": product_50kg.unit_price,
                     "is_exchange": True,
                     "empty_received": 2
                 },
                 {
                     "gas_product_id": product_20kg.id,
                     "quantity": 3,
+                    "unit_price": product_20kg.unit_price,
                     "discount_percentage": 10
                 }
             ],

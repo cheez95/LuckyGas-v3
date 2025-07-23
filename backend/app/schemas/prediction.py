@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from enum import Enum
 
 class PredictionType(str, Enum):
@@ -36,7 +36,7 @@ class BatchPredictionRequest(BaseModel):
     model_type: PredictionType
     input_gcs_path: str = Field(..., description="GCS path to input data")
     output_gcs_path: str = Field(..., description="GCS path for output")
-    parameters: Optional[Dict[str, any]] = None
+    parameters: Optional[Dict[str, Any]] = None
 
 class BatchPredictionResponse(BaseModel):
     job_id: str
@@ -61,7 +61,7 @@ class RouteOptimizationRequest(BaseModel):
     date: datetime = Field(default_factory=lambda: datetime.now())
     driver_ids: Optional[List[str]] = None
     order_ids: Optional[List[str]] = None
-    constraints: Optional[Dict[str, any]] = Field(default_factory=lambda: {
+    constraints: Optional[Dict[str, Any]] = Field(default_factory=lambda: {
         "max_distance_per_route": 100,
         "max_stops_per_route": 20,
         "time_window_start": "08:00",
@@ -91,5 +91,5 @@ class RouteOptimizationResponse(BaseModel):
     success: bool
     routes: List[OptimizedRoute]
     unassigned_orders: List[str]
-    metrics: Dict[str, any]
+    metrics: Dict[str, Any]
     optimization_score: float = Field(..., ge=0.0, le=100.0)

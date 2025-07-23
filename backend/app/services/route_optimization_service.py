@@ -16,7 +16,14 @@ class RouteOptimizationService:
     """Service for optimizing delivery routes using OR-Tools and Google Routes API."""
     
     def __init__(self):
-        self.gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+        self._gmaps = None
+        
+    @property
+    def gmaps(self):
+        """Lazy initialization of Google Maps client."""
+        if self._gmaps is None and settings.GOOGLE_MAPS_API_KEY:
+            self._gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+        return self._gmaps
         
     async def optimize_routes(
         self,

@@ -162,10 +162,12 @@ class ORToolsOptimizer:
         
         time_callback_index = routing.RegisterTransitCallback(time_callback)
         
+        # Use maximum of all vehicle times as the dimension capacity
+        max_vehicle_time = max(data['vehicle_max_time']) if data['vehicle_max_time'] else 3600
         routing.AddDimension(
             time_callback_index,
             30,  # allow waiting time
-            data['vehicle_max_time'],  # maximum time per vehicle
+            int(max_vehicle_time),  # maximum time per vehicle (must be int64)
             False,  # Don't force start cumul to zero
             'Time'
         )
@@ -177,7 +179,33 @@ class ORToolsOptimizer:
             if location_idx == data['depot']:
                 continue
             index = manager.NodeToIndex(location_idx)
-            time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
+            # Ensure time window values are valid integers
+            start_time = int(time_window[0]) if time_window[0] is not None else 0
+            end_time = int(time_window[1]) if time_window[1] is not None else int(max_vehicle_time)
+            
+            # Ensure start <= end and both are non-negative
+            if start_time > end_time:
+                logger.warning(f"Invalid time window: start ({start_time}) > end ({end_time}), swapping values")
+                start_time, end_time = end_time, start_time
+            
+            if start_time < 0:
+                logger.warning(f"Negative start time ({start_time}), setting to 0")
+                start_time = 0
+                
+            if end_time < 0:
+                logger.warning(f"Negative end time ({end_time}), setting to max_vehicle_time")
+                end_time = int(max_vehicle_time)
+            
+            # Ensure time window doesn't exceed dimension capacity
+            if end_time > max_vehicle_time:
+                logger.warning(f"End time ({end_time}) exceeds max_vehicle_time ({max_vehicle_time}), capping to max")
+                end_time = int(max_vehicle_time)
+            
+            if start_time > max_vehicle_time:
+                logger.warning(f"Start time ({start_time}) exceeds max_vehicle_time ({max_vehicle_time}), capping to max")
+                start_time = int(max_vehicle_time)
+            
+            time_dimension.CumulVar(index).SetRange(start_time, end_time)
         
         # Instantiate route start and end times
         for vehicle_id in range(data['num_vehicles']):
@@ -337,10 +365,20 @@ class ORToolsOptimizer:
             end = start + stops_per_vehicle if i < len(vehicles) - 1 else len(stops)
             routes[i] = sorted_stops[start:end]
             
-            # Add simple estimated arrival times
-            current_time = 8 * 60  # Start at 8 AM
+            # Add estimated arrival times respecting time windows where possible
+            current_time = 0  # Start at beginning of day (8 AM = 0)
             for j, stop in enumerate(routes[i]):
-                stop.estimated_arrival = current_time + (j * 30)  # 30 minutes per stop
+                # Try to respect time window
+                if current_time < stop.time_window[0]:
+                    # We're early, wait until time window opens
+                    current_time = stop.time_window[0]
+                elif current_time > stop.time_window[1]:
+                    # We're late, set to end of time window (best effort)
+                    logger.warning(f"Cannot meet time window for stop {stop.order_id}")
+                
+                stop.estimated_arrival = current_time
+                # Add travel time and service time for next stop
+                current_time += 30 + stop.service_time  # 30 minutes travel + service
         
         return routes
 
