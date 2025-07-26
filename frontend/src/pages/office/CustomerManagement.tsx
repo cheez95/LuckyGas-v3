@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Card, Input, Tag, Modal, Form, Select, Statistic, Row, Col, message } from 'antd';
-import { UserAddOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, EnvironmentOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { UserAddOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, EnvironmentOutlined, ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
-import { api } from '../../services/api';
+import api from '../../services/api';
+import CustomerDetail from '../../components/office/CustomerDetail';
 
 interface Customer {
   id: string;
@@ -29,6 +30,7 @@ const CustomerManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDetailDrawerVisible, setIsDetailDrawerVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [form] = Form.useForm();
 
@@ -45,13 +47,49 @@ const CustomerManagement: React.FC = () => {
     fetchStatistics();
   }, []);
 
+  // Transform backend customer data to frontend format
+  const transformFromBackendSchema = (backendCustomer: any) => {
+    const frontendCustomer: Customer = {
+      id: backendCustomer.id || backendCustomer.編號,
+      name: backendCustomer.short_name || backendCustomer.簡稱,
+      phone: backendCustomer.phone || backendCustomer.電話 || '',
+      address: backendCustomer.address || backendCustomer.地址,
+      district: backendCustomer.area || backendCustomer.區域 || '',
+      postalCode: '', // Backend doesn't have postal code
+      customerType: (backendCustomer.customer_type || backendCustomer.客戶類型 || 'residential') as 'residential' | 'commercial',
+      status: backendCustomer.is_terminated ? 'inactive' : 'active' as 'active' | 'inactive' | 'suspended',
+      // Determine cylinder type based on which cylinder count is > 0
+      cylinderType: (
+        backendCustomer.cylinders_50kg > 0 ? '50kg' :
+        backendCustomer.cylinders_20kg > 0 ? '20kg' :
+        backendCustomer.cylinders_16kg > 0 ? '16kg' :
+        '20kg' // default
+      ) as '20kg' | '16kg' | '50kg',
+      lastOrderDate: backendCustomer.lastOrderDate,
+      totalOrders: backendCustomer.totalOrders || 0,
+      averageFrequency: backendCustomer.averageFrequency || 0,
+      notes: '', // Backend doesn't have notes
+      createdAt: backendCustomer.created_at || backendCustomer.建立時間,
+      updatedAt: backendCustomer.updated_at || backendCustomer.更新時間,
+    };
+    return frontendCustomer;
+  };
+
   const fetchCustomers = async () => {
     setLoading(true);
     try {
       const response = await api.get('/customers');
-      setCustomers(response.data);
+      // Handle both array and object response formats
+      let backendCustomers = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.data || response.data?.customers || response.data?.items || []);
+      
+      // Transform each customer from backend to frontend format
+      const transformedCustomers = backendCustomers.map(transformFromBackendSchema);
+      setCustomers(transformedCustomers);
     } catch (error) {
       message.error(t('customers.fetchError'));
+      setCustomers([]); // Ensure customers is always an array
     } finally {
       setLoading(false);
     }
@@ -59,10 +97,28 @@ const CustomerManagement: React.FC = () => {
 
   const fetchStatistics = async () => {
     try {
+      // Try without parameters first
       const response = await api.get('/customers/statistics');
       setStats(response.data);
-    } catch (error) {
-      console.error('Failed to fetch statistics:', error);
+    } catch (error: any) {
+      console.error('Failed to fetch statistics:', error.response?.data || error);
+      // If that fails, try with different parameters
+      try {
+        const params = {
+          include_inactive: false
+        };
+        const response = await api.get('/customers/statistics', { params });
+        setStats(response.data);
+      } catch (error2: any) {
+        console.error('Failed with params:', error2.response?.data || error2);
+        // Set default stats if API fails
+        setStats({
+          totalCustomers: customers.length,
+          activeCustomers: customers.filter(c => c.status === 'active').length,
+          newCustomersThisMonth: 0,
+          averageOrderFrequency: 0,
+        });
+      }
     }
   };
 
@@ -72,9 +128,26 @@ const CustomerManagement: React.FC = () => {
     setIsModalVisible(true);
   };
 
+  const handleViewDetails = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDetailDrawerVisible(true);
+  };
+
   const handleEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
-    form.setFieldsValue(customer);
+    // Transform customer data to form values
+    const formValues = {
+      name: customer.name,
+      phone: customer.phone.replace(/-/g, ''), // Remove dashes for validation
+      address: customer.address,
+      district: customer.district,
+      postalCode: customer.postalCode || '',
+      customerType: customer.customerType,
+      cylinderType: customer.cylinderType,
+      status: customer.status,
+      notes: customer.notes || '',
+    };
+    form.setFieldsValue(formValues);
     setIsModalVisible(true);
   };
 
@@ -94,19 +167,112 @@ const CustomerManagement: React.FC = () => {
     });
   };
 
+  const handleDetailUpdate = async (updatedCustomer: Customer) => {
+    try {
+      // Transform to backend schema
+      const backendData = transformToBackendSchema(updatedCustomer);
+      await api.put(`/customers/${updatedCustomer.id}`, backendData);
+      message.success(t('customers.updateSuccess'));
+      fetchCustomers();
+      setIsDetailDrawerVisible(false);
+    } catch (error) {
+      message.error(t('customers.updateError'));
+    }
+  };
+
+  // Generate customer code with proper format
+  const generateCustomerCode = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const timestamp = Date.now().toString().slice(-4);
+    return `C-${year}${month}${day}-${timestamp}`;
+  };
+
+  // Transform frontend form values to backend schema
+  const transformToBackendSchema = (values: any) => {
+    const transformed: any = {
+      // Generate unique customer code
+      customer_code: generateCustomerCode(),
+      
+      // Map name to short_name and invoice_title
+      short_name: values.name,
+      invoice_title: values.name,
+      
+      // Address as simple string (backend expects string, not object)
+      address: values.address,
+      
+      // Direct mappings
+      phone: values.phone,
+      area: values.district,
+      customer_type: values.customerType,
+      
+      // Initialize all cylinder counts to 0
+      cylinders_50kg: 0,
+      cylinders_20kg: 0,
+      cylinders_16kg: 0,
+      cylinders_10kg: 0,
+      cylinders_4kg: 0,
+    };
+
+    // Set the selected cylinder type quantity to 1
+    if (values.cylinderType) {
+      const cylinderKey = `cylinders_${values.cylinderType}`;
+      if (cylinderKey in transformed) {
+        transformed[cylinderKey] = 1;
+      }
+    }
+
+    // Map status to boolean fields
+    transformed.is_terminated = values.status !== 'active';
+    transformed.is_subscription = false; // Default
+    transformed.needs_same_day_delivery = false; // Default
+
+    // Add default delivery times if not provided
+    transformed.delivery_time_start = values.deliveryTimeStart || '09:00';
+    transformed.delivery_time_end = values.deliveryTimeEnd || '17:00';
+
+    return transformed;
+  };
+
   const handleSubmit = async (values: any) => {
     try {
+      let backendData;
+      
       if (selectedCustomer) {
-        await api.put(`/customers/${selectedCustomer.id}`, values);
+        // For updates, only send fields that can be updated
+        backendData = {
+          short_name: values.name,
+          invoice_title: values.name,
+          address: values.address,
+          phone: values.phone,
+          area: values.district,
+          // Set cylinder quantities based on selected type
+          cylinders_50kg: values.cylinderType === '50kg' ? 1 : 0,
+          cylinders_20kg: values.cylinderType === '20kg' ? 1 : 0,
+          cylinders_16kg: values.cylinderType === '16kg' ? 1 : 0,
+          cylinders_10kg: 0,
+          cylinders_4kg: 0,
+          delivery_time_start: values.deliveryTimeStart || '09:00',
+          delivery_time_end: values.deliveryTimeEnd || '17:00',
+        };
+        // Note: customer_type, is_terminated, is_subscription, needs_same_day_delivery
+        // cannot be updated through this endpoint
+        
+        await api.put(`/customers/${selectedCustomer.id}`, backendData);
         message.success(t('customers.updateSuccess'));
       } else {
-        await api.post('/customers', values);
+        // For creates, send all fields
+        backendData = transformToBackendSchema(values);
+        await api.post('/customers', backendData);
         message.success(t('customers.createSuccess'));
       }
       setIsModalVisible(false);
       fetchCustomers();
       fetchStatistics();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Customer save error:', error.response?.data);
       message.error(t('customers.saveError'));
     }
   };
@@ -212,6 +378,13 @@ const CustomerManagement: React.FC = () => {
         <Space size="middle">
           <Button
             type="link"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetails(record)}
+          >
+            {t('common.view')}
+          </Button>
+          <Button
+            type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
@@ -230,7 +403,7 @@ const CustomerManagement: React.FC = () => {
     },
   ];
 
-  const filteredCustomers = customers.filter(customer =>
+  const filteredCustomers = (customers || []).filter(customer =>
     customer.name.toLowerCase().includes(searchText.toLowerCase()) ||
     customer.phone.includes(searchText) ||
     customer.address.toLowerCase().includes(searchText.toLowerCase())
@@ -432,6 +605,13 @@ const CustomerManagement: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <CustomerDetail
+        visible={isDetailDrawerVisible}
+        customer={selectedCustomer}
+        onClose={() => setIsDetailDrawerVisible(false)}
+        onUpdate={handleDetailUpdate}
+      />
     </div>
   );
 };
