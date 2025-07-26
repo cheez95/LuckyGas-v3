@@ -68,6 +68,14 @@ logs/
 .env.*
 !.env.example
 
+# API Keys and Secrets
+**/config/secrets.json
+**/config/api_keys.json
+**/*_api_key*
+**/*_secret*
+*.pem
+*.key
+
 # Temporary files
 *.tmp
 *.temp
