@@ -93,3 +93,11 @@ test_*.py
 examples/
 demos/
 samples/
+
+# Legacy system analysis artifacts
+scripts/
+**/page_*.html
+**/luckygas_*.json
+**/complete_*.json
+**/*_system_analysis.*
+**/*_exploration.*
