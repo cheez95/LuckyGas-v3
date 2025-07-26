@@ -25,6 +25,14 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.OFFICE_STAFF)
     
+    # Security fields
+    two_factor_enabled = Column(Boolean, default=False)
+    two_factor_secret = Column(String, nullable=True)
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    password_changed_at = Column(DateTime(timezone=True), nullable=True)
+    failed_login_attempts = Column(Integer, default=0)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 import time
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard, test_utils, driver, communications, order_templates, invoices, payments, financial_reports
+from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard, test_utils, driver, communications, order_templates, invoices, payments, financial_reports, banking, notifications, webhooks
 from app.api.v1.socketio_handler import sio, socket_app
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
@@ -17,6 +17,7 @@ from app.core.logging import setup_logging, get_logger
 from app.middleware.logging import LoggingMiddleware, CorrelationIdMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.middleware.rate_limiting import RateLimitMiddleware
+from app.middleware.security import SecurityMiddleware
 from app.core.db_metrics import DatabaseMetricsCollector
 from app.core.env_validation import validate_environment
 from app.services.websocket_service import websocket_manager
@@ -126,6 +127,9 @@ app.add_middleware(
     max_age=3600  # Cache preflight requests for 1 hour
 )
 
+# Add security middleware (should be first)
+app.add_middleware(SecurityMiddleware)
+
 # Add GZip compression middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
@@ -224,6 +228,9 @@ app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocke
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(financial_reports.router, prefix="/api/v1/financial-reports", tags=["financial_reports"])
+app.include_router(banking.router, prefix="/api/v1/banking", tags=["banking"])
+app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"])
+app.include_router(webhooks.router, prefix="/api/v1", tags=["webhooks"])
 
 # Include test utilities only in test/development environments
 import os

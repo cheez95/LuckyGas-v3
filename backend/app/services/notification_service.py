@@ -126,51 +126,37 @@ class NotificationService:
             raise
     
     async def _send_sms(self, phone_number: str, notification_type: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Send SMS notification"""
-        
-        # Format phone number for Taiwan
-        if not phone_number.startswith("+886"):
-            if phone_number.startswith("0"):
-                phone_number = "+886" + phone_number[1:]
-            else:
-                phone_number = "+886" + phone_number
+        """Send SMS notification using enhanced SMS service"""
+        from app.services.sms_service import enhanced_sms_service
         
         # Get template and format message
         template = self.sms_templates.get(notification_type, "")
         message = template.format(**data)
         
-        # Prepare SMS payload
-        payload = {
-            "to": phone_number,
-            "from": self.sms_sender_id,
-            "message": message,
-            "type": "unicode"  # Support Traditional Chinese
-        }
-        
-        # Send via SMS provider API
-        async with aiohttp.ClientSession() as session:
-            headers = {
-                "Authorization": f"Bearer {self.sms_api_key}",
-                "Content-Type": "application/json"
+        # Use enhanced SMS service
+        result = await enhanced_sms_service.send_sms(
+            phone=phone_number,
+            message=message,
+            message_type=notification_type,
+            metadata={
+                "notification_type": notification_type,
+                "order_id": data.get("order_number"),
+                "customer_id": data.get("customer_id")
             }
-            
-            async with session.post(
-                self.sms_provider_url,
-                json=payload,
-                headers=headers
-            ) as response:
-                result = await response.json()
-                
-                if response.status == 200:
-                    logger.info(f"SMS sent successfully to {phone_number}")
-                    return {
-                        "success": True,
-                        "message_id": result.get("message_id"),
-                        "channel": NotificationChannel.SMS
-                    }
-                else:
-                    logger.error(f"SMS send failed: {result}")
-                    raise Exception(f"SMS send failed: {result}")
+        )
+        
+        if result["success"]:
+            logger.info(f"SMS sent successfully to {phone_number}")
+            return {
+                "success": True,
+                "message_id": result["message_id"],
+                "channel": NotificationChannel.SMS,
+                "segments": result.get("segments", 1),
+                "cost": result.get("cost", 0)
+            }
+        else:
+            logger.error(f"SMS send failed: {result.get('error')}")
+            raise Exception(f"SMS send failed: {result.get('error')}")
     
     async def _send_email(self, email_address: str, notification_type: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Send email notification"""

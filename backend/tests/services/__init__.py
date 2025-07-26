@@ -1,1 +1,1 @@
-# Service tests module
+# Tests for services

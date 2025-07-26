@@ -225,3 +225,93 @@ export function formatTaiwanDate(date: Date): string {
 export function formatCurrency(amount: number): string {
   return `NT$ ${amount.toLocaleString('zh-TW')}`;
 }
+
+// Additional test data for payment processing
+export const TestPayments = {
+  customerWithCredit: {
+    id: 'cust_001',
+    name: '信用客戶公司',
+    creditLimit: 50000,
+    currentCredit: 30000
+  },
+  customerWithLowCredit: {
+    id: 'cust_002',
+    name: '小額信用客戶',
+    creditLimit: 5000,
+    currentCredit: 4000
+  },
+  generateBankResponseFile: () => {
+    // Generate mock bank response file for testing
+    const content = `H01,20240120,812,1234567890123
+D01,INV20240101001,2400,Y,20240120
+D01,INV20240101002,3600,Y,20240120
+D01,INV20240101003,1200,N,20240120,NSF
+T01,3,7200,2`;
+    
+    return {
+      name: 'ACH_20240120_response.txt',
+      content: Buffer.from(content),
+      mimeType: 'text/plain'
+    };
+  }
+};
+
+// Additional test data for invoice management
+export const TestInvoices = {
+  sampleInvoice: {
+    invoiceNumber: 'AB12345678',
+    orderNumber: 'ORD20240101001',
+    customerName: '林太太',
+    amount: 840,
+    tax: 40,
+    total: 880,
+    status: 'active'
+  },
+  b2bInvoice: {
+    invoiceNumber: 'CD98765432',
+    orderNumber: 'ORD20240101002',
+    customerName: '幸福小吃店',
+    customerTaxId: '12345678',
+    amount: 2800,
+    tax: 140,
+    total: 2940,
+    status: 'active',
+    type: 'triplicate'
+  }
+};
+
+// Taiwan-specific data formats
+export const TaiwanData = {
+  phoneFormats: [
+    '09XX-XXX-XXX',  // Mobile
+    '02-XXXX-XXXX',  // Taipei
+    '03-XXX-XXXX',   // Hsinchu/Hualien
+    '04-XXXX-XXXX',  // Taichung
+    '06-XXX-XXXX',   // Tainan
+    '07-XXX-XXXX'    // Kaohsiung
+  ],
+  addressFormat: {
+    example: '100台北市中正區重慶南路一段122號',
+    pattern: /^\d{3,5}[^\d]+[市縣][^\d]+[區鄉鎮市][^\d]+[路街道巷弄]\d+[號樓]/
+  },
+  taxIdFormat: {
+    length: 8,
+    pattern: /^\d{8}$/
+  },
+  invoiceFormat: {
+    pattern: /^[A-Z]{2}\d{8}$/,
+    example: 'AB12345678'
+  },
+  bankCodes: {
+    '004': '台灣銀行',
+    '005': '土地銀行',
+    '006': '合作金庫',
+    '007': '第一銀行',
+    '008': '華南銀行',
+    '009': '彰化銀行',
+    '012': '台北富邦',
+    '013': '國泰世華',
+    '812': '台新銀行',
+    '822': '中國信託'
+  }
+};

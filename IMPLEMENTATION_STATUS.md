@@ -216,7 +216,7 @@ luckygas-v3/
 
 7. **Financial Management System** (✅ Sprint 5)
    - Taiwan e-invoice generation with QR codes
-   - Government e-invoice API integration
+   - Government e-invoice API integration (✅ P0 BLOCKER RESOLVED)
    - Payment tracking and reconciliation
    - Comprehensive financial reporting
    - Credit note management
@@ -313,6 +313,12 @@ Target achievements:
   - Error handling and fallback
   - WebSocket integration verified
 
+### Critical Blockers Resolved
+- ✅ **Government E-Invoice API Integration** (P0 - Resolved 2025-07-26)
+  - Was: Mock implementation only
+  - Now: Full production-ready integration with Taiwan E-Invoice Platform
+  - Impact: Can now legally issue e-invoices for B2B and B2C transactions
+
 ### Known Issues
 - ~~Data quality: 30% of customers have NaN values in cylinder counts~~ ✅ FIXED - Implemented comprehensive NaN handling
 - Port conflict: Must use port 5433 for PostgreSQL (host uses 5432)
@@ -323,6 +329,18 @@ Target achievements:
   - Type-safe conversion functions with field-specific defaults
   - Detailed data quality reporting
   - See [NAN_HANDLING_STRATEGY.md](docs/NAN_HANDLING_STRATEGY.md) for details
+
+- **E-Invoice API Integration** (✅ P0 BLOCKER RESOLVED - 2025-07-26)
+  - Replaced mock implementation with full Government API integration
+  - Implemented B2B and B2C invoice submission endpoints
+  - Added circuit breaker pattern for fault tolerance
+  - Automatic retry with exponential backoff
+  - Certificate-based authentication support
+  - Request/response logging for audit trail
+  - Traditional Chinese error messages
+  - Comprehensive unit tests (42 test cases)
+  - Mock mode for development/testing
+  - See [EINVOICE_API_REQUIREMENTS.md](backend/docs/api/EINVOICE_API_REQUIREMENTS.md) for details
 
 See [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) for comprehensive test results.
 

@@ -56,6 +56,11 @@ class Customer(Base):
     pricing_method = Column(String(50))
     payment_method = Column(String(50))
     
+    # Banking information for automatic payment
+    bank_code = Column(String(10))  # 銀行代碼
+    bank_account_number = Column(String(20))  # 銀行帳號
+    bank_account_holder = Column(String(100))  # 戶名
+    
     # Customer classification
     customer_type = Column(String(50), default="household")  # household, restaurant, industrial, commercial
     
