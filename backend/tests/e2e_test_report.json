@@ -1,0 +1,124 @@
+{
+  "timestamp": "2025-07-26T19:06:23.905552",
+  "sprints": {
+    "sprint1": {
+      "name": "Driver Functionality",
+      "tests": [
+        {
+          "file": "tests/e2e/test_driver_mobile_flow.py",
+          "exit_code": 1,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 9
+          }
+        },
+        {
+          "file": "tests/e2e/test_login_flow.py::TestLoginFlow::test_driver_login",
+          "exit_code": 4,
+          "passed": false,
+          "summary": {
+            "total": 0,
+            "collected": 0
+          }
+        }
+      ],
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "sprint2": {
+      "name": "WebSocket & Real-time",
+      "tests": [
+        {
+          "file": "tests/e2e/test_websocket_realtime.py",
+          "exit_code": 1,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 6
+          }
+        }
+      ],
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "sprint3": {
+      "name": "Order Management",
+      "tests": [
+        {
+          "file": "tests/e2e/test_order_flow.py",
+          "exit_code": 1,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 8
+          }
+        },
+        {
+          "file": "tests/e2e/test_customer_management.py",
+          "exit_code": 1,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 8
+          }
+        },
+        {
+          "file": "tests/e2e/test_credit_limit_flow.py",
+          "exit_code": 1,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 5
+          }
+        },
+        {
+          "file": "tests/e2e/test_order_templates_flow.py",
+          "exit_code": 1,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 5
+          }
+        },
+        {
+          "file": "tests/test_order_search.py",
+          "exit_code": 4,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 5
+          }
+        },
+        {
+          "file": "tests/test_order_templates.py",
+          "exit_code": 4,
+          "passed": false,
+          "summary": {
+            "error": 1,
+            "total": 1,
+            "collected": 5
+          }
+        }
+      ],
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "summary": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0
+  }
+}

@@ -22,7 +22,7 @@ import {
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import { api } from '../../services/api';
+import api from '../../services/api';
 
 const { Title, Text } = Typography;
 const { Step } = Steps;

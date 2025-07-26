@@ -105,17 +105,18 @@ class MockVertexAIDemandPredictionService:
     
     async def predict_daily_demand(
         self,
-        prediction_date: date,
-        area: Optional[str] = None
-    ) -> Dict[str, Any]:
+        customer_data: List[Dict[str, Any]],
+        prediction_date: datetime
+    ) -> List[Dict[str, Any]]:
         """
         Generate mock daily demand predictions
+        Returns list matching API expectations
         """
         # Simulate API latency
         delay = random.uniform(self.mock_delays["min"], self.mock_delays["max"])
         await asyncio.sleep(delay)
         
-        logger.info(f"Mock demand prediction for {prediction_date} (area: {area or 'all'})")
+        logger.info(f"Mock demand prediction for {len(customer_data)} customers on {prediction_date}")
         
         # Calculate base demand factors
         month_factor = self.seasonal_factors.get(prediction_date.month, 1.0)
@@ -127,39 +128,42 @@ class MockVertexAIDemandPredictionService:
         # Holiday adjustments
         holiday_factor = self._get_holiday_factor(prediction_date)
         
-        predictions = {}
+        # Generate predictions for each customer
+        predictions = []
         
-        if area:
-            # Single area prediction
-            predictions[area] = self._generate_area_prediction(
-                area, prediction_date, month_factor, dow_factor, 
-                temp_adjustment, holiday_factor
-            )
-        else:
-            # All areas prediction
-            for area_name in self.area_base_demand.keys():
-                predictions[area_name] = self._generate_area_prediction(
-                    area_name, prediction_date, month_factor, dow_factor,
-                    temp_adjustment, holiday_factor
-                )
+        for customer in customer_data:
+            # Use customer ID as seed for consistent results
+            customer_id = customer.get("id", f"CUST{random.randint(1,9999):04d}")
+            
+            # Calculate demand based on customer's average consumption
+            avg_consumption = customer.get("avg_consumption", 20)
+            days_since_last = customer.get("days_since_last_order", 0)
+            
+            # Base demand calculation
+            base_demand = avg_consumption * month_factor * dow_factor * temp_adjustment * holiday_factor
+            
+            # Urgency factor based on days since last order
+            urgency_factor = min(days_since_last / 30.0, 1.5)
+            predicted_demand = base_demand * urgency_factor
+            
+            # Add some randomness
+            predicted_demand *= (0.9 + random.random() * 0.2)
+            
+            # Confidence based on data quality
+            confidence = 0.85 if days_since_last < 60 else 0.7
+            confidence *= (0.9 + random.random() * 0.1)
+            
+            predictions.append({
+                "customer_id": customer_id,
+                "customer_name": customer.get("name", f"Customer {customer_id}"),
+                "predicted_demand": round(predicted_demand, 2),
+                "confidence": round(confidence, 3),
+                "prediction_date": prediction_date.isoformat(),
+                "cylinder_type": customer.get("cylinder_type", "20kg"),
+                "days_since_last_order": days_since_last
+            })
         
-        # Add aggregate statistics
-        total_predicted = sum(p["total_cylinders"] for p in predictions.values())
-        
-        return {
-            "prediction_date": prediction_date.isoformat(),
-            "model_version": "mock-v1.0",
-            "confidence_score": round(0.75 + random.uniform(0, 0.15), 3),
-            "predictions_by_area": predictions,
-            "total_predicted_demand": total_predicted,
-            "factors_applied": {
-                "seasonal": round(month_factor, 2),
-                "day_of_week": round(dow_factor, 2),
-                "temperature": round(temp_adjustment, 2),
-                "holiday": round(holiday_factor, 2)
-            },
-            "warnings": ["Using mock prediction service (development mode)"]
-        }
+        return predictions
     
     def _generate_area_prediction(
         self,
@@ -215,7 +219,7 @@ class MockVertexAIDemandPredictionService:
             }
         }
     
-    def _simulate_temperature_effect(self, prediction_date: date) -> float:
+    def _simulate_temperature_effect(self, prediction_date) -> float:
         """Simulate temperature effect on gas demand"""
         # Simple sinusoidal temperature model
         day_of_year = prediction_date.timetuple().tm_yday
@@ -234,7 +238,7 @@ class MockVertexAIDemandPredictionService:
         else:
             return 1.0
     
-    def _get_holiday_factor(self, prediction_date: date) -> float:
+    def _get_holiday_factor(self, prediction_date) -> float:
         """Check for Taiwan holidays and adjust demand"""
         # Major Taiwan holidays (simplified)
         holidays = {

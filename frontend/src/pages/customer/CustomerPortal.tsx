@@ -29,7 +29,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
-import { api } from '../../services/api';
+import api from '../../services/api';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -158,6 +158,20 @@ const CustomerPortal: React.FC = () => {
 
   const handleCallSupport = () => {
     window.location.href = 'tel:+886212345678';
+  };
+
+  const handleReorder = (delivery: DeliveryHistory) => {
+    // Store the reorder data in sessionStorage to pass to order page
+    const reorderData = {
+      cylinderType: delivery.cylinderType,
+      quantity: delivery.quantity,
+      previousOrderNumber: delivery.orderNumber,
+      source: 'reorder'
+    };
+    sessionStorage.setItem('reorderData', JSON.stringify(reorderData));
+    
+    // Navigate to new order page
+    window.location.href = '/customer/new-order';
   };
 
   const getStatusColor = (status: string) => {
@@ -353,13 +367,27 @@ const CustomerPortal: React.FC = () => {
                 dot={<CheckCircleOutlined style={{ fontSize: '16px' }} />}
                 color="green"
               >
-                <Space direction="vertical" size={0}>
-                  <Text strong>
-                    {dayjs(delivery.deliveryDate).format('YYYY-MM-DD')} - {delivery.orderNumber}
-                  </Text>
-                  <Text type="secondary">
-                    {delivery.quantity} x {delivery.cylinderType} | NT$ {delivery.amount}
-                  </Text>
+                <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                  <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                    <div>
+                      <Text strong>
+                        {dayjs(delivery.deliveryDate).format('YYYY-MM-DD')} - {delivery.orderNumber}
+                      </Text>
+                      <br />
+                      <Text type="secondary">
+                        {delivery.quantity} x {delivery.cylinderType} | NT$ {delivery.amount}
+                      </Text>
+                    </div>
+                    <Button
+                      size="small"
+                      type="primary"
+                      ghost
+                      icon={<ShoppingCartOutlined />}
+                      onClick={() => handleReorder(delivery)}
+                    >
+                      再次訂購
+                    </Button>
+                  </Space>
                 </Space>
               </Timeline.Item>
             ))}

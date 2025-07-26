@@ -59,22 +59,28 @@ class WebSocketService extends EventEmitter {
   constructor() {
     super();
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Extract host from API URL or use localhost:8000 as default
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    const host = apiUrl.replace(/^https?:\/\//, '');
-    this.url = `${protocol}//${host}/ws`;
+    // Use the same host as the current window location for WebSocket
+    const host = window.location.host;
+    // Match the backend endpoint path
+    this.url = `${protocol}//${host}/api/v1/websocket/ws`;
+    console.log('🔌 WebSocket URL:', this.url);
   }
 
   connect(): void {
+    console.log('🔌 WebSocket connect() called');
     const token = localStorage.getItem('access_token');
     if (!token) {
       console.error('No authentication token found');
       return;
     }
 
+    const wsUrl = `${this.url}?token=${encodeURIComponent(token)}`;
+    console.log('🔌 Attempting to connect to:', wsUrl);
+
     try {
-      this.ws = new WebSocket(`${this.url}?token=${encodeURIComponent(token)}`);
+      this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
+      console.log('🔌 WebSocket connection initiated');
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       this.scheduleReconnect();
@@ -82,20 +88,26 @@ class WebSocketService extends EventEmitter {
   }
 
   disconnect(): void {
+    console.log('🔌 WebSocket disconnect() called');
     this.isIntentionallyClosed = true;
     this.clearTimers();
     
-    if (this.ws) {
+    if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
+      console.log('🔌 Closing WebSocket connection');
       this.ws.close(1000, 'Client disconnecting');
       this.ws = null;
+    } else {
+      console.log('🔌 WebSocket already closed or null');
     }
   }
 
   private setupEventHandlers(): void {
     if (!this.ws) return;
+    
+    console.log('🔌 Setting up WebSocket event handlers');
 
     this.ws.onopen = () => {
-      console.log('WebSocket connected');
+      console.log('✅ WebSocket connected successfully!');
       this.emit('connected');
       this.isIntentionallyClosed = false;
       
@@ -132,7 +144,9 @@ class WebSocketService extends EventEmitter {
     };
 
     this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('❌ WebSocket error:', error);
+      console.error('❌ WebSocket readyState:', this.ws?.readyState);
+      console.error('❌ WebSocket URL:', this.ws?.url);
       this.emit('error', error);
     };
 
@@ -148,6 +162,8 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleMessage(message: WebSocketMessage): void {
+    console.log('📨 WebSocket received message:', message);
+    
     // Emit generic message event
     this.emit('message', message);
 
@@ -265,6 +281,8 @@ class WebSocketService extends EventEmitter {
     }
 
     console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds...`);
+    this.emit('reconnecting');
+    
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
@@ -298,6 +316,11 @@ class WebSocketService extends EventEmitter {
 
 // Export singleton instance
 export const websocketService = new WebSocketService();
+
+// Expose to window for debugging
+if (typeof window !== 'undefined') {
+  (window as any).websocketService = websocketService;
+}
 
 // Export convenience hooks for React components
 export const useWebSocket = () => {

@@ -1,0 +1,462 @@
+# Product Data Model - Lucky Gas Legacy System
+
+Product:
+  table_name: "PRODUCT_MASTER"
+  chinese_name: "產品主檔"
+  description: "Master table for all gas cylinder products and accessories"
+  fields:
+    - name: "PRODUCT_ID"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      description: "Unique product identifier"
+      format: "P[0-9]{3}"
+      example: "P001"
+      
+    - name: "PRODUCT_CODE"
+      type: "varchar(20)"
+      required: true
+      unique: true
+      description: "Business product code"
+      example: "GAS-20KG-STD"
+      
+    - name: "PRODUCT_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Product display name"
+      example: "20公斤瓦斯桶"
+      
+    - name: "PRODUCT_NAME_EN"
+      type: "varchar(100)"
+      required: false
+      description: "English product name"
+      example: "20kg Gas Cylinder"
+      
+    - name: "PRODUCT_CATEGORY"
+      type: "varchar(2)"
+      required: true
+      description: "Product category"
+      values:
+        - "01": "瓦斯桶 (Gas Cylinder)"
+        - "02": "配件 (Accessories)"
+        - "03": "服務 (Services)"
+        - "04": "其他 (Others)"
+        
+    - name: "PRODUCT_SIZE"
+      type: "varchar(10)"
+      required: true
+      description: "Product size/specification"
+      values:
+        - "4KG": "4公斤"
+        - "16KG": "16公斤"
+        - "20KG": "20公斤"
+        - "50KG": "50公斤"
+        - "N/A": "不適用"
+        
+    - name: "UNIT_OF_MEASURE"
+      type: "varchar(10)"
+      required: true
+      description: "Sales unit"
+      default: "UNIT"
+      values:
+        - "UNIT": "個"
+        - "SET": "組"
+        - "PACK": "包"
+        
+    - name: "STANDARD_PRICE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Standard retail price"
+      validation: "> 0"
+      example: "850.00"
+      
+    - name: "COST_PRICE"
+      type: "decimal(10,2)"
+      required: false
+      description: "Product cost for margin calculation"
+      validation: ">= 0"
+      access: "RESTRICTED"
+      
+    - name: "MINIMUM_PRICE"
+      type: "decimal(10,2)"
+      required: false
+      description: "Minimum allowed selling price"
+      validation: ">= COST_PRICE"
+      
+    - name: "WEIGHT_KG"
+      type: "decimal(5,2)"
+      required: true
+      description: "Product weight in kilograms"
+      example: "20.00"
+      
+    - name: "CYLINDER_MATERIAL"
+      type: "varchar(20)"
+      required: false
+      description: "Cylinder material type"
+      values:
+        - "STEEL": "鋼瓶"
+        - "COMPOSITE": "複合材料"
+        - "ALUMINUM": "鋁瓶"
+        
+    - name: "TRACK_INVENTORY"
+      type: "boolean"
+      required: true
+      description: "Whether to track inventory"
+      default: true
+      
+    - name: "REQUIRES_DEPOSIT"
+      type: "boolean"
+      required: true
+      description: "Whether cylinder deposit required"
+      default: true
+      
+    - name: "DEPOSIT_AMOUNT"
+      type: "decimal(10,2)"
+      required: false
+      description: "Cylinder deposit amount"
+      default: "1500.00"
+      
+    - name: "REQUIRES_EMPTY_RETURN"
+      type: "boolean"
+      required: true
+      description: "Whether empty cylinder return required"
+      default: true
+      
+    - name: "MIN_ORDER_QTY"
+      type: "integer"
+      required: true
+      description: "Minimum order quantity"
+      default: 1
+      
+    - name: "MAX_ORDER_QTY"
+      type: "integer"
+      required: false
+      description: "Maximum order quantity per order"
+      default: null
+      
+    - name: "LEAD_TIME_DAYS"
+      type: "integer"
+      required: true
+      description: "Standard delivery lead time"
+      default: 0
+      
+    - name: "WARRANTY_DAYS"
+      type: "integer"
+      required: true
+      description: "Product warranty period"
+      default: 0
+      
+    - name: "EXPIRY_YEARS"
+      type: "integer"
+      required: false
+      description: "Cylinder expiry years"
+      default: 10
+      
+    - name: "HSN_CODE"
+      type: "varchar(20)"
+      required: false
+      description: "Harmonized System code for tax"
+      
+    - name: "TAX_RATE"
+      type: "decimal(5,2)"
+      required: true
+      description: "VAT rate percentage"
+      default: "5.00"
+      
+    - name: "TAX_INCLUSIVE"
+      type: "boolean"
+      required: true
+      description: "Whether price includes tax"
+      default: false
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Whether product is active"
+      default: true
+      
+    - name: "LAUNCH_DATE"
+      type: "date"
+      required: false
+      description: "Product launch date"
+      
+    - name: "DISCONTINUE_DATE"
+      type: "date"
+      required: false
+      description: "Product discontinuation date"
+      
+    - name: "SAFETY_STOCK_LEVEL"
+      type: "integer"
+      required: false
+      description: "Minimum stock level"
+      default: 50
+      
+    - name: "REORDER_POINT"
+      type: "integer"
+      required: false
+      description: "Automatic reorder trigger"
+      default: 100
+      
+    - name: "REORDER_QUANTITY"
+      type: "integer"
+      required: false
+      description: "Standard reorder quantity"
+      default: 200
+      
+    - name: "BARCODE"
+      type: "varchar(50)"
+      required: false
+      description: "Product barcode"
+      
+    - name: "QR_CODE"
+      type: "varchar(100)"
+      required: false
+      description: "QR code data"
+      
+    - name: "IMAGE_URL"
+      type: "varchar(255)"
+      required: false
+      description: "Product image URL"
+      
+    - name: "SPECIFICATIONS"
+      type: "text"
+      required: false
+      description: "Detailed specifications"
+      
+    - name: "SAFETY_INSTRUCTIONS"
+      type: "text"
+      required: false
+      description: "Safety handling instructions"
+      
+    - name: "NOTES"
+      type: "text"
+      required: false
+      description: "Internal notes"
+      
+    - name: "CREATE_USER"
+      type: "varchar(10)"
+      required: true
+      description: "User who created record"
+      
+    - name: "CREATE_DATE"
+      type: "timestamp"
+      required: true
+      description: "Record creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "UPDATE_USER"
+      type: "varchar(10)"
+      required: false
+      description: "Last update user"
+      
+    - name: "UPDATE_DATE"
+      type: "timestamp"
+      required: false
+      description: "Last update timestamp"
+  
+  indexes:
+    - name: "IDX_PRODUCT_CODE"
+      columns: ["PRODUCT_CODE"]
+      unique: true
+      
+    - name: "IDX_PRODUCT_CATEGORY"
+      columns: ["PRODUCT_CATEGORY", "ACTIVE_FLAG"]
+      
+    - name: "IDX_PRODUCT_SIZE"
+      columns: ["PRODUCT_SIZE", "ACTIVE_FLAG"]
+  
+  triggers:
+    - name: "TRG_PRODUCT_AUDIT"
+      event: "INSERT, UPDATE, DELETE"
+      description: "Log all changes to audit table"
+
+ProductPricing:
+  table_name: "PRODUCT_PRICING"
+  chinese_name: "產品定價"
+  description: "Multi-tier pricing structure with effective dates"
+  fields:
+    - name: "PRICING_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique pricing record ID"
+      
+    - name: "PRODUCT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "PRODUCT_MASTER.PRODUCT_ID"
+      description: "Product reference"
+      
+    - name: "PRICE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Pricing tier type"
+      values:
+        - "01": "標準價 (Standard)"
+        - "02": "批發價 (Wholesale)"
+        - "03": "企業價 (Corporate)"
+        - "04": "政府價 (Government)"
+        - "05": "促銷價 (Promotional)"
+        - "06": "特殊價 (Special)"
+        
+    - name: "CUSTOMER_CATEGORY"
+      type: "varchar(2)"
+      required: false
+      description: "Applicable customer category"
+      foreign_key: "REFERENCE_DATA.CATEGORY_CODE"
+      
+    - name: "MIN_QUANTITY"
+      type: "integer"
+      required: true
+      description: "Minimum quantity for this price"
+      default: 1
+      
+    - name: "UNIT_PRICE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Price per unit"
+      validation: "> 0"
+      
+    - name: "DISCOUNT_PERCENT"
+      type: "decimal(5,2)"
+      required: false
+      description: "Discount from standard price"
+      validation: "BETWEEN 0 AND 100"
+      
+    - name: "EFFECTIVE_FROM"
+      type: "date"
+      required: true
+      description: "Price effective start date"
+      
+    - name: "EFFECTIVE_TO"
+      type: "date"
+      required: false
+      description: "Price effective end date"
+      
+    - name: "APPROVAL_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Price approval status"
+      default: "01"
+      values:
+        - "01": "待審核 (Pending)"
+        - "02": "已核准 (Approved)"
+        - "03": "已拒絕 (Rejected)"
+        - "04": "已過期 (Expired)"
+        
+    - name: "APPROVED_BY"
+      type: "varchar(10)"
+      required: false
+      description: "Manager who approved"
+      
+    - name: "APPROVED_DATE"
+      type: "timestamp"
+      required: false
+      description: "Approval timestamp"
+      
+    - name: "PROMOTION_CODE"
+      type: "varchar(20)"
+      required: false
+      description: "Associated promotion code"
+      
+    - name: "NOTES"
+      type: "text"
+      required: false
+      description: "Pricing notes or conditions"
+  
+  indexes:
+    - name: "IDX_PRICING_PRODUCT"
+      columns: ["PRODUCT_ID", "PRICE_TYPE", "EFFECTIVE_FROM"]
+      
+    - name: "IDX_PRICING_DATES"
+      columns: ["EFFECTIVE_FROM", "EFFECTIVE_TO"]
+      
+    - name: "IDX_PRICING_STATUS"
+      columns: ["APPROVAL_STATUS", "EFFECTIVE_FROM"]
+
+ProductInventory:
+  table_name: "PRODUCT_INVENTORY"
+  chinese_name: "產品庫存"
+  description: "Real-time inventory tracking by location"
+  fields:
+    - name: "INVENTORY_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique inventory record ID"
+      
+    - name: "PRODUCT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "PRODUCT_MASTER.PRODUCT_ID"
+      description: "Product reference"
+      
+    - name: "WAREHOUSE_ID"
+      type: "varchar(10)"
+      required: true
+      description: "Warehouse/location ID"
+      default: "WH001"
+      
+    - name: "ON_HAND_QTY"
+      type: "integer"
+      required: true
+      description: "Physical quantity on hand"
+      default: 0
+      
+    - name: "AVAILABLE_QTY"
+      type: "integer"
+      required: true
+      description: "Available for sale quantity"
+      default: 0
+      
+    - name: "RESERVED_QTY"
+      type: "integer"
+      required: true
+      description: "Reserved for orders"
+      default: 0
+      
+    - name: "IN_TRANSIT_QTY"
+      type: "integer"
+      required: true
+      description: "Being delivered"
+      default: 0
+      
+    - name: "DAMAGED_QTY"
+      type: "integer"
+      required: true
+      description: "Damaged/unsellable"
+      default: 0
+      
+    - name: "LAST_COUNTED_DATE"
+      type: "date"
+      required: false
+      description: "Last physical count date"
+      
+    - name: "LAST_RECEIVED_DATE"
+      type: "date"
+      required: false
+      description: "Last stock receipt date"
+      
+    - name: "AVERAGE_DAILY_USAGE"
+      type: "decimal(10,2)"
+      required: false
+      description: "Calculated average usage"
+      
+    - name: "DAYS_OF_STOCK"
+      type: "decimal(5,1)"
+      required: false
+      description: "Estimated days remaining"
+  
+  indexes:
+    - name: "IDX_INVENTORY_PRODUCT"
+      columns: ["PRODUCT_ID", "WAREHOUSE_ID"]
+      unique: true
+      
+    - name: "IDX_INVENTORY_AVAILABLE"
+      columns: ["AVAILABLE_QTY"]
+  
+  constraints:
+    - name: "CHK_INVENTORY_QTY"
+      check: "ON_HAND_QTY = AVAILABLE_QTY + RESERVED_QTY + IN_TRANSIT_QTY + DAMAGED_QTY"

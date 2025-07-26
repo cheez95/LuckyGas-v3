@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幸福氣體 - 配送完成</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #52c41a;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .success-icon {
+            font-size: 60px;
+            margin: 20px 0;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .delivery-info {
+            background-color: #f6ffed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #b7eb8f;
+        }
+        .delivery-info h2 {
+            color: #52c41a;
+            margin-top: 0;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .signature-box {
+            background-color: #fafafa;
+            border: 1px solid #d9d9d9;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .signature-box img {
+            max-width: 200px;
+            height: auto;
+        }
+        .rating-section {
+            background-color: #f0f7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .rating-section h3 {
+            color: #1890ff;
+            margin-top: 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #1890ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        .button.secondary {
+            background-color: #8c8c8c;
+        }
+        .footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .footer a {
+            color: #1890ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>配送完成！</h1>
+            <p>您的瓦斯已成功送達</p>
+        </div>
+        
+        <div class="content">
+            <p>親愛的 {{ customer_name }} 您好，</p>
+            
+            <p>您的訂單已經成功配送完成，感謝您的訂購！</p>
+            
+            <div class="delivery-info">
+                <h2>配送詳情</h2>
+                
+                <div class="info-row">
+                    <span class="label">訂單編號：</span>
+                    <span class="value">{{ order_number }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">配送時間：</span>
+                    <span class="value">{{ delivery_time }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">配送司機：</span>
+                    <span class="value">{{ driver_name }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">配送項目：</span>
+                    <span class="value">
+                        {% for item in delivered_items %}
+                        {{ item.name }} x {{ item.quantity }}<br>
+                        {% endfor %}
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">應付金額：</span>
+                    <span class="value" style="font-size: 18px; color: #ff4d4f;">
+                        NT$ {{ total_amount | default(0) }}
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">付款方式：</span>
+                    <span class="value">{{ payment_method | default('現金') }}</span>
+                </div>
+            </div>
+            
+            {% if signature_url %}
+            <div class="signature-box">
+                <p><strong>簽收確認：</strong></p>
+                <img src="{{ signature_url }}" alt="簽名">
+                <p style="font-size: 12px; color: #666;">
+                    簽收時間：{{ signed_at }}
+                </p>
+            </div>
+            {% endif %}
+            
+            <div class="rating-section">
+                <h3>為這次的服務評分</h3>
+                <p>您的意見對我們非常重要，請花一分鐘為這次的配送服務評分。</p>
+                <a href="{{ rating_url | default('#') }}" class="button">立即評分</a>
+            </div>
+            
+            {% if invoice_number %}
+            <p><strong>電子發票資訊：</strong></p>
+            <p>發票號碼：{{ invoice_number }}<br>
+            發票將自動上傳至財政部電子發票整合服務平台，您可使用載具查詢。</p>
+            {% endif %}
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e8e8e8;">
+            
+            <h3>需要再次訂購嗎？</h3>
+            <p>您可以透過以下方式快速訂購：</p>
+            <center>
+                <a href="{{ reorder_url | default('#') }}" class="button">重複上次訂單</a>
+                <a href="{{ new_order_url | default('#') }}" class="button secondary">新訂單</a>
+            </center>
+        </div>
+        
+        <div class="footer">
+            <p>感謝您選擇幸福氣體，期待再次為您服務！</p>
+            <p>客服專線：0800-123-456 | 服務時間：週一至週六 08:00-18:00</p>
+            <p>© 2024 幸福氣體股份有限公司 版權所有</p>
+        </div>
+    </div>
+</body>
+</html>

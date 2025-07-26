@@ -12,12 +12,15 @@ import {
   CarOutlined,
   HistoryOutlined,
   CloseOutlined,
+  TeamOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationBell from './common/NotificationBell';
 import OfflineIndicator from './common/OfflineIndicator';
+import WebSocketStatus from './common/WebSocketStatus';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const { Header, Sider, Content } = Layout;
@@ -49,7 +52,7 @@ const MainLayout: React.FC = () => {
         {
           key: '/driver',
           icon: <CarOutlined />,
-          label: t('driver.todayDeliveries'),
+          label: <span data-testid="menu-driver">{t('driver.todayDeliveries')}</span>,
         },
       ];
     }
@@ -80,6 +83,21 @@ const MainLayout: React.FC = () => {
         key: '/routes',
         icon: <EnvironmentOutlined />,
         label: <span data-testid="menu-routes">{t('navigation.routes')}</span>,
+      },
+      {
+        key: '/driver-assignment',
+        icon: <TeamOutlined />,
+        label: <span data-testid="menu-driver-assignment">{t('dispatch.driverAssignment')}</span>,
+      },
+      {
+        key: '/emergency-dispatch',
+        icon: <ExclamationCircleOutlined />,
+        label: <span data-testid="menu-emergency-dispatch">{t('dispatch.emergencyDispatch')}</span>,
+      },
+      {
+        key: '/dispatch-dashboard',
+        icon: <DashboardOutlined />,
+        label: <span data-testid="menu-dispatch-dashboard">{t('dispatch.dispatchDashboard')}</span>,
       },
       {
         key: '/delivery-history',
@@ -239,6 +257,7 @@ const MainLayout: React.FC = () => {
               })
             )}
             <Space size={isMobile ? 'small' : 'large'}>
+              <WebSocketStatus />
               <OfflineIndicator isOnline={isOnline} pendingSync={syncPending} syncing={syncing} />
               {!isMobile && <NotificationBell />}
               {!isMobile ? (

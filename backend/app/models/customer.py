@@ -1,8 +1,20 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+import enum
 
 from app.core.database import Base
+
+
+class CustomerType(str, enum.Enum):
+    """Customer type enumeration"""
+    RESIDENTIAL = "residential"   # 住宅
+    COMMERCIAL = "commercial"    # 商業
+    INDUSTRIAL = "industrial"    # 工業
+    RESTAURANT = "restaurant"    # 餐廳
+    SCHOOL = "school"           # 學校
+    HOSPITAL = "hospital"       # 醫院
+    OTHER = "other"            # 其他
 
 
 class Customer(Base):
@@ -44,6 +56,14 @@ class Customer(Base):
     pricing_method = Column(String(50))
     payment_method = Column(String(50))
     
+    # Customer classification
+    customer_type = Column(String(50), default="household")  # household, restaurant, industrial, commercial
+    
+    # Credit management
+    credit_limit = Column(Float, default=0.0)  # 信用額度
+    current_balance = Column(Float, default=0.0)  # 當前應收帳款
+    is_credit_blocked = Column(Boolean, default=False)  # 信用額度封鎖
+    
     # Status flags
     is_subscription = Column(Boolean, default=False)  # 訂閱式會員
     needs_report = Column(Boolean, default=False)     # 發報
@@ -84,3 +104,4 @@ class Customer(Base):
     orders = relationship("Order", back_populates="customer")
     inventory_items = relationship("CustomerInventory", back_populates="customer", cascade="all, delete-orphan")
     predictions = relationship("DeliveryPrediction", back_populates="customer")
+    invoices = relationship("Invoice", back_populates="customer")

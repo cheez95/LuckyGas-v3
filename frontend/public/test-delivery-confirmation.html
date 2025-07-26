@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Confirmation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .primary {
+            background: #1890ff;
+            color: white;
+        }
+        .success {
+            background: #52c41a;
+            color: white;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .connected {
+            background: #52c41a;
+            color: white;
+        }
+        .disconnected {
+            background: #ff4d4f;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Delivery Confirmation Test</h1>
+    
+    <div class="section">
+        <h2>WebSocket Connection</h2>
+        <div>
+            Status: <span id="wsStatus" class="status disconnected">Disconnected</span>
+        </div>
+        <button class="primary" onclick="connectWebSocket()">Connect WebSocket</button>
+        <button onclick="disconnectWebSocket()">Disconnect</button>
+    </div>
+
+    <div class="section">
+        <h2>Simulate QR Code Scan</h2>
+        <p>This simulates what happens when the DeliveryScanner component scans a QR code.</p>
+        <button class="success" onclick="simulateQRScan()">
+            Simulate QR Scan (ORD20250722-001-CUST0001)
+        </button>
+        <button class="success" onclick="simulateManualConfirm()">
+            Simulate Manual Confirmation
+        </button>
+    </div>
+
+    <div class="section">
+        <h2>Message Log</h2>
+        <div id="messageLog" class="log">
+            <div>Waiting for messages...</div>
+        </div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        let ws = null;
+        const logElement = document.getElementById('messageLog');
+        const statusElement = document.getElementById('wsStatus');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logEntry.style.color = type === 'error' ? '#ff4d4f' : 
+                                  type === 'success' ? '#52c41a' : 
+                                  type === 'sent' ? '#1890ff' : '#000';
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function updateStatus(connected) {
+            statusElement.textContent = connected ? 'Connected' : 'Disconnected';
+            statusElement.className = `status ${connected ? 'connected' : 'disconnected'}`;
+        }
+        
+        function connectWebSocket() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                log('No access token found. Please login first.', 'error');
+                return;
+            }
+            
+            const wsUrl = `ws://localhost:5173/api/v1/websocket/ws?token=${encodeURIComponent(token)}`;
+            log(`Connecting to ${wsUrl}...`);
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                log('WebSocket connected successfully!', 'success');
+                updateStatus(true);
+            };
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                log(`Received: ${JSON.stringify(message, null, 2)}`);
+                
+                // Highlight delivery confirmations
+                if (message.type === 'order.delivered' || message.type === 'delivery.update') {
+                    log('🎉 Delivery confirmation received!', 'success');
+                }
+            };
+            
+            ws.onerror = (error) => {
+                log(`WebSocket error: ${error}`, 'error');
+                updateStatus(false);
+            };
+            
+            ws.onclose = () => {
+                log('WebSocket disconnected');
+                updateStatus(false);
+            };
+        }
+        
+        function disconnectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+                log('Disconnecting WebSocket...');
+            }
+        }
+        
+        function simulateQRScan() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('WebSocket not connected!', 'error');
+                return;
+            }
+            
+            const message = {
+                type: 'delivery.confirmed',
+                order_id: 'ORD20250722-001',
+                customer_id: 'CUST0001',
+                confirmed_at: new Date().toISOString(),
+                confirmation_type: 'qr_code'
+            };
+            
+            ws.send(JSON.stringify(message));
+            log(`Sent QR scan confirmation: ${JSON.stringify(message, null, 2)}`, 'sent');
+        }
+        
+        function simulateManualConfirm() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('WebSocket not connected!', 'error');
+                return;
+            }
+            
+            const message = {
+                type: 'delivery.confirmed',
+                order_id: 'ORD20250722-002',
+                cylinder_serial: 'CYL-12345',
+                confirmed_at: new Date().toISOString(),
+                confirmation_type: 'manual'
+            };
+            
+            ws.send(JSON.stringify(message));
+            log(`Sent manual confirmation: ${JSON.stringify(message, null, 2)}`, 'sent');
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '<div>Log cleared</div>';
+        }
+        
+        // Auto-connect on page load if token exists
+        window.onload = () => {
+            if (localStorage.getItem('access_token')) {
+                connectWebSocket();
+            }
+        };
+    </script>
+</body>
+</html>

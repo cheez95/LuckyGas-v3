@@ -44,7 +44,7 @@ import {
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
-import { api } from '../../services/api';
+import api from '../../services/api';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;

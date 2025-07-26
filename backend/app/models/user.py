@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLEnum
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from enum import Enum
 
@@ -27,3 +28,7 @@ class User(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    assigned_routes = relationship("RoutePlan", foreign_keys="RoutePlan.driver_id", back_populates="driver")
+    assigned_vehicle = relationship("Vehicle", foreign_keys="Vehicle.assigned_driver_id", back_populates="assigned_driver", uselist=False)

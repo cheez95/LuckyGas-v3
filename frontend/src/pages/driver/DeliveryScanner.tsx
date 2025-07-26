@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 
 const { Title, Text } = Typography;
 
@@ -15,6 +16,7 @@ const DeliveryScanner: React.FC = () => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const { sendMessage } = useWebSocketContext();
   const [scanning, setScanning] = useState(false);
   const [manualEntry, setManualEntry] = useState(false);
@@ -22,6 +24,9 @@ const DeliveryScanner: React.FC = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
+    // Initialize code reader
+    codeReaderRef.current = new BrowserMultiFormatReader();
+    
     if (scanning) {
       startCamera();
     } else {
@@ -30,23 +35,34 @@ const DeliveryScanner: React.FC = () => {
 
     return () => {
       stopCamera();
+      // Clean up code reader
+      if (codeReaderRef.current) {
+        codeReaderRef.current.reset();
+      }
     };
   }, [scanning]);
 
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       });
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
+        
+        // Start continuous scanning
+        startContinuousScanning();
       }
     } catch (error) {
       console.error('Camera error:', error);
-      message.error('無法啟動相機');
+      message.error('無法啟動相機，請確認已授權相機權限');
       setScanning(false);
     }
   };
@@ -56,26 +72,71 @@ const DeliveryScanner: React.FC = () => {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
+    stopContinuousScanning();
   };
 
-  const captureAndScan = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  // Add continuous scanning functionality
+  const continuousScanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const startContinuousScanning = () => {
+    // Scan every 500ms for better QR code detection
+    continuousScanIntervalRef.current = setInterval(() => {
+      if (scanning && videoRef.current && videoRef.current.readyState === 4) {
+        captureAndScan();
+      }
+    }, 500);
+  };
+  
+  const stopContinuousScanning = () => {
+    if (continuousScanIntervalRef.current) {
+      clearInterval(continuousScanIntervalRef.current);
+      continuousScanIntervalRef.current = null;
+    }
+  };
+
+  const captureAndScan = async () => {
+    if (!videoRef.current || !canvasRef.current || !codeReaderRef.current) {
+      console.error('Required references not available');
+      return;
+    }
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
 
-    if (!context) return;
+    if (!context) {
+      console.error('Could not get canvas context');
+      return;
+    }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    try {
+      // Draw current video frame to canvas
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Here you would integrate with a QR code scanning library
-    // For now, we'll simulate a successful scan
-    setTimeout(() => {
-      handleQRCodeScanned('ORD20250722-001-CUST0001');
-    }, 1000);
+      // Create image data from canvas
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      
+      // Decode QR code from image data
+      const result = await codeReaderRef.current.decodeFromImageElement(canvas);
+      
+      if (result) {
+        console.log('QR Code detected:', result.getText());
+        handleQRCodeScanned(result.getText());
+      } else {
+        // No QR code found, show feedback to user
+        message.info('未偵測到 QR Code，請對準後再試');
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        // No QR code found in image
+        message.info('未偵測到 QR Code，請對準後再試');
+      } else {
+        console.error('QR scanning error:', error);
+        message.error('掃描失敗，請再試一次');
+      }
+    }
   };
 
   const handleQRCodeScanned = (code: string) => {
@@ -199,8 +260,10 @@ const DeliveryScanner: React.FC = () => {
               borderRadius: 8,
             }} />
             <Space style={{ marginTop: 16, width: '100%', justifyContent: 'center' }}>
-              <Button onClick={captureAndScan}>掃描</Button>
-              <Button onClick={() => setScanning(false)}>取消</Button>
+              <Text type="secondary">請將 QR Code 對準框內</Text>
+            </Space>
+            <Space style={{ marginTop: 8, width: '100%', justifyContent: 'center' }}>
+              <Button onClick={() => setScanning(false)} danger>取消掃描</Button>
             </Space>
           </Card>
         )}

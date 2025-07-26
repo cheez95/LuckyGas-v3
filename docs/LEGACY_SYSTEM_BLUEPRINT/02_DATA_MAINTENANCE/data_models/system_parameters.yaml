@@ -1,0 +1,615 @@
+# System Parameters Data Model - Lucky Gas Legacy System
+
+SystemParameter:
+  table_name: "SYSTEM_PARAMETER"
+  chinese_name: "系統參數"
+  description: "Core system configuration parameters and settings"
+  fields:
+    - name: "PARAMETER_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique parameter ID"
+      
+    - name: "PARAMETER_CODE"
+      type: "varchar(50)"
+      required: true
+      unique: true
+      description: "Parameter identifier code"
+      format: "MODULE.CATEGORY.NAME"
+      example: "ORDER.VALIDATION.MIN_AMOUNT"
+      
+    - name: "PARAMETER_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Parameter display name"
+      example: "最低訂單金額"
+      
+    - name: "PARAMETER_CATEGORY"
+      type: "varchar(2)"
+      required: true
+      description: "Parameter category"
+      values:
+        - "01": "業務規則 (Business Rules)"
+        - "02": "系統設定 (System Settings)"
+        - "03": "介面設定 (Interface Settings)"
+        - "04": "整合設定 (Integration Settings)"
+        - "05": "安全設定 (Security Settings)"
+        - "06": "報表設定 (Report Settings)"
+        
+    - name: "MODULE_CODE"
+      type: "varchar(10)"
+      required: false
+      description: "Associated module"
+      example: "W100"
+      
+    - name: "DATA_TYPE"
+      type: "varchar(20)"
+      required: true
+      description: "Parameter data type"
+      values:
+        - "STRING": "文字"
+        - "NUMBER": "數字"
+        - "DECIMAL": "小數"
+        - "BOOLEAN": "是/否"
+        - "DATE": "日期"
+        - "TIME": "時間"
+        - "JSON": "JSON物件"
+        
+    - name: "PARAMETER_VALUE"
+      type: "text"
+      required: true
+      description: "Current parameter value"
+      
+    - name: "DEFAULT_VALUE"
+      type: "text"
+      required: true
+      description: "System default value"
+      
+    - name: "MIN_VALUE"
+      type: "varchar(50)"
+      required: false
+      description: "Minimum allowed value"
+      
+    - name: "MAX_VALUE"
+      type: "varchar(50)"
+      required: false
+      description: "Maximum allowed value"
+      
+    - name: "VALIDATION_RULE"
+      type: "varchar(255)"
+      required: false
+      description: "Validation regex or rule"
+      
+    - name: "UNIT"
+      type: "varchar(20)"
+      required: false
+      description: "Value unit"
+      example: "元, 分鐘, 天"
+      
+    - name: "IS_ENCRYPTED"
+      type: "boolean"
+      required: true
+      description: "Whether value is encrypted"
+      default: false
+      
+    - name: "IS_REQUIRED"
+      type: "boolean"
+      required: true
+      description: "Whether parameter is required"
+      default: true
+      
+    - name: "IS_VISIBLE"
+      type: "boolean"
+      required: true
+      description: "Whether visible in UI"
+      default: true
+      
+    - name: "CHANGE_REQUIRES_RESTART"
+      type: "boolean"
+      required: true
+      description: "Requires system restart"
+      default: false
+      
+    - name: "CHANGE_REQUIRES_APPROVAL"
+      type: "boolean"
+      required: true
+      description: "Requires manager approval"
+      default: false
+      
+    - name: "DESCRIPTION"
+      type: "text"
+      required: false
+      description: "Detailed parameter description"
+      
+    - name: "HELP_TEXT"
+      type: "text"
+      required: false
+      description: "User help text"
+      
+    - name: "LAST_CHANGED_BY"
+      type: "varchar(10)"
+      required: false
+      description: "Last modified by user"
+      
+    - name: "LAST_CHANGED_DATE"
+      type: "timestamp"
+      required: false
+      description: "Last modification timestamp"
+      
+    - name: "EFFECTIVE_DATE"
+      type: "timestamp"
+      required: true
+      description: "When value becomes effective"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "CREATE_USER"
+      type: "varchar(10)"
+      required: true
+      description: "Created by user"
+      
+    - name: "CREATE_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+  
+  indexes:
+    - name: "IDX_PARAMETER_CODE"
+      columns: ["PARAMETER_CODE"]
+      unique: true
+      
+    - name: "IDX_PARAMETER_CATEGORY"
+      columns: ["PARAMETER_CATEGORY", "MODULE_CODE"]
+      
+    - name: "IDX_PARAMETER_MODULE"
+      columns: ["MODULE_CODE"]
+
+DeliveryZone:
+  table_name: "DELIVERY_ZONE"
+  chinese_name: "配送區域"
+  description: "Delivery zones with associated fees and service levels"
+  fields:
+    - name: "ZONE_ID"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      description: "Unique zone identifier"
+      example: "ZONE_N01"
+      
+    - name: "ZONE_CODE"
+      type: "varchar(20)"
+      required: true
+      unique: true
+      description: "Zone code"
+      example: "TAIPEI_NORTH"
+      
+    - name: "ZONE_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Zone display name"
+      example: "台北市北區"
+      
+    - name: "ZONE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Zone classification"
+      values:
+        - "01": "市區 (Urban)"
+        - "02": "郊區 (Suburban)"
+        - "03": "偏遠 (Remote)"
+        - "04": "離島 (Island)"
+        - "05": "山區 (Mountain)"
+        
+    - name: "CITY"
+      type: "varchar(20)"
+      required: true
+      description: "City/County name"
+      example: "台北市"
+      
+    - name: "DISTRICTS"
+      type: "text"
+      required: true
+      description: "Comma-separated districts"
+      example: "中正區,大同區,中山區"
+      
+    - name: "POSTAL_CODES"
+      type: "text"
+      required: true
+      description: "Comma-separated postal codes"
+      example: "100,103,104"
+      
+    - name: "BASE_DELIVERY_FEE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Standard delivery charge"
+      default: "50.00"
+      
+    - name: "RUSH_DELIVERY_FEE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Express delivery charge"
+      default: "100.00"
+      
+    - name: "MIN_ORDER_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Minimum order value"
+      default: "800.00"
+      
+    - name: "FREE_DELIVERY_THRESHOLD"
+      type: "decimal(10,2)"
+      required: false
+      description: "Free delivery if order exceeds"
+      default: "3000.00"
+      
+    - name: "SERVICE_DAYS"
+      type: "varchar(20)"
+      required: true
+      description: "Service days (1=Mon, 7=Sun)"
+      default: "1,2,3,4,5,6"
+      example: "1,2,3,4,5"
+      
+    - name: "SERVICE_START_TIME"
+      type: "time"
+      required: true
+      description: "Service start time"
+      default: "08:00:00"
+      
+    - name: "SERVICE_END_TIME"
+      type: "time"
+      required: true
+      description: "Service end time"
+      default: "18:00:00"
+      
+    - name: "CUTOFF_TIME"
+      type: "time"
+      required: true
+      description: "Same-day delivery cutoff"
+      default: "14:00:00"
+      
+    - name: "DELIVERY_TIME_SLOTS"
+      type: "text"
+      required: true
+      description: "Available time slots"
+      default: "08:00-12:00,13:00-17:00,17:00-20:00"
+      
+    - name: "MAX_ORDERS_PER_SLOT"
+      type: "integer"
+      required: true
+      description: "Capacity per time slot"
+      default: 20
+      
+    - name: "ESTIMATED_DELIVERY_MINS"
+      type: "integer"
+      required: true
+      description: "Average delivery time"
+      default: 30
+      
+    - name: "PRIORITY_LEVEL"
+      type: "integer"
+      required: true
+      description: "Service priority (1=highest)"
+      default: 5
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Zone active status"
+      default: true
+      
+    - name: "NOTES"
+      type: "text"
+      required: false
+      description: "Zone-specific notes"
+  
+  indexes:
+    - name: "IDX_ZONE_CODE"
+      columns: ["ZONE_CODE"]
+      unique: true
+      
+    - name: "IDX_ZONE_CITY"
+      columns: ["CITY", "ACTIVE_FLAG"]
+      
+    - name: "IDX_ZONE_TYPE"
+      columns: ["ZONE_TYPE", "ACTIVE_FLAG"]
+
+PaymentTerms:
+  table_name: "PAYMENT_TERMS"
+  chinese_name: "付款條件"
+  description: "Payment terms and credit configurations"
+  fields:
+    - name: "TERM_ID"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      description: "Payment term ID"
+      example: "TERM_30"
+      
+    - name: "TERM_CODE"
+      type: "varchar(20)"
+      required: true
+      unique: true
+      description: "Payment term code"
+      example: "NET30"
+      
+    - name: "TERM_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Term display name"
+      example: "月結30天"
+      
+    - name: "PAYMENT_DAYS"
+      type: "integer"
+      required: true
+      description: "Days until payment due"
+      default: 30
+      
+    - name: "DISCOUNT_DAYS"
+      type: "integer"
+      required: false
+      description: "Early payment discount period"
+      example: 10
+      
+    - name: "DISCOUNT_PERCENT"
+      type: "decimal(5,2)"
+      required: false
+      description: "Early payment discount"
+      example: "2.00"
+      
+    - name: "LATE_CHARGE_PERCENT"
+      type: "decimal(5,2)"
+      required: true
+      description: "Monthly late charge"
+      default: "1.50"
+      
+    - name: "GRACE_DAYS"
+      type: "integer"
+      required: true
+      description: "Grace period days"
+      default: 5
+      
+    - name: "CREDIT_LIMIT_DEFAULT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Default credit limit"
+      default: "30000.00"
+      
+    - name: "REQUIRES_APPROVAL"
+      type: "boolean"
+      required: true
+      description: "Requires credit approval"
+      default: true
+      
+    - name: "CUSTOMER_TYPES"
+      type: "varchar(50)"
+      required: true
+      description: "Applicable customer types"
+      example: "02,03,04"
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Term active status"
+      default: true
+
+HolidayCalendar:
+  table_name: "HOLIDAY_CALENDAR"
+  chinese_name: "假日行事曆"
+  description: "Taiwan holidays and special business days"
+  fields:
+    - name: "HOLIDAY_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Holiday record ID"
+      
+    - name: "HOLIDAY_DATE"
+      type: "date"
+      required: true
+      unique: true
+      description: "Holiday date"
+      
+    - name: "HOLIDAY_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Holiday name"
+      example: "春節"
+      
+    - name: "HOLIDAY_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Holiday type"
+      values:
+        - "01": "國定假日 (National)"
+        - "02": "彈性放假 (Flexible)"
+        - "03": "補班日 (Make-up Work)"
+        - "04": "公司假日 (Company)"
+        - "05": "特殊營業 (Special)"
+        
+    - name: "IS_WORKING_DAY"
+      type: "boolean"
+      required: true
+      description: "Whether business is open"
+      default: false
+      
+    - name: "SERVICE_LEVEL"
+      type: "varchar(2)"
+      required: false
+      description: "Service level if open"
+      values:
+        - "01": "正常 (Normal)"
+        - "02": "減班 (Reduced)"
+        - "03": "僅急件 (Emergency Only)"
+        
+    - name: "SURCHARGE_PERCENT"
+      type: "decimal(5,2)"
+      required: false
+      description: "Holiday surcharge"
+      default: "0.00"
+      
+    - name: "YEAR"
+      type: "integer"
+      required: true
+      description: "Calendar year"
+      
+    - name: "NOTES"
+      type: "text"
+      required: false
+      description: "Special instructions"
+  
+  indexes:
+    - name: "IDX_HOLIDAY_DATE"
+      columns: ["HOLIDAY_DATE"]
+      unique: true
+      
+    - name: "IDX_HOLIDAY_YEAR"
+      columns: ["YEAR", "HOLIDAY_TYPE"]
+
+TaxConfiguration:
+  table_name: "TAX_CONFIGURATION"
+  chinese_name: "稅務設定"
+  description: "Tax rates and invoice configurations"
+  fields:
+    - name: "TAX_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Tax configuration ID"
+      
+    - name: "TAX_CODE"
+      type: "varchar(20)"
+      required: true
+      unique: true
+      description: "Tax code"
+      example: "VAT_5"
+      
+    - name: "TAX_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Tax description"
+      example: "營業稅 5%"
+      
+    - name: "TAX_RATE"
+      type: "decimal(5,2)"
+      required: true
+      description: "Tax rate percentage"
+      default: "5.00"
+      
+    - name: "TAX_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Tax type"
+      values:
+        - "01": "營業稅 (VAT)"
+        - "02": "營所稅 (Income)"
+        - "03": "印花稅 (Stamp)"
+        
+    - name: "INVOICE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Invoice type"
+      values:
+        - "01": "二聯式 (Duplicate)"
+        - "02": "三聯式 (Triplicate)"
+        - "03": "電子發票 (e-Invoice)"
+        
+    - name: "EFFECTIVE_FROM"
+      type: "date"
+      required: true
+      description: "Effective start date"
+      
+    - name: "EFFECTIVE_TO"
+      type: "date"
+      required: false
+      description: "Effective end date"
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Configuration active"
+      default: true
+
+ReferenceData:
+  table_name: "REFERENCE_DATA"
+  chinese_name: "參考資料"
+  description: "General lookup values and codes"
+  fields:
+    - name: "REFERENCE_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Reference data ID"
+      
+    - name: "CATEGORY"
+      type: "varchar(50)"
+      required: true
+      description: "Reference category"
+      example: "CUSTOMER_TYPE"
+      
+    - name: "CODE"
+      type: "varchar(10)"
+      required: true
+      description: "Reference code"
+      example: "01"
+      
+    - name: "NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Display name"
+      example: "一般住戶"
+      
+    - name: "NAME_EN"
+      type: "varchar(100)"
+      required: false
+      description: "English name"
+      example: "Residential"
+      
+    - name: "DESCRIPTION"
+      type: "text"
+      required: false
+      description: "Detailed description"
+      
+    - name: "SORT_ORDER"
+      type: "integer"
+      required: true
+      description: "Display order"
+      default: 999
+      
+    - name: "PARENT_CODE"
+      type: "varchar(10)"
+      required: false
+      description: "Parent reference code"
+      
+    - name: "VALUE1"
+      type: "varchar(100)"
+      required: false
+      description: "Additional value 1"
+      
+    - name: "VALUE2"
+      type: "varchar(100)"
+      required: false
+      description: "Additional value 2"
+      
+    - name: "VALUE3"
+      type: "varchar(100)"
+      required: false
+      description: "Additional value 3"
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Reference active"
+      default: true
+  
+  indexes:
+    - name: "IDX_REFERENCE_CATEGORY_CODE"
+      columns: ["CATEGORY", "CODE"]
+      unique: true
+      
+    - name: "IDX_REFERENCE_CATEGORY"
+      columns: ["CATEGORY", "ACTIVE_FLAG", "SORT_ORDER"]

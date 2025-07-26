@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner Test</title>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border: 2px solid #1890ff;
+            border-radius: 8px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            min-height: 50px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .primary {
+            background-color: #1890ff;
+            color: white;
+        }
+        .danger {
+            background-color: #ff4d4f;
+            color: white;
+        }
+        #qrbox {
+            position: relative;
+            display: inline-block;
+        }
+        #qrbox::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid #52c41a;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Scanner Test Page</h1>
+    
+    <div id="qrbox">
+        <video id="video" autoplay playsinline></video>
+    </div>
+    
+    <div>
+        <button id="startButton" class="primary" onclick="startScanning()">開始掃描</button>
+        <button id="stopButton" class="danger" onclick="stopScanning()" style="display: none;">停止掃描</button>
+    </div>
+    
+    <div id="result">
+        <p id="resultText">等待掃描...</p>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="/test-qr-code.html" target="_blank">打開測試 QR Code</a>
+    </div>
+
+    <script>
+        let codeReader = null;
+        let selectedDeviceId = null;
+        
+        async function startScanning() {
+            try {
+                const { BrowserMultiFormatReader } = ZXing;
+                codeReader = new BrowserMultiFormatReader();
+                
+                console.log('ZXing library loaded successfully');
+                
+                // Get available video devices
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+                console.log('Available video devices:', videoInputDevices);
+                
+                if (videoInputDevices.length === 0) {
+                    alert('未找到相機設備');
+                    return;
+                }
+                
+                // Use the first available device
+                selectedDeviceId = videoInputDevices[0].deviceId;
+                
+                // Start decoding from the video device
+                console.log('Starting continuous decode from device:', selectedDeviceId);
+                
+                document.getElementById('startButton').style.display = 'none';
+                document.getElementById('stopButton').style.display = 'inline-block';
+                document.getElementById('resultText').textContent = '掃描中...';
+                
+                await codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
+                    if (result) {
+                        console.log('QR Code detected:', result.text);
+                        document.getElementById('resultText').innerHTML = 
+                            '<strong>成功!</strong><br>QR Code 內容: ' + result.text;
+                        
+                        // Optionally stop scanning after successful detection
+                        // stopScanning();
+                    }
+                    if (err && !(err instanceof ZXing.NotFoundException)) {
+                        console.error('Decode error:', err);
+                    }
+                });
+                
+                console.log('Scanner started successfully');
+            } catch (error) {
+                console.error('Error starting scanner:', error);
+                alert('啟動掃描器失敗: ' + error.message);
+            }
+        }
+        
+        function stopScanning() {
+            if (codeReader) {
+                codeReader.reset();
+                codeReader = null;
+                console.log('Scanner stopped');
+            }
+            
+            document.getElementById('startButton').style.display = 'inline-block';
+            document.getElementById('stopButton').style.display = 'none';
+            document.getElementById('resultText').textContent = '已停止掃描';
+        }
+    </script>
+</body>
+</html>

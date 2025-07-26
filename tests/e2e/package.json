@@ -1,0 +1,36 @@
+{
+  "name": "luckygas-e2e-tests",
+  "version": "1.0.0",
+  "description": "Comprehensive E2E test suite for LuckyGas delivery management system",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:auth": "playwright test specs/auth.spec.ts",
+    "test:customer": "playwright test specs/customer-journey.spec.ts",
+    "test:driver": "playwright test specs/driver-workflow.spec.ts",
+    "test:websocket": "playwright test specs/websocket-realtime.spec.ts",
+    "test:mobile": "playwright test --project=mobile-chrome --project=mobile-safari",
+    "test:performance": "playwright test --project=performance",
+    "test:visual": "playwright test --project=visual",
+    "test:headed": "playwright test --headed",
+    "test:chrome": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:parallel": "playwright test --workers=4",
+    "test:serial": "playwright test --workers=1",
+    "test:ci": "playwright test --reporter=junit,html",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen http://localhost:3000",
+    "trace": "playwright show-trace",
+    "install": "playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -60,7 +60,7 @@ class Order(Base):
     
     # Assignment
     route_id = Column(Integer, ForeignKey("routes.id"))
-    driver_id = Column(Integer, ForeignKey("drivers.id"))
+    driver_id = Column(Integer, ForeignKey("users.id"))
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -71,3 +71,4 @@ class Order(Base):
     customer = relationship("Customer", back_populates="orders")
     delivery = relationship("Delivery", back_populates="order", uselist=False)
     order_items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    invoice = relationship("Invoice", back_populates="order", uselist=False)

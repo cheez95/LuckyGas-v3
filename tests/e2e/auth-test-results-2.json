@@ -1,0 +1,4 @@
+
+> luckygas-e2e-tests@1.0.0 test
+> playwright test auth.spec.ts --reporter=json
+

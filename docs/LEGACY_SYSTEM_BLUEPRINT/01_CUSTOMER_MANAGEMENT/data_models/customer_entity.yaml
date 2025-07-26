@@ -1,0 +1,542 @@
+# Customer Entity Data Model
+# Based on 76-field customer form analysis
+
+Customer:
+  chinese_name: "客戶"
+  table_name: "CUST_CUSTOMER"
+  description: "Master customer record containing core customer information"
+  
+  fields:
+    # === Identification Fields ===
+    - name: "CUSTOMER_ID"
+      chinese_name: "客戶編號"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      auto_generated: true
+      pattern: "C[0-9]{6}"
+      description: "System-generated unique customer code"
+      
+    - name: "TAX_ID"
+      chinese_name: "統一編號"
+      type: "varchar(10)"
+      required: false
+      unique: true
+      pattern: "[0-9]{8}"
+      description: "Taiwan company tax ID (8 digits)"
+      
+    - name: "NATIONAL_ID"
+      chinese_name: "身分證字號"
+      type: "varchar(10)"
+      required: false
+      pattern: "[A-Z][12][0-9]{8}"
+      description: "Taiwan national ID for individuals"
+      
+    # === Basic Information ===
+    - name: "CUSTOMER_NAME"
+      chinese_name: "客戶名稱"
+      type: "varchar(100)"
+      required: true
+      description: "Full customer name (company or individual)"
+      
+    - name: "SHORT_NAME"
+      chinese_name: "簡稱"
+      type: "varchar(50)"
+      required: false
+      description: "Abbreviated name for quick reference"
+      
+    - name: "ENGLISH_NAME"
+      chinese_name: "英文名稱"
+      type: "varchar(100)"
+      required: false
+      description: "English name for international use"
+      
+    - name: "CUSTOMER_TYPE"
+      chinese_name: "客戶類型"
+      type: "varchar(2)"
+      required: true
+      values: ["01:公司行號", "02:個人住家", "03:餐廳", "04:工廠", "05:機關團體"]
+      description: "Customer category for pricing and service"
+      
+    - name: "BUSINESS_TYPE"
+      chinese_name: "行業別"
+      type: "varchar(4)"
+      required: false
+      description: "Industry classification code"
+      
+    # === Contact Information ===
+    - name: "CONTACT_PERSON"
+      chinese_name: "聯絡人"
+      type: "varchar(50)"
+      required: true
+      description: "Primary contact person name"
+      
+    - name: "CONTACT_TITLE"
+      chinese_name: "職稱"
+      type: "varchar(30)"
+      required: false
+      description: "Contact person's title"
+      
+    - name: "PHONE_PRIMARY"
+      chinese_name: "電話1"
+      type: "varchar(20)"
+      required: true
+      pattern: "0[2-9]-?[0-9]{4}-?[0-9]{4}"
+      description: "Primary phone (landline format)"
+      
+    - name: "PHONE_SECONDARY"
+      chinese_name: "電話2"
+      type: "varchar(20)"
+      required: false
+      description: "Secondary phone number"
+      
+    - name: "MOBILE"
+      chinese_name: "手機"
+      type: "varchar(15)"
+      required: false
+      pattern: "09[0-9]{2}-?[0-9]{3}-?[0-9]{3}"
+      description: "Mobile phone number"
+      
+    - name: "FAX"
+      chinese_name: "傳真"
+      type: "varchar(20)"
+      required: false
+      description: "Fax number"
+      
+    - name: "EMAIL"
+      chinese_name: "電子郵件"
+      type: "varchar(100)"
+      required: false
+      pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      description: "Email address"
+      
+    - name: "LINE_ID"
+      chinese_name: "LINE ID"
+      type: "varchar(50)"
+      required: false
+      description: "LINE messaging app ID"
+      
+    # === Address Information (Registration) ===
+    - name: "REG_POSTAL_CODE"
+      chinese_name: "郵遞區號"
+      type: "varchar(5)"
+      required: true
+      pattern: "[0-9]{3,5}"
+      description: "Registration address postal code"
+      
+    - name: "REG_CITY"
+      chinese_name: "縣市"
+      type: "varchar(10)"
+      required: true
+      description: "City or county"
+      
+    - name: "REG_DISTRICT"
+      chinese_name: "區鄉鎮"
+      type: "varchar(10)"
+      required: true
+      description: "District, township, or town"
+      
+    - name: "REG_ADDRESS"
+      chinese_name: "地址"
+      type: "varchar(200)"
+      required: true
+      description: "Detailed street address"
+      
+    # === Delivery Information ===
+    - name: "DELIVERY_SAME_AS_REG"
+      chinese_name: "送貨地址同上"
+      type: "boolean"
+      required: true
+      default: true
+      description: "Delivery address same as registration"
+      
+    - name: "DELIVERY_POSTAL_CODE"
+      chinese_name: "送貨郵遞區號"
+      type: "varchar(5)"
+      required: false
+      description: "Delivery address postal code"
+      
+    - name: "DELIVERY_ADDRESS"
+      chinese_name: "送貨地址"
+      type: "varchar(200)"
+      required: false
+      description: "Full delivery address if different"
+      
+    - name: "DELIVERY_ZONE"
+      chinese_name: "配送區域"
+      type: "varchar(4)"
+      required: true
+      description: "Delivery zone code for routing"
+      
+    - name: "DELIVERY_SEQUENCE"
+      chinese_name: "配送順序"
+      type: "integer"
+      required: false
+      description: "Preferred sequence in route"
+      
+    - name: "DELIVERY_TIME_PREF"
+      chinese_name: "配送時段"
+      type: "varchar(2)"
+      required: false
+      values: ["01:上午", "02:下午", "03:不限"]
+      description: "Preferred delivery time"
+      
+    - name: "DELIVERY_INSTRUCTIONS"
+      chinese_name: "配送備註"
+      type: "varchar(500)"
+      required: false
+      description: "Special delivery instructions"
+      
+    # === Product Preferences ===
+    - name: "PRIMARY_PRODUCT"
+      chinese_name: "主要產品"
+      type: "varchar(4)"
+      required: true
+      values: ["20KG:20公斤桶裝", "50KG:50公斤桶裝", "BOTH:兩種都用"]
+      description: "Primary gas cylinder size"
+      
+    - name: "AVG_MONTHLY_QTY"
+      chinese_name: "平均月用量"
+      type: "integer"
+      required: false
+      description: "Average monthly consumption"
+      
+    - name: "SAFETY_STOCK"
+      chinese_name: "安全存量"
+      type: "integer"
+      required: false
+      default: 1
+      description: "Minimum stock to maintain"
+      
+    # === Financial Information ===
+    - name: "PAYMENT_TERMS"
+      chinese_name: "付款條件"
+      type: "varchar(4)"
+      required: true
+      values: ["CASH:現金", "MON30:月結30天", "MON60:月結60天", "CHECK:支票"]
+      description: "Payment terms"
+      
+    - name: "CREDIT_LIMIT"
+      chinese_name: "信用額度"
+      type: "decimal(10,2)"
+      required: true
+      default: 10000.00
+      description: "Maximum credit allowed"
+      
+    - name: "DEPOSIT_AMOUNT"
+      chinese_name: "押瓶費"
+      type: "decimal(10,2)"
+      required: false
+      default: 0.00
+      description: "Cylinder deposit amount"
+      
+    - name: "PRICE_LEVEL"
+      chinese_name: "價格等級"
+      type: "varchar(2)"
+      required: true
+      default: "01"
+      values: ["01:標準價", "02:優惠價", "03:特殊價"]
+      description: "Customer pricing tier"
+      
+    - name: "TAX_TYPE"
+      chinese_name: "稅別"
+      type: "varchar(2)"
+      required: true
+      default: "01"
+      values: ["01:應稅", "02:免稅", "03:零稅率"]
+      description: "Tax classification"
+      
+    - name: "INVOICE_TYPE"
+      chinese_name: "發票類型"
+      type: "varchar(2)"
+      required: true
+      values: ["01:二聯式", "02:三聯式", "03:電子發票"]
+      description: "Invoice type preference"
+      
+    - name: "INVOICE_DELIVERY"
+      chinese_name: "發票寄送"
+      type: "varchar(2)"
+      required: true
+      values: ["01:隨貨", "02:郵寄", "03:Email", "04:自取"]
+      description: "Invoice delivery method"
+      
+    # === Account Status ===
+    - name: "STATUS"
+      chinese_name: "狀態"
+      type: "varchar(2)"
+      required: true
+      default: "01"
+      values: ["01:正常", "02:停用", "03:黑名單", "04:暫停"]
+      description: "Customer account status"
+      
+    - name: "STOP_REASON"
+      chinese_name: "停用原因"
+      type: "varchar(200)"
+      required: false
+      description: "Reason for account suspension"
+      
+    - name: "BLACKLIST_REASON"
+      chinese_name: "黑名單原因"
+      type: "varchar(200)"
+      required: false
+      description: "Reason for blacklisting"
+      
+    # === Marketing Information ===
+    - name: "SOURCE"
+      chinese_name: "客戶來源"
+      type: "varchar(2)"
+      required: false
+      values: ["01:介紹", "02:陌拜", "03:電話", "04:網路", "05:其他"]
+      description: "Customer acquisition source"
+      
+    - name: "REFERRER_ID"
+      chinese_name: "介紹人"
+      type: "varchar(10)"
+      required: false
+      foreign_key: "CUSTOMER_ID"
+      description: "Referring customer ID"
+      
+    - name: "SALES_REP"
+      chinese_name: "業務員"
+      type: "varchar(10)"
+      required: false
+      description: "Assigned sales representative"
+      
+    - name: "SERVICE_AREA"
+      chinese_name: "服務區"
+      type: "varchar(4)"
+      required: true
+      description: "Service area code"
+      
+    # === Contract Information ===
+    - name: "CONTRACT_NO"
+      chinese_name: "合約編號"
+      type: "varchar(20)"
+      required: false
+      description: "Contract number if applicable"
+      
+    - name: "CONTRACT_START"
+      chinese_name: "合約起日"
+      type: "date"
+      required: false
+      description: "Contract start date"
+      
+    - name: "CONTRACT_END"
+      chinese_name: "合約迄日"
+      type: "date"
+      required: false
+      description: "Contract end date"
+      
+    - name: "CONTRACT_PRICE"
+      chinese_name: "合約價格"
+      type: "decimal(10,2)"
+      required: false
+      description: "Special contract price"
+      
+    # === System Fields ===
+    - name: "FIRST_TRANS_DATE"
+      chinese_name: "首次交易日"
+      type: "date"
+      required: false
+      description: "First transaction date"
+      
+    - name: "LAST_TRANS_DATE"
+      chinese_name: "最後交易日"
+      type: "date"
+      required: false
+      description: "Last transaction date"
+      
+    - name: "TOTAL_AMOUNT"
+      chinese_name: "累計金額"
+      type: "decimal(12,2)"
+      required: false
+      default: 0.00
+      description: "Total transaction amount"
+      
+    - name: "CYLINDER_COUNT"
+      chinese_name: "持瓶數"
+      type: "integer"
+      required: false
+      default: 0
+      description: "Number of cylinders held"
+      
+    - name: "NOTES"
+      chinese_name: "備註"
+      type: "text"
+      required: false
+      description: "General notes"
+      
+    # === Audit Fields ===
+    - name: "CREATE_USER"
+      chinese_name: "建立人員"
+      type: "varchar(20)"
+      required: true
+      description: "User who created record"
+      
+    - name: "CREATE_DATE"
+      chinese_name: "建立日期"
+      type: "datetime"
+      required: true
+      default: "CURRENT_TIMESTAMP"
+      description: "Record creation timestamp"
+      
+    - name: "UPDATE_USER"
+      chinese_name: "修改人員"
+      type: "varchar(20)"
+      required: false
+      description: "User who last updated"
+      
+    - name: "UPDATE_DATE"
+      chinese_name: "修改日期"
+      type: "datetime"
+      required: false
+      description: "Last update timestamp"
+      
+    - name: "DELETE_FLAG"
+      chinese_name: "刪除標記"
+      type: "varchar(1)"
+      required: true
+      default: "N"
+      values: ["Y:已刪除", "N:正常"]
+      description: "Soft delete flag"
+
+  indexes:
+    - name: "IDX_CUSTOMER_PHONE"
+      fields: ["PHONE_PRIMARY"]
+      unique: false
+      description: "Quick phone lookup"
+      
+    - name: "IDX_CUSTOMER_TAXID"
+      fields: ["TAX_ID"]
+      unique: true
+      description: "Tax ID lookup"
+      
+    - name: "IDX_CUSTOMER_STATUS"
+      fields: ["STATUS", "DELETE_FLAG"]
+      unique: false
+      description: "Active customer filtering"
+      
+    - name: "IDX_CUSTOMER_ZONE"
+      fields: ["DELIVERY_ZONE", "STATUS"]
+      unique: false
+      description: "Delivery zone queries"
+
+# Related Tables
+
+CustomerAddress:
+  chinese_name: "客戶地址"
+  table_name: "CUST_ADDRESS"
+  description: "Additional delivery addresses for customers"
+  
+  fields:
+    - name: "ADDRESS_ID"
+      chinese_name: "地址編號"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      
+    - name: "CUSTOMER_ID"
+      chinese_name: "客戶編號"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "CUST_CUSTOMER.CUSTOMER_ID"
+      
+    - name: "ADDRESS_TYPE"
+      chinese_name: "地址類型"
+      type: "varchar(2)"
+      required: true
+      values: ["01:送貨地址", "02:發票地址", "03:其他"]
+      
+    - name: "ADDRESS_NAME"
+      chinese_name: "地址名稱"
+      type: "varchar(50)"
+      required: true
+      description: "Nickname for address"
+      
+    - name: "POSTAL_CODE"
+      chinese_name: "郵遞區號"
+      type: "varchar(5)"
+      required: true
+      
+    - name: "FULL_ADDRESS"
+      chinese_name: "完整地址"
+      type: "varchar(200)"
+      required: true
+      
+    - name: "CONTACT_PERSON"
+      chinese_name: "聯絡人"
+      type: "varchar(50)"
+      required: false
+      
+    - name: "CONTACT_PHONE"
+      chinese_name: "聯絡電話"
+      type: "varchar(20)"
+      required: false
+      
+    - name: "DELIVERY_NOTE"
+      chinese_name: "配送備註"
+      type: "varchar(200)"
+      required: false
+      
+    - name: "IS_DEFAULT"
+      chinese_name: "預設地址"
+      type: "boolean"
+      required: true
+      default: false
+      
+    - name: "ACTIVE"
+      chinese_name: "啟用"
+      type: "boolean"
+      required: true
+      default: true
+
+CustomerContact:
+  chinese_name: "客戶聯絡人"
+  table_name: "CUST_CONTACT"
+  description: "Additional contact persons for customers"
+  
+  fields:
+    - name: "CONTACT_ID"
+      chinese_name: "聯絡人編號"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      
+    - name: "CUSTOMER_ID"
+      chinese_name: "客戶編號"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "CUST_CUSTOMER.CUSTOMER_ID"
+      
+    - name: "CONTACT_NAME"
+      chinese_name: "姓名"
+      type: "varchar(50)"
+      required: true
+      
+    - name: "TITLE"
+      chinese_name: "職稱"
+      type: "varchar(30)"
+      required: false
+      
+    - name: "PHONE"
+      chinese_name: "電話"
+      type: "varchar(20)"
+      required: true
+      
+    - name: "MOBILE"
+      chinese_name: "手機"
+      type: "varchar(15)"
+      required: false
+      
+    - name: "EMAIL"
+      chinese_name: "Email"
+      type: "varchar(100)"
+      required: false
+      
+    - name: "IS_PRIMARY"
+      chinese_name: "主要聯絡人"
+      type: "boolean"
+      required: true
+      default: false

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { notification } from 'antd';
 import { useWebSocket } from '../hooks/useWebSocket';
-import type { NotificationMessage } from '../services/websocket.service';
+import { websocketService, type NotificationMessage } from '../services/websocket.service';
 
 interface Notification {
   id: string;
@@ -24,30 +24,26 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-export const useNotifications = () => {
+export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider');
+    throw new Error('useNotification must be used within NotificationProvider');
   }
   return context;
 };
 
-interface NotificationProviderProps {
-  children: React.ReactNode;
-}
-
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { on } = useWebSocket();
+  const { isConnected } = useWebSocket();
 
   // Calculate unread count
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // Add notification
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
       ...notification,
-      id: `${Date.now()}-${Math.random()}`,
+      id: Date.now().toString(),
       timestamp: new Date(),
       read: false,
     };
@@ -72,7 +68,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Mark all as read
   const markAllAsRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications(prev =>
+      prev.map(n => ({ ...n, read: true }))
+    );
   }, []);
 
   // Clear notification
@@ -87,7 +85,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Listen to WebSocket notifications
   useEffect(() => {
-    const unsubscribeNotification = on<NotificationMessage>('notification', (message) => {
+    const handleNotification = (message: NotificationMessage) => {
       let type: 'success' | 'info' | 'warning' | 'error' = 'info';
       
       // Map priority to notification type
@@ -107,58 +105,66 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         message: message.message,
         type,
       });
-    });
+    };
 
-    const unsubscribeSystemMessage = on('system_message', (message) => {
+    const handleSystemMessage = (message: any) => {
       addNotification({
         title: '系統訊息',
-        message: message.message,
-        type: message.priority === 'high' ? 'warning' : 'info',
+        message: message.content || message.message,
+        type: 'info',
       });
-    });
+    };
 
-    const unsubscribeOrderUpdate = on('order_update', (message) => {
+    const handleOrderUpdate = (message: any) => {
       addNotification({
         title: '訂單更新',
         message: `訂單 #${message.order_id} 狀態已更新為 ${message.status}`,
         type: 'info',
       });
-    });
+    };
 
-    const unsubscribeRouteUpdate = on('route_update', (message) => {
+    const handleRouteUpdate = (message: any) => {
       addNotification({
         title: '路線更新',
         message: `路線 #${message.route_id} 已更新`,
         type: 'info',
       });
-    });
+    };
 
-    const unsubscribePredictionReady = on('prediction_ready', (message) => {
+    const handlePredictionReady = (message: any) => {
       addNotification({
         title: '需求預測完成',
         message: `批次 ${message.batch_id} 的預測已完成`,
         type: 'success',
       });
-    });
+    };
 
-    const unsubscribeRouteAssigned = on('route_assigned', (message) => {
+    const handleRouteAssigned = (message: any) => {
       addNotification({
         title: '新路線分配',
         message: `您已被分配到路線 #${message.route_id}`,
         type: 'warning',
       });
-    });
+    };
+
+    // Register event handlers
+    websocketService.on('notification', handleNotification);
+    websocketService.on('system_message', handleSystemMessage);
+    websocketService.on('order_update', handleOrderUpdate);
+    websocketService.on('route_update', handleRouteUpdate);
+    websocketService.on('prediction_ready', handlePredictionReady);
+    websocketService.on('route_assigned', handleRouteAssigned);
 
     // Cleanup
     return () => {
-      unsubscribeNotification();
-      unsubscribeSystemMessage();
-      unsubscribeOrderUpdate();
-      unsubscribeRouteUpdate();
-      unsubscribePredictionReady();
-      unsubscribeRouteAssigned();
+      websocketService.off('notification', handleNotification);
+      websocketService.off('system_message', handleSystemMessage);
+      websocketService.off('order_update', handleOrderUpdate);
+      websocketService.off('route_update', handleRouteUpdate);
+      websocketService.off('prediction_ready', handlePredictionReady);
+      websocketService.off('route_assigned', handleRouteAssigned);
     };
-  }, [on, addNotification]);
+  }, [addNotification]);
 
   const value: NotificationContextType = {
     notifications,

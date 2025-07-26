@@ -52,3 +52,24 @@ def decode_refresh_token(token: str) -> Dict[str, Any]:
         return payload
     except JWTError:
         raise ValueError("Could not validate refresh token")
+
+
+def verify_user_role(user, allowed_roles: list[str]) -> bool:
+    """
+    Verify if user has one of the allowed roles
+    
+    Args:
+        user: User model instance
+        allowed_roles: List of allowed role names
+        
+    Raises:
+        HTTPException: If user role is not in allowed roles
+    """
+    from fastapi import HTTPException, status
+    
+    if user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="權限不足"
+        )
+    return True

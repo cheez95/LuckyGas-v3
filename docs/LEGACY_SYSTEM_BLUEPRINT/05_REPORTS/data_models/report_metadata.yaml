@@ -1,0 +1,727 @@
+# Report Metadata Data Model - Lucky Gas Legacy System
+
+ReportMaster:
+  table_name: "REPORT_MASTER"
+  chinese_name: "報表主檔"
+  description: "Master table for all report definitions and configurations"
+  fields:
+    - name: "REPORT_ID"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      description: "Unique report identifier"
+      format: "RPT[0-9]{3}"
+      example: "RPT001"
+      
+    - name: "REPORT_CODE"
+      type: "varchar(30)"
+      required: true
+      unique: true
+      description: "Business report code"
+      example: "DAILY_SALES_REPORT"
+      
+    - name: "REPORT_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Report display name"
+      example: "每日銷售報表"
+      
+    - name: "REPORT_NAME_EN"
+      type: "varchar(100)"
+      required: false
+      description: "English report name"
+      example: "Daily Sales Report"
+      
+    - name: "REPORT_CATEGORY"
+      type: "varchar(2)"
+      required: true
+      description: "Report category"
+      values:
+        - "01": "銷售報表 (Sales)"
+        - "02": "營運報表 (Operations)"
+        - "03": "財務報表 (Financial)"
+        - "04": "庫存報表 (Inventory)"
+        - "05": "管理報表 (Management)"
+        - "06": "法規報表 (Regulatory)"
+        
+    - name: "REPORT_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Report generation type"
+      values:
+        - "01": "預設報表 (Standard)"
+        - "02": "客製報表 (Custom)"
+        - "03": "即時儀表板 (Dashboard)"
+        - "04": "分析報表 (Analytics)"
+        - "05": "匯出報表 (Export)"
+        
+    - name: "DATA_SOURCE"
+      type: "varchar(50)"
+      required: true
+      description: "Primary data source"
+      example: "DW_SALES_FACT"
+      
+    - name: "REPORT_QUERY"
+      type: "text"
+      required: true
+      description: "SQL query or procedure name"
+      
+    - name: "PARAMETERS"
+      type: "json"
+      required: false
+      description: "Report parameter definitions"
+      example: '{"date_from": "date", "date_to": "date", "customer_id": "string"}'
+      
+    - name: "DEFAULT_PARAMETERS"
+      type: "json"
+      required: false
+      description: "Default parameter values"
+      example: '{"date_from": "TODAY-30", "date_to": "TODAY"}'
+      
+    - name: "OUTPUT_FORMATS"
+      type: "varchar(50)"
+      required: true
+      description: "Supported output formats"
+      default: "HTML,PDF,EXCEL,CSV"
+      
+    - name: "TEMPLATE_FILE"
+      type: "varchar(255)"
+      required: false
+      description: "Report template path"
+      example: "/templates/daily_sales.jrxml"
+      
+    - name: "PROCESSING_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Processing method"
+      values:
+        - "01": "即時 (Real-time)"
+        - "02": "批次 (Batch)"
+        - "03": "快取 (Cached)"
+        - "04": "串流 (Streaming)"
+        
+    - name: "CACHE_DURATION"
+      type: "integer"
+      required: false
+      description: "Cache duration in minutes"
+      default: 60
+      
+    - name: "MAX_ROWS"
+      type: "integer"
+      required: true
+      description: "Maximum rows to return"
+      default: 10000
+      
+    - name: "TIMEOUT_SECONDS"
+      type: "integer"
+      required: true
+      description: "Query timeout"
+      default: 300
+      
+    - name: "SECURITY_LEVEL"
+      type: "varchar(2)"
+      required: true
+      description: "Data sensitivity level"
+      values:
+        - "01": "公開 (Public)"
+        - "02": "內部 (Internal)"
+        - "03": "機密 (Confidential)"
+        - "04": "高度機密 (Highly Confidential)"
+        
+    - name: "REQUIRED_ROLES"
+      type: "varchar(255)"
+      required: true
+      description: "Comma-separated role codes"
+      example: "MANAGER,SUPERVISOR,ANALYST"
+      
+    - name: "DATA_FILTERS"
+      type: "json"
+      required: false
+      description: "Row-level security filters"
+      example: '{"department": "USER_DEPT", "region": "USER_REGION"}'
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Report active status"
+      default: true
+      
+    - name: "DESCRIPTION"
+      type: "text"
+      required: false
+      description: "Report description and purpose"
+      
+    - name: "HELP_TEXT"
+      type: "text"
+      required: false
+      description: "User help instructions"
+      
+    - name: "VERSION"
+      type: "varchar(10)"
+      required: true
+      description: "Report version"
+      default: "1.0"
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Report creator"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "MODIFIED_BY"
+      type: "varchar(10)"
+      required: false
+      description: "Last modifier"
+      
+    - name: "MODIFIED_DATE"
+      type: "timestamp"
+      required: false
+      description: "Last modification"
+      
+  indexes:
+    - name: "IDX_REPORT_CODE"
+      columns: ["REPORT_CODE"]
+      unique: true
+      
+    - name: "IDX_REPORT_CATEGORY"
+      columns: ["REPORT_CATEGORY", "ACTIVE_FLAG"]
+      
+    - name: "IDX_REPORT_TYPE"
+      columns: ["REPORT_TYPE", "ACTIVE_FLAG"]
+
+ReportSchedule:
+  table_name: "REPORT_SCHEDULE"
+  chinese_name: "報表排程"
+  description: "Scheduled report execution configurations"
+  fields:
+    - name: "SCHEDULE_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique schedule ID"
+      
+    - name: "REPORT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "REPORT_MASTER.REPORT_ID"
+      description: "Report reference"
+      
+    - name: "SCHEDULE_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Schedule description"
+      example: "每日早上6點銷售報表"
+      
+    - name: "SCHEDULE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Schedule type"
+      values:
+        - "01": "每日 (Daily)"
+        - "02": "每週 (Weekly)"
+        - "03": "每月 (Monthly)"
+        - "04": "每季 (Quarterly)"
+        - "05": "每年 (Yearly)"
+        - "06": "自訂 (Custom)"
+        
+    - name: "CRON_EXPRESSION"
+      type: "varchar(100)"
+      required: false
+      description: "Cron schedule expression"
+      example: "0 6 * * *"
+      
+    - name: "TIME_ZONE"
+      type: "varchar(50)"
+      required: true
+      description: "Execution timezone"
+      default: "Asia/Taipei"
+      
+    - name: "START_DATE"
+      type: "date"
+      required: true
+      description: "Schedule start date"
+      
+    - name: "END_DATE"
+      type: "date"
+      required: false
+      description: "Schedule end date"
+      
+    - name: "NEXT_RUN_TIME"
+      type: "timestamp"
+      required: false
+      description: "Next scheduled execution"
+      
+    - name: "LAST_RUN_TIME"
+      type: "timestamp"
+      required: false
+      description: "Last execution time"
+      
+    - name: "LAST_RUN_STATUS"
+      type: "varchar(2)"
+      required: false
+      description: "Last execution status"
+      values:
+        - "01": "成功 (Success)"
+        - "02": "失敗 (Failed)"
+        - "03": "執行中 (Running)"
+        - "04": "已取消 (Cancelled)"
+        
+    - name: "PARAMETERS"
+      type: "json"
+      required: false
+      description: "Report parameters for schedule"
+      example: '{"date_from": "MONTH_START", "date_to": "MONTH_END"}'
+      
+    - name: "OUTPUT_FORMAT"
+      type: "varchar(10)"
+      required: true
+      description: "Output format for scheduled report"
+      default: "PDF"
+      
+    - name: "DISTRIBUTION_LIST"
+      type: "text"
+      required: true
+      description: "Email recipients (comma-separated)"
+      
+    - name: "EMAIL_SUBJECT"
+      type: "varchar(200)"
+      required: true
+      description: "Email subject template"
+      example: "每日銷售報表 - {DATE}"
+      
+    - name: "EMAIL_BODY"
+      type: "text"
+      required: false
+      description: "Email body template"
+      
+    - name: "ATTACH_REPORT"
+      type: "boolean"
+      required: true
+      description: "Attach report to email"
+      default: true
+      
+    - name: "COMPRESS_ATTACHMENT"
+      type: "boolean"
+      required: true
+      description: "ZIP compression for large files"
+      default: false
+      
+    - name: "RETENTION_DAYS"
+      type: "integer"
+      required: true
+      description: "Days to retain generated reports"
+      default: 90
+      
+    - name: "PRIORITY"
+      type: "integer"
+      required: true
+      description: "Execution priority (1=highest)"
+      default: 5
+      
+    - name: "MAX_RETRIES"
+      type: "integer"
+      required: true
+      description: "Maximum retry attempts"
+      default: 3
+      
+    - name: "RETRY_INTERVAL"
+      type: "integer"
+      required: true
+      description: "Minutes between retries"
+      default: 15
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Schedule active status"
+      default: true
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Schedule creator"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_SCHEDULE_REPORT"
+      columns: ["REPORT_ID", "ACTIVE_FLAG"]
+      
+    - name: "IDX_SCHEDULE_NEXT_RUN"
+      columns: ["NEXT_RUN_TIME", "ACTIVE_FLAG"]
+      
+    - name: "IDX_SCHEDULE_TYPE"
+      columns: ["SCHEDULE_TYPE"]
+
+ReportExecution:
+  table_name: "REPORT_EXECUTION"
+  chinese_name: "報表執行記錄"
+  description: "Report execution history and status tracking"
+  fields:
+    - name: "EXECUTION_ID"
+      type: "bigint"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique execution ID"
+      
+    - name: "REPORT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "REPORT_MASTER.REPORT_ID"
+      description: "Report reference"
+      
+    - name: "SCHEDULE_ID"
+      type: "integer"
+      required: false
+      foreign_key: "REPORT_SCHEDULE.SCHEDULE_ID"
+      description: "Schedule reference (if scheduled)"
+      
+    - name: "EXECUTION_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "How report was triggered"
+      values:
+        - "01": "手動 (Manual)"
+        - "02": "排程 (Scheduled)"
+        - "03": "API (API)"
+        - "04": "觸發 (Triggered)"
+        
+    - name: "USER_ID"
+      type: "varchar(10)"
+      required: true
+      description: "User who triggered execution"
+      
+    - name: "START_TIME"
+      type: "timestamp"
+      required: true
+      description: "Execution start time"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "END_TIME"
+      type: "timestamp"
+      required: false
+      description: "Execution end time"
+      
+    - name: "DURATION_SECONDS"
+      type: "integer"
+      required: false
+      description: "Execution duration"
+      
+    - name: "STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Execution status"
+      values:
+        - "01": "排隊中 (Queued)"
+        - "02": "執行中 (Running)"
+        - "03": "成功 (Success)"
+        - "04": "失敗 (Failed)"
+        - "05": "已取消 (Cancelled)"
+        - "06": "逾時 (Timeout)"
+        
+    - name: "PARAMETERS_USED"
+      type: "json"
+      required: false
+      description: "Parameters used for execution"
+      
+    - name: "OUTPUT_FORMAT"
+      type: "varchar(10)"
+      required: true
+      description: "Generated format"
+      
+    - name: "FILE_PATH"
+      type: "varchar(500)"
+      required: false
+      description: "Generated file location"
+      
+    - name: "FILE_SIZE_KB"
+      type: "integer"
+      required: false
+      description: "Generated file size"
+      
+    - name: "ROW_COUNT"
+      type: "integer"
+      required: false
+      description: "Number of data rows"
+      
+    - name: "ERROR_MESSAGE"
+      type: "text"
+      required: false
+      description: "Error details if failed"
+      
+    - name: "SERVER_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Execution server"
+      
+    - name: "IP_ADDRESS"
+      type: "varchar(45)"
+      required: true
+      description: "Client IP address"
+      
+    - name: "DELIVERY_STATUS"
+      type: "varchar(2)"
+      required: false
+      description: "Email delivery status"
+      values:
+        - "01": "已發送 (Sent)"
+        - "02": "發送失敗 (Failed)"
+        - "03": "未發送 (Not Sent)"
+        
+    - name: "DOWNLOAD_COUNT"
+      type: "integer"
+      required: true
+      description: "Times downloaded"
+      default: 0
+      
+    - name: "LAST_DOWNLOAD_TIME"
+      type: "timestamp"
+      required: false
+      description: "Last download timestamp"
+      
+  indexes:
+    - name: "IDX_EXECUTION_REPORT"
+      columns: ["REPORT_ID", "START_TIME"]
+      
+    - name: "IDX_EXECUTION_USER"
+      columns: ["USER_ID", "START_TIME"]
+      
+    - name: "IDX_EXECUTION_STATUS"
+      columns: ["STATUS", "START_TIME"]
+      
+    - name: "IDX_EXECUTION_SCHEDULE"
+      columns: ["SCHEDULE_ID"]
+
+ReportParameter:
+  table_name: "REPORT_PARAMETER"
+  chinese_name: "報表參數"
+  description: "Report parameter definitions and validations"
+  fields:
+    - name: "PARAMETER_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique parameter ID"
+      
+    - name: "REPORT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "REPORT_MASTER.REPORT_ID"
+      description: "Report reference"
+      
+    - name: "PARAMETER_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Parameter name"
+      example: "date_from"
+      
+    - name: "PARAMETER_LABEL"
+      type: "varchar(100)"
+      required: true
+      description: "Display label"
+      example: "開始日期"
+      
+    - name: "PARAMETER_TYPE"
+      type: "varchar(20)"
+      required: true
+      description: "Data type"
+      values:
+        - "DATE": "日期"
+        - "DATETIME": "日期時間"
+        - "STRING": "文字"
+        - "NUMBER": "數字"
+        - "BOOLEAN": "是/否"
+        - "LIST": "下拉選單"
+        - "MULTI_SELECT": "多選"
+        
+    - name: "REQUIRED"
+      type: "boolean"
+      required: true
+      description: "Is parameter required"
+      default: true
+      
+    - name: "DEFAULT_VALUE"
+      type: "varchar(255)"
+      required: false
+      description: "Default value or expression"
+      example: "TODAY"
+      
+    - name: "VALIDATION_RULE"
+      type: "varchar(500)"
+      required: false
+      description: "Validation expression"
+      
+    - name: "VALUE_SOURCE"
+      type: "varchar(2)"
+      required: true
+      description: "Source of values"
+      values:
+        - "01": "使用者輸入 (User Input)"
+        - "02": "系統查詢 (Query)"
+        - "03": "固定清單 (Fixed List)"
+        - "04": "動態計算 (Dynamic)"
+        
+    - name: "LOOKUP_QUERY"
+      type: "text"
+      required: false
+      description: "Query for dropdown values"
+      
+    - name: "DISPLAY_ORDER"
+      type: "integer"
+      required: true
+      description: "Parameter display sequence"
+      
+    - name: "HELP_TEXT"
+      type: "varchar(500)"
+      required: false
+      description: "Parameter help text"
+      
+    - name: "DEPENDS_ON"
+      type: "varchar(50)"
+      required: false
+      description: "Dependent parameter name"
+      
+  indexes:
+    - name: "IDX_PARAMETER_REPORT"
+      columns: ["REPORT_ID", "DISPLAY_ORDER"]
+      
+    - name: "IDX_PARAMETER_NAME"
+      columns: ["REPORT_ID", "PARAMETER_NAME"]
+      unique: true
+
+ReportDistribution:
+  table_name: "REPORT_DISTRIBUTION"
+  chinese_name: "報表發送清單"
+  description: "Report distribution lists and delivery preferences"
+  fields:
+    - name: "DISTRIBUTION_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique distribution ID"
+      
+    - name: "LIST_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Distribution list name"
+      example: "管理階層每日報表"
+      
+    - name: "LIST_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "List type"
+      values:
+        - "01": "電子郵件 (Email)"
+        - "02": "簡訊 (SMS)"
+        - "03": "系統通知 (System)"
+        - "04": "FTP上傳 (FTP)"
+        
+    - name: "RECIPIENTS"
+      type: "text"
+      required: true
+      description: "Recipient list (JSON array)"
+      example: '[{"email": "manager@luckygas.com", "name": "經理"}]'
+      
+    - name: "CC_RECIPIENTS"
+      type: "text"
+      required: false
+      description: "CC recipient list"
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "List active status"
+      default: true
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "List creator"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_DISTRIBUTION_NAME"
+      columns: ["LIST_NAME"]
+      unique: true
+
+ReportFavorite:
+  table_name: "REPORT_FAVORITE"
+  chinese_name: "我的最愛報表"
+  description: "User favorite reports and personalized settings"
+  fields:
+    - name: "FAVORITE_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique favorite ID"
+      
+    - name: "USER_ID"
+      type: "varchar(10)"
+      required: true
+      description: "User reference"
+      
+    - name: "REPORT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "REPORT_MASTER.REPORT_ID"
+      description: "Report reference"
+      
+    - name: "FAVORITE_NAME"
+      type: "varchar(100)"
+      required: false
+      description: "Custom name for favorite"
+      
+    - name: "SAVED_PARAMETERS"
+      type: "json"
+      required: false
+      description: "Saved parameter values"
+      
+    - name: "DISPLAY_ORDER"
+      type: "integer"
+      required: true
+      description: "Display sequence"
+      default: 999
+      
+    - name: "LAST_ACCESSED"
+      type: "timestamp"
+      required: false
+      description: "Last access time"
+      
+    - name: "ACCESS_COUNT"
+      type: "integer"
+      required: true
+      description: "Times accessed"
+      default: 0
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Favorite created date"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_FAVORITE_USER"
+      columns: ["USER_ID", "DISPLAY_ORDER"]
+      
+    - name: "IDX_FAVORITE_UNIQUE"
+      columns: ["USER_ID", "REPORT_ID"]
+      unique: true

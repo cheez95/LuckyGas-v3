@@ -1,0 +1,2044 @@
+{
+  "config": {
+    "configFile": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/playwright.config.ts",
+    "rootDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 4
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "edge",
+        "name": "edge",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "mobile-chrome",
+        "name": "mobile-chrome",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "mobile-safari",
+        "name": "mobile-safari",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "tablet",
+        "name": "tablet",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "performance",
+        "name": "performance",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "visual",
+        "name": "visual",
+        "testDir": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth.spec.ts",
+      "file": "auth.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Authentication Tests",
+          "file": "auth.spec.ts",
+          "line": 6,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Basic Authentication",
+              "file": "auth.spec.ts",
+              "line": 16,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should display login page in Traditional Chinese",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 804,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:07.150Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-6f1a6bf38057a7ebe042",
+                  "file": "auth.spec.ts",
+                  "line": 17,
+                  "column": 9
+                },
+                {
+                  "title": "should login successfully with valid credentials",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 1,
+                          "parallelIndex": 1,
+                          "status": "failed",
+                          "duration": 6208,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n\n    at LoginPage.expectLoginSuccess (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:53:29)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:23:23",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 29,
+                              "line": 53
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:53\n\n  51 |   async expectLoginSuccess() {\n  52 |     // Should redirect to dashboard\n> 53 |     await expect(this.page).toHaveURL(/\\/dashboard|\\/home/);\n     |                             ^\n  54 |     \n  55 |     // Check for JWT token\n  56 |     const token = await this.page.evaluate(() => localStorage.getItem('access_token'));"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 29,
+                                "line": 53
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n\n\n   at ../pages/LoginPage.ts:53\n\n  51 |   async expectLoginSuccess() {\n  52 |     // Should redirect to dashboard\n> 53 |     await expect(this.page).toHaveURL(/\\/dashboard|\\/home/);\n     |                             ^\n  54 |     \n  55 |     // Check for JWT token\n  56 |     const token = await this.page.evaluate(() => localStorage.getItem('access_token'));\n    at LoginPage.expectLoginSuccess (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:53:29)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:23:23"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:07.147Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--6e9b5-ully-with-valid-credentials-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--6e9b5-ully-with-valid-credentials-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--6e9b5-ully-with-valid-credentials-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 29,
+                            "line": 53
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-b49a9da7ffa840ce4083",
+                  "file": "auth.spec.ts",
+                  "line": 21,
+                  "column": 9
+                },
+                {
+                  "title": "should show error with invalid credentials",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 2,
+                          "status": "passed",
+                          "duration": 1140,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:07.155Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-5541b9c6d8620eaa9bd9",
+                  "file": "auth.spec.ts",
+                  "line": 32,
+                  "column": 9
+                },
+                {
+                  "title": "should validate email format",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 3,
+                          "parallelIndex": 3,
+                          "status": "failed",
+                          "duration": 30875,
+                          "error": {
+                            "message": "TimeoutError: locator.textContent: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"username-input\"] ~ .error-text')\u001b[22m\n",
+                            "stack": "TimeoutError: locator.textContent: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"username-input\"] ~ .error-text')\u001b[22m\n\n    at LoginPage.fillInvalidEmail (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:95:89)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:38:7",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 89,
+                              "line": 95
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:95\n\n  93 |     \n  94 |     // Check for validation error\n> 95 |     const validationError = await this.page.locator(`${this.emailInput} ~ .error-text`).textContent();\n     |                                                                                         ^\n  96 |     expect(validationError).toContain('請輸入有效的電子郵件');\n  97 |   }\n  98 |"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 89,
+                                "line": 95
+                              },
+                              "message": "TimeoutError: locator.textContent: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"username-input\"] ~ .error-text')\u001b[22m\n\n\n   at ../pages/LoginPage.ts:95\n\n  93 |     \n  94 |     // Check for validation error\n> 95 |     const validationError = await this.page.locator(`${this.emailInput} ~ .error-text`).textContent();\n     |                                                                                         ^\n  96 |     expect(validationError).toContain('請輸入有效的電子郵件');\n  97 |   }\n  98 |\n    at LoginPage.fillInvalidEmail (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:95:89)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:38:7"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:07.147Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--68a0d-hould-validate-email-format-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--68a0d-hould-validate-email-format-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--68a0d-hould-validate-email-format-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 89,
+                            "line": 95
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-4c036ff84a153bb32353",
+                  "file": "auth.spec.ts",
+                  "line": 37,
+                  "column": 9
+                },
+                {
+                  "title": "should toggle password visibility",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 31240,
+                          "error": {
+                            "message": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"password-visibility-toggle\"]')\u001b[22m\n",
+                            "stack": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"password-visibility-toggle\"]')\u001b[22m\n\n    at LoginPage.testPasswordVisibilityToggle (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:106:21)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:42:7",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 21,
+                              "line": 106
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:106\n\n  104 |     \n  105 |     // Click toggle to show password\n> 106 |     await this.page.click(toggleButton);\n      |                     ^\n  107 |     await expect(this.page.locator(this.passwordInput)).toHaveAttribute('type', 'text');\n  108 |     \n  109 |     // Click again to hide"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 21,
+                                "line": 106
+                              },
+                              "message": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"password-visibility-toggle\"]')\u001b[22m\n\n\n   at ../pages/LoginPage.ts:106\n\n  104 |     \n  105 |     // Click toggle to show password\n> 106 |     await this.page.click(toggleButton);\n      |                     ^\n  107 |     await expect(this.page.locator(this.passwordInput)).toHaveAttribute('type', 'text');\n  108 |     \n  109 |     // Click again to hide\n    at LoginPage.testPasswordVisibilityToggle (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:106:21)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:42:7"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:08.275Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--eb866--toggle-password-visibility-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--eb866--toggle-password-visibility-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--eb866--toggle-password-visibility-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 21,
+                            "line": 106
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-963fb502c6b2194b02cb",
+                  "file": "auth.spec.ts",
+                  "line": 41,
+                  "column": 9
+                },
+                {
+                  "title": "should support keyboard navigation",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5488,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"remember-me-checkbox\"]')\nExpected: focused\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"remember-me-checkbox\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"remember-me-checkbox\"]')\nExpected: focused\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"remember-me-checkbox\"]')\u001b[22m\n\n    at LoginPage.testKeyboardNavigation (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:125:62)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:46:7",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 62,
+                              "line": 125
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:125\n\n  123 |     // Tab to remember me\n  124 |     await this.page.keyboard.press('Tab');\n> 125 |     await expect(this.page.locator(this.rememberMeCheckbox)).toBeFocused();\n      |                                                              ^\n  126 |     \n  127 |     // Tab to login button\n  128 |     await this.page.keyboard.press('Tab');"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 62,
+                                "line": 125
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"remember-me-checkbox\"]')\nExpected: focused\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"remember-me-checkbox\"]')\u001b[22m\n\n\n   at ../pages/LoginPage.ts:125\n\n  123 |     // Tab to remember me\n  124 |     await this.page.keyboard.press('Tab');\n> 125 |     await expect(this.page.locator(this.rememberMeCheckbox)).toBeFocused();\n      |                                                              ^\n  126 |     \n  127 |     // Tab to login button\n  128 |     await this.page.keyboard.press('Tab');\n    at LoginPage.testKeyboardNavigation (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:125:62)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:46:7"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:08.611Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--800fb-support-keyboard-navigation-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--800fb-support-keyboard-navigation-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--800fb-support-keyboard-navigation-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 62,
+                            "line": 125
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-f41f7968a07e955651ba",
+                  "file": "auth.spec.ts",
+                  "line": 45,
+                  "column": 9
+                },
+                {
+                  "title": "should submit form with Enter key",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 4,
+                          "parallelIndex": 1,
+                          "status": "failed",
+                          "duration": 5445,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"loading-spinner\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"loading-spinner\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"loading-spinner\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"loading-spinner\"]')\u001b[22m\n\n    at LoginPage.testEnterKeySubmission (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:140:58)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:50:7",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 58,
+                              "line": 140
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:140\n\n  138 |     \n  139 |     // Should show loading state\n> 140 |     await expect(this.page.locator(this.loadingSpinner)).toBeVisible();\n      |                                                          ^\n  141 |   }\n  142 |\n  143 |   async measureLoginPerformance(): Promise<number> {"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 58,
+                                "line": 140
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"loading-spinner\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"loading-spinner\"]')\u001b[22m\n\n\n   at ../pages/LoginPage.ts:140\n\n  138 |     \n  139 |     // Should show loading state\n> 140 |     await expect(this.page.locator(this.loadingSpinner)).toBeVisible();\n      |                                                          ^\n  141 |   }\n  142 |\n  143 |   async measureLoginPerformance(): Promise<number> {\n    at LoginPage.testEnterKeySubmission (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:140:58)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:50:7"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:13.955Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--2e348--submit-form-with-Enter-key-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--2e348--submit-form-with-Enter-key-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--2e348--submit-form-with-Enter-key-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 58,
+                            "line": 140
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-30fadbc0d37804a19c09",
+                  "file": "auth.spec.ts",
+                  "line": 49,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Role-Based Access Control",
+              "file": "auth.spec.ts",
+              "line": 54,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should login as Super Admin and see all features",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 5,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5628,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:57:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:57:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:14.446Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--07eb0--Admin-and-see-all-features-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--07eb0--Admin-and-see-all-features-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--07eb0--Admin-and-see-all-features-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-9b0bb85e3cfc08f15c62",
+                  "file": "auth.spec.ts",
+                  "line": 55,
+                  "column": 9
+                },
+                {
+                  "title": "should login as Manager and see limited features",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 6,
+                          "parallelIndex": 1,
+                          "status": "failed",
+                          "duration": 5593,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:63:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:63:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:19.834Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--0ff19-er-and-see-limited-features-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--0ff19-er-and-see-limited-features-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--0ff19-er-and-see-limited-features-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-8e2c9569d52cb956b127",
+                  "file": "auth.spec.ts",
+                  "line": 61,
+                  "column": 9
+                },
+                {
+                  "title": "should login as Office Staff and see customer/order features",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 7,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5577,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:69:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:69:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:20.489Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--ac093-see-customer-order-features-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--ac093-see-customer-order-features-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--ac093-see-customer-order-features-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-7b428fee6cf47ea71000",
+                  "file": "auth.spec.ts",
+                  "line": 67,
+                  "column": 9
+                },
+                {
+                  "title": "should login as Driver and see only route features",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 8,
+                          "parallelIndex": 1,
+                          "status": "failed",
+                          "duration": 5587,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:75:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:75:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:25.806Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--1111f-and-see-only-route-features-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--1111f-and-see-only-route-features-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--1111f-and-see-only-route-features-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-9ed72b2351039ef67762",
+                  "file": "auth.spec.ts",
+                  "line": 73,
+                  "column": 9
+                },
+                {
+                  "title": "should login as Customer and redirect to customer portal",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 9,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5606,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/customer-portal/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/customer-portal/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:83:26",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                              "column": 26,
+                              "line": 83
+                            },
+                            "snippet": "  81 |       \n  82 |       // Customer should be redirected to customer portal\n> 83 |       await expect(page).toHaveURL(/\\/customer-portal/);\n     |                          ^\n  84 |     });\n  85 |   });\n  86 |"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                                "column": 26,
+                                "line": 83
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/customer-portal/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n\n\n  81 |       \n  82 |       // Customer should be redirected to customer portal\n> 83 |       await expect(page).toHaveURL(/\\/customer-portal/);\n     |                          ^\n  84 |     });\n  85 |   });\n  86 |\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:83:26"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:26.491Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--4384f-redirect-to-customer-portal-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--4384f-redirect-to-customer-portal-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--4384f-redirect-to-customer-portal-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                            "column": 26,
+                            "line": 83
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-8f49898622189d184170",
+                  "file": "auth.spec.ts",
+                  "line": 79,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Session Management",
+              "file": "auth.spec.ts",
+              "line": 87,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should persist session with Remember Me",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 10,
+                          "parallelIndex": 1,
+                          "status": "failed",
+                          "duration": 30398,
+                          "error": {
+                            "message": "TimeoutError: page.check: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"remember-me-checkbox\"]')\u001b[22m\n",
+                            "stack": "TimeoutError: page.check: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"remember-me-checkbox\"]')\u001b[22m\n\n    at LoginPage.login (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:38:23)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:89:7",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 23,
+                              "line": 38
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:38\n\n  36 |     \n  37 |     if (rememberMe) {\n> 38 |       await this.page.check(this.rememberMeCheckbox);\n     |                       ^\n  39 |     }\n  40 |     \n  41 |     // Click login and wait for navigation or error"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 23,
+                                "line": 38
+                              },
+                              "message": "TimeoutError: page.check: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"remember-me-checkbox\"]')\u001b[22m\n\n\n   at ../pages/LoginPage.ts:38\n\n  36 |     \n  37 |     if (rememberMe) {\n> 38 |       await this.page.check(this.rememberMeCheckbox);\n     |                       ^\n  39 |     }\n  40 |     \n  41 |     // Click login and wait for navigation or error\n    at LoginPage.login (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:38:23)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:89:7"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:31.763Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--a9b60-st-session-with-Remember-Me-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--a9b60-st-session-with-Remember-Me-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--a9b60-st-session-with-Remember-Me-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 23,
+                            "line": 38
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-0d16363e055ddf134e48",
+                  "file": "auth.spec.ts",
+                  "line": 88,
+                  "column": 9
+                },
+                {
+                  "title": "should logout successfully",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 11,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5595,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:103:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:103:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:32.541Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9b201--should-logout-successfully-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9b201--should-logout-successfully-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9b201--should-logout-successfully-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-509695a60dedbb2f18cb",
+                  "file": "auth.spec.ts",
+                  "line": 101,
+                  "column": 9
+                },
+                {
+                  "title": "should handle token expiration gracefully",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 12,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5621,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:116:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:116:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:38.534Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--0bad7-token-expiration-gracefully-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--0bad7-token-expiration-gracefully-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--0bad7-token-expiration-gracefully-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-fcba5a22dd94492da3bd",
+                  "file": "auth.spec.ts",
+                  "line": 114,
+                  "column": 9
+                },
+                {
+                  "title": "should refresh token automatically",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 13,
+                          "parallelIndex": 3,
+                          "status": "failed",
+                          "duration": 5630,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:133:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:133:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:38.655Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--d4048-refresh-token-automatically-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--d4048-refresh-token-automatically-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--d4048-refresh-token-automatically-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-78b15d76eb24f924cbc0",
+                  "file": "auth.spec.ts",
+                  "line": 131,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Security Features",
+              "file": "auth.spec.ts",
+              "line": 148,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should prevent XSS in login form",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 14,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 1474,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:39.795Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-c2301ed319b883da935d",
+                  "file": "auth.spec.ts",
+                  "line": 149,
+                  "column": 9
+                },
+                {
+                  "title": "should implement rate limiting after failed attempts",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 14,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 8351,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('[data-testid=\"error-message\"]')\nExpected pattern: \u001b[32m/請稍後再試|Too many attempts/\u001b[39m\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"error-message\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('[data-testid=\"error-message\"]')\nExpected pattern: \u001b[32m/請稍後再試|Too many attempts/\u001b[39m\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"error-message\"]')\u001b[22m\n\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:175:67",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                              "column": 67,
+                              "line": 175
+                            },
+                            "snippet": "  173 |       \n  174 |       // Should show rate limit error\n> 175 |       await expect(page.locator('[data-testid=\"error-message\"]')).toContainText(/請稍後再試|Too many attempts/);\n      |                                                                   ^\n  176 |     });\n  177 |\n  178 |     test('should clear sensitive data on logout', async ({ page }) => {"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                                "column": 67,
+                                "line": 175
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('[data-testid=\"error-message\"]')\nExpected pattern: \u001b[32m/請稍後再試|Too many attempts/\u001b[39m\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"error-message\"]')\u001b[22m\n\n\n  173 |       \n  174 |       // Should show rate limit error\n> 175 |       await expect(page.locator('[data-testid=\"error-message\"]')).toContainText(/請稍後再試|Too many attempts/);\n      |                                                                   ^\n  176 |     });\n  177 |\n  178 |     test('should clear sensitive data on logout', async ({ page }) => {\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:175:67"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:41.390Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--229ab-iting-after-failed-attempts-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--229ab-iting-after-failed-attempts-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--229ab-iting-after-failed-attempts-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                            "column": 67,
+                            "line": 175
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-ff2d4716ff25806a4c33",
+                  "file": "auth.spec.ts",
+                  "line": 167,
+                  "column": 9
+                },
+                {
+                  "title": "should clear sensitive data on logout",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 15,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 5639,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:180:27",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                              "column": 51,
+                              "line": 35
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                                "column": 51,
+                                "line": 35
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('[data-testid=\"sidebar\"]')\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"sidebar\"]')\u001b[22m\n\n\n   at ../pages/DashboardPage.ts:35\n\n  33 |\n  34 |   async waitForPageLoad() {\n> 35 |     await expect(this.page.locator(this.sidebar)).toBeVisible();\n     |                                                   ^\n  36 |     await expect(this.page.locator(this.dailyOrdersWidget)).toBeVisible();\n  37 |     \n  38 |     // Wait for data to load\n    at DashboardPage.waitForPageLoad (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts:35:51)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:180:27"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:44.597Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--ea9b4-ar-sensitive-data-on-logout-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--ea9b4-ar-sensitive-data-on-logout-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--ea9b4-ar-sensitive-data-on-logout-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/DashboardPage.ts",
+                            "column": 51,
+                            "line": 35
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-ee521b752641ae102932",
+                  "file": "auth.spec.ts",
+                  "line": 178,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Forgot Password Flow",
+              "file": "auth.spec.ts",
+              "line": 199,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should navigate to forgot password page",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 16,
+                          "parallelIndex": 3,
+                          "status": "failed",
+                          "duration": 5650,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('h1')\nExpected string: \u001b[32m\"忘記密碼\"\u001b[39m\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('h1')\nExpected string: \u001b[32m\"忘記密碼\"\u001b[39m\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:202:40",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                              "column": 40,
+                              "line": 202
+                            },
+                            "snippet": "  200 |     test('should navigate to forgot password page', async ({ page }) => {\n  201 |       await loginPage.clickForgotPassword();\n> 202 |       await expect(page.locator('h1')).toContainText('忘記密碼');\n      |                                        ^\n  203 |     });\n  204 |\n  205 |     test('should send password reset email', async ({ page }) => {"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                                "column": 40,
+                                "line": 202
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('h1')\nExpected string: \u001b[32m\"忘記密碼\"\u001b[39m\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n\n  200 |     test('should navigate to forgot password page', async ({ page }) => {\n  201 |       await loginPage.clickForgotPassword();\n> 202 |       await expect(page.locator('h1')).toContainText('忘記密碼');\n      |                                        ^\n  203 |     });\n  204 |\n  205 |     test('should send password reset email', async ({ page }) => {\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:202:40"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:44.733Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--8c336-ate-to-forgot-password-page-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--8c336-ate-to-forgot-password-page-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--8c336-ate-to-forgot-password-page-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                            "column": 40,
+                            "line": 202
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-058d4531e51ae489be12",
+                  "file": "auth.spec.ts",
+                  "line": 200,
+                  "column": 9
+                },
+                {
+                  "title": "should send password reset email",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 17,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 31136,
+                          "error": {
+                            "message": "TimeoutError: page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"reset-email-input\"]')\u001b[22m\n",
+                            "stack": "TimeoutError: page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"reset-email-input\"]')\u001b[22m\n\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:208:18",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                              "column": 18,
+                              "line": 208
+                            },
+                            "snippet": "  206 |       await loginPage.clickForgotPassword();\n  207 |       \n> 208 |       await page.fill('[data-testid=\"reset-email-input\"]', TestUsers.officeStaff.email);\n      |                  ^\n  209 |       await page.click('[data-testid=\"send-reset-button\"]');\n  210 |       \n  211 |       // Should show success message"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                                "column": 18,
+                                "line": 208
+                              },
+                              "message": "TimeoutError: page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"reset-email-input\"]')\u001b[22m\n\n\n  206 |       await loginPage.clickForgotPassword();\n  207 |       \n> 208 |       await page.fill('[data-testid=\"reset-email-input\"]', TestUsers.officeStaff.email);\n      |                  ^\n  209 |       await page.click('[data-testid=\"send-reset-button\"]');\n  210 |       \n  211 |       // Should show success message\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:208:18"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:50.028Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--5f836-d-send-password-reset-email-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--5f836-d-send-password-reset-email-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--5f836-d-send-password-reset-email-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                            "column": 18,
+                            "line": 208
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-772a93d4f1684b4fc0a0",
+                  "file": "auth.spec.ts",
+                  "line": 205,
+                  "column": 9
+                },
+                {
+                  "title": "should validate email in forgot password form",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 18,
+                          "parallelIndex": 2,
+                          "status": "failed",
+                          "duration": 31148,
+                          "error": {
+                            "message": "TimeoutError: page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"reset-email-input\"]')\u001b[22m\n",
+                            "stack": "TimeoutError: page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"reset-email-input\"]')\u001b[22m\n\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:218:18",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                              "column": 18,
+                              "line": 218
+                            },
+                            "snippet": "  216 |       await loginPage.clickForgotPassword();\n  217 |       \n> 218 |       await page.fill('[data-testid=\"reset-email-input\"]', 'invalid-email');\n      |                  ^\n  219 |       await page.click('[data-testid=\"send-reset-button\"]');\n  220 |       \n  221 |       // Should show validation error"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                                "column": 18,
+                                "line": 218
+                              },
+                              "message": "TimeoutError: page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"reset-email-input\"]')\u001b[22m\n\n\n  216 |       await loginPage.clickForgotPassword();\n  217 |       \n> 218 |       await page.fill('[data-testid=\"reset-email-input\"]', 'invalid-email');\n      |                  ^\n  219 |       await page.click('[data-testid=\"send-reset-button\"]');\n  220 |       \n  221 |       // Should show validation error\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:218:18"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:50.726Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--16a3a-ail-in-forgot-password-form-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--16a3a-ail-in-forgot-password-form-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--16a3a-ail-in-forgot-password-form-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts",
+                            "column": 18,
+                            "line": 218
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-b1c665dea395f936f799",
+                  "file": "auth.spec.ts",
+                  "line": 215,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Performance Tests",
+              "file": "auth.spec.ts",
+              "line": 226,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should login within 3 seconds",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 19,
+                          "parallelIndex": 3,
+                          "status": "passed",
+                          "duration": 543,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:50.848Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-fe1848ab9c8e4d14cdd5",
+                  "file": "auth.spec.ts",
+                  "line": 227,
+                  "column": 9
+                },
+                {
+                  "title": "should handle concurrent login attempts",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 19,
+                          "parallelIndex": 3,
+                          "status": "failed",
+                          "duration": 6023,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n\n    at LoginPage.expectLoginSuccess (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:53:29)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:248:22\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:252:7",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 29,
+                              "line": 53
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:53\n\n  51 |   async expectLoginSuccess() {\n  52 |     // Should redirect to dashboard\n> 53 |     await expect(this.page).toHaveURL(/\\/dashboard|\\/home/);\n     |                             ^\n  54 |     \n  55 |     // Check for JWT token\n  56 |     const token = await this.page.evaluate(() => localStorage.getItem('access_token'));"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 29,
+                                "line": 53
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/login\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/login\"\u001b[22m\n\n\n   at ../pages/LoginPage.ts:53\n\n  51 |   async expectLoginSuccess() {\n  52 |     // Should redirect to dashboard\n> 53 |     await expect(this.page).toHaveURL(/\\/dashboard|\\/home/);\n     |                             ^\n  54 |     \n  55 |     // Check for JWT token\n  56 |     const token = await this.page.evaluate(() => localStorage.getItem('access_token'));\n    at LoginPage.expectLoginSuccess (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:53:29)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:248:22\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:252:7"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:51.525Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9f958-e-concurrent-login-attempts-chromium/test-failed-4.png"
+                            },
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9f958-e-concurrent-login-attempts-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9f958-e-concurrent-login-attempts-chromium/test-failed-2.png"
+                            },
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9f958-e-concurrent-login-attempts-chromium/test-failed-3.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9f958-e-concurrent-login-attempts-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--9f958-e-concurrent-login-attempts-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 29,
+                            "line": 53
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-fa58abda89d988bc6429",
+                  "file": "auth.spec.ts",
+                  "line": 232,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Accessibility Tests",
+              "file": "auth.spec.ts",
+              "line": 259,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should have proper ARIA labels and form structure",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 20,
+                          "parallelIndex": 3,
+                          "status": "failed",
+                          "duration": 5452,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('[data-testid=\"username-input\"]')\nExpected string: \u001b[32m\"電子郵件\"\u001b[39m\nReceived string: \u001b[31m\"\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"username-input\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input value=\"\" type=\"text\" placeholder=\"用戶名\" id=\"login_username\" aria-required=\"true\" autocomplete=\"username\" data-testid=\"username-input\" class=\"ant-input ant-input-lg css-dev-only-do-not-override-1vkfdow\"/>\u001b[22m\n\u001b[2m      - unexpected value \"null\"\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('[data-testid=\"username-input\"]')\nExpected string: \u001b[32m\"電子郵件\"\u001b[39m\nReceived string: \u001b[31m\"\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"username-input\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input value=\"\" type=\"text\" placeholder=\"用戶名\" id=\"login_username\" aria-required=\"true\" autocomplete=\"username\" data-testid=\"username-input\" class=\"ant-input ant-input-lg css-dev-only-do-not-override-1vkfdow\"/>\u001b[22m\n\u001b[2m      - unexpected value \"null\"\u001b[22m\n\n    at LoginPage.checkAccessibility (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:159:54)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:261:23",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 54,
+                              "line": 159
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:159\n\n  157 |   async checkAccessibility() {\n  158 |     // Check for proper ARIA labels\n> 159 |     await expect(this.page.locator(this.emailInput)).toHaveAttribute('aria-label', '電子郵件');\n      |                                                      ^\n  160 |     await expect(this.page.locator(this.passwordInput)).toHaveAttribute('aria-label', '密碼');\n  161 |     await expect(this.page.locator(this.loginButton)).toHaveAttribute('aria-label', '登入系統');\n  162 |     "
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 54,
+                                "line": 159
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveAttribute\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nLocator: locator('[data-testid=\"username-input\"]')\nExpected string: \u001b[32m\"電子郵件\"\u001b[39m\nReceived string: \u001b[31m\"\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveAttribute\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('[data-testid=\"username-input\"]')\u001b[22m\n\u001b[2m    9 × locator resolved to <input value=\"\" type=\"text\" placeholder=\"用戶名\" id=\"login_username\" aria-required=\"true\" autocomplete=\"username\" data-testid=\"username-input\" class=\"ant-input ant-input-lg css-dev-only-do-not-override-1vkfdow\"/>\u001b[22m\n\u001b[2m      - unexpected value \"null\"\u001b[22m\n\n\n   at ../pages/LoginPage.ts:159\n\n  157 |   async checkAccessibility() {\n  158 |     // Check for proper ARIA labels\n> 159 |     await expect(this.page.locator(this.emailInput)).toHaveAttribute('aria-label', '電子郵件');\n      |                                                      ^\n  160 |     await expect(this.page.locator(this.passwordInput)).toHaveAttribute('aria-label', '密碼');\n  161 |     await expect(this.page.locator(this.loginButton)).toHaveAttribute('aria-label', '登入系統');\n  162 |     \n    at LoginPage.checkAccessibility (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:159:54)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:261:23"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:21:57.842Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--c510b-A-labels-and-form-structure-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--c510b-A-labels-and-form-structure-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--c510b-A-labels-and-form-structure-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 54,
+                            "line": 159
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-b3164b0497665283ad07",
+                  "file": "auth.spec.ts",
+                  "line": 260,
+                  "column": 9
+                },
+                {
+                  "title": "should be navigable with keyboard only",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 21,
+                          "parallelIndex": 1,
+                          "status": "failed",
+                          "duration": 5680,
+                          "error": {
+                            "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/forgot-password\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    - waiting for\" http://localhost:5174/forgot-password\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://localhost:5174/forgot-password\"\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/forgot-password\"\u001b[22m\n",
+                            "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/forgot-password\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    - waiting for\" http://localhost:5174/forgot-password\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://localhost:5174/forgot-password\"\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/forgot-password\"\u001b[22m\n\n    at LoginPage.expectLoginSuccess (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:53:29)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:276:23",
+                            "location": {
+                              "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                              "column": 29,
+                              "line": 53
+                            },
+                            "snippet": "\u001b[90m   at \u001b[39m../pages/LoginPage.ts:53\n\n  51 |   async expectLoginSuccess() {\n  52 |     // Should redirect to dashboard\n> 53 |     await expect(this.page).toHaveURL(/\\/dashboard|\\/home/);\n     |                             ^\n  54 |     \n  55 |     // Check for JWT token\n  56 |     const token = await this.page.evaluate(() => localStorage.getItem('access_token'));"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                                "column": 29,
+                                "line": 53
+                              },
+                              "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: \u001b[32m/\\/dashboard|\\/home/\u001b[39m\nReceived string:  \u001b[31m\"http://localhost:5174/forgot-password\"\u001b[39m\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    - waiting for\" http://localhost:5174/forgot-password\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://localhost:5174/forgot-password\"\u001b[22m\n\u001b[2m    9 × unexpected value \"http://localhost:5174/forgot-password\"\u001b[22m\n\n\n   at ../pages/LoginPage.ts:53\n\n  51 |   async expectLoginSuccess() {\n  52 |     // Should redirect to dashboard\n> 53 |     await expect(this.page).toHaveURL(/\\/dashboard|\\/home/);\n     |                             ^\n  54 |     \n  55 |     // Check for JWT token\n  56 |     const token = await this.page.evaluate(() => localStorage.getItem('access_token'));\n    at LoginPage.expectLoginSuccess (/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts:53:29)\n    at /Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/specs/auth.spec.ts:276:23"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-07-24T03:22:02.553Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--7b2cb-avigable-with-keyboard-only-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "video",
+                              "contentType": "video/webm",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--7b2cb-avigable-with-keyboard-only-chromium/video.webm"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/test-results/auth-Authentication-Tests--7b2cb-avigable-with-keyboard-only-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/lgee258/Desktop/LuckyGas-v3/tests/e2e/pages/LoginPage.ts",
+                            "column": 29,
+                            "line": 53
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "d748ac400d08b85935ef-96181d997ccdcf662de4",
+                  "file": "auth.spec.ts",
+                  "line": 264,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-07-24T03:21:06.801Z",
+    "duration": 75203.34700000001,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 22,
+    "flaky": 0
+  }
+}

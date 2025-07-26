@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 import time
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard
+from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard, test_utils, driver, communications, order_templates, invoices, payments, financial_reports
 from app.api.v1.socketio_handler import sio, socket_app
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
@@ -210,6 +210,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
+app.include_router(order_templates.router, prefix="/api/v1/order-templates", tags=["order_templates"])
 # Include both route routers - optimization and CRUD
 app.include_router(routes_crud.router, prefix="/api/v1/routes", tags=["routes"])
 app.include_router(routes.router, prefix="/api/v1/routes", tags=["route_optimization"])
@@ -217,7 +218,17 @@ app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["pred
 app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
 app.include_router(google_api_dashboard.router, prefix="/api/v1/google-api", tags=["google_api_dashboard"])
+app.include_router(driver.router, prefix="/api/v1/driver", tags=["driver"])
+app.include_router(communications.router, prefix="/api/v1/communications", tags=["communications"])
 app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocket"])
+app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(financial_reports.router, prefix="/api/v1/financial-reports", tags=["financial_reports"])
+
+# Include test utilities only in test/development environments
+import os
+if os.getenv("ENVIRONMENT") in ["test", "development"]:
+    app.include_router(test_utils.router, prefix="/api/v1/test", tags=["test_utilities"])
 
 
 @app.get("/")

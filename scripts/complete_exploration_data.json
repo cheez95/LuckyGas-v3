@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-07-25T09:49:48.981919",
+  "navigation_tree": {},
+  "leaf_nodes": [
+    {
+      "path": "s系統管理\\C000",
+      "name": "會員作業",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W000",
+      "name": "資料維護",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W100",
+      "name": "訂單銷售",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W300",
+      "name": "報表作業",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W500",
+      "name": "熱氣球作業",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W600",
+      "name": "幸福氣APP",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W700",
+      "name": "發票作業",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\W800",
+      "name": "帳務管理",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\Z100",
+      "name": "CSV匯出",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\Z200",
+      "name": "派遣作業",
+      "type": "leaf_page"
+    },
+    {
+      "path": "s系統管理\\Z300",
+      "name": "通報作業",
+      "type": "leaf_page"
+    }
+  ],
+  "unexplored_elements": [],
+  "statistics": {
+    "total_pages": 11,
+    "leaf_nodes": 11,
+    "main_sections": 0
+  }
+}

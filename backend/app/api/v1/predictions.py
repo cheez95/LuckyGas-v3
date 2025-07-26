@@ -14,7 +14,7 @@ from app.schemas.prediction import (
     BatchPredictionResponse,
     PredictionMetrics
 )
-from app.services.vertex_ai_service import vertex_ai_service
+from app.services.vertex_ai_service import get_vertex_ai_service
 from app.core.decorators import rate_limit
 
 router = APIRouter()
@@ -66,6 +66,7 @@ async def predict_daily_demand(
             ]
         
         # Make predictions
+        vertex_ai_service = get_vertex_ai_service()
         predictions = await vertex_ai_service.predict_daily_demand(
             customer_data,
             request.prediction_date
@@ -112,6 +113,9 @@ async def predict_weekly_demand(
             }
             for i in range(1, 101)
         ]
+        
+        # Get Vertex AI service
+        vertex_ai_service = get_vertex_ai_service()
         
         weekly_predictions = {}
         
@@ -178,6 +182,7 @@ async def predict_customer_churn(
         # Make predictions
         churn_predictions = []
         for customer in customers:
+            vertex_ai_service = get_vertex_ai_service()
             prediction = await vertex_ai_service.predict_customer_churn(customer)
             churn_predictions.append(prediction)
         
@@ -201,6 +206,7 @@ async def create_batch_prediction(
     """
     try:
         # Create batch prediction job
+        vertex_ai_service = get_vertex_ai_service()
         job_id = await vertex_ai_service.batch_predict(
             input_uri=request.input_gcs_path,
             output_uri=request.output_gcs_path,
@@ -270,6 +276,7 @@ async def train_demand_model(
     
     try:
         # Prepare training data
+        vertex_ai_service = get_vertex_ai_service()
         training_data = await vertex_ai_service.prepare_historical_data_for_training()
         
         # Upload to GCS

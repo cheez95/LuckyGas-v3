@@ -1,334 +1,354 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Badge, List, Avatar, Typography, Space, Progress, Statistic } from 'antd';
-import {
-  EnvironmentOutlined,
+import { Card, Button, Badge, Space, Statistic, Row, Col, List, Avatar, Tag, Drawer } from 'antd';
+import { 
+  CarOutlined, 
+  CheckCircleOutlined, 
   ClockCircleOutlined,
-  CheckCircleOutlined,
-  CarOutlined,
+  EnvironmentOutlined,
   PhoneOutlined,
-  QrcodeOutlined,
+  MenuOutlined,
+  SyncOutlined,
+  WifiOutlined,
+  DisconnectOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
+import GPSTracker from './components/GPSTracker';
+import { Position } from '../../services/gps.service';
+import './DriverDashboard.css';
 
-const { Title, Text } = Typography;
-
-interface RouteStop {
+interface Route {
   id: string;
-  sequence: number;
-  customer_name: string;
-  address: string;
-  phone: string;
-  cylinder_count: number;
-  cylinder_type: string;
-  status: 'pending' | 'arrived' | 'delivered';
-  estimated_arrival: string;
-  notes?: string;
+  name: string;
+  deliveryCount: number;
+  completedCount: number;
+  estimatedTime: string;
+  distance: number;
+  status: 'pending' | 'in_progress' | 'completed';
 }
 
-interface ActiveRoute {
-  id: string;
-  date: string;
-  status: 'assigned' | 'in_progress' | 'completed';
-  total_stops: number;
-  completed_stops: number;
-  total_distance: number;
-  estimated_duration: number;
-  stops: RouteStop[];
+interface DeliveryStats {
+  total: number;
+  completed: number;
+  pending: number;
+  failed: number;
 }
 
 const DriverDashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { lastMessage, sendMessage } = useWebSocketContext();
-  const [activeRoute, setActiveRoute] = useState<ActiveRoute | null>(null);
-  const [currentStop, setCurrentStop] = useState<RouteStop | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [stats, setStats] = useState<DeliveryStats>({
+    total: 0,
+    completed: 0,
+    pending: 0,
+    failed: 0
+  });
+  const [loading, setLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
+  const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
 
   useEffect(() => {
-    // Load active route
-    loadActiveRoute();
+    fetchTodayRoutes();
+    fetchDeliveryStats();
     
-    // Start location tracking
-    if ('geolocation' in navigator) {
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          sendMessage({
-            type: 'driver.location',
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            speed: position.coords.speed || 0,
-            heading: position.coords.heading || 0,
-          });
-        },
-        (error) => {
-          console.error('Location error:', error);
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 0,
-          timeout: 5000,
-        }
-      );
+    // Monitor online status
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
-      return () => {
-        navigator.geolocation.clearWatch(watchId);
-      };
+  const fetchTodayRoutes = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/driver/routes/today');
+      setRoutes(response.data);
+    } catch (error) {
+      console.error('Failed to fetch routes:', error);
+      // Load from local storage if offline
+      const cachedRoutes = localStorage.getItem('driver_routes_cache');
+      if (cachedRoutes) {
+        setRoutes(JSON.parse(cachedRoutes));
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [sendMessage]);
+  };
 
-  useEffect(() => {
-    // Handle WebSocket messages
-    if (lastMessage) {
-      switch (lastMessage.type) {
-        case 'route.assigned':
-          loadActiveRoute();
-          break;
-        case 'route.updated':
-          if (lastMessage.route_id === activeRoute?.id) {
-            loadActiveRoute();
-          }
-          break;
+  const fetchDeliveryStats = async () => {
+    try {
+      const response = await api.get('/driver/stats/today');
+      setStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  const handleStartRoute = (routeId: string) => {
+    navigate(`/driver/route/${routeId}`);
+  };
+
+  const handleSync = async () => {
+    setSyncStatus('syncing');
+    try {
+      // Sync offline data
+      await api.post('/driver/sync');
+      setSyncStatus('idle');
+      fetchTodayRoutes();
+      fetchDeliveryStats();
+    } catch (error) {
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    }
+  };
+
+  const handlePositionUpdate = async (position: Position) => {
+    setCurrentPosition(position);
+    
+    // Send position to backend if online
+    if (isOnline) {
+      try {
+        await api.post('/driver/location', {
+          latitude: position.latitude,
+          longitude: position.longitude,
+          accuracy: position.accuracy,
+          timestamp: position.timestamp,
+          speed: position.speed,
+          heading: position.heading
+        });
+      } catch (error) {
+        console.error('Failed to update location:', error);
+        // Store in local storage for later sync
+        const storedPositions = JSON.parse(localStorage.getItem('pendingPositions') || '[]');
+        storedPositions.push(position);
+        localStorage.setItem('pendingPositions', JSON.stringify(storedPositions));
       }
     }
-  }, [lastMessage, activeRoute]);
-
-  const loadActiveRoute = async () => {
-    // TODO: Fetch from API
-    const mockRoute: ActiveRoute = {
-      id: 'R-20250722-01',
-      date: new Date().toISOString().split('T')[0],
-      status: 'in_progress',
-      total_stops: 15,
-      completed_stops: 5,
-      total_distance: 45.8,
-      estimated_duration: 240,
-      stops: [
-        {
-          id: 'S001',
-          sequence: 1,
-          customer_name: '王小明',
-          address: '台北市大安區和平東路一段129號',
-          phone: '0912-345-678',
-          cylinder_count: 2,
-          cylinder_type: '20kg',
-          status: 'delivered',
-          estimated_arrival: '09:00',
-        },
-        {
-          id: 'S002',
-          sequence: 2,
-          customer_name: '李美華',
-          address: '台北市大安區信義路四段265號',
-          phone: '0923-456-789',
-          cylinder_count: 1,
-          cylinder_type: '16kg',
-          status: 'arrived',
-          estimated_arrival: '09:30',
-          notes: '請按門鈴，狗會叫但不咬人',
-        },
-        {
-          id: 'S003',
-          sequence: 3,
-          customer_name: '張大同',
-          address: '台北市大安區忠孝東路四段181號',
-          phone: '0934-567-890',
-          cylinder_count: 3,
-          cylinder_type: '20kg',
-          status: 'pending',
-          estimated_arrival: '10:00',
-        },
-      ],
-    };
-    
-    setActiveRoute(mockRoute);
-    setCurrentStop(mockRoute.stops.find(s => s.status === 'arrived') || mockRoute.stops.find(s => s.status === 'pending') || null);
   };
 
-  const handleStartRoute = () => {
-    sendMessage({
-      type: 'route.started',
-      route_id: activeRoute?.id,
-    });
-    navigate('/driver/navigation');
+  const getRouteStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'green';
+      case 'in_progress': return 'blue';
+      default: return 'default';
+    }
   };
-
-  const handleScanDelivery = () => {
-    navigate('/driver/scan');
-  };
-
-  const handleCallCustomer = (phone: string) => {
-    window.location.href = `tel:${phone}`;
-  };
-
-  const handleNavigateToStop = (stop: RouteStop) => {
-    navigate('/driver/navigation', { state: { stop } });
-  };
-
-  const completionRate = activeRoute 
-    ? Math.round((activeRoute.completed_stops / activeRoute.total_stops) * 100)
-    : 0;
 
   return (
-    <div style={{ padding: '16px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-      {/* Header Status */}
-      <Card size="small" style={{ marginBottom: 16 }}>
-        <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
-          <Space>
-            <Avatar style={{ backgroundColor: '#1890ff' }}>
-              {user?.name?.charAt(0) || 'D'}
-            </Avatar>
-            <div>
-              <Text strong>{user?.name || '司機'}</Text>
-              <br />
-              <Badge status={isOnline ? 'success' : 'default'} text={isOnline ? '上線' : '離線'} />
-            </div>
-          </Space>
+    <div className="driver-dashboard">
+      {/* Mobile Header */}
+      <div className="driver-mobile-header" data-testid="driver-mobile-header">
+        <div className="header-content">
           <Button 
-            type={isOnline ? 'default' : 'primary'}
-            onClick={() => setIsOnline(!isOnline)}
-          >
-            {isOnline ? '結束上線' : '開始上線'}
-          </Button>
-        </Space>
+            icon={<MenuOutlined />} 
+            type="text"
+            onClick={() => setDrawerVisible(true)}
+            className="menu-button"
+          />
+          <h2>{t('driver.dashboard.title')}</h2>
+          <Space>
+            {isOnline ? (
+              <WifiOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
+            ) : (
+              <DisconnectOutlined style={{ color: '#ff4d4f', fontSize: '18px' }} />
+            )}
+            {syncStatus === 'syncing' && (
+              <SyncOutlined spin style={{ fontSize: '18px' }} />
+            )}
+          </Space>
+        </div>
+        {!isOnline && (
+          <div className="offline-mode-banner" data-testid="offline-mode-banner">
+            {t('driver.offline.message')}
+          </div>
+        )}
+      </div>
+
+      {/* Delivery Summary */}
+      <Card className="delivery-summary-card" data-testid="delivery-summary">
+        <Row gutter={[16, 16]}>
+          <Col span={6}>
+            <Statistic
+              title={t('driver.stats.total')}
+              value={stats.total}
+              prefix={<CarOutlined />}
+              data-testid="total-deliveries"
+            />
+          </Col>
+          <Col span={6}>
+            <Statistic
+              title={t('driver.stats.completed')}
+              value={stats.completed}
+              valueStyle={{ color: '#3f8600' }}
+              prefix={<CheckCircleOutlined />}
+              data-testid="completed-deliveries"
+            />
+          </Col>
+          <Col span={6}>
+            <Statistic
+              title={t('driver.stats.pending')}
+              value={stats.pending}
+              valueStyle={{ color: '#1890ff' }}
+              prefix={<ClockCircleOutlined />}
+              data-testid="pending-deliveries"
+            />
+          </Col>
+          <Col span={6}>
+            <Button
+              type="primary"
+              block
+              size="large"
+              onClick={handleSync}
+              loading={syncStatus === 'syncing'}
+              style={{ marginTop: 8 }}
+            >
+              {t('driver.sync')}
+            </Button>
+          </Col>
+        </Row>
       </Card>
 
-      {/* Today's Route Summary */}
-      {activeRoute && (
-        <Card 
-          title={<Space><CarOutlined /> 今日路線</Space>}
-          extra={
-            <Button type="primary" onClick={handleStartRoute}>
-              開始配送
-            </Button>
-          }
-          style={{ marginBottom: 16 }}
-        >
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Progress percent={completionRate} status="active" />
-            <Space wrap>
-              <Statistic 
-                title="總站點" 
-                value={activeRoute.total_stops} 
-                suffix="站" 
-              />
-              <Statistic 
-                title="已完成" 
-                value={activeRoute.completed_stops} 
-                suffix="站" 
-              />
-              <Statistic 
-                title="總距離" 
-                value={activeRoute.total_distance} 
-                suffix="公里" 
-                precision={1}
-              />
-              <Statistic 
-                title="預計時間" 
-                value={Math.round(activeRoute.estimated_duration / 60)} 
-                suffix="小時" 
-                precision={1}
-              />
-            </Space>
-          </Space>
-        </Card>
-      )}
+      {/* GPS Tracking */}
+      <Card className="gps-tracker-card" style={{ marginBottom: 16 }}>
+        <GPSTracker 
+          onPositionUpdate={handlePositionUpdate}
+          autoStart={false}
+          showDetails={true}
+        />
+      </Card>
 
-      {/* Current Stop */}
-      {currentStop && (
-        <Card 
-          title={<Space><EnvironmentOutlined /> 當前配送點</Space>}
-          style={{ marginBottom: 16 }}
-          actions={[
-            <Button 
-              type="primary" 
-              icon={<EnvironmentOutlined />}
-              onClick={() => handleNavigateToStop(currentStop)}
+      {/* Today's Routes */}
+      <Card 
+        title={t('driver.routes.today')}
+        className="routes-card"
+        data-testid="today-routes"
+      >
+        <List
+          loading={loading}
+          dataSource={routes}
+          renderItem={(route) => (
+            <List.Item
+              className="route-item"
+              data-testid="route-item"
+              onClick={() => handleStartRoute(route.id)}
             >
-              導航
-            </Button>,
-            <Button 
-              icon={<QrcodeOutlined />}
-              onClick={handleScanDelivery}
-            >
-              掃描確認
-            </Button>,
-            <Button 
-              icon={<PhoneOutlined />}
-              onClick={() => handleCallCustomer(currentStop.phone)}
-            >
-              聯絡客戶
-            </Button>,
-          ]}
-        >
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Title level={5}>{currentStop.customer_name}</Title>
-            <Text>{currentStop.address}</Text>
-            <Space>
-              <Text type="secondary">
-                <ClockCircleOutlined /> 預計 {currentStop.estimated_arrival}
-              </Text>
-              <Text strong>
-                {currentStop.cylinder_count} x {currentStop.cylinder_type}
-              </Text>
-            </Space>
-            {currentStop.notes && (
-              <Text type="warning">備註：{currentStop.notes}</Text>
-            )}
-          </Space>
-        </Card>
-      )}
-
-      {/* Route Stops List */}
-      {activeRoute && (
-        <Card title="配送站點列表">
-          <List
-            dataSource={activeRoute.stops}
-            renderItem={(stop) => (
-              <List.Item
-                onClick={() => stop.status === 'pending' && handleNavigateToStop(stop)}
-                style={{ 
-                  cursor: stop.status === 'pending' ? 'pointer' : 'default',
-                  opacity: stop.status === 'delivered' ? 0.6 : 1,
-                }}
-              >
-                <List.Item.Meta
-                  avatar={
-                    <Badge count={stop.sequence}>
-                      <Avatar 
-                        icon={stop.status === 'delivered' ? <CheckCircleOutlined /> : <EnvironmentOutlined />}
-                        style={{ 
-                          backgroundColor: stop.status === 'delivered' ? '#52c41a' : 
-                                         stop.status === 'arrived' ? '#faad14' : '#1890ff' 
-                        }}
-                      />
-                    </Badge>
-                  }
-                  title={
+              <List.Item.Meta
+                avatar={
+                  <Avatar
+                    size="large"
+                    style={{ backgroundColor: '#1890ff' }}
+                  >
+                    {route.name.charAt(0)}
+                  </Avatar>
+                }
+                title={
+                  <Space>
+                    <span data-testid="route-name">{route.name}</span>
+                    <Tag color={getRouteStatusColor(route.status)}>
+                      {t(`driver.routes.status.${route.status}`)}
+                    </Tag>
+                  </Space>
+                }
+                description={
+                  <Space direction="vertical" size={0}>
+                    <span data-testid="delivery-count">
+                      {t('driver.routes.deliveries', { 
+                        completed: route.completedCount, 
+                        total: route.deliveryCount 
+                      })}
+                    </span>
                     <Space>
-                      <Text strong>{stop.customer_name}</Text>
-                      <Text type="secondary">
-                        {stop.cylinder_count} x {stop.cylinder_type}
-                      </Text>
+                      <ClockCircleOutlined />
+                      <span data-testid="estimated-time">{route.estimatedTime}</span>
+                      <EnvironmentOutlined />
+                      <span>{route.distance} km</span>
                     </Space>
-                  }
-                  description={
-                    <Space direction="vertical" size={0}>
-                      <Text>{stop.address}</Text>
-                      <Text type="secondary">
-                        <ClockCircleOutlined /> {stop.estimated_arrival}
-                      </Text>
-                    </Space>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        </Card>
-      )}
+                  </Space>
+                }
+              />
+              <Button
+                type="primary"
+                size="large"
+                className="start-route-button"
+                data-testid="start-route-button"
+                disabled={route.status === 'completed'}
+              >
+                {route.status === 'in_progress' 
+                  ? t('driver.routes.continue') 
+                  : t('driver.routes.start')
+                }
+              </Button>
+            </List.Item>
+          )}
+        />
+      </Card>
+
+      {/* Side Drawer Menu */}
+      <Drawer
+        title={t('driver.menu.title')}
+        placement="left"
+        onClose={() => setDrawerVisible(false)}
+        open={drawerVisible}
+        width={280}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Button 
+            block 
+            size="large"
+            icon={<CarOutlined />}
+            onClick={() => {
+              setDrawerVisible(false);
+              navigate('/driver/routes/completed');
+            }}
+          >
+            {t('driver.menu.completedRoutes')}
+          </Button>
+          <Button 
+            block 
+            size="large"
+            icon={<PhoneOutlined />}
+            onClick={() => {
+              setDrawerVisible(false);
+              navigate('/driver/communication');
+            }}
+            data-testid="office-chat-button"
+          >
+            {t('driver.menu.contactOffice')}
+          </Button>
+          <Button 
+            block 
+            size="large"
+            onClick={() => {
+              setDrawerVisible(false);
+              navigate('/driver/cylinder-return');
+            }}
+          >
+            {t('driver.menu.cylinderReturn')}
+          </Button>
+          <Button 
+            block 
+            size="large"
+            danger
+            onClick={() => {
+              // Clock out logic
+              navigate('/driver/clock-out');
+            }}
+            data-testid="clock-out-button"
+          >
+            {t('driver.menu.clockOut')}
+          </Button>
+        </Space>
+      </Drawer>
     </div>
   );
 };

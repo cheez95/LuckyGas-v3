@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Space, Select, DatePicker, Row, Col, List, Tag, Statistic, message, Spin, Badge, Tooltip, Modal, Form, Input, Drawer, Timeline, Transfer, Progress } from 'antd';
 import { EnvironmentOutlined, CarOutlined, ClockCircleOutlined, UserOutlined, ReloadOutlined, SendOutlined, DragOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { api } from '../../services/api';
+import api from '../../services/api';
 import dayjs from 'dayjs';
+import GoogleMapsPlaceholder, { MapMarker } from '../../components/common/GoogleMapsPlaceholder';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 
 interface Driver {
   id: string;
@@ -65,6 +68,12 @@ const RoutePlanning: React.FC = () => {
   const [isAssignDriverModalVisible, setIsAssignDriverModalVisible] = useState(false);
   const [isRouteDetailDrawerVisible, setIsRouteDetailDrawerVisible] = useState(false);
   const [form] = Form.useForm();
+  
+  // Real-time driver locations
+  const [driverLocations, setDriverLocations] = useState<Map<string, { latitude: number; longitude: number }>>(new Map());
+  
+  // WebSocket context
+  const { subscribeToDriverLocation, unsubscribeFromDriverLocation } = useWebSocketContext();
 
   // Statistics
   const [stats, setStats] = useState({
@@ -73,11 +82,63 @@ const RoutePlanning: React.FC = () => {
     totalDistance: 0,
     averageStopsPerRoute: 0,
   });
+  
+  // Real-time WebSocket updates
+  useRealtimeUpdates({
+    onDriverLocation: (location) => {
+      // Update driver location in the map
+      setDriverLocations(prev => {
+        const newLocations = new Map(prev);
+        newLocations.set(location.driver_id, {
+          latitude: location.latitude,
+          longitude: location.longitude
+        });
+        return newLocations;
+      });
+      
+      // Update driver status in drivers list
+      setDrivers(prevDrivers => 
+        prevDrivers.map(driver => 
+          driver.id === location.driver_id 
+            ? { ...driver, currentLocation: { latitude: location.latitude, longitude: location.longitude } }
+            : driver
+        )
+      );
+    },
+    onRouteUpdate: (updatedRoute) => {
+      setRoutes(prevRoutes => {
+        const index = prevRoutes.findIndex(r => r.id === updatedRoute.id);
+        if (index >= 0) {
+          const newRoutes = [...prevRoutes];
+          newRoutes[index] = { ...newRoutes[index], ...updatedRoute };
+          return newRoutes;
+        }
+        return prevRoutes;
+      });
+    },
+    enableNotifications: true,
+  });
 
   useEffect(() => {
     fetchData();
-    initializeMap();
   }, [selectedDate]);
+  
+  // Subscribe to driver locations when drivers are loaded
+  useEffect(() => {
+    // Subscribe to all active drivers
+    const activeDrivers = drivers.filter(d => d.status !== 'offline');
+    
+    activeDrivers.forEach(driver => {
+      subscribeToDriverLocation(driver.id);
+    });
+    
+    // Cleanup: unsubscribe when component unmounts or drivers change
+    return () => {
+      activeDrivers.forEach(driver => {
+        unsubscribeFromDriverLocation(driver.id);
+      });
+    };
+  }, [drivers, subscribeToDriverLocation, unsubscribeFromDriverLocation]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -112,21 +173,57 @@ const RoutePlanning: React.FC = () => {
     });
   };
 
-  const initializeMap = () => {
-    // Initialize Google Maps
-    if (window.google && mapRef.current) {
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 25.0330, lng: 121.5654 }, // Taipei
-        zoom: 12,
-      });
-      
-      // Add markers for stops
-      routes.forEach(route => {
-        route.stops.forEach(stop => {
-          // Add markers for each stop
+  // Prepare map markers from drivers and route stops
+  const prepareMapMarkers = (): MapMarker[] => {
+    const markers: MapMarker[] = [];
+    
+    // Add driver markers
+    drivers.forEach(driver => {
+      if (driver.currentLocation) {
+        markers.push({
+          id: `driver-${driver.id}`,
+          position: { 
+            lat: driver.currentLocation.latitude, 
+            lng: driver.currentLocation.longitude 
+          },
+          title: driver.name,
+          type: 'driver',
+          info: `${driver.vehicleNumber} - ${t(`drivers.status.${driver.status}`)}`
+        });
+      }
+    });
+    
+    // Add route stop markers for selected route
+    if (selectedRoute) {
+      selectedRoute.stops.forEach(stop => {
+        // For demo purposes, generate random coordinates near Taipei
+        const baseLat = 25.0330;
+        const baseLng = 121.5654;
+        const offset = 0.05;
+        
+        markers.push({
+          id: `stop-${stop.id}`,
+          position: {
+            lat: baseLat + (Math.random() - 0.5) * offset,
+            lng: baseLng + (Math.random() - 0.5) * offset
+          },
+          title: stop.customerName,
+          type: 'customer',
+          info: `${stop.address} - ${stop.cylinderType} x${stop.quantity}`
         });
       });
     }
+    
+    // Add depot marker
+    markers.push({
+      id: 'depot-main',
+      position: { lat: 25.0330, lng: 121.5654 },
+      title: '幸福氣體總部',
+      type: 'depot',
+      info: 'Lucky Gas Headquarters'
+    });
+    
+    return markers;
   };
 
   const handleOptimizeRoutes = async () => {
@@ -464,13 +561,29 @@ const RoutePlanning: React.FC = () => {
           </Col>
 
           <Col span={6}>
-            <Card title={t('routes.availableDrivers')}>
+            <Card title={
+              <Space>
+                {t('routes.availableDrivers')}
+                <Badge 
+                  status="processing" 
+                  text={`${driverLocations.size} 追蹤中`}
+                  style={{ fontSize: 12 }}
+                />
+              </Space>
+            }>
               <List
                 dataSource={drivers}
                 renderItem={(driver) => (
                   <List.Item>
                     <List.Item.Meta
-                      avatar={<UserOutlined />}
+                      avatar={
+                        <Badge 
+                          dot={!!driver.currentLocation} 
+                          status={driver.currentLocation ? "success" : "default"}
+                        >
+                          <UserOutlined />
+                        </Badge>
+                      }
                       title={driver.name}
                       description={
                         <Space direction="vertical" size={0}>
@@ -478,6 +591,11 @@ const RoutePlanning: React.FC = () => {
                           <Tag color={getDriverStatusColor(driver.status)}>
                             {t(`drivers.status.${driver.status}`)}
                           </Tag>
+                          {driver.currentLocation && (
+                            <span style={{ fontSize: 12, color: '#52c41a' }}>
+                              <EnvironmentOutlined /> 定位中
+                            </span>
+                          )}
                         </Space>
                       }
                     />
@@ -493,8 +611,21 @@ const RoutePlanning: React.FC = () => {
               />
             </Card>
 
-            <Card title={t('routes.map')} style={{ marginTop: 16, height: 400 }}>
-              <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+            <Card title={t('routes.map')} style={{ marginTop: 16 }}>
+              <GoogleMapsPlaceholder
+                center={{ lat: 25.0330, lng: 121.5654 }}
+                zoom={13}
+                markers={prepareMapMarkers()}
+                height={350}
+                showControls={true}
+                onMarkerClick={(marker) => {
+                  if (marker.type === 'driver') {
+                    message.info(`司機位置: ${marker.title}`);
+                  } else if (marker.type === 'customer') {
+                    message.info(`客戶: ${marker.title}`);
+                  }
+                }}
+              />
             </Card>
           </Col>
         </Row>

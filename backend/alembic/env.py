@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -24,6 +25,10 @@ from app.core.database import Base
 from app.models import *  # Import all models
 
 target_metadata = Base.metadata
+
+# Get DATABASE_URL from environment if available
+if os.getenv("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

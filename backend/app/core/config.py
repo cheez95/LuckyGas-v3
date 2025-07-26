@@ -123,6 +123,18 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
     
+    # SMS Configuration
+    SMS_PROVIDER_URL: str = "https://api.twsms.com/send"  # Example Taiwan SMS provider
+    SMS_API_KEY: str = ""
+    SMS_SENDER_ID: str = "LuckyGas"
+    
+    # Email Configuration
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = "noreply@luckygas.com.tw"
+    
     # CORS - Updated configuration
     BACKEND_CORS_ORIGINS: List[str] = []
     

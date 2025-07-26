@@ -429,5 +429,28 @@ class VertexAIService:
         return pd.DataFrame(data)
 
 
-# Singleton instance
-vertex_ai_service = VertexAIService()
+# Singleton instance - lazy initialization
+_vertex_ai_service = None
+
+def get_vertex_ai_service():
+    """Get or create the singleton vertex AI service"""
+    global _vertex_ai_service
+    if _vertex_ai_service is None:
+        # Check if we're in development/testing mode
+        import os
+        if os.getenv("DEVELOPMENT_MODE", "false").lower() == "true" or os.getenv("TESTING", "false").lower() == "true":
+            # Return a mock service in development mode
+            from app.services.google_cloud.mock_vertex_ai_service import MockVertexAIDemandPredictionService
+            return MockVertexAIDemandPredictionService()
+        else:
+            try:
+                _vertex_ai_service = VertexAIService()
+            except Exception as e:
+                logger.warning(f"Failed to initialize Vertex AI service: {e}. Using mock service.")
+                from app.services.google_cloud.mock_vertex_ai_service import MockVertexAIDemandPredictionService
+                _vertex_ai_service = MockVertexAIDemandPredictionService()
+    return _vertex_ai_service
+
+# For backward compatibility - lazy initialization
+# Don't initialize at module level to avoid credential issues
+vertex_ai_service = None

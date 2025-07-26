@@ -23,6 +23,7 @@ from app.models.customer import Customer
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.gas_product import GasProduct
 from app.models.route import Route
+from app.models.order_template import OrderTemplate
 # Driver is a User with role='driver', not a separate model
 from app.core.security import get_password_hash, create_access_token
 from app.core.cache import get_redis_client
@@ -385,6 +386,39 @@ async def order_factory(db_session: AsyncSession):
 
 
 # Note: Driver factory removed as drivers are Users with role='driver', not a separate model
+
+
+@pytest_asyncio.fixture
+async def test_order_template(db_session: AsyncSession, test_customer: Customer, test_user: User) -> OrderTemplate:
+    """Create test order template"""
+    template = OrderTemplate(
+        template_name="測試模板",
+        template_code=f"TPL-{datetime.now().microsecond:06d}",
+        description="測試用訂單模板",
+        customer_id=test_customer.id,
+        products=[
+            {
+                "gas_product_id": 1,
+                "quantity": 2,
+                "unit_price": 800,
+                "discount_percentage": 0,
+                "is_exchange": True,
+                "empty_received": 2
+            }
+        ],
+        delivery_notes="請放置於後門",
+        priority="normal",
+        payment_method="cash",
+        is_recurring=False,
+        times_used=0,
+        is_active=True,
+        created_by=test_user.id,
+        updated_by=test_user.id
+    )
+    db_session.add(template)
+    await db_session.commit()
+    await db_session.refresh(template)
+    return template
 
 
 # Authenticated client fixtures

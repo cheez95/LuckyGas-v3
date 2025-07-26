@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Test Page</h1>
+    <div id="status">Disconnected</div>
+    <button onclick="sendTestMessage()">Send Test Message</button>
+    <div id="messages"></div>
+
+    <script>
+        // Get token from localStorage
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            document.getElementById('status').textContent = 'No token found - please login first';
+        } else {
+            // Connect to WebSocket
+            const ws = new WebSocket(`ws://localhost:5173/api/v1/websocket/ws?token=${encodeURIComponent(token)}`);
+            
+            ws.onopen = () => {
+                document.getElementById('status').textContent = 'Connected';
+                console.log('WebSocket connected');
+            };
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log('Received message:', message);
+                
+                const messagesDiv = document.getElementById('messages');
+                const messageEl = document.createElement('div');
+                messageEl.textContent = `${new Date().toLocaleTimeString()} - Type: ${message.type}, Data: ${JSON.stringify(message)}`;
+                messagesDiv.appendChild(messageEl);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('status').textContent = 'Error';
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+                document.getElementById('status').textContent = 'Disconnected';
+            };
+            
+            // Function to send test message
+            window.sendTestMessage = () => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    const testMessage = {
+                        type: 'test',
+                        data: 'Hello from test page',
+                        timestamp: new Date().toISOString()
+                    };
+                    ws.send(JSON.stringify(testMessage));
+                    console.log('Sent test message:', testMessage);
+                } else {
+                    alert('WebSocket is not connected');
+                }
+            };
+        }
+    </script>
+</body>
+</html>

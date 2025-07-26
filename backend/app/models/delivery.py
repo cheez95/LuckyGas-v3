@@ -11,7 +11,7 @@ class Delivery(Base):
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("orders.id"), unique=True, nullable=False)
     route_id = Column(Integer, ForeignKey("routes.id"))
-    driver_id = Column(Integer, ForeignKey("drivers.id"))
+    driver_id = Column(Integer, ForeignKey("users.id"))
     
     # Delivery tracking
     started_at = Column(DateTime(timezone=True))

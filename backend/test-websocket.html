@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test - Lucky Gas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .messages { 
+            height: 300px; 
+            overflow-y: auto; 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            margin: 10px 0;
+            background-color: #f8f9fa;
+        }
+        .message { margin: 5px 0; padding: 5px; background-color: white; border-radius: 3px; }
+        button { margin: 5px; padding: 10px 20px; }
+        input { padding: 5px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>Lucky Gas WebSocket 測試</h1>
+    
+    <div id="status" class="status disconnected">未連接</div>
+    
+    <div>
+        <input type="text" id="token" placeholder="輸入JWT Token">
+        <button onclick="connect()">連接</button>
+        <button onclick="disconnect()">斷開</button>
+    </div>
+    
+    <div>
+        <h3>發送測試訊息</h3>
+        <button onclick="sendEvent('order_created')">訂單建立</button>
+        <button onclick="sendEvent('delivery_update')">配送更新</button>
+        <button onclick="sendEvent('route_update')">路線更新</button>
+    </div>
+    
+    <h3>訊息紀錄</h3>
+    <div id="messages" class="messages"></div>
+    
+    <script>
+        let ws = null;
+        const messagesDiv = document.getElementById('messages');
+        const statusDiv = document.getElementById('status');
+        const tokenInput = document.getElementById('token');
+        
+        // Set default token
+        tokenInput.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInJvbGUiOiJvZmZpY2Vfc3RhZmYiLCJleHAiOjE3NTM1MzY5MTF9.lWnIPSbhQPivcAra6z7aH_3nlPXf8Otqo70AP2B1NZw';
+        
+        function connect() {
+            const token = tokenInput.value;
+            if (!token) {
+                alert('請輸入JWT Token');
+                return;
+            }
+            
+            const wsUrl = `ws://localhost:8001/api/v1/ws?token=${token}`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                updateStatus('已連接', true);
+                addMessage('系統', '成功連接到WebSocket伺服器');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    addMessage('伺服器', JSON.stringify(data, null, 2));
+                } catch (e) {
+                    addMessage('伺服器', event.data);
+                }
+            };
+            
+            ws.onerror = (error) => {
+                addMessage('錯誤', '連接錯誤');
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = () => {
+                updateStatus('已斷開', false);
+                addMessage('系統', 'WebSocket連接已關閉');
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function sendEvent(eventType) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('請先連接WebSocket');
+                return;
+            }
+            
+            let message = {};
+            
+            switch(eventType) {
+                case 'order_created':
+                    message = {
+                        type: 'order_created',
+                        data: {
+                            order_id: 1,
+                            customer_name: '測試客戶',
+                            total_amount: 5000
+                        }
+                    };
+                    break;
+                case 'delivery_update':
+                    message = {
+                        type: 'delivery_update',
+                        data: {
+                            order_id: 1,
+                            status: 'completed',
+                            driver_name: '司機一號'
+                        }
+                    };
+                    break;
+                case 'route_update':
+                    message = {
+                        type: 'route_update',
+                        data: {
+                            route_id: 1,
+                            completed_stops: 5,
+                            total_stops: 10
+                        }
+                    };
+                    break;
+            }
+            
+            ws.send(JSON.stringify(message));
+            addMessage('客戶端', JSON.stringify(message, null, 2));
+        }
+        
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            const time = new Date().toLocaleTimeString('zh-TW');
+            messageDiv.innerHTML = `<strong>[${time}] ${sender}:</strong><br><pre>${content}</pre>`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function updateStatus(text, connected) {
+            statusDiv.textContent = `狀態: ${text}`;
+            statusDiv.className = `status ${connected ? 'connected' : 'disconnected'}`;
+        }
+    </script>
+</body>
+</html>

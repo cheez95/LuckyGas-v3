@@ -14,6 +14,7 @@ from app.schemas.order import OrderCreate, OrderUpdate, OrderCreateV2
 from app.core.metrics import orders_created_counter, background_tasks_counter
 from app.api.v1.socketio_handler import notify_order_update, notify_driver_assigned
 from app.services.google_cloud.routes_service import google_routes_service
+from app.services.credit_service import CreditService
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +30,21 @@ class OrderService:
         self.order_repo = OrderRepository(session)
         self.customer_repo = CustomerRepository(session)
     
-    async def create_order(self, order_data: OrderCreate, created_by: int) -> Order:
+    async def create_order(
+        self, 
+        order_data: OrderCreate, 
+        created_by: int,
+        skip_credit_check: bool = False,
+        created_by_role: Optional[str] = None
+    ) -> Order:
         """
-        Create new order with validation and pricing
+        Create new order with validation, credit checking, and pricing
         
         Args:
             order_data: Order creation data
             created_by: User ID creating the order
+            skip_credit_check: Skip credit check (for manager override)
+            created_by_role: Role of user creating order
             
         Returns:
             Created order
@@ -52,6 +61,19 @@ class OrderService:
         
         # Calculate pricing
         pricing = self._calculate_order_pricing(order_data)
+        
+        # Check credit limit
+        credit_result = await CreditService.check_credit_limit(
+            db=self.session,
+            customer_id=order_data.customer_id,
+            order_amount=pricing["final_amount"],
+            skip_check=skip_credit_check or created_by_role == "super_admin"
+        )
+        
+        if not credit_result["approved"]:
+            raise ValueError(f"信用額度檢查失敗: {credit_result['reason']}. " +
+                           f"可用額度: NT${credit_result['details'].get('available_credit', 0):,.0f}, " +
+                           f"訂單金額: NT${credit_result['details'].get('requested_amount', 0):,.0f}")
         
         # Generate order number
         order_number = self._generate_order_number()

@@ -1,0 +1,430 @@
+# Order Data Model - Lucky Gas Legacy System
+
+Order:
+  table_name: "ORDER_MASTER"
+  chinese_name: "訂單主檔"
+  description: "Main order table containing order header information"
+  fields:
+    - name: "ORDER_ID"
+      type: "varchar(20)"
+      required: true
+      primary_key: true
+      description: "Unique order identifier"
+      format: "O-YYYYMMDD-NNNNNN"
+      example: "O-20240125-000001"
+      
+    - name: "CUSTOMER_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "CUST_CUSTOMER.CUSTOMER_ID"
+      description: "Customer identifier"
+      format: "C000001"
+      
+    - name: "ORDER_DATE"
+      type: "datetime"
+      required: true
+      description: "Order creation date and time"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "DELIVERY_DATE"
+      type: "date"
+      required: true
+      description: "Requested delivery date"
+      validation: "Must be >= ORDER_DATE"
+      
+    - name: "DELIVERY_TIME_SLOT"
+      type: "varchar(2)"
+      required: true
+      description: "Delivery time preference"
+      values:
+        - "01": "上午 08:00-12:00"
+        - "02": "下午 13:00-17:00"
+        - "03": "晚上 17:00-20:00"
+        - "04": "隨時"
+        - "05": "緊急 (加價)"
+        
+    - name: "ORDER_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Current order status"
+      default: "01"
+      values:
+        - "01": "草稿 (Draft)"
+        - "02": "已確認 (Confirmed)"
+        - "03": "已派送 (Dispatched)"
+        - "04": "配送中 (In Delivery)"
+        - "05": "已送達 (Delivered)"
+        - "06": "已取消 (Cancelled)"
+        - "07": "配送失敗 (Failed)"
+        
+    - name: "DELIVERY_ADDRESS_ID"
+      type: "integer"
+      required: true
+      foreign_key: "CUST_ADDRESS.ADDRESS_ID"
+      description: "Delivery address reference"
+      
+    - name: "DELIVERY_ADDRESS_TEXT"
+      type: "varchar(255)"
+      required: true
+      description: "Snapshot of delivery address at order time"
+      comment: "Denormalized for historical accuracy"
+      
+    - name: "DELIVERY_NOTES"
+      type: "text"
+      required: false
+      description: "Special delivery instructions"
+      example: "請按門鈴，狗不咬人"
+      
+    - name: "TOTAL_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Total order amount before tax"
+      validation: ">= 0"
+      
+    - name: "TAX_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Tax amount (5% VAT)"
+      calculation: "TOTAL_AMOUNT * 0.05"
+      
+    - name: "DELIVERY_FEE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Delivery charge based on zone"
+      default: "0.00"
+      
+    - name: "DISCOUNT_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Total discount applied"
+      default: "0.00"
+      
+    - name: "FINAL_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Final amount to be paid"
+      calculation: "TOTAL_AMOUNT + TAX_AMOUNT + DELIVERY_FEE - DISCOUNT_AMOUNT"
+      
+    - name: "PAYMENT_METHOD"
+      type: "varchar(2)"
+      required: true
+      description: "Payment method"
+      values:
+        - "01": "現金 (Cash)"
+        - "02": "月結 (Monthly)"
+        - "03": "轉帳 (Transfer)"
+        - "04": "支票 (Check)"
+        
+    - name: "PAYMENT_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Payment collection status"
+      default: "01"
+      values:
+        - "01": "未付款 (Unpaid)"
+        - "02": "部分付款 (Partial)"
+        - "03": "已付款 (Paid)"
+        - "04": "退款 (Refunded)"
+        
+    - name: "CREDIT_USED"
+      type: "decimal(10,2)"
+      required: true
+      description: "Credit amount used for this order"
+      comment: "Updates customer available credit"
+      
+    - name: "ORDER_SOURCE"
+      type: "varchar(2)"
+      required: true
+      description: "How order was placed"
+      default: "01"
+      values:
+        - "01": "電話 (Phone)"
+        - "02": "傳真 (Fax)"
+        - "03": "網路 (Web)"
+        - "04": "APP"
+        - "05": "現場 (Walk-in)"
+        
+    - name: "PRIORITY_FLAG"
+      type: "char(1)"
+      required: true
+      description: "Priority order indicator"
+      default: "N"
+      values:
+        - "N": "Normal"
+        - "Y": "Priority"
+        
+    - name: "DISPATCH_ID"
+      type: "varchar(20)"
+      required: false
+      foreign_key: "DISPATCH_MASTER.DISPATCH_ID"
+      description: "Dispatch batch reference"
+      
+    - name: "DRIVER_ID"
+      type: "varchar(10)"
+      required: false
+      foreign_key: "EMPLOYEE.EMPLOYEE_ID"
+      description: "Assigned driver"
+      
+    - name: "ROUTE_SEQUENCE"
+      type: "integer"
+      required: false
+      description: "Delivery sequence in route"
+      
+    - name: "ACTUAL_DELIVERY_TIME"
+      type: "datetime"
+      required: false
+      description: "Actual delivery timestamp"
+      
+    - name: "DELIVERY_SIGNATURE"
+      type: "varchar(100)"
+      required: false
+      description: "Customer signature file reference"
+      
+    - name: "CANCEL_REASON"
+      type: "varchar(2)"
+      required: false
+      description: "Cancellation reason code"
+      values:
+        - "01": "客戶取消 (Customer)"
+        - "02": "無庫存 (No Stock)"
+        - "03": "無法配送 (Cannot Deliver)"
+        - "04": "重複訂單 (Duplicate)"
+        - "05": "其他 (Other)"
+        
+    - name: "CANCEL_NOTES"
+      type: "text"
+      required: false
+      description: "Detailed cancellation notes"
+      
+    - name: "INVOICE_ID"
+      type: "varchar(20)"
+      required: false
+      foreign_key: "INVOICE_MASTER.INVOICE_ID"
+      description: "Generated invoice reference"
+      
+    - name: "CREATE_USER"
+      type: "varchar(10)"
+      required: true
+      description: "User who created the order"
+      
+    - name: "CREATE_DATE"
+      type: "datetime"
+      required: true
+      description: "Order creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "UPDATE_USER"
+      type: "varchar(10)"
+      required: false
+      description: "Last user to modify"
+      
+    - name: "UPDATE_DATE"
+      type: "datetime"
+      required: false
+      description: "Last modification timestamp"
+      
+    - name: "DELETE_FLAG"
+      type: "char(1)"
+      required: true
+      description: "Soft delete indicator"
+      default: "N"
+      values:
+        - "N": "Active"
+        - "Y": "Deleted"
+  
+  indexes:
+    - name: "IDX_ORDER_CUSTOMER"
+      columns: ["CUSTOMER_ID", "ORDER_DATE"]
+      
+    - name: "IDX_ORDER_STATUS"
+      columns: ["ORDER_STATUS", "DELIVERY_DATE"]
+      
+    - name: "IDX_ORDER_DELIVERY"
+      columns: ["DELIVERY_DATE", "DELIVERY_TIME_SLOT"]
+      
+    - name: "IDX_ORDER_DISPATCH"
+      columns: ["DISPATCH_ID", "ROUTE_SEQUENCE"]
+  
+  triggers:
+    - name: "TRG_ORDER_AUDIT"
+      event: "INSERT, UPDATE"
+      description: "Log all changes to audit table"
+      
+    - name: "TRG_CREDIT_UPDATE"
+      event: "INSERT, UPDATE, DELETE"
+      description: "Update customer available credit"
+      
+    - name: "TRG_STATUS_HISTORY"
+      event: "UPDATE"
+      description: "Track status changes in history table"
+
+OrderDetail:
+  table_name: "ORDER_DETAIL"
+  chinese_name: "訂單明細"
+  description: "Order line items with product details"
+  fields:
+    - name: "DETAIL_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique detail line identifier"
+      
+    - name: "ORDER_ID"
+      type: "varchar(20)"
+      required: true
+      foreign_key: "ORDER_MASTER.ORDER_ID"
+      description: "Parent order reference"
+      
+    - name: "LINE_NUMBER"
+      type: "integer"
+      required: true
+      description: "Line sequence number"
+      validation: "> 0"
+      
+    - name: "PRODUCT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "PRODUCT_MASTER.PRODUCT_ID"
+      description: "Product identifier"
+      
+    - name: "PRODUCT_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Product name snapshot"
+      comment: "Denormalized for history"
+      
+    - name: "PRODUCT_SIZE"
+      type: "varchar(10)"
+      required: true
+      description: "Product size/specification"
+      values:
+        - "20KG": "20公斤桶裝"
+        - "50KG": "50公斤桶裝"
+        - "16KG": "16公斤桶裝"
+        - "4KG": "4公斤桶裝"
+        
+    - name: "QUANTITY"
+      type: "integer"
+      required: true
+      description: "Ordered quantity"
+      validation: "> 0"
+      
+    - name: "UNIT_PRICE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Price per unit at order time"
+      validation: ">= 0"
+      
+    - name: "DISCOUNT_PERCENT"
+      type: "decimal(5,2)"
+      required: true
+      description: "Line discount percentage"
+      default: "0.00"
+      validation: "BETWEEN 0 AND 100"
+      
+    - name: "DISCOUNT_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Line discount amount"
+      default: "0.00"
+      
+    - name: "LINE_TOTAL"
+      type: "decimal(10,2)"
+      required: true
+      description: "Line total after discount"
+      calculation: "(QUANTITY * UNIT_PRICE) - DISCOUNT_AMOUNT"
+      
+    - name: "DEPOSIT_REQUIRED"
+      type: "char(1)"
+      required: true
+      description: "Cylinder deposit needed"
+      default: "N"
+      values:
+        - "N": "No deposit"
+        - "Y": "Deposit required"
+        
+    - name: "DEPOSIT_AMOUNT"
+      type: "decimal(10,2)"
+      required: false
+      description: "Deposit amount per unit"
+      
+    - name: "SPECIAL_PRICE_FLAG"
+      type: "char(1)"
+      required: true
+      description: "Special pricing applied"
+      default: "N"
+      
+    - name: "PRICE_REASON"
+      type: "varchar(50)"
+      required: false
+      description: "Reason for special price"
+      
+    - name: "NOTES"
+      type: "varchar(255)"
+      required: false
+      description: "Line item notes"
+  
+  indexes:
+    - name: "IDX_DETAIL_ORDER"
+      columns: ["ORDER_ID", "LINE_NUMBER"]
+      unique: true
+      
+    - name: "IDX_DETAIL_PRODUCT"
+      columns: ["PRODUCT_ID", "ORDER_ID"]
+
+OrderStatusHistory:
+  table_name: "ORDER_STATUS_HISTORY"
+  chinese_name: "訂單狀態歷史"
+  description: "Complete history of order status changes"
+  fields:
+    - name: "HISTORY_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique history record ID"
+      
+    - name: "ORDER_ID"
+      type: "varchar(20)"
+      required: true
+      foreign_key: "ORDER_MASTER.ORDER_ID"
+      description: "Order reference"
+      
+    - name: "OLD_STATUS"
+      type: "varchar(2)"
+      required: false
+      description: "Previous status code"
+      
+    - name: "NEW_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "New status code"
+      
+    - name: "CHANGE_DATE"
+      type: "datetime"
+      required: true
+      description: "Status change timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "CHANGE_USER"
+      type: "varchar(10)"
+      required: true
+      description: "User who made the change"
+      
+    - name: "CHANGE_REASON"
+      type: "varchar(255)"
+      required: false
+      description: "Reason for status change"
+      
+    - name: "SYSTEM_NOTES"
+      type: "text"
+      required: false
+      description: "System-generated notes"
+  
+  indexes:
+    - name: "IDX_HISTORY_ORDER"
+      columns: ["ORDER_ID", "CHANGE_DATE"]
+      
+    - name: "IDX_HISTORY_DATE"
+      columns: ["CHANGE_DATE"]

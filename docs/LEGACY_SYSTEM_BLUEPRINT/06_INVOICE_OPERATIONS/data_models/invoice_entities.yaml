@@ -1,0 +1,788 @@
+# Invoice Entity Data Models - Lucky Gas Legacy System
+
+InvoiceMaster:
+  table_name: "INVOICE_MASTER"
+  chinese_name: "發票主檔"
+  description: "Master table for all invoice records and header information"
+  fields:
+    - name: "INVOICE_NO"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      description: "Government-issued invoice number"
+      format: "[A-Z]{2}[0-9]{8}"
+      example: "AB12345678"
+      
+    - name: "INVOICE_DATE"
+      type: "date"
+      required: true
+      description: "Invoice issue date"
+      validation: "Cannot be future date"
+      
+    - name: "INVOICE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Invoice type classification"
+      values:
+        - "01": "三聯式發票 (Triplicate)"
+        - "02": "二聯式發票 (Duplicate)"
+        - "03": "電子發票 (E-Invoice)"
+        - "04": "收銀機發票 (Register)"
+        
+    - name: "CUSTOMER_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "CUSTOMER_MASTER.CUSTOMER_ID"
+      description: "Customer reference"
+      
+    - name: "CUSTOMER_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Customer name on invoice"
+      
+    - name: "CUSTOMER_TAX_ID"
+      type: "varchar(8)"
+      required: false
+      description: "Customer tax ID (統一編號)"
+      format: "[0-9]{8}"
+      
+    - name: "CUSTOMER_ADDRESS"
+      type: "varchar(255)"
+      required: true
+      description: "Billing address"
+      
+    - name: "CONTACT_PERSON"
+      type: "varchar(50)"
+      required: false
+      description: "Customer contact person"
+      
+    - name: "CONTACT_PHONE"
+      type: "varchar(20)"
+      required: false
+      description: "Contact phone number"
+      
+    - name: "SALES_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Total sales amount before tax"
+      validation: "Must be positive"
+      
+    - name: "TAX_TYPE"
+      type: "varchar(1)"
+      required: true
+      description: "Tax type code"
+      values:
+        - "1": "應稅 (Taxable)"
+        - "2": "零稅率 (Zero-rated)"
+        - "3": "免稅 (Tax-exempt)"
+        
+    - name: "TAX_RATE"
+      type: "decimal(5,2)"
+      required: true
+      description: "Tax rate percentage"
+      default: 5.00
+      
+    - name: "TAX_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Calculated tax amount"
+      calculation: "SALES_AMOUNT * TAX_RATE / 100"
+      
+    - name: "TOTAL_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Total amount including tax"
+      calculation: "SALES_AMOUNT + TAX_AMOUNT"
+      
+    - name: "INVOICE_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Current invoice status"
+      values:
+        - "01": "正常 (Normal)"
+        - "02": "作廢 (Void)"
+        - "03": "退回 (Returned)"
+        - "04": "折讓 (Credited)"
+        
+    - name: "PRINT_STATUS"
+      type: "varchar(1)"
+      required: true
+      description: "Print status"
+      values:
+        - "Y": "已列印 (Printed)"
+        - "N": "未列印 (Not Printed)"
+        - "R": "重印 (Reprinted)"
+        
+    - name: "PRINT_COUNT"
+      type: "integer"
+      required: true
+      description: "Number of times printed"
+      default: 0
+      
+    - name: "E_INVOICE_STATUS"
+      type: "varchar(2)"
+      required: false
+      description: "E-invoice upload status"
+      values:
+        - "01": "待上傳 (Pending)"
+        - "02": "已上傳 (Uploaded)"
+        - "03": "上傳失敗 (Failed)"
+        - "04": "不適用 (N/A)"
+        
+    - name: "UPLOAD_DATE"
+      type: "timestamp"
+      required: false
+      description: "Government upload timestamp"
+      
+    - name: "UPLOAD_BATCH_NO"
+      type: "varchar(20)"
+      required: false
+      description: "Upload batch number"
+      
+    - name: "CARRIER_TYPE"
+      type: "varchar(2)"
+      required: false
+      description: "E-invoice carrier type"
+      values:
+        - "01": "手機條碼 (Mobile)"
+        - "02": "自然人憑證 (Citizen Card)"
+        - "03": "悠遊卡 (EasyCard)"
+        - "04": "無載具 (None)"
+        
+    - name: "CARRIER_ID"
+      type: "varchar(64)"
+      required: false
+      description: "Carrier identifier"
+      
+    - name: "DONATION_FLAG"
+      type: "boolean"
+      required: true
+      description: "Donated to charity"
+      default: false
+      
+    - name: "DONATION_CODE"
+      type: "varchar(10)"
+      required: false
+      description: "Charity organization code"
+      
+    - name: "ORDER_NO"
+      type: "varchar(20)"
+      required: false
+      foreign_key: "ORDER_MASTER.ORDER_NO"
+      description: "Related order number"
+      
+    - name: "DELIVERY_NO"
+      type: "varchar(20)"
+      required: false
+      description: "Delivery slip number"
+      
+    - name: "PAYMENT_TERMS"
+      type: "varchar(2)"
+      required: true
+      description: "Payment terms"
+      values:
+        - "01": "現金 (Cash)"
+        - "02": "月結30天 (Net 30)"
+        - "03": "月結60天 (Net 60)"
+        - "04": "貨到付款 (COD)"
+        
+    - name: "DUE_DATE"
+      type: "date"
+      required: true
+      description: "Payment due date"
+      
+    - name: "PAYMENT_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Payment collection status"
+      values:
+        - "01": "未付 (Unpaid)"
+        - "02": "部分付款 (Partial)"
+        - "03": "已付清 (Paid)"
+        - "04": "逾期 (Overdue)"
+        
+    - name: "PAID_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Amount paid"
+      default: 0.00
+      
+    - name: "REMARKS"
+      type: "text"
+      required: false
+      description: "Invoice remarks"
+      
+    - name: "VOID_DATE"
+      type: "date"
+      required: false
+      description: "Void processing date"
+      
+    - name: "VOID_REASON"
+      type: "varchar(100)"
+      required: false
+      description: "Reason for voiding"
+      
+    - name: "VOID_BY"
+      type: "varchar(10)"
+      required: false
+      description: "User who voided"
+      
+    - name: "PERIOD_YEAR"
+      type: "integer"
+      required: true
+      description: "Invoice period year"
+      
+    - name: "PERIOD_MONTH"
+      type: "integer"
+      required: true
+      description: "Invoice period month"
+      validation: "1-12"
+      
+    - name: "QR_CODE_LEFT"
+      type: "varchar(200)"
+      required: false
+      description: "Left QR code data"
+      
+    - name: "QR_CODE_RIGHT"
+      type: "varchar(200)"
+      required: false
+      description: "Right QR code data"
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Invoice creator"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "MODIFIED_BY"
+      type: "varchar(10)"
+      required: false
+      description: "Last modifier"
+      
+    - name: "MODIFIED_DATE"
+      type: "timestamp"
+      required: false
+      description: "Last modification"
+      
+  indexes:
+    - name: "IDX_INVOICE_DATE"
+      columns: ["INVOICE_DATE", "INVOICE_STATUS"]
+      
+    - name: "IDX_CUSTOMER"
+      columns: ["CUSTOMER_ID", "INVOICE_DATE"]
+      
+    - name: "IDX_PERIOD"
+      columns: ["PERIOD_YEAR", "PERIOD_MONTH", "INVOICE_STATUS"]
+      
+    - name: "IDX_ORDER"
+      columns: ["ORDER_NO"]
+      
+    - name: "IDX_PAYMENT"
+      columns: ["PAYMENT_STATUS", "DUE_DATE"]
+
+InvoiceDetail:
+  table_name: "INVOICE_DETAIL"
+  chinese_name: "發票明細"
+  description: "Invoice line items and product details"
+  fields:
+    - name: "INVOICE_NO"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      foreign_key: "INVOICE_MASTER.INVOICE_NO"
+      description: "Invoice number reference"
+      
+    - name: "LINE_NO"
+      type: "integer"
+      required: true
+      primary_key: true
+      description: "Line item sequence"
+      
+    - name: "PRODUCT_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "PRODUCT_MASTER.PRODUCT_ID"
+      description: "Product reference"
+      
+    - name: "PRODUCT_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Product description on invoice"
+      
+    - name: "QUANTITY"
+      type: "decimal(10,2)"
+      required: true
+      description: "Quantity sold"
+      validation: "Must be positive"
+      
+    - name: "UNIT"
+      type: "varchar(10)"
+      required: true
+      description: "Unit of measure"
+      
+    - name: "UNIT_PRICE"
+      type: "decimal(10,2)"
+      required: true
+      description: "Unit price before tax"
+      
+    - name: "AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Line total before tax"
+      calculation: "QUANTITY * UNIT_PRICE"
+      
+    - name: "DISCOUNT_RATE"
+      type: "decimal(5,2)"
+      required: false
+      description: "Discount percentage"
+      default: 0.00
+      
+    - name: "DISCOUNT_AMOUNT"
+      type: "decimal(10,2)"
+      required: false
+      description: "Discount amount"
+      default: 0.00
+      
+    - name: "NET_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Net amount after discount"
+      calculation: "AMOUNT - DISCOUNT_AMOUNT"
+      
+    - name: "TAX_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Tax amount for line"
+      
+    - name: "TOTAL_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Line total including tax"
+      
+    - name: "REMARK"
+      type: "varchar(200)"
+      required: false
+      description: "Line item remark"
+      
+  indexes:
+    - name: "IDX_DETAIL_PRODUCT"
+      columns: ["PRODUCT_ID", "INVOICE_NO"]
+
+CreditNote:
+  table_name: "CREDIT_NOTE"
+  chinese_name: "折讓單"
+  description: "Credit notes for returns and adjustments"
+  fields:
+    - name: "CREDIT_NOTE_NO"
+      type: "varchar(20)"
+      required: true
+      primary_key: true
+      description: "Credit note number"
+      format: "CN[0-9]{10}"
+      
+    - name: "CREDIT_DATE"
+      type: "date"
+      required: true
+      description: "Credit note date"
+      
+    - name: "ORIGINAL_INVOICE_NO"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "INVOICE_MASTER.INVOICE_NO"
+      description: "Original invoice reference"
+      
+    - name: "CUSTOMER_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "CUSTOMER_MASTER.CUSTOMER_ID"
+      description: "Customer reference"
+      
+    - name: "CREDIT_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Credit reason type"
+      values:
+        - "01": "商品退回 (Return)"
+        - "02": "價格調整 (Price Adjust)"
+        - "03": "品質問題 (Quality)"
+        - "04": "其他 (Other)"
+        
+    - name: "CREDIT_REASON"
+      type: "text"
+      required: true
+      description: "Detailed reason"
+      
+    - name: "ORIGINAL_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Original invoice amount"
+      
+    - name: "CREDIT_AMOUNT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Credit amount before tax"
+      validation: "Cannot exceed original"
+      
+    - name: "TAX_AMOUNT"
+      type: "decimal(10,2)"
+      required: true
+      description: "Credit tax amount"
+      
+    - name: "TOTAL_CREDIT"
+      type: "decimal(12,2)"
+      required: true
+      description: "Total credit including tax"
+      
+    - name: "STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Credit note status"
+      values:
+        - "01": "待審核 (Pending)"
+        - "02": "已核准 (Approved)"
+        - "03": "已拒絕 (Rejected)"
+        - "04": "已處理 (Processed)"
+        
+    - name: "APPROVAL_BY"
+      type: "varchar(10)"
+      required: false
+      description: "Approver user ID"
+      
+    - name: "APPROVAL_DATE"
+      type: "timestamp"
+      required: false
+      description: "Approval timestamp"
+      
+    - name: "UPLOAD_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Government upload status"
+      values:
+        - "01": "待上傳 (Pending)"
+        - "02": "已上傳 (Uploaded)"
+        - "03": "上傳失敗 (Failed)"
+        
+    - name: "UPLOAD_DATE"
+      type: "timestamp"
+      required: false
+      description: "Upload timestamp"
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Creator user ID"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_CREDIT_INVOICE"
+      columns: ["ORIGINAL_INVOICE_NO"]
+      
+    - name: "IDX_CREDIT_CUSTOMER"
+      columns: ["CUSTOMER_ID", "CREDIT_DATE"]
+      
+    - name: "IDX_CREDIT_STATUS"
+      columns: ["STATUS", "CREDIT_DATE"]
+
+InvoiceVoid:
+  table_name: "INVOICE_VOID"
+  chinese_name: "發票作廢記錄"
+  description: "Invoice void/cancellation records"
+  fields:
+    - name: "VOID_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Unique void record ID"
+      
+    - name: "INVOICE_NO"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "INVOICE_MASTER.INVOICE_NO"
+      description: "Voided invoice number"
+      
+    - name: "VOID_DATE"
+      type: "date"
+      required: true
+      description: "Void processing date"
+      
+    - name: "VOID_TIME"
+      type: "time"
+      required: true
+      description: "Void processing time"
+      
+    - name: "VOID_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Void type"
+      values:
+        - "01": "買受人作廢 (Buyer)"
+        - "02": "營業人作廢 (Seller)"
+        - "03": "系統作廢 (System)"
+        
+    - name: "VOID_REASON"
+      type: "varchar(2)"
+      required: true
+      description: "Void reason code"
+      values:
+        - "01": "資料錯誤 (Data Error)"
+        - "02": "重複開立 (Duplicate)"
+        - "03": "客戶退貨 (Return)"
+        - "04": "其他 (Other)"
+        
+    - name: "VOID_DESCRIPTION"
+      type: "text"
+      required: true
+      description: "Detailed void reason"
+      
+    - name: "PHYSICAL_RETURN"
+      type: "boolean"
+      required: true
+      description: "Physical invoice returned"
+      default: false
+      
+    - name: "RETURN_DATE"
+      type: "date"
+      required: false
+      description: "Physical return date"
+      
+    - name: "REPLACEMENT_INVOICE"
+      type: "varchar(10)"
+      required: false
+      description: "Replacement invoice number"
+      
+    - name: "APPROVED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Void approver"
+      
+    - name: "UPLOAD_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Government notification status"
+      values:
+        - "01": "待通知 (Pending)"
+        - "02": "已通知 (Notified)"
+        - "03": "通知失敗 (Failed)"
+        
+    - name: "UPLOAD_DATE"
+      type: "timestamp"
+      required: false
+      description: "Government upload timestamp"
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Void initiator"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_VOID_INVOICE"
+      columns: ["INVOICE_NO"]
+      unique: true
+      
+    - name: "IDX_VOID_DATE"
+      columns: ["VOID_DATE", "VOID_TYPE"]
+
+EInvoiceUpload:
+  table_name: "E_INVOICE_UPLOAD"
+  chinese_name: "電子發票上傳記錄"
+  description: "E-invoice government upload batch records"
+  fields:
+    - name: "BATCH_ID"
+      type: "varchar(20)"
+      required: true
+      primary_key: true
+      description: "Upload batch ID"
+      format: "BATCH[0-9]{12}"
+      
+    - name: "UPLOAD_DATE"
+      type: "date"
+      required: true
+      description: "Upload date"
+      
+    - name: "UPLOAD_TIME"
+      type: "time"
+      required: true
+      description: "Upload time"
+      
+    - name: "BATCH_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Batch type"
+      values:
+        - "01": "B2C發票 (B2C)"
+        - "02": "B2B發票 (B2B)"
+        - "03": "作廢發票 (Void)"
+        - "04": "折讓單 (Credit)"
+        
+    - name: "PERIOD_YEAR"
+      type: "integer"
+      required: true
+      description: "Invoice period year"
+      
+    - name: "PERIOD_MONTH"
+      type: "integer"
+      required: true
+      description: "Invoice period month"
+      
+    - name: "INVOICE_COUNT"
+      type: "integer"
+      required: true
+      description: "Number of invoices"
+      
+    - name: "TOTAL_AMOUNT"
+      type: "decimal(15,2)"
+      required: true
+      description: "Total batch amount"
+      
+    - name: "FILE_NAME"
+      type: "varchar(100)"
+      required: true
+      description: "Upload file name"
+      
+    - name: "FILE_SIZE"
+      type: "integer"
+      required: true
+      description: "File size in bytes"
+      
+    - name: "UPLOAD_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Upload status"
+      values:
+        - "01": "準備中 (Preparing)"
+        - "02": "上傳中 (Uploading)"
+        - "03": "成功 (Success)"
+        - "04": "失敗 (Failed)"
+        - "05": "部分成功 (Partial)"
+        
+    - name: "SUCCESS_COUNT"
+      type: "integer"
+      required: true
+      description: "Successfully uploaded"
+      default: 0
+      
+    - name: "FAIL_COUNT"
+      type: "integer"
+      required: true
+      description: "Failed uploads"
+      default: 0
+      
+    - name: "RESPONSE_CODE"
+      type: "varchar(10)"
+      required: false
+      description: "Government response code"
+      
+    - name: "RESPONSE_MESSAGE"
+      type: "text"
+      required: false
+      description: "Government response message"
+      
+    - name: "RETRY_COUNT"
+      type: "integer"
+      required: true
+      description: "Number of retries"
+      default: 0
+      
+    - name: "CREATED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Upload initiator"
+      
+    - name: "CREATED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_UPLOAD_DATE"
+      columns: ["UPLOAD_DATE", "BATCH_TYPE"]
+      
+    - name: "IDX_UPLOAD_PERIOD"
+      columns: ["PERIOD_YEAR", "PERIOD_MONTH", "BATCH_TYPE"]
+      
+    - name: "IDX_UPLOAD_STATUS"
+      columns: ["UPLOAD_STATUS", "CREATED_DATE"]
+
+InvoiceParameter:
+  table_name: "INVOICE_PARAMETER"
+  chinese_name: "發票參數設定"
+  description: "Invoice system parameters and configuration"
+  fields:
+    - name: "PARAM_ID"
+      type: "varchar(30)"
+      required: true
+      primary_key: true
+      description: "Parameter identifier"
+      
+    - name: "PARAM_TYPE"
+      type: "varchar(20)"
+      required: true
+      description: "Parameter category"
+      values:
+        - "NUMBER_RANGE": "號碼區間"
+        - "TAX_SETTING": "稅務設定"
+        - "PRINT_CONFIG": "列印設定"
+        - "UPLOAD_CONFIG": "上傳設定"
+        - "BUSINESS_RULE": "營業規則"
+        
+    - name: "PARAM_VALUE"
+      type: "varchar(255)"
+      required: true
+      description: "Parameter value"
+      
+    - name: "PARAM_DESC"
+      type: "varchar(200)"
+      required: true
+      description: "Parameter description"
+      
+    - name: "EFFECTIVE_DATE"
+      type: "date"
+      required: true
+      description: "Effective from date"
+      
+    - name: "EXPIRY_DATE"
+      type: "date"
+      required: false
+      description: "Effective until date"
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Parameter active status"
+      default: true
+      
+    - name: "MODIFIED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Last modifier"
+      
+    - name: "MODIFIED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Last modification"
+      default: "CURRENT_TIMESTAMP"
+      
+  indexes:
+    - name: "IDX_PARAM_TYPE"
+      columns: ["PARAM_TYPE", "ACTIVE_FLAG"]
+      
+    - name: "IDX_PARAM_DATE"
+      columns: ["EFFECTIVE_DATE", "EXPIRY_DATE"]

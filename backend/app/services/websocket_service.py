@@ -8,6 +8,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from enum import Enum
 
 from app.core.config import settings
+from app.services.message_queue_service import message_queue, QueuePriority
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,10 @@ class WebSocketManager:
             self._background_tasks.add(task)
             task.add_done_callback(self._background_tasks.discard)
             
-            logger.info("WebSocket manager initialized with Redis pub/sub")
+            # Initialize message queue with delivery callback
+            await message_queue.initialize(self._deliver_queued_message)
+            
+            logger.info("WebSocket manager initialized with Redis pub/sub and message queue")
             
         except Exception as e:
             logger.error(f"Failed to initialize Redis: {e}")
@@ -239,17 +243,64 @@ class WebSocketManager:
             for role in self.active_connections:
                 await self.send_to_role(role, message)
     
-    async def publish_event(self, channel: str, event_data: Dict[str, Any]):
+    async def publish_event(
+        self, 
+        channel: str, 
+        event_data: Dict[str, Any],
+        priority: QueuePriority = QueuePriority.NORMAL,
+        use_queue: bool = False,
+        target_user_id: Optional[str] = None,
+        target_role: Optional[str] = None
+    ):
         """Publish event to Redis for cross-instance broadcasting"""
-        if self.redis_client:
+        event_data["timestamp"] = datetime.now().isoformat()
+        
+        # Use message queue for critical messages or when requested
+        if use_queue:
+            await message_queue.enqueue(
+                channel=channel,
+                event_type=event_data.get("type", "unknown"),
+                data=event_data,
+                priority=priority,
+                target_user_id=target_user_id,
+                target_role=target_role
+            )
+        elif self.redis_client:
             try:
-                event_data["timestamp"] = datetime.now().isoformat()
                 await self.redis_client.publish(channel, json.dumps(event_data))
             except Exception as e:
                 logger.error(f"Error publishing to Redis: {e}")
+                # Fallback to message queue on Redis publish failure
+                await message_queue.enqueue(
+                    channel=channel,
+                    event_type=event_data.get("type", "unknown"),
+                    data=event_data,
+                    priority=priority,
+                    target_user_id=target_user_id,
+                    target_role=target_role
+                )
         else:
             # Fallback to direct broadcast (single instance)
             await self.broadcast(event_data, channel)
+    
+    async def _deliver_queued_message(
+        self,
+        channel: str,
+        event_type: str,
+        data: Dict[str, Any],
+        target_user_id: Optional[str] = None,
+        target_role: Optional[str] = None
+    ):
+        """Delivery callback for message queue"""
+        if target_user_id:
+            # Deliver to specific user
+            await self.send_to_user(target_user_id, data)
+        elif target_role:
+            # Deliver to specific role
+            await self.send_to_role(target_role, data)
+        else:
+            # Broadcast to channel
+            await self.broadcast(data, channel)
     
     async def handle_message(self, connection_id: str, message: Dict[str, Any]):
         """Handle incoming WebSocket message"""
@@ -270,6 +321,26 @@ class WebSocketManager:
         # Handle driver location update
         if message_type == EventType.DRIVER_LOCATION and info["role"] == "driver":
             await self.handle_driver_location(info["user_id"], message)
+        
+        # Handle delivery confirmation
+        elif message_type == "delivery.confirmed" and info["role"] == "driver":
+            await self.handle_delivery_confirmation(info["user_id"], message)
+        
+        # Handle generic order updates
+        elif message_type == "order_update":
+            await self.notify_order_update(
+                message.get("order_id"),
+                message.get("status", "updated"),
+                details=message.get("details", {})
+            )
+        
+        # Handle route updates
+        elif message_type == "route_update":
+            await self.notify_route_update(
+                message.get("route_id"),
+                message.get("status", "updated"),
+                details=message.get("details", {})
+            )
         
         # Add more message handlers as needed
     
@@ -304,7 +375,16 @@ class WebSocketManager:
             "status": status,
             **kwargs
         }
-        await self.publish_event("orders", event_data)
+        # Use message queue for critical order updates
+        use_queue = status in ["delivered", "cancelled", "assigned"]
+        priority = QueuePriority.HIGH if status in ["delivered", "cancelled"] else QueuePriority.NORMAL
+        
+        await self.publish_event(
+            "orders", 
+            event_data,
+            priority=priority,
+            use_queue=use_queue
+        )
     
     async def notify_route_update(self, route_id: str, status: str, **kwargs):
         """Send route update notification"""
@@ -323,13 +403,59 @@ class WebSocketManager:
             "user_id": customer_id,
             **notification
         }
-        await self.publish_event("customers", event_data)
+        # Always use message queue for customer notifications to ensure delivery
+        priority = QueuePriority.HIGH if notification.get("urgent", False) else QueuePriority.NORMAL
+        
+        await self.publish_event(
+            "customers", 
+            event_data,
+            priority=priority,
+            use_queue=True,
+            target_user_id=customer_id
+        )
+    
+    async def handle_delivery_confirmation(self, driver_id: str, message: Dict[str, Any]):
+        """Handle delivery confirmation from QR code scan or manual entry"""
+        confirmation_data = {
+            "type": EventType.ORDER_DELIVERED,
+            "driver_id": driver_id,
+            "order_id": message.get("order_id"),
+            "customer_id": message.get("customer_id"),
+            "confirmed_at": message.get("confirmed_at"),
+            "confirmation_type": message.get("confirmation_type", "unknown"),
+            "cylinder_serial": message.get("cylinder_serial")
+        }
+        
+        # Update order status in database (to be implemented)
+        # For now, just broadcast the event
+        
+        # Notify office staff
+        await self.send_to_role("office_staff", confirmation_data)
+        await self.send_to_role("manager", confirmation_data)
+        
+        # Notify the specific customer
+        if customer_id := message.get("customer_id"):
+            await self.send_to_user(customer_id, {
+                "type": EventType.DELIVERY_UPDATE,
+                "status": "delivered",
+                "order_id": message.get("order_id"),
+                "message": "您的瓦斯已送達，感謝您的訂購！",
+                "timestamp": datetime.now().isoformat()
+            })
+        
+        # Broadcast to all relevant channels
+        await self.publish_event("orders", confirmation_data)
+        
+        logger.info(f"Delivery confirmed for order {message.get('order_id')} by driver {driver_id}")
     
     async def close(self):
         """Close all connections and cleanup"""
         # Close all WebSocket connections
         for connection_id in list(self.connection_info.keys()):
             await self.disconnect(connection_id)
+        
+        # Shutdown message queue service
+        await message_queue.shutdown()
         
         # Close Redis connections
         if self.pubsub:

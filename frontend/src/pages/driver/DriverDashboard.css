@@ -1,0 +1,190 @@
+/* Driver Dashboard Mobile-First Styles */
+
+.driver-dashboard {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
+}
+
+/* Mobile Header */
+.driver-mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+}
+
+.driver-mobile-header .header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  min-height: 56px;
+}
+
+.driver-mobile-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+}
+
+.menu-button {
+  font-size: 20px !important;
+}
+
+/* Offline Banner */
+.offline-mode-banner {
+  background-color: #ff4d4f;
+  color: white;
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Cards */
+.delivery-summary-card,
+.routes-card {
+  margin: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.delivery-summary-card .ant-card-body {
+  padding: 16px;
+}
+
+.delivery-summary-card .ant-statistic-title {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.delivery-summary-card .ant-statistic-content {
+  font-size: 20px;
+}
+
+/* Route List */
+.route-item {
+  padding: 16px !important;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.route-item:active {
+  background-color: #f5f5f5;
+}
+
+.route-item:last-child {
+  border-bottom: none;
+}
+
+.route-item .ant-list-item-meta {
+  align-items: center;
+}
+
+.route-item .ant-list-item-meta-title {
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.route-item .ant-list-item-meta-description {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Touch-friendly buttons */
+.start-route-button {
+  min-width: 100px;
+  height: 44px !important;
+  font-size: 16px !important;
+  border-radius: 22px;
+}
+
+/* Ensure minimum touch target size (44x44px) */
+.ant-btn {
+  min-height: 44px;
+  padding: 0 16px;
+}
+
+/* Drawer Styles */
+.ant-drawer-body {
+  padding: 16px;
+}
+
+.ant-drawer-body .ant-btn {
+  font-size: 16px;
+  height: 48px !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.ant-drawer-body .ant-btn .anticon {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+/* Responsive Grid */
+@media (max-width: 576px) {
+  .delivery-summary-card .ant-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  
+  .delivery-summary-card .ant-statistic {
+    text-align: center;
+  }
+}
+
+/* Large Touch Targets */
+@media (pointer: coarse) {
+  .ant-btn,
+  .route-item {
+    min-height: 48px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .driver-dashboard {
+    background-color: #141414;
+  }
+  
+  .driver-mobile-header {
+    background: #1f1f1f;
+  }
+  
+  .delivery-summary-card,
+  .routes-card {
+    background: #1f1f1f;
+  }
+}
+
+/* Landscape Mode Adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .driver-mobile-header {
+    position: relative;
+  }
+  
+  .delivery-summary-card {
+    margin-top: 8px;
+  }
+}
+
+/* Loading States */
+.ant-skeleton {
+  padding: 16px;
+}
+
+/* Performance Optimizations */
+.route-item {
+  will-change: background-color;
+}
+
+.ant-drawer {
+  will-change: transform;
+}

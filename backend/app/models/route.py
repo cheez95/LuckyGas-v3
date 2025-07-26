@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum as SQLEnum, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from enum import Enum
@@ -14,6 +14,8 @@ class RouteStatus(str, Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    # Add simpler statuses for driver app
+    PENDING = "pending"
 
 
 class Route(Base):
@@ -21,17 +23,19 @@ class Route(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     route_number = Column(String(100), nullable=False, unique=True)
-    route_name = Column(String(100))
+    name = Column(String(100))  # Alias for route_name
+    route_name = Column(String(100))  # Keep for backward compatibility
     date = Column(DateTime(timezone=True), nullable=False, index=True)
+    scheduled_date = Column(Date, nullable=False, index=True)  # Date only for driver queries
     route_date = Column(DateTime(timezone=True))  # Backward compatibility
     
     # Assignment
-    driver_id = Column(Integer, ForeignKey("drivers.id"))
+    driver_id = Column(Integer, ForeignKey("users.id"))  # Changed from drivers.id to users.id
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"))
     
     # Route details
     area = Column(String(50))
-    status = Column(String(50), default="draft")  # Using string for flexibility
+    status = Column(SQLEnum(RouteStatus), default=RouteStatus.PENDING)  # Use enum
     total_stops = Column(Integer, default=0)
     completed_stops = Column(Integer, default=0)
     total_distance_km = Column(Float, default=0.0)
@@ -48,12 +52,16 @@ class Route(Base):
     completed_at = Column(DateTime(timezone=True))
     actual_duration_minutes = Column(Integer)
     
+    # Active flag
+    is_active = Column(Boolean, default=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
     stops = relationship("RouteStop", back_populates="route", order_by="RouteStop.stop_sequence")
+    driver = relationship("User", backref="routes")
 
 
 class RouteStop(Base):

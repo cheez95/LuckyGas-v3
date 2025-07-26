@@ -14,7 +14,7 @@ import {
   RocketOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { websocketService } from '../../services/websocket.service';
 import { orderService } from '../../services/order.service';
 import { customerService } from '../../services/customer.service';
 import { routeService } from '../../services/route.service';
@@ -32,7 +32,7 @@ interface RealtimeActivity {
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { on, isConnected } = useWebSocket();
+  const [isConnected, setIsConnected] = useState(false);
   
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -104,14 +104,40 @@ const Dashboard: React.FC = () => {
     fetchStatistics();
   }, []);
 
+  // WebSocket connection status
+  useEffect(() => {
+    const handleConnected = () => {
+      console.log('📡 Dashboard: WebSocket connected!');
+      setIsConnected(true);
+    };
+    const handleDisconnected = () => {
+      console.log('📡 Dashboard: WebSocket disconnected!');
+      setIsConnected(false);
+    };
+    
+    websocketService.on('connected', handleConnected);
+    websocketService.on('disconnected', handleDisconnected);
+    
+    // Check current connection status
+    const currentStatus = websocketService.isConnected();
+    console.log('📡 Dashboard: Current WebSocket status:', currentStatus);
+    setIsConnected(currentStatus);
+    
+    return () => {
+      websocketService.off('connected', handleConnected);
+      websocketService.off('disconnected', handleDisconnected);
+    };
+  }, []);
+
   // WebSocket listeners
   useEffect(() => {
-    const unsubscribeOrder = on('order_created', (data) => {
+    const handleOrderCreated = (data: any) => {
+      console.log('📦 Dashboard: Order update received:', data);
       setStats(prev => ({ ...prev, todayOrders: prev.todayOrders + 1 }));
       addActivity('order', `新訂單 #${data.order_id} 已創建`, 'success');
-    });
+    };
 
-    const unsubscribeRoute = on('route_update', (data) => {
+    const handleRouteUpdate = (data: any) => {
       if (data.status === 'in_progress') {
         setStats(prev => ({ ...prev, driversOnRoute: prev.driversOnRoute + 1 }));
         addActivity('route', `路線 ${data.route_number} 開始配送`, 'info');
@@ -119,25 +145,30 @@ const Dashboard: React.FC = () => {
         setStats(prev => ({ ...prev, driversOnRoute: Math.max(0, prev.driversOnRoute - 1) }));
         addActivity('route', `路線 ${data.route_number} 已完成`, 'success');
       }
-    });
+    };
 
-    const unsubscribeDelivery = on('delivery_completed', (data) => {
+    const handleDeliveryCompleted = (data: any) => {
       addActivity('delivery', `訂單 #${data.order_id} 已送達`, 'success');
       setStats(prev => ({ ...prev, todayRevenue: prev.todayRevenue + (data.amount || 0) }));
-    });
+    };
 
-    const unsubscribePrediction = on('prediction_generated', (data) => {
+    const handlePredictionGenerated = (data: any) => {
       setPredictions(prev => ({ ...prev, total: prev.total + data.count }));
       addActivity('prediction', `生成了 ${data.count} 個新預測`, 'info');
-    });
+    };
+
+    websocketService.on('order_update', handleOrderCreated);
+    websocketService.on('route_update', handleRouteUpdate);
+    websocketService.on('delivery_status', handleDeliveryCompleted);
+    websocketService.on('prediction_ready', handlePredictionGenerated);
 
     return () => {
-      unsubscribeOrder();
-      unsubscribeRoute();
-      unsubscribeDelivery();
-      unsubscribePrediction();
+      websocketService.off('order_update', handleOrderCreated);
+      websocketService.off('route_update', handleRouteUpdate);
+      websocketService.off('delivery_status', handleDeliveryCompleted);
+      websocketService.off('prediction_ready', handlePredictionGenerated);
     };
-  }, [on]);
+  }, []);
 
   // Add activity to the feed
   const addActivity = (type: RealtimeActivity['type'], message: string, status: RealtimeActivity['status']) => {

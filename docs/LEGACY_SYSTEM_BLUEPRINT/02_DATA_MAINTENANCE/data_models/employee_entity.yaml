@@ -1,0 +1,528 @@
+# Employee Data Model - Lucky Gas Legacy System
+
+Employee:
+  table_name: "EMPLOYEE_MASTER"
+  chinese_name: "員工主檔"
+  description: "Master table for all employees including drivers, office staff, and management"
+  fields:
+    - name: "EMPLOYEE_ID"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      description: "Unique employee identifier"
+      format: "E[0-9]{6}"
+      example: "E000123"
+      
+    - name: "EMPLOYEE_CODE"
+      type: "varchar(20)"
+      required: true
+      unique: true
+      description: "Employee code for login/reference"
+      example: "DRV001"
+      
+    - name: "NATIONAL_ID"
+      type: "varchar(10)"
+      required: true
+      unique: true
+      description: "Taiwan national ID"
+      pattern: "[A-Z][0-9]{9}"
+      validation: "Taiwan ID checksum"
+      
+    - name: "EMPLOYEE_NAME"
+      type: "varchar(50)"
+      required: true
+      description: "Full name in Chinese"
+      example: "李大明"
+      
+    - name: "EMPLOYEE_NAME_EN"
+      type: "varchar(50)"
+      required: false
+      description: "English name"
+      example: "Lee Da-Ming"
+      
+    - name: "EMPLOYEE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Employee category"
+      values:
+        - "01": "司機 (Driver)"
+        - "02": "辦公室 (Office Staff)"
+        - "03": "業務 (Sales)"
+        - "04": "主管 (Manager)"
+        - "05": "約聘 (Contract)"
+        - "06": "工讀 (Part-time)"
+        
+    - name: "DEPARTMENT"
+      type: "varchar(2)"
+      required: true
+      description: "Department code"
+      values:
+        - "01": "營運部 (Operations)"
+        - "02": "業務部 (Sales)"
+        - "03": "財務部 (Finance)"
+        - "04": "人事部 (HR)"
+        - "05": "資訊部 (IT)"
+        - "06": "管理部 (Management)"
+        
+    - name: "POSITION"
+      type: "varchar(50)"
+      required: true
+      description: "Job position/title"
+      example: "資深司機"
+      
+    - name: "HIRE_DATE"
+      type: "date"
+      required: true
+      description: "Employment start date"
+      
+    - name: "TERMINATION_DATE"
+      type: "date"
+      required: false
+      description: "Employment end date"
+      
+    - name: "BIRTH_DATE"
+      type: "date"
+      required: true
+      description: "Date of birth"
+      validation: "Age >= 18"
+      
+    - name: "GENDER"
+      type: "char(1)"
+      required: true
+      description: "Gender"
+      values:
+        - "M": "男 (Male)"
+        - "F": "女 (Female)"
+        
+    - name: "MARITAL_STATUS"
+      type: "char(1)"
+      required: false
+      description: "Marital status"
+      values:
+        - "S": "單身 (Single)"
+        - "M": "已婚 (Married)"
+        - "D": "離婚 (Divorced)"
+        - "W": "喪偶 (Widowed)"
+        
+    - name: "PHONE_MOBILE"
+      type: "varchar(20)"
+      required: true
+      description: "Mobile phone number"
+      pattern: "09[0-9]{8}"
+      
+    - name: "PHONE_HOME"
+      type: "varchar(20)"
+      required: false
+      description: "Home phone number"
+      
+    - name: "EMAIL"
+      type: "varchar(100)"
+      required: false
+      description: "Email address"
+      validation: "Valid email format"
+      
+    - name: "ADDRESS"
+      type: "varchar(255)"
+      required: true
+      description: "Home address"
+      
+    - name: "EMERGENCY_CONTACT"
+      type: "varchar(50)"
+      required: true
+      description: "Emergency contact name"
+      
+    - name: "EMERGENCY_PHONE"
+      type: "varchar(20)"
+      required: true
+      description: "Emergency contact phone"
+      
+    - name: "EMERGENCY_RELATION"
+      type: "varchar(20)"
+      required: true
+      description: "Relationship to employee"
+      example: "配偶"
+      
+    - name: "BANK_CODE"
+      type: "varchar(3)"
+      required: true
+      description: "Bank code for salary"
+      
+    - name: "BANK_ACCOUNT"
+      type: "varchar(20)"
+      required: true
+      description: "Bank account number"
+      
+    - name: "SALARY_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "Salary calculation type"
+      values:
+        - "01": "月薪 (Monthly)"
+        - "02": "日薪 (Daily)"
+        - "03": "時薪 (Hourly)"
+        - "04": "件計 (Per Delivery)"
+        
+    - name: "BASE_SALARY"
+      type: "decimal(10,2)"
+      required: true
+      description: "Base salary amount"
+      access: "RESTRICTED"
+      
+    - name: "EMPLOYMENT_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Current employment status"
+      default: "01"
+      values:
+        - "01": "在職 (Active)"
+        - "02": "請假 (On Leave)"
+        - "03": "停職 (Suspended)"
+        - "04": "離職 (Terminated)"
+        - "05": "退休 (Retired)"
+        
+    - name: "LOGIN_ENABLED"
+      type: "boolean"
+      required: true
+      description: "System access enabled"
+      default: true
+      
+    - name: "LOGIN_ID"
+      type: "varchar(20)"
+      required: false
+      unique: true
+      description: "System login username"
+      
+    - name: "PASSWORD_HASH"
+      type: "varchar(255)"
+      required: false
+      description: "Encrypted password"
+      access: "SYSTEM_ONLY"
+      
+    - name: "LAST_LOGIN_DATE"
+      type: "timestamp"
+      required: false
+      description: "Last system login"
+      
+    - name: "ACCESS_LEVEL"
+      type: "varchar(2)"
+      required: true
+      description: "System access level"
+      default: "01"
+      values:
+        - "01": "一般 (Basic)"
+        - "02": "進階 (Advanced)"
+        - "03": "主管 (Supervisor)"
+        - "04": "經理 (Manager)"
+        - "05": "管理員 (Admin)"
+        
+    - name: "PHOTO_URL"
+      type: "varchar(255)"
+      required: false
+      description: "Employee photo URL"
+      
+    - name: "NOTES"
+      type: "text"
+      required: false
+      description: "HR notes"
+      access: "HR_ONLY"
+      
+    - name: "CREATE_USER"
+      type: "varchar(10)"
+      required: true
+      description: "Created by user"
+      
+    - name: "CREATE_DATE"
+      type: "timestamp"
+      required: true
+      description: "Creation timestamp"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "UPDATE_USER"
+      type: "varchar(10)"
+      required: false
+      description: "Last updated by"
+      
+    - name: "UPDATE_DATE"
+      type: "timestamp"
+      required: false
+      description: "Last update timestamp"
+  
+  indexes:
+    - name: "IDX_EMPLOYEE_CODE"
+      columns: ["EMPLOYEE_CODE"]
+      unique: true
+      
+    - name: "IDX_EMPLOYEE_NATIONAL_ID"
+      columns: ["NATIONAL_ID"]
+      unique: true
+      
+    - name: "IDX_EMPLOYEE_TYPE"
+      columns: ["EMPLOYEE_TYPE", "EMPLOYMENT_STATUS"]
+      
+    - name: "IDX_EMPLOYEE_LOGIN"
+      columns: ["LOGIN_ID"]
+      unique: true
+      where: "LOGIN_ID IS NOT NULL"
+
+DriverDetails:
+  table_name: "DRIVER_DETAILS"
+  chinese_name: "司機詳細資料"
+  description: "Additional information specific to drivers"
+  fields:
+    - name: "EMPLOYEE_ID"
+      type: "varchar(10)"
+      required: true
+      primary_key: true
+      foreign_key: "EMPLOYEE_MASTER.EMPLOYEE_ID"
+      description: "Driver employee ID"
+      
+    - name: "LICENSE_NUMBER"
+      type: "varchar(20)"
+      required: true
+      description: "Driving license number"
+      
+    - name: "LICENSE_TYPE"
+      type: "varchar(2)"
+      required: true
+      description: "License category"
+      values:
+        - "01": "普通小型車 (Regular)"
+        - "02": "普通大貨車 (Truck)"
+        - "03": "職業小型車 (Professional)"
+        - "04": "職業大貨車 (Professional Truck)"
+        
+    - name: "LICENSE_EXPIRY"
+      type: "date"
+      required: true
+      description: "License expiry date"
+      validation: "Must be future date"
+      
+    - name: "VEHICLE_ID"
+      type: "varchar(10)"
+      required: false
+      foreign_key: "VEHICLE_MASTER.VEHICLE_ID"
+      description: "Assigned vehicle"
+      
+    - name: "DELIVERY_ZONES"
+      type: "varchar(255)"
+      required: true
+      description: "Authorized delivery zones"
+      example: "NORTH,CENTRAL"
+      
+    - name: "MAX_CYLINDERS"
+      type: "integer"
+      required: true
+      description: "Maximum cylinders per trip"
+      default: 20
+      
+    - name: "SAFETY_TRAINING_DATE"
+      type: "date"
+      required: true
+      description: "Last safety training"
+      
+    - name: "MEDICAL_CHECK_DATE"
+      type: "date"
+      required: true
+      description: "Last medical examination"
+      
+    - name: "MEDICAL_CHECK_RESULT"
+      type: "varchar(2)"
+      required: true
+      description: "Medical check result"
+      values:
+        - "01": "合格 (Passed)"
+        - "02": "需複檢 (Recheck)"
+        - "03": "不合格 (Failed)"
+        
+    - name: "INSURANCE_POLICY"
+      type: "varchar(50)"
+      required: true
+      description: "Insurance policy number"
+      
+    - name: "INSURANCE_EXPIRY"
+      type: "date"
+      required: true
+      description: "Insurance expiry date"
+      
+    - name: "ACCIDENT_COUNT"
+      type: "integer"
+      required: true
+      description: "Total accidents on record"
+      default: 0
+      
+    - name: "VIOLATION_COUNT"
+      type: "integer"
+      required: true
+      description: "Traffic violations"
+      default: 0
+      
+    - name: "PERFORMANCE_SCORE"
+      type: "decimal(3,1)"
+      required: false
+      description: "Performance rating (0-5)"
+      validation: "BETWEEN 0 AND 5"
+      
+    - name: "ACTIVE_FLAG"
+      type: "boolean"
+      required: true
+      description: "Active driver status"
+      default: true
+
+EmployeeRole:
+  table_name: "EMPLOYEE_ROLE"
+  chinese_name: "員工角色"
+  description: "Role-based access control assignments"
+  fields:
+    - name: "ROLE_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Role assignment ID"
+      
+    - name: "EMPLOYEE_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "EMPLOYEE_MASTER.EMPLOYEE_ID"
+      description: "Employee reference"
+      
+    - name: "ROLE_CODE"
+      type: "varchar(20)"
+      required: true
+      description: "System role code"
+      values:
+        - "SUPER_ADMIN": "超級管理員"
+        - "ADMIN": "系統管理員"
+        - "MANAGER": "經理"
+        - "SUPERVISOR": "主管"
+        - "OPERATOR": "操作員"
+        - "DRIVER": "司機"
+        - "VIEWER": "檢視者"
+        
+    - name: "MODULE_CODE"
+      type: "varchar(10)"
+      required: false
+      description: "Specific module access"
+      example: "W100"
+      
+    - name: "PERMISSIONS"
+      type: "varchar(255)"
+      required: true
+      description: "Permission flags"
+      example: "CREATE,READ,UPDATE"
+      
+    - name: "ASSIGNED_BY"
+      type: "varchar(10)"
+      required: true
+      description: "Who assigned the role"
+      
+    - name: "ASSIGNED_DATE"
+      type: "timestamp"
+      required: true
+      description: "Assignment date"
+      default: "CURRENT_TIMESTAMP"
+      
+    - name: "VALID_FROM"
+      type: "date"
+      required: true
+      description: "Role effective from"
+      default: "CURRENT_DATE"
+      
+    - name: "VALID_TO"
+      type: "date"
+      required: false
+      description: "Role effective until"
+  
+  indexes:
+    - name: "IDX_ROLE_EMPLOYEE"
+      columns: ["EMPLOYEE_ID", "ROLE_CODE"]
+      unique: true
+      
+    - name: "IDX_ROLE_VALIDITY"
+      columns: ["VALID_FROM", "VALID_TO"]
+
+EmployeeAttendance:
+  table_name: "EMPLOYEE_ATTENDANCE"
+  chinese_name: "員工出勤"
+  description: "Daily attendance and work hour tracking"
+  fields:
+    - name: "ATTENDANCE_ID"
+      type: "integer"
+      required: true
+      primary_key: true
+      auto_increment: true
+      description: "Attendance record ID"
+      
+    - name: "EMPLOYEE_ID"
+      type: "varchar(10)"
+      required: true
+      foreign_key: "EMPLOYEE_MASTER.EMPLOYEE_ID"
+      description: "Employee reference"
+      
+    - name: "ATTENDANCE_DATE"
+      type: "date"
+      required: true
+      description: "Attendance date"
+      
+    - name: "CHECK_IN_TIME"
+      type: "time"
+      required: false
+      description: "Clock in time"
+      
+    - name: "CHECK_OUT_TIME"
+      type: "time"
+      required: false
+      description: "Clock out time"
+      
+    - name: "WORK_HOURS"
+      type: "decimal(4,2)"
+      required: false
+      description: "Total work hours"
+      
+    - name: "OVERTIME_HOURS"
+      type: "decimal(4,2)"
+      required: false
+      description: "Overtime hours"
+      default: 0
+      
+    - name: "ATTENDANCE_STATUS"
+      type: "varchar(2)"
+      required: true
+      description: "Attendance status"
+      values:
+        - "01": "正常 (Normal)"
+        - "02": "遲到 (Late)"
+        - "03": "早退 (Early Leave)"
+        - "04": "曠職 (Absent)"
+        - "05": "請假 (On Leave)"
+        - "06": "公休 (Day Off)"
+        - "07": "國定假日 (Holiday)"
+        
+    - name: "LEAVE_TYPE"
+      type: "varchar(2)"
+      required: false
+      description: "Leave type if applicable"
+      values:
+        - "01": "事假 (Personal)"
+        - "02": "病假 (Sick)"
+        - "03": "年假 (Annual)"
+        - "04": "婚假 (Marriage)"
+        - "05": "喪假 (Bereavement)"
+        - "06": "產假 (Maternity)"
+        - "07": "陪產假 (Paternity)"
+        
+    - name: "NOTES"
+      type: "text"
+      required: false
+      description: "Attendance notes"
+  
+  indexes:
+    - name: "IDX_ATTENDANCE_EMPLOYEE_DATE"
+      columns: ["EMPLOYEE_ID", "ATTENDANCE_DATE"]
+      unique: true
+      
+    - name: "IDX_ATTENDANCE_DATE"
+      columns: ["ATTENDANCE_DATE"]
+      
+    - name: "IDX_ATTENDANCE_STATUS"
+      columns: ["ATTENDANCE_STATUS", "ATTENDANCE_DATE"]
