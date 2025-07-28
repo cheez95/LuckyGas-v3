@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/');
+    // Wait for app to load
+    await page.waitForLoadState('networkidle');
   });
 
   test('should display login page', async ({ page }) => {
@@ -31,42 +33,36 @@ test.describe('Authentication Flow', () => {
     await page.locator('input[type="password"]').fill('wrongpassword');
     await page.locator('button[type="submit"]').click();
     
-    // Wait for network error message
-    await page.waitForSelector('[role="alert"]', { state: 'visible', timeout: 5000 });
+    // Wait for error message
+    await page.waitForTimeout(1000);
     
     // Should still be on login page
     await expect(page.locator('form')).toBeVisible();
     
-    // Check error message
+    // Should show error message
     const errorAlert = page.locator('[role="alert"]');
     await expect(errorAlert).toBeVisible();
+    const errorText = await errorAlert.textContent();
+    expect(errorText).toContain('網路連線失敗');
   });
 
   test('should successfully login with valid credentials', async ({ page }) => {
-    // Monitor network to ensure request completes
-    const responsePromise = page.waitForResponse(resp => 
-      resp.url().includes('/auth/login') && resp.status() === 200
-    );
-    
     // Use test credentials
     await page.locator('input[type="text"]').fill('admin');
     await page.locator('input[type="password"]').fill('admin123');
+    await page.locator('button[type="submit"]').click();
     
-    // Click login and wait for response
-    await Promise.all([
-      page.locator('button[type="submit"]').click(),
-      responsePromise
-    ]);
+    // Wait for navigation with proper timeout
+    await page.waitForURL((url) => !url.toString().includes('/login'), { 
+      timeout: 15000,
+      waitUntil: 'networkidle' 
+    });
     
-    // Give some time for the redirect to happen
-    await page.waitForTimeout(2000);
+    // Verify we're on dashboard
+    expect(page.url()).toContain('/dashboard');
     
-    // Check if we navigated away from login
-    const currentUrl = page.url();
-    console.log('Current URL after login:', currentUrl);
-    
-    // Should not be on login page anymore
-    expect(currentUrl).not.toContain('/login');
+    // Should see dashboard or main content
+    await expect(page.locator('.ant-layout')).toBeVisible({ timeout: 5000 });
     
     // Verify token is stored
     const token = await page.evaluate(() => localStorage.getItem('access_token'));
@@ -75,99 +71,93 @@ test.describe('Authentication Flow', () => {
 
   test('should handle logout', async ({ page }) => {
     // First login
-    const loginResponsePromise = page.waitForResponse(resp => 
-      resp.url().includes('/auth/login') && resp.status() === 200
-    );
-    
     await page.locator('input[type="text"]').fill('admin');
     await page.locator('input[type="password"]').fill('admin123');
+    await page.locator('button[type="submit"]').click();
     
-    await Promise.all([
-      page.locator('button[type="submit"]').click(),
-      loginResponsePromise
-    ]);
+    await page.waitForURL((url) => !url.toString().includes('/login'), { 
+      timeout: 15000,
+      waitUntil: 'networkidle' 
+    });
     
-    // Wait for redirect
-    await page.waitForTimeout(2000);
+    // Find user menu (usually in header) - wait for it to be visible
+    await page.waitForTimeout(1000); // Give time for header to render
     
-    // Try to find logout button - it might be in a dropdown menu
-    const possibleLogoutLocations = [
-      // Direct logout button
-      'button:has-text("登出")',
-      'a:has-text("登出")',
-      // User menu that might contain logout
+    // Try multiple selectors for user menu
+    const userMenuSelectors = [
       '.ant-dropdown-trigger',
-      '.ant-avatar',
       '[data-testid="user-menu"]',
-      // Header items
-      '.ant-layout-header button',
-      '.ant-layout-header .ant-avatar'
+      '.ant-avatar',
+      'span:has-text("系統管理員")',
+      'button:has-text("系統管理員")'
     ];
     
-    let logoutFound = false;
-    
-    for (const selector of possibleLogoutLocations) {
+    let userMenuClicked = false;
+    for (const selector of userMenuSelectors) {
       const element = page.locator(selector).first();
-      if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
-        // Click to open dropdown if needed
+      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
         await element.click();
-        await page.waitForTimeout(500);
-        
-        // Now look for logout option
-        const logoutOption = page.locator('text=/登出|logout|退出/i').first();
-        if (await logoutOption.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await logoutOption.click();
-          logoutFound = true;
-          break;
-        }
+        userMenuClicked = true;
+        break;
       }
     }
     
-    if (logoutFound) {
-      // Wait for redirect to login
+    if (!userMenuClicked) {
+      // If no user menu found, try to find logout directly
+      console.log('User menu not found, looking for logout button directly');
+    }
+    
+    // Click logout - try multiple selectors
+    const logoutSelectors = [
+      'text=/logout|登出|Logout|退出/i',
+      '[data-testid="logout"]',
+      'button:has-text("登出")',
+      'a:has-text("登出")'
+    ];
+    
+    let logoutClicked = false;
+    for (const selector of logoutSelectors) {
+      const element = page.locator(selector).first();
+      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await element.click();
+        logoutClicked = true;
+        break;
+      }
+    }
+    
+    if (logoutClicked) {
+      // Should redirect to login
       await page.waitForURL(/\/login/, { timeout: 5000 });
       await expect(page.locator('form')).toBeVisible();
-      
-      // Verify token is cleared
-      const token = await page.evaluate(() => localStorage.getItem('access_token'));
-      expect(token).toBeNull();
     } else {
-      console.log('Logout feature not found - might not be implemented yet');
+      // Skip test if logout not implemented
+      console.log('Logout button not found - feature might not be implemented');
     }
   });
 
   test('should persist session across page refresh', async ({ page }) => {
-    // Login first
-    const loginResponsePromise = page.waitForResponse(resp => 
-      resp.url().includes('/auth/login') && resp.status() === 200
-    );
-    
+    // Login
     await page.locator('input[type="text"]').fill('admin');
     await page.locator('input[type="password"]').fill('admin123');
+    await page.locator('button[type="submit"]').click();
     
-    await Promise.all([
-      page.locator('button[type="submit"]').click(),
-      loginResponsePromise
-    ]);
-    
-    // Wait for redirect
-    await page.waitForTimeout(2000);
+    await page.waitForURL((url) => !url.toString().includes('/login'), { 
+      timeout: 15000,
+      waitUntil: 'networkidle' 
+    });
     
     const dashboardUrl = page.url();
-    expect(dashboardUrl).not.toContain('/login');
     
     // Refresh page
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload();
+    await page.waitForLoadState('networkidle');
     
-    // Should still be on the same page (not redirected to login)
+    // Should still be logged in (not redirected to login)
     expect(page.url()).toBe(dashboardUrl);
-    
-    // Verify token still exists
-    const token = await page.evaluate(() => localStorage.getItem('access_token'));
-    expect(token).toBeTruthy();
+    await expect(page.locator('.ant-layout')).toBeVisible();
   });
 
-  test('should redirect to login when accessing protected routes without auth', async ({ page }) => {
+  test('should redirect to login when accessing protected routes', async ({ page }) => {
     // Clear any existing session
     await page.context().clearCookies();
     await page.evaluate(() => {

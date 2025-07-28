@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CustomerPage } from './pages/CustomerPage';
+import { TestDataFactory } from './utils/TestDataFactory';
 
 test.describe('Customer Management', () => {
   let loginPage: LoginPage;
@@ -35,43 +36,32 @@ test.describe('Customer Management', () => {
   });
 
   test('should create a new customer', async ({ page }) => {
-    // Generate unique customer code with timestamp
-    const timestamp = Date.now();
-    const customerCode = `TEST${timestamp}`;
+    // Generate unique customer data
+    const customerData = TestDataFactory.createCustomer();
     
     // Click add customer button
     await customerPage.clickAddCustomer();
     
-    // Fill form with all required fields
-    await customerPage.fillCustomerForm({
-      customerCode: customerCode,
-      shortName: '測試客戶',  // This is the required field
-      invoiceTitle: '測試公司',
-      address: '台北市信義區測試路123號',  // Required field
-      area: 'A-瑞光',
-      deliveryTimeStart: '09:00',
-      deliveryTimeEnd: '18:00',
-      avgDailyUsage: 10,
-      maxCycleDays: 30,
-      canDelayDays: 3
-    });
+    // Fill form with generated data
+    await customerPage.fillCustomerForm(customerData);
     
     // Submit form
     await customerPage.submitCustomerForm();
     
     // Verify success by checking if modal closed and searching for the customer
-    await customerPage.searchCustomer(customerCode);
+    await customerPage.searchCustomer(customerData.customerCode);
     
-    // Wait for search results
-    await page.waitForTimeout(1000);
+    // Wait for search API call to complete
+    await customerPage.waitForApiCall('/api/v1/customers', 'GET');
+    await customerPage.waitForLoadingComplete();
     
     // Verify customer appears in list
     const customerCount = await customerPage.getCustomerCount();
     expect(customerCount).toBeGreaterThan(0);
     
-    const customerData = await customerPage.getCustomerData(0);
-    expect(customerData.customerCode).toBe(customerCode);
-    expect(customerData.shortName).toBe('測試客戶');
+    const foundCustomer = await customerPage.getCustomerData(0);
+    expect(foundCustomer.customerCode).toBe(customerData.customerCode);
+    expect(foundCustomer.shortName).toBe(customerData.shortName);
   });
 
   test('should edit an existing customer', async ({ page }) => {
