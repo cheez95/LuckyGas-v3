@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 
-const { Title, Text, Link } = Typography;
+const { Title, Text } = Typography;
 
 const ForgotPassword: React.FC = () => {
   const { t } = useTranslation();

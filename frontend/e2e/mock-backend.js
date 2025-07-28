@@ -13,6 +13,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Mock data
 const users = {
@@ -225,6 +226,24 @@ app.get('/api/v1/customers', verifyToken, (req, res) => {
     page,
     size,
     pages: Math.ceil(filtered.length / size)
+  });
+});
+
+app.get('/api/v1/customers/statistics', verifyToken, (req, res) => {
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter(c => c.is_active !== false).length;
+  const newCustomersThisMonth = customers.filter(c => {
+    const createdDate = new Date(c.created_at || Date.now());
+    const thisMonth = new Date();
+    return createdDate.getMonth() === thisMonth.getMonth() && 
+           createdDate.getFullYear() === thisMonth.getFullYear();
+  }).length;
+  
+  res.json({
+    totalCustomers,
+    activeCustomers,
+    newCustomersThisMonth,
+    averageOrderFrequency: 15
   });
 });
 

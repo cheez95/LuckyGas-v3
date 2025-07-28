@@ -1,0 +1,448 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaos-scenarios
+  namespace: luckygas-test
+data:
+  scenarios.yaml: |
+    # LuckyGas Chaos Engineering Test Scenarios
+    # Run with: kubectl apply -f chaos-scenarios.yaml
+    # Monitor with: kubectl get chaosresults -n luckygas-test
+    
+    scenarios:
+      # Scenario 1: Pod Failure Tests
+      - name: api-pod-failure
+        description: Kill random API pods to test resilience
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: PodChaos
+          metadata:
+            name: api-pod-failure
+            namespace: luckygas-test
+          spec:
+            action: pod-kill
+            mode: one
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            scheduler:
+              cron: "@every 2m"
+            duration: "30s"
+        
+        validation:
+          - check: api_availability
+            threshold: 99.5%
+          - check: request_success_rate
+            threshold: 99%
+          - check: auto_recovery_time
+            threshold: "<30s"
+      
+      # Scenario 2: Network Latency Injection
+      - name: network-latency-test
+        description: Inject network latency to external services
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: NetworkChaos
+          metadata:
+            name: network-latency
+            namespace: luckygas-test
+          spec:
+            action: delay
+            mode: all
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            delay:
+              latency: "300ms"
+              correlation: "100"
+              jitter: "50ms"
+            direction: to
+            externalTargets:
+              - "gov.einvoice.tw"
+              - "api.twilio.com"
+              - "banking.api.tw"
+            duration: "5m"
+        
+        validation:
+          - check: circuit_breaker_activation
+            expected: true
+          - check: fallback_mechanism
+            expected: activated
+          - check: user_experience_degradation
+            threshold: "<10%"
+      
+      # Scenario 3: Database Connection Drops
+      - name: database-connection-chaos
+        description: Simulate database connection failures
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: NetworkChaos
+          metadata:
+            name: db-connection-drop
+            namespace: luckygas-test
+          spec:
+            action: partition
+            mode: all
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            direction: to
+            externalTargets:
+              - "postgres.luckygas.svc.cluster.local"
+            duration: "1m"
+        
+        validation:
+          - check: connection_pool_recovery
+            threshold: "<5s"
+          - check: transaction_rollback
+            expected: successful
+          - check: data_consistency
+            expected: maintained
+          - check: error_message_quality
+            expected: informative
+      
+      # Scenario 4: External API Timeout Scenarios
+      - name: external-api-timeouts
+        description: Simulate timeouts from government and banking APIs
+        experiments:
+          # E-Invoice API timeout
+          - apiVersion: chaos-mesh.org/v1alpha1
+            kind: HTTPChaos
+            metadata:
+              name: einvoice-timeout
+              namespace: luckygas-test
+            spec:
+              selector:
+                namespaces:
+                  - luckygas
+                labelSelectors:
+                  "app": "luckygas-api"
+              target: Request
+              port: 443
+              method: POST
+              path: "/einvoice/api/.*"
+              delay: "30s"
+              duration: "3m"
+          
+          # Banking SFTP timeout
+          - apiVersion: chaos-mesh.org/v1alpha1
+            kind: NetworkChaos
+            metadata:
+              name: banking-sftp-timeout
+              namespace: luckygas-test
+            spec:
+              action: delay
+              mode: all
+              selector:
+                namespaces:
+                  - luckygas
+                labelSelectors:
+                  "app": "luckygas-sftp-client"
+              delay:
+                latency: "60s"
+              direction: to
+              externalTargets:
+                - "sftp.bank.tw"
+              duration: "5m"
+        
+        validation:
+          - check: retry_mechanism
+            expected: "3 retries with exponential backoff"
+          - check: timeout_handling
+            expected: graceful
+          - check: user_notification
+            expected: clear_error_message
+          - check: background_job_queuing
+            expected: successful
+      
+      # Scenario 5: Memory Pressure
+      - name: memory-pressure-test
+        description: Simulate memory pressure on pods
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: StressChaos
+          metadata:
+            name: memory-stress
+            namespace: luckygas-test
+          spec:
+            mode: one
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            stressors:
+              memory:
+                workers: 4
+                size: "256MB"
+            duration: "5m"
+        
+        validation:
+          - check: memory_limit_enforcement
+            expected: true
+          - check: oom_killer_prevention
+            expected: successful
+          - check: graceful_degradation
+            expected: true
+          - check: performance_impact
+            threshold: "<20% slowdown"
+      
+      # Scenario 6: CPU Stress
+      - name: cpu-stress-test
+        description: Stress CPU to test performance under load
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: StressChaos
+          metadata:
+            name: cpu-stress
+            namespace: luckygas-test
+          spec:
+            mode: all
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            stressors:
+              cpu:
+                workers: 2
+                load: 80
+            duration: "3m"
+        
+        validation:
+          - check: horizontal_pod_autoscaling
+            expected: triggered
+          - check: response_time_degradation
+            threshold: "<50%"
+          - check: request_queuing
+            expected: properly_managed
+      
+      # Scenario 7: Disk I/O Stress
+      - name: disk-io-stress
+        description: Test system behavior under disk I/O pressure
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: IOChaos
+          metadata:
+            name: disk-io-stress
+            namespace: luckygas-test
+          spec:
+            action: latency
+            mode: one
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            volumePath: /data
+            path: "*"
+            delay: "100ms"
+            percent: 50
+            duration: "5m"
+        
+        validation:
+          - check: file_upload_handling
+            expected: graceful_degradation
+          - check: report_generation
+            expected: queued_properly
+          - check: log_writing
+            expected: buffered_correctly
+      
+      # Scenario 8: DNS Resolution Failure
+      - name: dns-failure-test
+        description: Simulate DNS resolution failures
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: DNSChaos
+          metadata:
+            name: dns-failure
+            namespace: luckygas-test
+          spec:
+            action: error
+            mode: all
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            patterns:
+              - "einvoice.tw"
+              - "twilio.com"
+            duration: "2m"
+        
+        validation:
+          - check: dns_cache_utilization
+            expected: true
+          - check: fallback_dns_server
+            expected: used
+          - check: service_discovery
+            expected: kubernetes_native
+      
+      # Scenario 9: Time Drift
+      - name: time-drift-chaos
+        description: Introduce clock skew between services
+        experiment:
+          apiVersion: chaos-mesh.org/v1alpha1
+          kind: TimeChaos
+          metadata:
+            name: time-drift
+            namespace: luckygas-test
+          spec:
+            mode: one
+            selector:
+              namespaces:
+                - luckygas
+              labelSelectors:
+                "app": "luckygas-api"
+            timeOffset: "+5m"
+            duration: "10m"
+        
+        validation:
+          - check: jwt_validation
+            expected: handles_clock_skew
+          - check: scheduled_jobs
+            expected: properly_adjusted
+          - check: audit_log_consistency
+            expected: maintained
+      
+      # Scenario 10: Cascading Failure Simulation
+      - name: cascading-failure
+        description: Simulate cascading failures across services
+        experiments:
+          # Step 1: Database slowdown
+          - apiVersion: chaos-mesh.org/v1alpha1
+            kind: NetworkChaos
+            metadata:
+              name: db-slowdown
+              namespace: luckygas-test
+            spec:
+              action: delay
+              mode: all
+              selector:
+                namespaces:
+                  - luckygas
+                labelSelectors:
+                  "app": "postgres"
+              delay:
+                latency: "500ms"
+              duration: "10m"
+          
+          # Step 2: API pod failure (after 2 minutes)
+          - apiVersion: chaos-mesh.org/v1alpha1
+            kind: PodChaos
+            metadata:
+              name: api-cascading-failure
+              namespace: luckygas-test
+            spec:
+              action: pod-kill
+              mode: fixed
+              value: "2"
+              selector:
+                namespaces:
+                  - luckygas
+                labelSelectors:
+                  "app": "luckygas-api"
+              scheduler:
+                cron: "@every 30s"
+              duration: "5m"
+          
+          # Step 3: Redis failure (after 4 minutes)
+          - apiVersion: chaos-mesh.org/v1alpha1
+            kind: PodChaos
+            metadata:
+              name: redis-failure
+              namespace: luckygas-test
+            spec:
+              action: pod-failure
+              mode: all
+              selector:
+                namespaces:
+                  - luckygas
+                labelSelectors:
+                  "app": "redis"
+              duration: "2m"
+        
+        validation:
+          - check: system_recovery
+            expected: full_recovery_within_5min
+          - check: data_loss
+            expected: none
+          - check: alert_firing
+            expected: appropriate_alerts
+          - check: circuit_breaker_cascade
+            expected: prevented_total_failure
+    
+    # Monitoring and Validation Configuration
+    monitoring:
+      prometheus:
+        url: http://prometheus.luckygas.svc.cluster.local:9090
+        queries:
+          api_availability: |
+            avg_over_time(up{job="luckygas-api"}[5m]) * 100
+          request_success_rate: |
+            sum(rate(http_requests_total{status=~"2.."}[5m])) / 
+            sum(rate(http_requests_total[5m])) * 100
+          response_time_p95: |
+            histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+          error_rate: |
+            sum(rate(http_requests_total{status=~"5.."}[5m])) / 
+            sum(rate(http_requests_total[5m])) * 100
+          circuit_breaker_state: |
+            circuit_breaker_state{name="external_api"}
+      
+      grafana:
+        dashboards:
+          - chaos-engineering-overview
+          - system-resilience-metrics
+          - failure-recovery-analysis
+      
+      alerts:
+        - name: chaos_test_sla_breach
+          expr: api_availability < 99.5
+          duration: 1m
+          severity: critical
+        
+        - name: cascading_failure_detected
+          expr: |
+            increase(pod_restart_total[5m]) > 5 AND
+            increase(error_rate[5m]) > 0.1
+          duration: 2m
+          severity: critical
+    
+    # Test Execution Plan
+    execution_plan:
+      schedule: "0 2 * * 6"  # Every Saturday at 2 AM
+      duration: 4h
+      
+      phases:
+        - name: baseline
+          duration: 30m
+          description: Collect baseline metrics
+        
+        - name: light_chaos
+          duration: 1h
+          scenarios: [pod-failure, network-latency]
+        
+        - name: medium_chaos
+          duration: 1h
+          scenarios: [database-connection, external-api-timeouts, memory-pressure]
+        
+        - name: heavy_chaos
+          duration: 1h
+          scenarios: [cascading-failure, time-drift, disk-io-stress]
+        
+        - name: recovery
+          duration: 30m
+          description: Monitor system recovery
+      
+      reporting:
+        slack_webhook: "${SLACK_WEBHOOK_URL}"
+        email: chaos-engineering@luckygas.com.tw
+        generate_report: true
+        include_recommendations: true

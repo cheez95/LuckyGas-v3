@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useRef } from 'react';
 import { useWebSocket, WebSocketMessage } from '../hooks/useWebSocket';
 import { useAuth } from './AuthContext';
 
@@ -12,6 +12,9 @@ interface WebSocketContextType {
   unsubscribeFromRouteUpdates: (routeId: string) => void;
   subscribeToDriverLocation: (driverId: string) => void;
   unsubscribeFromDriverLocation: (driverId: string) => void;
+  on: (event: string, callback: (data: any) => void) => () => void;
+  emit: (event: string, data?: any) => void;
+  socket?: any;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
@@ -30,6 +33,7 @@ interface WebSocketProviderProps {
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
   const { user } = useAuth();
+  const eventListenersRef = React.useRef<Map<string, Set<(data: any) => void>>>(new Map());
   
   // Determine endpoint based on user role
   const getEndpoint = () => {
@@ -51,6 +55,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     endpoint: getEndpoint() as any,
     onMessage: (message) => {
       console.log('WebSocket message received:', message);
+      // Emit to event listeners
+      const listeners = eventListenersRef.current.get(message.type);
+      if (listeners) {
+        listeners.forEach(callback => callback(message.data || message));
+      }
     },
     onConnect: () => {
       console.log('WebSocket connected in context');
@@ -109,6 +118,29 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     });
   };
 
+  // Event listener methods
+  const on = (event: string, callback: (data: any) => void) => {
+    if (!eventListenersRef.current.has(event)) {
+      eventListenersRef.current.set(event, new Set());
+    }
+    eventListenersRef.current.get(event)!.add(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      const listeners = eventListenersRef.current.get(event);
+      if (listeners) {
+        listeners.delete(callback);
+        if (listeners.size === 0) {
+          eventListenersRef.current.delete(event);
+        }
+      }
+    };
+  };
+
+  const emit = (event: string, data?: any) => {
+    sendMessage({ type: event, data });
+  };
+
   const value: WebSocketContextType = {
     isConnected,
     lastMessage,
@@ -119,6 +151,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     unsubscribeFromRouteUpdates,
     subscribeToDriverLocation,
     unsubscribeFromDriverLocation,
+    on,
+    emit,
+    socket: { on, emit, connected: isConnected },
   };
 
   return <WebSocketContext.Provider value={value}>{children}</WebSocketContext.Provider>;

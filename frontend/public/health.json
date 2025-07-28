@@ -1,0 +1,6 @@
+{
+  "status": "healthy",
+  "service": "lucky-gas-frontend",
+  "version": "1.0.0",
+  "timestamp": "{{TIMESTAMP}}"
+}

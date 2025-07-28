@@ -6,6 +6,7 @@ import {
   CustomerInventory,
   CustomerInventoryList,
 } from '../types/product';
+import i18n from '../utils/i18n';
 
 export class ProductService {
   private static readonly BASE_URL = '/products';
@@ -129,13 +130,11 @@ export class ProductService {
    * Get product display name by size and method
    */
   static getProductDisplayName(product: GasProduct): string {
-    const sizeDisplay = `${product.size_kg}kg`;
-    const methodDisplay = product.delivery_method === 'cylinder' ? '桶裝' : '流量';
-    const attributeDisplay = {
-      regular: '',
-      haoyun: '好運',
-      pingan: '瓶安'
-    }[product.attribute];
+    const sizeDisplay = i18n.t(`product.sizes.${product.size_kg}kg`);
+    const methodDisplay = i18n.t(`product.deliveryMethods.${product.delivery_method}`);
+    const attributeDisplay = product.attribute !== 'regular' 
+      ? i18n.t(`product.attributes.${product.attribute}`)
+      : '';
 
     const parts = [sizeDisplay, methodDisplay];
     if (attributeDisplay) parts.push(attributeDisplay);

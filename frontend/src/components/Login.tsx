@@ -32,7 +32,7 @@ const Login: React.FC = () => {
       // Handle error locally if login throws
       const errorMessage = error?.response?.data?.detail || 
                           error?.message || 
-                          '登入失敗，請稍後再試';
+                          t('auth.loginFailedTryLater');
       setLocalError(errorMessage);
     }
     setLoading(false);
@@ -110,7 +110,7 @@ const Login: React.FC = () => {
           <Form.Item>
             <div style={{ textAlign: 'center' }}>
               <a href="/forgot-password" style={{ fontSize: 14 }}>
-                忘記密碼？
+                {t('auth.forgotPassword')}
               </a>
             </div>
           </Form.Item>

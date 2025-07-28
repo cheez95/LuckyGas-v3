@@ -32,6 +32,7 @@
     "forgotPassword": "Forgot password?",
     "loginSuccess": "Login successful",
     "loginFailed": "Login failed",
+    "loginFailedTryLater": "Login failed, please try again later",
     "invalidCredentials": "Invalid username or password",
     "sessionExpired": "Your session has expired, please login again",
     "unauthorized": "You are not authorized to perform this action"
@@ -253,7 +254,17 @@
     "nextStop": "Next Stop",
     "previousStop": "Previous Stop",
     "callCustomer": "Call Customer",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "route": {
+      "fetchError": "Failed to load route data",
+      "newRouteAssigned": "You have a new delivery route!"
+    },
+    "gps": {
+      "notSupported": "Your browser does not support location services",
+      "positionUnavailable": "Unable to get your location",
+      "trackingStarted": "Location tracking enabled",
+      "trackingStopped": "Location tracking disabled"
+    }
   },
   "message": {
     "success": {

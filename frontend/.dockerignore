@@ -1,19 +1,36 @@
-# Dependencies
+# Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
-# Build output
+# Testing
+coverage/
+.nyc_output/
+e2e/
+tests/
+test-results/
+playwright-report/
+playwright/
+chromium/
+
+# Build outputs
 dist/
 build/
+.cache/
+.parcel-cache/
 
-# Environment
+# Environment files
 .env
 .env.*
-!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Development
+# IDE
 .vscode/
 .idea/
 *.swp
@@ -21,36 +38,41 @@ build/
 *~
 .DS_Store
 
-# Tests
-coverage/
-.nyc_output/
-tests/
-test/
-e2e/
-*.spec.ts
-*.spec.tsx
-*.test.ts
-*.test.tsx
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
 
 # Documentation
 docs/
 *.md
 !README.md
 
-# Git
-.git/
-.gitignore
+# Logs
+logs/
+*.log
 
-# Docker
-Dockerfile
-.dockerignore
+# OS files
+Thumbs.db
+
+# Development files
 docker-compose*.yml
+Dockerfile*
+.dockerignore
+*.config.js
+*.config.ts
+!vite.config.ts
+!tsconfig*.json
 
-# Misc
-.eslintcache
-.parcel-cache/
-.cache/
-playwright-report/
-playwright/
-screenshots/
-chromium/
+# Source maps
+*.map
+
+# Temporary files
+tmp/
+temp/
+*.tmp

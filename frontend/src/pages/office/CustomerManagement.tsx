@@ -387,6 +387,7 @@ const CustomerManagement: React.FC = () => {
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            data-testid={`edit-customer-${record.id}`}
           >
             {t('common.edit')}
           </Button>
@@ -395,6 +396,7 @@ const CustomerManagement: React.FC = () => {
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record.id)}
+            data-testid={`delete-customer-${record.id}`}
           >
             {t('common.delete')}
           </Button>
@@ -411,7 +413,7 @@ const CustomerManagement: React.FC = () => {
 
   return (
     <div className="customer-management">
-      <Card title={t('customers.title')}>
+      <Card title={t('customers.title')} data-testid="customer-management-page">
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={6}>
             <Card>
@@ -459,11 +461,13 @@ const CustomerManagement: React.FC = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             style={{ width: 300 }}
+            data-testid="customer-search-input"
           />
           <Button
             type="primary"
             icon={<UserAddOutlined />}
             onClick={handleAdd}
+            data-testid="add-customer-button"
           >
             {t('customers.addCustomer')}
           </Button>
@@ -479,6 +483,7 @@ const CustomerManagement: React.FC = () => {
             showSizeChanger: true,
             showTotal: (total) => t('common.totalItems', { total }),
           }}
+          data-testid="customer-table"
         />
       </Card>
 
@@ -488,6 +493,7 @@ const CustomerManagement: React.FC = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={600}
+        data-testid="customer-modal"
       >
         <Form
           form={form}
@@ -499,7 +505,7 @@ const CustomerManagement: React.FC = () => {
             label={t('customers.name')}
             rules={[{ required: true, message: t('validation.required') }]}
           >
-            <Input />
+            <Input data-testid="customer-name-input" id="customer_name" />
           </Form.Item>
 
           <Form.Item
@@ -510,7 +516,7 @@ const CustomerManagement: React.FC = () => {
               { pattern: /^09\d{8}$/, message: t('validation.phoneFormat') },
             ]}
           >
-            <Input />
+            <Input data-testid="customer-phone-input" id="customer_phone" />
           </Form.Item>
 
           <Form.Item
@@ -518,7 +524,7 @@ const CustomerManagement: React.FC = () => {
             label={t('customers.address')}
             rules={[{ required: true, message: t('validation.required') }]}
           >
-            <Input.TextArea rows={2} />
+            <Input.TextArea rows={2} data-testid="customer-address-input" id="customer_address" />
           </Form.Item>
 
           <Row gutter={16}>
@@ -528,7 +534,7 @@ const CustomerManagement: React.FC = () => {
                 label={t('customers.district')}
                 rules={[{ required: true, message: t('validation.required') }]}
               >
-                <Input />
+                <Input data-testid="customer-district-input" id="customer_district" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -540,7 +546,7 @@ const CustomerManagement: React.FC = () => {
                   { pattern: /^\d{3,5}$/, message: t('validation.postalCodeFormat') },
                 ]}
               >
-                <Input />
+                <Input data-testid="customer-postal-input" id="customer_postalCode" />
               </Form.Item>
             </Col>
           </Row>
@@ -552,7 +558,7 @@ const CustomerManagement: React.FC = () => {
                 label={t('customers.type')}
                 rules={[{ required: true, message: t('validation.required') }]}
               >
-                <Select>
+                <Select data-testid="customer-type-select">
                   <Select.Option value="residential">{t('customers.type.residential')}</Select.Option>
                   <Select.Option value="commercial">{t('customers.type.commercial')}</Select.Option>
                 </Select>
@@ -564,7 +570,7 @@ const CustomerManagement: React.FC = () => {
                 label={t('customers.cylinderType')}
                 rules={[{ required: true, message: t('validation.required') }]}
               >
-                <Select>
+                <Select data-testid="cylinder-type-select">
                   <Select.Option value="20kg">20kg</Select.Option>
                   <Select.Option value="16kg">16kg</Select.Option>
                   <Select.Option value="50kg">50kg</Select.Option>
@@ -579,7 +585,7 @@ const CustomerManagement: React.FC = () => {
             rules={[{ required: true, message: t('validation.required') }]}
             initialValue="active"
           >
-            <Select>
+            <Select data-testid="status-select">
               <Select.Option value="active">{t('customers.status.active')}</Select.Option>
               <Select.Option value="inactive">{t('customers.status.inactive')}</Select.Option>
               <Select.Option value="suspended">{t('customers.status.suspended')}</Select.Option>
@@ -590,15 +596,15 @@ const CustomerManagement: React.FC = () => {
             name="notes"
             label={t('customers.notes')}
           >
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} data-testid="customer-notes-textarea" id="customer_notes" />
           </Form.Item>
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" data-testid="customer-submit-button">
                 {t('common.save')}
               </Button>
-              <Button onClick={() => setIsModalVisible(false)}>
+              <Button onClick={() => setIsModalVisible(false)} data-testid="customer-cancel-button">
                 {t('common.cancel')}
               </Button>
             </Space>

@@ -16,9 +16,15 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
+  /* Global timeout */
+  timeout: 30 * 1000,
+  /* Test timeout */
+  expect: {
+    timeout: 10000
+  },
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
@@ -79,10 +85,35 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: [
+    {
+      command: 'cd backend && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000',
+      port: 8000,
+      timeout: 120 * 1000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: {
+        ...process.env,
+        TESTING: '1',
+        DATABASE_URL: process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5432/luckygas_test',
+        REDIS_URL: process.env.TEST_REDIS_URL || 'redis://localhost:6379',
+        JWT_SECRET_KEY: 'test-secret-key-for-e2e-tests',
+        LOG_LEVEL: 'debug'
+      }
+    },
+    {
+      command: 'cd frontend && npm run dev',
+      port: 5173,
+      timeout: 120 * 1000,
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: {
+        ...process.env,
+        VITE_API_URL: 'http://localhost:8000',
+        NODE_ENV: 'test'
+      }
+    }
+  ],
 });

@@ -1,34 +1,34 @@
 # E2E Test Execution Report
 
-**Date**: 2025-07-26T19:06:23.905552
+**Date**: 2025-07-27T13:17:41.807070
 
-**Overall Status**: ✅ PASSED
+**Overall Status**: ❌ FAILED
 
 ## Test Results by Sprint
 
-### ✅ Driver Functionality
+### ❌ Driver Functionality
 
 - **Passed**: 0
-- **Failed**: 0
+- **Failed**: 2
 - **Skipped**: 0
 
 **Test Files:**
 - ❌ `tests/e2e/test_driver_mobile_flow.py`
 - ❌ `tests/e2e/test_login_flow.py::TestLoginFlow::test_driver_login`
 
-### ✅ WebSocket & Real-time
+### ❌ WebSocket & Real-time
 
 - **Passed**: 0
-- **Failed**: 0
+- **Failed**: 1
 - **Skipped**: 0
 
 **Test Files:**
 - ❌ `tests/e2e/test_websocket_realtime.py`
 
-### ✅ Order Management
+### ❌ Order Management
 
 - **Passed**: 0
-- **Failed**: 0
+- **Failed**: 6
 - **Skipped**: 0
 
 **Test Files:**
@@ -42,9 +42,9 @@
 
 ## Summary Statistics
 
-- **Total Tests Run**: 0
+- **Total Tests Run**: 9
 - **Success Rate**: 0.0%
-- **Failed Tests**: 0
+- **Failed Tests**: 9
 - **Skipped Tests**: 0
 
 ## Coverage Areas

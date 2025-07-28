@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import GPSTracker from './components/GPSTracker';
 import { Position } from '../../services/gps.service';
+import MobileDriverInterface from '../../components/driver/mobile/MobileDriverInterface';
 import './DriverDashboard.css';
 
 interface Route {
@@ -50,6 +51,28 @@ const DriverDashboard: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
+
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if device is mobile
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+      
+      setIsMobile(mobileRegex.test(userAgent.toLowerCase()) || (isTouch && isSmallScreen));
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     fetchTodayRoutes();
@@ -144,6 +167,12 @@ const DriverDashboard: React.FC = () => {
     }
   };
 
+  // Render mobile interface if on mobile device
+  if (isMobile) {
+    return <MobileDriverInterface />;
+  }
+
+  // Desktop interface
   return (
     <div className="driver-dashboard">
       {/* Mobile Header */}

@@ -13,14 +13,14 @@ import DispatchMetrics from '../../components/dispatch/dashboard/DispatchMetrics
 import LiveRouteTracker from '../../components/dispatch/dashboard/LiveRouteTracker';
 import EmergencyAlertBanner from '../../components/dispatch/emergency/EmergencyAlertBanner';
 import PriorityQueueManager from '../../components/dispatch/emergency/PriorityQueueManager';
-import { useWebSocket } from '../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
 const DispatchDashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { isConnected } = useWebSocket();
+  const { isConnected } = useWebSocketContext();
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedArea, setSelectedArea] = useState<string>('all');
   const [isFullscreen, setIsFullscreen] = useState(false);

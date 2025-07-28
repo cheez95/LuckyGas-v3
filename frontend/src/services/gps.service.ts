@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import i18n from '../utils/i18n';
 
 export interface Position {
   latitude: number;
@@ -194,20 +195,20 @@ class GPSService {
     
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        errorMessage = '位置權限被拒絕';
-        message.error('請允許位置權限以使用GPS功能');
+        errorMessage = i18n.t('gps.error.permissionDenied');
+        message.error(i18n.t('gps.error.permissionDenied'));
         break;
       case error.POSITION_UNAVAILABLE:
-        errorMessage = '無法取得位置資訊';
-        message.error('無法取得您的位置，請檢查GPS是否開啟');
+        errorMessage = i18n.t('gps.error.positionUnavailable');
+        message.error(i18n.t('gps.error.positionUnavailable'));
         break;
       case error.TIMEOUT:
-        errorMessage = '取得位置逾時';
-        message.warning('GPS定位逾時，將重試...');
+        errorMessage = i18n.t('gps.error.timeout');
+        message.warning(i18n.t('gps.error.timeout'));
         break;
       default:
-        errorMessage = '未知的定位錯誤';
-        message.error('GPS定位發生錯誤');
+        errorMessage = i18n.t('gps.error.unknown');
+        message.error(i18n.t('gps.error.unknown'));
     }
 
     return {

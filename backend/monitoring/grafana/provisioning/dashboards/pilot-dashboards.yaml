@@ -1,0 +1,14 @@
+apiVersion: 1
+
+providers:
+  - name: 'Lucky Gas Pilot Dashboards'
+    orgId: 1
+    folder: 'Pilot Program'
+    folderUid: pilot-program
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards/pilot
+      foldersFromFilesStructure: false

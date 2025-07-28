@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配送通知 - 幸福氣</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #52c41a;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .delivery-info {
+            background-color: #f6ffed;
+            border: 1px solid #b7eb8f;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .delivery-info h2 {
+            margin-top: 0;
+            color: #52c41a;
+            font-size: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #d9f7be;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: 600;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .driver-info {
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .driver-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: block;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #1890ff;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 5px;
+            font-weight: 600;
+        }
+        .cta-button.secondary {
+            background-color: #fff;
+            color: #1890ff;
+            border: 2px solid #1890ff;
+        }
+        .tips {
+            background-color: #fffbe6;
+            border: 1px solid #ffe58f;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .tips h3 {
+            margin-top: 0;
+            color: #d48806;
+        }
+        .tips ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #1890ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚚 配送通知</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">您的瓦斯即將送達！</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                親愛的 {{ customer_name }} 您好，
+            </div>
+            
+            <p style="font-size: 16px;">
+                您的訂單 <strong>{{ order_number }}</strong> 將於今日配送，請準備接收。
+            </p>
+            
+            <div class="delivery-info">
+                <h2>📍 配送資訊</h2>
+                <div class="info-row">
+                    <span class="label">預計到達時間：</span>
+                    <span class="value" style="font-size: 18px; font-weight: bold; color: #52c41a;">
+                        {{ estimated_time }}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">配送地址：</span>
+                    <span class="value">{{ delivery_address }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">訂購項目：</span>
+                    <span class="value">{{ order_items }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">應付金額：</span>
+                    <span class="value" style="font-weight: bold;">NT$ {{ total_amount }}</span>
+                </div>
+            </div>
+            
+            <div class="driver-info">
+                {% if driver_photo %}
+                <img src="{{ driver_photo }}" alt="司機照片" class="driver-photo">
+                {% endif %}
+                <h3>您的配送司機</h3>
+                <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">{{ driver_name }}</p>
+                <p style="color: #666; margin: 5px 0;">車牌號碼：{{ vehicle_number }}</p>
+                <p style="color: #666; margin: 5px 0;">聯絡電話：{{ driver_phone }}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ tracking_url }}" class="cta-button">即時追蹤配送</a>
+                <a href="tel:{{ driver_phone }}" class="cta-button secondary">聯絡司機</a>
+            </div>
+            
+            <div class="tips">
+                <h3>📌 配送提醒</h3>
+                <ul>
+                    <li>請確保有人在家接收瓦斯桶</li>
+                    <li>準備好空瓦斯桶進行更換</li>
+                    <li>如需更改配送時間，請儘速聯繫司機</li>
+                    <li>付款方式：{{ payment_method }}</li>
+                </ul>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">
+                如有任何問題，請隨時聯繫我們的客服團隊。<br>
+                客服電話：{{ customer_service_phone }}<br>
+                客服時間：週一至週六 8:00 - 18:00
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                此為系統自動發送郵件，請勿直接回覆。<br>
+                © {{ current_year }} 幸福氣瓦斯配送 版權所有
+            </p>
+            <p>
+                <a href="{{ website_url }}">造訪我們的網站</a> | 
+                <a href="{{ unsubscribe_url }}">取消訂閱</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

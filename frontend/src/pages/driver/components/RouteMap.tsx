@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { Spin } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Spin, message } from 'antd';
 import { EnvironmentOutlined, CarOutlined } from '@ant-design/icons';
+import { mapsLoader } from '../../../services/mapLoader.service';
 
 interface RouteMapProps {
   route: {
@@ -34,19 +35,33 @@ const RouteMap: React.FC<RouteMapProps> = ({ route, currentDeliveryIndex = 0 }) 
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const routeLineRef = useRef<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load Google Maps script if not already loaded
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeMap;
-      document.head.appendChild(script);
-    } else {
-      initializeMap();
-    }
+    const loadMap = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Load Google Maps securely through our service
+        await mapsLoader.load({
+          libraries: ['places', 'geometry'],
+          language: 'zh-TW',
+          region: 'TW'
+        });
+        
+        await initializeMap();
+      } catch (err) {
+        console.error('Failed to load map:', err);
+        setError('無法載入地圖，請重新整理頁面再試');
+        message.error('地圖載入失敗');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadMap();
 
     return () => {
       // Cleanup markers
@@ -58,7 +73,7 @@ const RouteMap: React.FC<RouteMapProps> = ({ route, currentDeliveryIndex = 0 }) 
     };
   }, []);
 
-  const initializeMap = () => {
+  const initializeMap = async () => {
     if (!mapRef.current || !window.google) return;
 
     // Default center (Taiwan)
@@ -174,20 +189,35 @@ const RouteMap: React.FC<RouteMapProps> = ({ route, currentDeliveryIndex = 0 }) 
     }
   };
 
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '400px',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <div style={{ color: '#ff4d4f', fontSize: '16px' }}>{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div 
       ref={mapRef} 
       data-testid="route-map-container"
       style={{ width: '100%', height: '100%', minHeight: '400px' }}
     >
-      {!window.google && (
+      {isLoading && (
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
           height: '100%' 
         }}>
-          <Spin size="large" tip="Loading map..." />
+          <Spin size="large" tip="載入地圖中..." />
         </div>
       )}
     </div>

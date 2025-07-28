@@ -1,0 +1,67 @@
+[
+  {
+    "username": "admin1",
+    "password": "TestAdmin123!",
+    "role": "admin"
+  },
+  {
+    "username": "manager1",
+    "password": "TestManager123!",
+    "role": "manager"
+  },
+  {
+    "username": "manager2",
+    "password": "TestManager123!",
+    "role": "manager"
+  },
+  {
+    "username": "staff1",
+    "password": "TestStaff123!",
+    "role": "office_staff"
+  },
+  {
+    "username": "staff2",
+    "password": "TestStaff123!",
+    "role": "office_staff"
+  },
+  {
+    "username": "staff3",
+    "password": "TestStaff123!",
+    "role": "office_staff"
+  },
+  {
+    "username": "staff4",
+    "password": "TestStaff123!",
+    "role": "office_staff"
+  },
+  {
+    "username": "staff5",
+    "password": "TestStaff123!",
+    "role": "office_staff"
+  },
+  {
+    "username": "driver1",
+    "password": "TestDriver123!",
+    "role": "driver"
+  },
+  {
+    "username": "driver2",
+    "password": "TestDriver123!",
+    "role": "driver"
+  },
+  {
+    "username": "driver3",
+    "password": "TestDriver123!",
+    "role": "driver"
+  },
+  {
+    "username": "driver4",
+    "password": "TestDriver123!",
+    "role": "driver"
+  },
+  {
+    "username": "driver5",
+    "password": "TestDriver123!",
+    "role": "driver"
+  }
+]

@@ -1,7 +1,7 @@
 {
   "name": "幸福氣司機端",
   "short_name": "幸福氣司機",
-  "description": "幸福氣體配送司機管理系統",
+  "description": "幸福氣體配送司機管理系統 - 支援離線操作、GPS追蹤、推播通知",
   "start_url": "/driver",
   "display": "standalone",
   "theme_color": "#1890ff",
@@ -21,10 +21,25 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "categories": ["business", "productivity", "utilities"],
   "lang": "zh-TW",
   "dir": "ltr",
   "prefer_related_applications": false,
+  "features": [
+    "GPS tracking",
+    "Offline support",
+    "Push notifications",
+    "Camera integration",
+    "Background sync"
+  ],
+  "permissions": [
+    "geolocation",
+    "notifications",
+    "camera",
+    "storage",
+    "background-sync",
+    "wake-lock"
+  ],
   "screenshots": [
     {
       "src": "/screenshots/driver-dashboard.png",

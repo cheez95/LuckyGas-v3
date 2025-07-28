@@ -3,6 +3,7 @@ import type { AxiosError, AxiosInstance } from 'axios';
 import { message } from 'antd';
 import { navigateTo } from '../utils/router';
 import { performanceMonitor } from './performance.service';
+import i18n from '../utils/i18n';
 
 // Extend axios config to include metadata
 declare module 'axios' {
@@ -124,7 +125,7 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('token_expiry');
-        message.error('登入已過期，請重新登入');
+        message.error(i18n.t('auth.sessionExpired'));
         
         if (!window.location.pathname.includes('/login')) {
           navigateTo('/login');
@@ -163,22 +164,22 @@ api.interceptors.response.use(
     
     // Handle 404 errors
     if (error.response?.status === 404) {
-      message.error('找不到請求的資源');
+      message.error(i18n.t('message.error.notFound'));
     }
     
     // Handle 500 errors
     if (error.response?.status >= 500) {
-      message.error('伺服器錯誤，請稍後再試');
+      message.error(i18n.t('message.error.serverError'));
     }
     
     // Handle network errors
     if (error.code === 'ERR_NETWORK') {
-      message.error('網路連線錯誤');
+      message.error(i18n.t('message.error.network'));
     }
     
     // Handle timeout errors
     if (error.code === 'ECONNABORTED') {
-      message.error('請求超時，請檢查網路連線');
+      message.error(i18n.t('message.error.timeout'));
     }
     
     return Promise.reject(error);
@@ -191,12 +192,12 @@ export default api;
 export const handleApiError = (error: any): string => {
   // Check for timeout error
   if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-    return '請求超時，請檢查網路連線或稍後再試';
+    return i18n.t('message.error.timeout');
   }
   
   // Check for network error
   if (error.code === 'ERR_NETWORK') {
-    return '網路連線失敗，請檢查網路設定';
+    return i18n.t('message.error.network');
   }
   
   // Check for server errors
@@ -212,13 +213,13 @@ export const handleApiError = (error: any): string => {
     
     // Fallback to generic messages based on status code
     if (status >= 500) {
-      return '伺服器錯誤，請稍後再試';
+      return i18n.t('message.error.serverError');
     } else if (status === 404) {
-      return '請求的資源不存在';
+      return i18n.t('message.error.notFound');
     } else if (status === 403) {
-      return '您沒有權限執行此操作';
+      return i18n.t('message.error.unauthorized');
     } else if (status === 401) {
-      return '登入已過期，請重新登入';
+      return i18n.t('auth.sessionExpired');
     }
   }
   
@@ -227,5 +228,5 @@ export const handleApiError = (error: any): string => {
     return error.message;
   }
   
-  return '發生未知錯誤';
+  return i18n.t('message.error.general');
 };

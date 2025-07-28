@@ -5,6 +5,18 @@
  * Ensures required environment variables are set before building
  */
 
+// Load environment variables from .env files
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env files in the same order as Vite
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+
 const requiredEnvVars = {
   VITE_API_URL: {
     required: true,

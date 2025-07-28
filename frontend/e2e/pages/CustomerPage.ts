@@ -55,47 +55,51 @@ export class CustomerPage extends BasePage {
 
   // Form fields
   get customerCodeInput() {
-    return this.page.locator('input[id="customer_code"]');
+    return this.page.locator('input[id="customer_customerCode"]');
   }
 
   get shortNameInput() {
-    return this.page.locator('input[id="short_name"]');
+    return this.page.locator('input[id="customer_shortName"]');
   }
 
   get invoiceTitleInput() {
-    return this.page.locator('input[id="invoice_title"]');
+    return this.page.locator('input[id="customer_invoiceTitle"]');
   }
 
   get addressInput() {
-    return this.page.locator('textarea[id="address"]');
+    return this.page.locator('textarea[id="customer_address"]');
   }
 
   get areaSelect() {
-    return this.page.locator('input[id="area"]');
+    return this.page.locator('input[id="customer_area"]');
   }
 
   get deliveryTimeInput() {
-    return this.page.locator('input[id="delivery_time"]');
+    return this.page.locator('input[id="customer_deliveryTime"]');
   }
 
   get paymentMethodSelect() {
-    return this.page.locator('input[id="payment_method"]');
+    return this.page.locator('input[id="customer_paymentMethod"]');
   }
 
   get avgDailyUsageInput() {
-    return this.page.locator('input[id="avg_daily_usage"]');
+    return this.page.locator('input[id="customer_avgDailyUsage"]');
   }
 
   get maxCycleDaysInput() {
-    return this.page.locator('input[id="max_cycle_days"]');
+    return this.page.locator('input[id="customer_maxCycleDays"]');
   }
 
   get canDelayDaysInput() {
-    return this.page.locator('input[id="can_delay_days"]');
+    return this.page.locator('input[id="customer_canDelayDays"]');
   }
   
   get phoneInput() {
-    return this.page.locator('input[id="phone"]');
+    return this.page.locator('input[id="customer_phone"]');
+  }
+  
+  get mobileInput() {
+    return this.page.locator('input[id="customer_mobile"]');
   }
 
   // Actions
@@ -113,6 +117,9 @@ export class CustomerPage extends BasePage {
   async clickAddCustomer() {
     await this.addCustomerButton.click();
     await this.modalTitle.waitFor({ state: 'visible' });
+    await this.waitForAntAnimation();
+    // Wait for the first input field to be ready
+    await this.customerCodeInput.waitFor({ state: 'visible' });
   }
 
   async fillCustomerForm(customerData: {
@@ -146,16 +153,20 @@ export class CustomerPage extends BasePage {
     }
     if (customerData.area) {
       await this.areaSelect.click();
-      await this.page.waitForTimeout(500); // Wait for dropdown animation
+      // Wait for dropdown to be visible
+      await this.page.locator('.ant-select-dropdown').waitFor({ state: 'visible' });
+      await this.waitForAntAnimation();
       await this.page.locator('.ant-select-dropdown .ant-select-item[title="' + customerData.area + '"]').click();
     }
     
     // Handle delivery time range picker
     if (customerData.deliveryTimeStart && customerData.deliveryTimeEnd) {
-      const rangePickerInput = this.page.locator('input[id="delivery_time"]');
+      const rangePickerInput = this.page.locator('input[id="customer_deliveryTime"]');
       // Click the first input field
       await rangePickerInput.first().click();
-      await this.page.waitForTimeout(500);
+      // Wait for time picker to be visible
+      await this.page.locator('.ant-picker-dropdown').waitFor({ state: 'visible' });
+      await this.waitForAntAnimation();
       // Clear and type start time
       await this.page.keyboard.press('Control+A');
       await this.page.keyboard.type(customerData.deliveryTimeStart);
@@ -176,17 +187,24 @@ export class CustomerPage extends BasePage {
     }
   }
 
-  async submitCustomerForm() {
+  async submitCustomerForm(isEdit: boolean = false) {
     await this.modalConfirmButton.click();
     
-    // Wait for success indication - either modal closes or success message appears
-    await this.page.waitForResponse(
-      response => response.url().includes('/api/v1/customers') && response.status() === 200,
-      { timeout: 10000 }
-    );
+    // Wait for API call to complete (POST for create, PUT for update)
+    if (isEdit) {
+      await this.page.waitForResponse(
+        resp => resp.url().includes('/api/v1/customers/') && resp.request().method() === 'PUT' && resp.ok()
+      );
+    } else {
+      await this.waitForApiCall('/api/v1/customers', 'POST');
+    }
     
-    // Give a bit more time for UI to update
-    await this.page.waitForTimeout(1000);
+    // Wait for modal to close
+    await this.modalTitle.waitFor({ state: 'hidden', timeout: 5000 });
+    
+    // Wait for any animations and loading states
+    await this.waitForAntAnimation();
+    await this.waitForLoadingComplete();
   }
 
   async cancelCustomerForm() {
@@ -239,12 +257,26 @@ export class CustomerPage extends BasePage {
 
   async deleteCustomer(rowIndex: number) {
     const row = this.customerRows.nth(rowIndex);
-    const deleteButton = row.locator('button').filter({ hasText: '刪除' });
+    // Try to find delete button by data-testid first, fallback to text
+    let deleteButton = row.locator('[data-testid^="delete-customer-"]');
+    const buttonCount = await deleteButton.count();
+    
+    if (buttonCount === 0) {
+      // Fallback to text-based selector
+      deleteButton = row.locator('button').filter({ hasText: '刪除' });
+    }
+    
     await deleteButton.click();
     
     // Confirm deletion in the modal
     const confirmButton = this.page.locator('.ant-modal-confirm-btns button.ant-btn-primary');
     await confirmButton.click();
+    
+    // Wait for API response
+    await this.page.waitForResponse(
+      resp => resp.url().includes('/api/v1/customers/') && resp.request().method() === 'DELETE' && resp.ok()
+    );
+    
     await this.waitForToast('刪除成功');
   }
 

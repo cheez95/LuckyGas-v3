@@ -12,8 +12,9 @@ from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.core.security import (
     decode_access_token, AccountLockout, APIKeyManager,
-    SessionManager, CSRFProtection
+    SessionManager
 )
+from app.middleware.security import CSRFProtection
 from app.core.security_config import get_2fa_config
 from app.core.cache import cache
 from app.utils.security_utils import SecurityAudit, RequestValidator

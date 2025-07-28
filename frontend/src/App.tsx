@@ -32,7 +32,6 @@ import DriverAssignment from './pages/dispatch/DriverAssignment';
 import EmergencyDispatch from './pages/dispatch/EmergencyDispatch';
 import DispatchDashboard from './pages/dispatch/DispatchDashboard';
 import DeliveryHistory from './components/office/DeliveryHistory';
-import DriverInterface from './components/driver/DriverInterface';
 import UserProfile from './components/UserProfile';
 
 // Driver Pages
@@ -48,6 +47,12 @@ import OrderTracking from './pages/customer/OrderTracking';
 
 // Analytics Pages
 import ReportingDashboard from './pages/analytics/ReportingDashboard';
+
+// Admin Pages
+import ExecutiveDashboard from './pages/admin/ExecutiveDashboard';
+import OperationsDashboard from './pages/admin/OperationsDashboard';
+import FinancialDashboard from './pages/admin/FinancialDashboard';
+import PerformanceAnalytics from './pages/admin/PerformanceAnalytics';
 
 // Set dayjs locale
 dayjs.locale('zh-tw');
@@ -114,6 +119,13 @@ const App: React.FC = () => {
                         <Route path="customer" element={<CustomerPortal />} />
                         <Route path="customer/track/:orderId" element={<OrderTracking />} />
                         <Route path="analytics" element={<ReportingDashboard />} />
+                        
+                        {/* Admin Routes */}
+                        <Route path="admin/executive" element={<ExecutiveDashboard />} />
+                        <Route path="admin/operations" element={<OperationsDashboard />} />
+                        <Route path="admin/financial" element={<FinancialDashboard />} />
+                        <Route path="admin/performance" element={<PerformanceAnalytics />} />
+                        
                         <Route path="profile" element={<UserProfile />} />
                       </Route>
                     </Routes>

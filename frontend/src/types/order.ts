@@ -127,6 +127,7 @@ export interface Customer {
   short_name: string;
   address: string;
   area?: string;
+  phone?: string;
   
   // Delivery preferences
   delivery_time_start?: string;
@@ -191,79 +192,79 @@ export const getPaymentStatusText = (status: PaymentStatus) => {
 // V2 Order types for flexible product system
 export interface OrderV2 {
   id: number;
-  order_number: string;
-  customer_id: number;
+  orderNumber: string;
+  customerId: number;
   status: OrderStatus;
-  scheduled_date: string;
-  delivery_time_start?: string;
-  delivery_time_end?: string;
+  scheduledDate: string;
+  deliveryTimeStart?: string;
+  deliveryTimeEnd?: string;
   
   // Pricing
-  total_amount: number;
-  discount_amount: number;
-  final_amount: number;
+  totalAmount: number;
+  discountAmount: number;
+  finalAmount: number;
   
   // Payment
-  payment_status: PaymentStatus;
-  payment_method?: string;
-  invoice_number?: string;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: string;
+  invoiceNumber?: string;
   
   // Delivery
-  delivery_address?: string;
-  delivery_notes?: string;
-  is_urgent: boolean;
+  deliveryAddress?: string;
+  deliveryNotes?: string;
+  isUrgent: boolean;
   
   // Assignment
-  route_id?: number;
-  driver_id?: number;
+  routeId?: number;
+  driverId?: number;
   
   // Timestamps
-  created_at: string;
-  updated_at?: string;
-  delivered_at?: string;
+  createdAt: string;
+  updatedAt?: string;
+  deliveredAt?: string;
   
   // Order items (flexible products)
-  order_items: OrderItem[];
+  orderItems: OrderItem[];
   
   // Related data
   customer?: Customer;
-  customer_name?: string;
-  customer_phone?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 export interface OrderCreateV2 {
-  customer_id: number;
-  scheduled_date: string;
-  delivery_time_start?: string;
-  delivery_time_end?: string;
+  customerId: number;
+  scheduledDate: string;
+  deliveryTimeStart?: string;
+  deliveryTimeEnd?: string;
   
   // Order items
-  order_items: OrderItemCreate[];
+  orderItems: OrderItemCreate[];
   
   // Delivery info
-  delivery_address?: string;
-  delivery_notes?: string;
-  is_urgent?: boolean;
+  deliveryAddress?: string;
+  deliveryNotes?: string;
+  isUrgent?: boolean;
   
   // Payment
-  payment_method?: string;
+  paymentMethod?: string;
 }
 
 export interface OrderUpdateV2 {
-  scheduled_date?: string;
-  delivery_time_start?: string;
-  delivery_time_end?: string;
+  scheduledDate?: string;
+  deliveryTimeStart?: string;
+  deliveryTimeEnd?: string;
   
   // Status
   status?: OrderStatus;
-  payment_status?: PaymentStatus;
+  paymentStatus?: PaymentStatus;
   
   // Delivery
-  delivery_address?: string;
-  delivery_notes?: string;
-  is_urgent?: boolean;
+  deliveryAddress?: string;
+  deliveryNotes?: string;
+  isUrgent?: boolean;
   
   // Assignment
-  route_id?: number;
-  driver_id?: number;
+  routeId?: number;
+  driverId?: number;
 }

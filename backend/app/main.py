@@ -9,15 +9,18 @@ from contextlib import asynccontextmanager
 import time
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard, test_utils, driver, communications, order_templates, invoices, payments, financial_reports, banking, notifications, webhooks
+from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard, test_utils, driver, communications, order_templates, invoices, payments, financial_reports, banking, banking_monitor, notifications, webhooks, health, monitoring, sync_operations, feature_flags, sms, sms_webhooks, analytics, api_keys, maps_proxy
+from app.api.v1.admin import migration
 from app.api.v1.socketio_handler import sio, socket_app
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
 from app.core.logging import setup_logging, get_logger
 from app.middleware.logging import LoggingMiddleware, CorrelationIdMiddleware
 from app.middleware.metrics import MetricsMiddleware
-from app.middleware.rate_limiting import RateLimitMiddleware
+from app.middleware.enhanced_rate_limiting import limiter, RateLimitExceeded, _rate_limit_exceeded_handler
 from app.middleware.security import SecurityMiddleware
+from app.core.api_security import APISecurityMiddleware, api_validator, rate_limiter
+from app.middleware.performance import PerformanceMiddleware
 from app.core.db_metrics import DatabaseMetricsCollector
 from app.core.env_validation import validate_environment
 from app.services.websocket_service import websocket_manager
@@ -46,6 +49,11 @@ async def lifespan(app: FastAPI):
     await cache.connect()
     logger.info("Custom cache service initialized")
     
+    # Initialize performance monitoring
+    from app.middleware.performance import PerformanceMiddleware
+    app.state.performance_middleware = PerformanceMiddleware(redis_client=cache.redis_client)
+    logger.info("Performance monitoring initialized")
+    
     # Start database metrics collector
     db_metrics_collector = DatabaseMetricsCollector(engine)
     import asyncio
@@ -55,6 +63,27 @@ async def lifespan(app: FastAPI):
     # Initialize WebSocket manager
     await websocket_manager.initialize()
     logger.info("WebSocket manager initialized")
+    
+    # Initialize API monitoring
+    from app.core.api_monitoring import init_api_monitoring, api_monitor
+    init_api_monitoring()
+    await api_monitor.start_monitoring(interval=300)  # 5 minute interval
+    logger.info("API monitoring initialized")
+    
+    # Initialize enhanced feature flag service
+    from app.services.feature_flags_enhanced import get_feature_flag_service
+    feature_service = await get_feature_flag_service()
+    logger.info("Enhanced feature flag service initialized with persistence")
+    
+    # Initialize enhanced sync service
+    from app.services.sync_service_enhanced import get_sync_service
+    sync_service = await get_sync_service()
+    logger.info("Enhanced sync service initialized with persistence")
+    
+    # Initialize enhanced monitoring
+    from app.core.enhanced_monitoring import monitoring_service
+    await monitoring_service.initialize(app)
+    logger.info("Enhanced monitoring service initialized")
     
     yield
     
@@ -68,6 +97,18 @@ async def lifespan(app: FastAPI):
     # Stop metrics collector
     db_metrics_collector.stop()
     metrics_task.cancel()
+    
+    # Close enhanced sync service
+    from app.services.sync_service_enhanced import get_sync_service
+    sync_service = await get_sync_service()
+    await sync_service.close()
+    logger.info("Enhanced sync service closed")
+    
+    # Close enhanced feature flag service
+    from app.services.feature_flags_enhanced import get_feature_flag_service
+    feature_service = await get_feature_flag_service()
+    await feature_service.close()
+    logger.info("Enhanced feature flag service closed")
     
     # Close custom cache connection
     from app.core.cache import cache
@@ -130,16 +171,15 @@ app.add_middleware(
 # Add security middleware (should be first)
 app.add_middleware(SecurityMiddleware)
 
+# Add API security middleware for key validation and rate limiting
+app.add_middleware(APISecurityMiddleware, validator=api_validator, rate_limiter=rate_limiter)
+
 # Add GZip compression middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Add rate limiting middleware
-rate_limit_config = settings.get_rate_limit()
-app.add_middleware(
-    RateLimitMiddleware,
-    default_limit=rate_limit_config["calls"],
-    window_seconds=rate_limit_config["period"]
-)
+# Add slowapi rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Add logging middleware (should be early in the chain)
 app.add_middleware(LoggingMiddleware)
@@ -147,6 +187,13 @@ app.add_middleware(CorrelationIdMiddleware)
 
 # Add metrics middleware
 app.add_middleware(MetricsMiddleware)
+
+# Add performance monitoring middleware
+@app.middleware("http")
+async def performance_middleware(request: Request, call_next):
+    if hasattr(app.state, 'performance_middleware'):
+        return await app.state.performance_middleware(request, call_next)
+    return await call_next(request)
 
 # Add HTTPS redirect middleware for production
 if settings.ENVIRONMENT.value == "production":
@@ -222,15 +269,26 @@ app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["pred
 app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
 app.include_router(google_api_dashboard.router, prefix="/api/v1/google-api", tags=["google_api_dashboard"])
-app.include_router(driver.router, prefix="/api/v1/driver", tags=["driver"])
+app.include_router(driver.router, prefix="/api/v1/drivers", tags=["drivers"])
 app.include_router(communications.router, prefix="/api/v1/communications", tags=["communications"])
 app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocket"])
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(financial_reports.router, prefix="/api/v1/financial-reports", tags=["financial_reports"])
 app.include_router(banking.router, prefix="/api/v1/banking", tags=["banking"])
+app.include_router(banking_monitor.router, prefix="/api/v1", tags=["banking_monitor"])
 app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"])
 app.include_router(webhooks.router, prefix="/api/v1", tags=["webhooks"])
+app.include_router(sms.router, prefix="/api/v1", tags=["sms"])
+app.include_router(sms_webhooks.router, prefix="/api/v1", tags=["sms_webhooks"])
+app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
+app.include_router(monitoring.router, prefix="/api/v1", tags=["monitoring"])
+app.include_router(migration.router, prefix="/api/v1", tags=["admin", "migration"])
+app.include_router(sync_operations.router, prefix="/api/v1", tags=["sync"])
+app.include_router(feature_flags.router, prefix="/api/v1", tags=["feature_flags"])
+app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
+app.include_router(api_keys.router, prefix="/api/v1", tags=["api_keys"])
+app.include_router(maps_proxy.router, prefix="/api/v1/maps", tags=["maps_proxy"])
 
 # Include test utilities only in test/development environments
 import os
@@ -246,6 +304,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "message": "系統正常運行"}
+
+
+@app.get("/api/health")
+async def api_health_check():
+    """Health check endpoint for API."""
+    return {"status": "healthy", "message": "系統正常運行", "timestamp": time.time()}
 
 
 @app.get("/api/v1/health")

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { notification } from 'antd';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { websocketService, type NotificationMessage } from '../services/websocket.service';
+import i18n from '../utils/i18n';
 
 interface Notification {
   id: string;
@@ -109,7 +110,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const handleSystemMessage = (message: any) => {
       addNotification({
-        title: '系統訊息',
+        title: i18n.t('notification.system'),
         message: message.content || message.message,
         type: 'info',
       });
@@ -117,7 +118,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const handleOrderUpdate = (message: any) => {
       addNotification({
-        title: '訂單更新',
+        title: i18n.t('notification.order.updated'),
         message: `訂單 #${message.order_id} 狀態已更新為 ${message.status}`,
         type: 'info',
       });
@@ -125,7 +126,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const handleRouteUpdate = (message: any) => {
       addNotification({
-        title: '路線更新',
+        title: i18n.t('notification.route.updated'),
         message: `路線 #${message.route_id} 已更新`,
         type: 'info',
       });
@@ -133,7 +134,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const handlePredictionReady = (message: any) => {
       addNotification({
-        title: '需求預測完成',
+        title: i18n.t('notification.prediction.completed'),
         message: `批次 ${message.batch_id} 的預測已完成`,
         type: 'success',
       });
@@ -141,7 +142,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const handleRouteAssigned = (message: any) => {
       addNotification({
-        title: '新路線分配',
+        title: i18n.t('notification.route.new'),
         message: `您已被分配到路線 #${message.route_id}`,
         type: 'warning',
       });

@@ -4,6 +4,7 @@ import { TestUsers } from './test-data';
 import { setupAuthInterceptor } from './auth-interceptor';
 import path from 'path';
 import fs from 'fs';
+import fetch from 'node-fetch';
 
 /**
  * Global setup to create authenticated states for different user roles
@@ -12,6 +13,44 @@ import fs from 'fs';
 async function globalSetup(config: FullConfig) {
   const { baseURL } = config.projects[0].use;
   const storageDir = path.join(__dirname, '../.auth');
+  
+  // Wait for services to be ready with retry logic
+  console.log('🔄 Checking if services are ready...');
+  
+  const checkService = async (url: string, serviceName: string, maxRetries = 30): Promise<boolean> => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(url);
+        if (response.ok || response.status === 404) {
+          console.log(`✅ ${serviceName} is ready`);
+          return true;
+        }
+      } catch (error) {
+        // Service not ready yet
+      }
+      
+      if (i < maxRetries - 1) {
+        console.log(`⏳ Waiting for ${serviceName}... (${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    console.error(`❌ ${serviceName} failed to start after ${maxRetries} attempts`);
+    return false;
+  };
+  
+  // Check backend health
+  const backendUrl = baseURL?.replace(':5173', ':8000') || 'http://localhost:8000';
+  const backendReady = await checkService(`${backendUrl}/api/v1/health`, 'Backend');
+  if (!backendReady) {
+    throw new Error('Backend service is not ready. Please ensure the backend is running on port 8000.');
+  }
+  
+  // Check frontend
+  const frontendReady = await checkService(`${baseURL}`, 'Frontend');
+  if (!frontendReady) {
+    throw new Error('Frontend service is not ready. Please ensure the frontend is running on port 5173.');
+  }
   
   // Create auth directory if it doesn't exist
   if (!fs.existsSync(storageDir)) {

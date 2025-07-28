@@ -1,0 +1,112 @@
+[
+  {
+    "customer_id": "CUST001",
+    "customer_name": "王小明",
+    "phone": "0912-345-678",
+    "address": "台北市大安區和平東路一段1號",
+    "district": "大安區",
+    "cylinder_quantity": 2,
+    "cylinder_type": "20kg",
+    "service_type": "standard",
+    "payment_method": "cash"
+  },
+  {
+    "customer_id": "CUST002",
+    "customer_name": "李美華",
+    "phone": "0923-456-789",
+    "address": "台北市信義區松高路68號",
+    "district": "信義區",
+    "cylinder_quantity": 1,
+    "cylinder_type": "16kg",
+    "service_type": "express",
+    "payment_method": "credit_card"
+  },
+  {
+    "customer_id": "CUST003",
+    "customer_name": "張大同",
+    "phone": "0934-567-890",
+    "address": "台北市中山區民生東路三段67號",
+    "district": "中山區",
+    "cylinder_quantity": 3,
+    "cylinder_type": "20kg",
+    "service_type": "standard",
+    "payment_method": "bank_transfer"
+  },
+  {
+    "customer_id": "CUST004",
+    "customer_name": "陳建國",
+    "phone": "0945-678-901",
+    "address": "台北市內湖區成功路四段168號",
+    "district": "內湖區",
+    "cylinder_quantity": 1,
+    "cylinder_type": "5kg",
+    "service_type": "standard",
+    "payment_method": "cash"
+  },
+  {
+    "customer_id": "CUST005",
+    "customer_name": "林淑芬",
+    "phone": "0956-789-012",
+    "address": "台北市松山區南京東路五段123號",
+    "district": "松山區",
+    "cylinder_quantity": 2,
+    "cylinder_type": "16kg",
+    "service_type": "scheduled",
+    "payment_method": "monthly_billing"
+  },
+  {
+    "customer_id": "CUST006",
+    "customer_name": "黃志明",
+    "phone": "0967-890-123",
+    "address": "台北市士林區中正路247號",
+    "district": "士林區",
+    "cylinder_quantity": 4,
+    "cylinder_type": "20kg",
+    "service_type": "standard",
+    "payment_method": "cash"
+  },
+  {
+    "customer_id": "CUST007",
+    "customer_name": "楊秀英",
+    "phone": "0978-901-234",
+    "address": "台北市北投區明德路150號",
+    "district": "北投區",
+    "cylinder_quantity": 1,
+    "cylinder_type": "16kg",
+    "service_type": "express",
+    "payment_method": "line_pay"
+  },
+  {
+    "customer_id": "CUST008",
+    "customer_name": "劉文雄",
+    "phone": "0989-012-345",
+    "address": "台北市文山區木柵路三段102號",
+    "district": "文山區",
+    "cylinder_quantity": 2,
+    "cylinder_type": "20kg",
+    "service_type": "standard",
+    "payment_method": "cash"
+  },
+  {
+    "customer_id": "CUST009",
+    "customer_name": "吳美玲",
+    "phone": "0990-123-456",
+    "address": "台北市南港區研究院路二段128號",
+    "district": "南港區",
+    "cylinder_quantity": 1,
+    "cylinder_type": "5kg",
+    "service_type": "scheduled",
+    "payment_method": "monthly_billing"
+  },
+  {
+    "customer_id": "CUST010",
+    "customer_name": "蔡英文",
+    "phone": "0911-234-567",
+    "address": "台北市萬華區和平西路三段120號",
+    "district": "萬華區",
+    "cylinder_quantity": 3,
+    "cylinder_type": "20kg",
+    "service_type": "standard",
+    "payment_method": "cash"
+  }
+]

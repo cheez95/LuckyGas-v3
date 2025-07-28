@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "幸福氣管理系統",
+    "title": "幸福氣瓦斯配送管理系統",
     "shortTitle": "幸福氣",
     "loading": "載入中...",
     "error": "發生錯誤",
@@ -64,6 +64,7 @@
     "forgotPassword": "忘記密碼？",
     "loginSuccess": "登入成功",
     "loginFailed": "登入失敗",
+    "loginFailedTryLater": "登入失敗，請稍後再試",
     "invalidCredentials": "用戶名或密碼錯誤",
     "sessionExpired": "您的登入已過期，請重新登入",
     "unauthorized": "您沒有權限執行此操作"
@@ -623,6 +624,8 @@
       "downloading": "下載中...",
       "downloadSuccess": "路線已下載",
       "downloadError": "下載失敗",
+      "fetchError": "無法載入路線資料",
+      "newRouteAssigned": "您有新的配送路線！",
       "startRoute": "開始配送",
       "continueRoute": "繼續配送",
       "status": {
@@ -717,7 +720,9 @@
       "startError": "無法啟動GPS定位",
       "permissionDenied": "位置權限被拒絕",
       "positionUnavailable": "無法取得位置資訊",
-      "timeout": "定位逾時"
+      "timeout": "定位逾時",
+      "trackingStarted": "位置追蹤已開啟",
+      "trackingStopped": "位置追蹤已關閉"
     },
     "myRoute": "我的路線",
     "todayDeliveries": "今日配送",
@@ -799,6 +804,162 @@
     "morning": "上午",
     "afternoon": "下午",
     "evening": "晚上"
+  },
+  "gps": {
+    "error": {
+      "permissionDenied": "位置權限被拒絕",
+      "positionUnavailable": "無法取得位置資訊",
+      "timeout": "取得位置逾時",
+      "unknown": "未知的定位錯誤",
+      "notSupported": "您的裝置不支援定位功能"
+    }
+  },
+  "profile": {
+    "title": "個人資料",
+    "personalInfo": "個人資料",
+    "security": "安全設定",
+    "name": "姓名",
+    "email": "電子郵件",
+    "phone": "電話",
+    "username": "帳號",
+    "avatar": "頭像",
+    "role": {
+      "super_admin": "超級管理員",
+      "manager": "經理",
+      "office_staff": "辦公室人員",
+      "driver": "司機",
+      "customer": "客戶"
+    },
+    "updateSuccess": "個人資料更新成功",
+    "updateError": "更新失敗",
+    "password": {
+      "current": "目前密碼",
+      "new": "新密碼",
+      "confirm": "確認新密碼",
+      "updateSuccess": "密碼更新成功",
+      "updateError": "密碼更新失敗",
+      "mismatch": "兩次輸入的密碼不一致"
+    },
+    "lastLogin": "上次登入時間",
+    "noRecord": "無記錄",
+    "previewImage": "預覽圖片",
+    "forgotPassword": {
+      "title": "重設密碼",
+      "emailSent": "重設密碼郵件已發送",
+      "emailPlaceholder": "請輸入註冊時使用的電子郵件"
+    }
+  },
+  "notification": {
+    "system": "系統訊息",
+    "order": {
+      "new": "新訂單",
+      "assigned": "訂單指派",
+      "completed": "訂單完成",
+      "cancelled": "訂單取消",
+      "updated": "訂單更新"
+    },
+    "route": {
+      "new": "新路線分配",
+      "published": "路線發布",
+      "started": "路線開始",
+      "completed": "路線完成",
+      "updated": "路線更新"
+    },
+    "delivery": {
+      "arrived": "司機已到達",
+      "updated": "配送更新",
+      "statusUpdated": "配送狀態已更新"
+    },
+    "prediction": {
+      "completed": "需求預測完成"
+    },
+    "maintenance": {
+      "notification": "維護通知",
+      "systemMaintenance": "系統維護中"
+    },
+    "connection": {
+      "error": "連線錯誤",
+      "errorDesc": "與伺服器的即時連線發生錯誤",
+      "restored": "已恢復網路連線",
+      "offline": "目前處於離線模式"
+    }
+  },
+  "analytics": {
+    "revenue": {
+      "title": "營收趨勢",
+      "monthly": "月營收"
+    },
+    "orders": {
+      "daily": "每日訂單",
+      "dailyCount": "每日訂單數"
+    },
+    "status": {
+      "completed": "已完成",
+      "inProgress": "進行中",
+      "cancelled": "已取消"
+    },
+    "customers": {
+      "topCustomers": "重要客戶",
+      "revenue": "營收"
+    },
+    "forecast": {
+      "title": "需求預測",
+      "nextMonthRevenue": "下月預估營收",
+      "expectedOrders": "預期訂單數",
+      "demand": "預測需求"
+    },
+    "tabs": {
+      "overview": "總覽",
+      "revenue": "營收",
+      "operations": "營運",
+      "customers": "客戶"
+    },
+    "metrics": {
+      "totalRevenue": "總營收",
+      "totalOrders": "總訂單數",
+      "activeCustomers": "活躍客戶",
+      "onTimeDelivery": "準時送達率"
+    },
+    "productMix": "產品組合",
+    "driverEfficiency": "司機效率",
+    "topRanking": "前 {{count}} 名"
+  },
+  "tracking": {
+    "orderProgress": "訂單進度",
+    "orderConfirmed": "訂單確認",
+    "driverAssigned": "司機指派",
+    "inDelivery": "配送中",
+    "delivered": "已送達",
+    "orderNumber": "訂單編號",
+    "items": "訂購項目",
+    "deliveryAddress": "配送地址",
+    "estimatedDelivery": "預計送達時間",
+    "notScheduled": "尚未安排",
+    "deliveryDriver": "配送司機",
+    "driverLocation": "司機位置",
+    "loadError": "無法載入訂單資訊"
+  },
+  "areas": {
+    "xinyi": "信義區",
+    "daan": "大安區",
+    "zhongshan": "中山區",
+    "songshan": "松山區",
+    "neihu": "內湖區"
+  },
+  "customerPortal": {
+    "defaultAddress": "台北市大安區",
+    "stats": {
+      "totalOrders": "總訂單數",
+      "monthlyUsage": "月均用量",
+      "nextOrder": "預測下次訂購"
+    }
+  },
+  "driverNames": {
+    "zhang": "張師傅",
+    "li": "李師傅",
+    "wang": "王師傅",
+    "chen": "陳師傅",
+    "lin": "林師傅"
   },
   "dispatch": {
     "title": "派遣管理",
