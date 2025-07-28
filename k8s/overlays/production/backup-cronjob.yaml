@@ -1,0 +1,151 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: luckygas-database-backup
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: luckygas-backup
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: luckygas-system
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM Taiwan time
+  timeZone: "Asia/Taipei"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: luckygas-backup
+        app.kubernetes.io/component: backup
+        app.kubernetes.io/part-of: luckygas-system
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: luckygas-backup
+            app.kubernetes.io/component: backup
+        spec:
+          serviceAccountName: luckygas-backup
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+          - name: backup
+            image: gcr.io/luckygas-production/postgres-backup:14
+            imagePullPolicy: Always
+            env:
+            - name: PGHOST
+              valueFrom:
+                configMapKeyRef:
+                  name: luckygas-backend-config
+                  key: DATABASE_HOST
+            - name: PGPORT
+              valueFrom:
+                configMapKeyRef:
+                  name: luckygas-backend-config
+                  key: DATABASE_PORT
+            - name: PGDATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: luckygas-backend-config
+                  key: DATABASE_NAME
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: luckygas-backend-secrets
+                  key: DATABASE_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: luckygas-backend-secrets
+                  key: DATABASE_PASSWORD
+            - name: GCS_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: luckygas-database-backup
+                  key: GCS_BACKUP_BUCKET
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/service-account.json
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Starting database backup..."
+              
+              # Generate backup filename with timestamp
+              BACKUP_FILE="luckygas-db-$(date +%Y%m%d-%H%M%S).sql.gz"
+              
+              # Perform database dump
+              echo "Dumping database..."
+              pg_dump --verbose --no-owner --no-acl --clean --if-exists | gzip > /tmp/${BACKUP_FILE}
+              
+              # Upload to Google Cloud Storage
+              echo "Uploading to GCS..."
+              gsutil cp /tmp/${BACKUP_FILE} gs://${GCS_BUCKET}/daily/${BACKUP_FILE}
+              
+              # Keep weekly backup (every Sunday)
+              if [ $(date +%u) -eq 7 ]; then
+                gsutil cp gs://${GCS_BUCKET}/daily/${BACKUP_FILE} gs://${GCS_BUCKET}/weekly/${BACKUP_FILE}
+              fi
+              
+              # Keep monthly backup (first day of month)
+              if [ $(date +%d) -eq 01 ]; then
+                gsutil cp gs://${GCS_BUCKET}/daily/${BACKUP_FILE} gs://${GCS_BUCKET}/monthly/${BACKUP_FILE}
+              fi
+              
+              # Clean up old backups (keep 30 days of daily, 12 weeks of weekly, 12 months of monthly)
+              echo "Cleaning up old backups..."
+              gsutil ls gs://${GCS_BUCKET}/daily/ | sort | head -n -30 | xargs -I {} gsutil rm {} || true
+              gsutil ls gs://${GCS_BUCKET}/weekly/ | sort | head -n -12 | xargs -I {} gsutil rm {} || true
+              gsutil ls gs://${GCS_BUCKET}/monthly/ | sort | head -n -12 | xargs -I {} gsutil rm {} || true
+              
+              echo "Backup completed successfully!"
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "256Mi"
+              limits:
+                cpu: "500m"
+                memory: "1Gi"
+            volumeMounts:
+            - name: gcp-credentials
+              mountPath: /var/secrets/google
+              readOnly: true
+            - name: temp
+              mountPath: /tmp
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+              capabilities:
+                drop:
+                - ALL
+          volumes:
+          - name: gcp-credentials
+            secret:
+              secretName: luckygas-database-backup
+              items:
+              - key: GCS_SERVICE_ACCOUNT_JSON
+                path: service-account.json
+          - name: temp
+            emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: luckygas-backup
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: luckygas-backup
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: luckygas-system
+  annotations:
+    iam.gke.io/gcp-service-account: luckygas-backup@luckygas-production.iam.gserviceaccount.com

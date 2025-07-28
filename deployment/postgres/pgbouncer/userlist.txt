@@ -1,0 +1,13 @@
+# PgBouncer userlist.txt
+# Format: "username" "password_hash"
+# Generate password hash with: echo -n "password" | md5sum
+
+# Application users
+"luckygas" "md5${POSTGRES_PASSWORD_MD5}"
+
+# Administrative users
+"pgbouncer" "md5${PGBOUNCER_ADMIN_PASSWORD_MD5}"
+"monitor" "md5${MONITOR_PASSWORD_MD5}"
+
+# Replication users (if needed for monitoring)
+"replicator" "md5${REPLICATION_PASSWORD_MD5}"

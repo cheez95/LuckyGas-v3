@@ -1,0 +1,204 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: luckygas-backend-monitor
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: luckygas-backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: luckygas-system
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: luckygas-backend
+      app.kubernetes.io/component: backend
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+    scrapeTimeout: 10s
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: cloud-sql-proxy-monitor
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: cloud-sql-proxy
+    app.kubernetes.io/component: database-proxy
+    app.kubernetes.io/part-of: luckygas-system
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloud-sql-proxy
+      app.kubernetes.io/component: database-proxy
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: luckygas-alerts
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: luckygas
+    app.kubernetes.io/part-of: luckygas-system
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: luckygas.backend
+    interval: 30s
+    rules:
+    - alert: BackendHighErrorRate
+      expr: |
+        (
+          sum(rate(http_requests_total{job="luckygas-backend",status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total{job="luckygas-backend"}[5m]))
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "High error rate on backend API"
+        description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+    
+    - alert: BackendHighLatency
+      expr: |
+        histogram_quantile(0.95,
+          sum(rate(http_request_duration_seconds_bucket{job="luckygas-backend"}[5m])) by (le)
+        ) > 1
+      for: 10m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "High latency on backend API"
+        description: "95th percentile latency is {{ $value }}s for the last 10 minutes"
+    
+    - alert: BackendPodCrashLooping
+      expr: |
+        rate(kube_pod_container_status_restarts_total{
+          namespace="luckygas",
+          pod=~"luckygas-backend-.*"
+        }[15m]) > 0
+      for: 5m
+      labels:
+        severity: critical
+        team: backend
+      annotations:
+        summary: "Backend pod is crash looping"
+        description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+    
+    - alert: BackendHighMemoryUsage
+      expr: |
+        (
+          container_memory_working_set_bytes{
+            namespace="luckygas",
+            pod=~"luckygas-backend-.*",
+            container="backend"
+          }
+          / 
+          container_spec_memory_limit_bytes{
+            namespace="luckygas",
+            pod=~"luckygas-backend-.*",
+            container="backend"
+          }
+        ) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "Backend pod high memory usage"
+        description: "Pod {{ $labels.pod }} memory usage is {{ $value | humanizePercentage }}"
+    
+  - name: luckygas.database
+    interval: 30s
+    rules:
+    - alert: DatabaseConnectionPoolExhausted
+      expr: |
+        (
+          pg_stat_database_numbackends{job="cloud-sql-proxy"}
+          /
+          pg_settings_max_connections{job="cloud-sql-proxy"}
+        ) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        team: database
+      annotations:
+        summary: "Database connection pool near exhaustion"
+        description: "Connection pool is {{ $value | humanizePercentage }} full"
+    
+    - alert: DatabaseHighTransactionRate
+      expr: |
+        rate(pg_stat_database_xact_commit{job="cloud-sql-proxy"}[5m]) +
+        rate(pg_stat_database_xact_rollback{job="cloud-sql-proxy"}[5m]) > 1000
+      for: 10m
+      labels:
+        severity: info
+        team: database
+      annotations:
+        summary: "High database transaction rate"
+        description: "Transaction rate is {{ $value }} per second"
+    
+  - name: luckygas.celery
+    interval: 30s
+    rules:
+    - alert: CeleryQueueBacklog
+      expr: |
+        celery_queue_length{queue_name="default"} > 100
+      for: 15m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "Celery queue backlog detected"
+        description: "Queue {{ $labels.queue_name }} has {{ $value }} pending tasks"
+    
+    - alert: CeleryWorkerOffline
+      expr: |
+        up{job="luckygas-celery-worker"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        team: backend
+      annotations:
+        summary: "Celery worker is offline"
+        description: "Celery worker {{ $labels.instance }} has been down for 5 minutes"
+        
+  - name: luckygas.business
+    interval: 5m
+    rules:
+    - alert: NoOrdersProcessed
+      expr: |
+        increase(business_orders_created_total[1h]) == 0
+      for: 2h
+      labels:
+        severity: warning
+        team: business
+      annotations:
+        summary: "No orders processed in the last hour"
+        description: "Business might be impacted - no orders created for 2 hours"
+    
+    - alert: DeliveryDelayHigh
+      expr: |
+        histogram_quantile(0.95,
+          sum(rate(delivery_completion_time_seconds_bucket[1h])) by (le)
+        ) > 7200
+      for: 30m
+      labels:
+        severity: warning
+        team: operations
+      annotations:
+        summary: "High delivery completion time"
+        description: "95th percentile delivery time is {{ $value | humanizeDuration }}"

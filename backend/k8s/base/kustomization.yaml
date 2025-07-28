@@ -1,0 +1,57 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: luckygas-staging
+
+resources:
+- backend-deployment.yaml
+- backend-service.yaml
+- frontend-deployment.yaml
+- frontend-service.yaml
+- ingress.yaml
+- network-policy.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: luckygas
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: luckygas-platform
+
+# Configure image tags through kustomize
+images:
+- name: gcr.io/luckygas-staging/backend
+  newTag: "1.0.0"  # Override with actual tag during deployment
+- name: gcr.io/luckygas-staging/frontend
+  newTag: "1.0.0"  # Override with actual tag during deployment
+
+# ConfigMap generator for environment-specific configs
+configMapGenerator:
+- name: app-config
+  literals:
+  - ENVIRONMENT=staging
+  - LOG_LEVEL=info
+  - ENABLE_METRICS=true
+
+# Secret generator (actual secrets should be in Google Secret Manager)
+secretGenerator: []
+
+# Apply security contexts to all containers
+patches:
+- target:
+    kind: Deployment
+  patch: |-
+    - op: add
+      path: /spec/template/spec/securityContext
+      value:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+    - op: add
+      path: /spec/template/spec/containers/0/securityContext
+      value:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        capabilities:
+          drop:
+          - ALL

@@ -1,0 +1,187 @@
+# PostgreSQL Exporter Custom Queries for Lucky Gas
+# These queries provide business-specific metrics
+
+pg_replication:
+  query: |
+    SELECT
+      CASE WHEN pg_is_in_recovery() THEN 1 ELSE 0 END AS is_replica,
+      CASE WHEN pg_is_in_recovery() THEN NULL ELSE pg_current_wal_lsn() - '0/0'::pg_lsn END AS current_wal_lsn,
+      CASE WHEN pg_is_in_recovery() THEN pg_last_wal_receive_lsn() - '0/0'::pg_lsn ELSE NULL END AS last_wal_receive_lsn,
+      CASE WHEN pg_is_in_recovery() THEN pg_last_wal_replay_lsn() - '0/0'::pg_lsn ELSE NULL END AS last_wal_replay_lsn,
+      CASE WHEN pg_is_in_recovery() THEN EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp()) ELSE NULL END AS replication_lag_seconds
+  metrics:
+    - is_replica:
+        usage: "GAUGE"
+        description: "Whether this instance is a replica"
+    - current_wal_lsn:
+        usage: "COUNTER"
+        description: "Current WAL LSN (primary only)"
+    - last_wal_receive_lsn:
+        usage: "COUNTER"
+        description: "Last WAL receive LSN (replica only)"
+    - last_wal_replay_lsn:
+        usage: "COUNTER"
+        description: "Last WAL replay LSN (replica only)"
+    - replication_lag_seconds:
+        usage: "GAUGE"
+        description: "Replication lag in seconds (replica only)"
+
+pg_database_stats:
+  query: |
+    SELECT
+      datname as database,
+      pg_database_size(datname) as size_bytes,
+      numbackends as connections,
+      xact_commit as commits,
+      xact_rollback as rollbacks,
+      blks_read as blocks_read,
+      blks_hit as blocks_hit,
+      tup_returned as tuples_returned,
+      tup_fetched as tuples_fetched,
+      tup_inserted as tuples_inserted,
+      tup_updated as tuples_updated,
+      tup_deleted as tuples_deleted
+    FROM pg_stat_database
+    WHERE datname NOT IN ('template0', 'template1')
+  metrics:
+    - database:
+        usage: "LABEL"
+        description: "Database name"
+    - size_bytes:
+        usage: "GAUGE"
+        description: "Database size in bytes"
+    - connections:
+        usage: "GAUGE"
+        description: "Number of active connections"
+    - commits:
+        usage: "COUNTER"
+        description: "Number of committed transactions"
+    - rollbacks:
+        usage: "COUNTER"
+        description: "Number of rolled back transactions"
+    - blocks_read:
+        usage: "COUNTER"
+        description: "Number of disk blocks read"
+    - blocks_hit:
+        usage: "COUNTER"
+        description: "Number of buffer hits"
+    - tuples_returned:
+        usage: "COUNTER"
+        description: "Number of tuples returned"
+    - tuples_fetched:
+        usage: "COUNTER"
+        description: "Number of tuples fetched"
+    - tuples_inserted:
+        usage: "COUNTER"
+        description: "Number of tuples inserted"
+    - tuples_updated:
+        usage: "COUNTER"
+        description: "Number of tuples updated"
+    - tuples_deleted:
+        usage: "COUNTER"
+        description: "Number of tuples deleted"
+
+pg_table_stats:
+  query: |
+    SELECT
+      schemaname,
+      tablename,
+      pg_total_relation_size(schemaname||'.'||tablename) as total_size_bytes,
+      n_live_tup as live_tuples,
+      n_dead_tup as dead_tuples,
+      n_mod_since_analyze as modifications_since_analyze,
+      last_vacuum,
+      last_autovacuum,
+      last_analyze,
+      last_autoanalyze
+    FROM pg_stat_user_tables
+  metrics:
+    - schemaname:
+        usage: "LABEL"
+        description: "Schema name"
+    - tablename:
+        usage: "LABEL"
+        description: "Table name"
+    - total_size_bytes:
+        usage: "GAUGE"
+        description: "Total table size including indexes"
+    - live_tuples:
+        usage: "GAUGE"
+        description: "Estimated number of live tuples"
+    - dead_tuples:
+        usage: "GAUGE"
+        description: "Estimated number of dead tuples"
+    - modifications_since_analyze:
+        usage: "GAUGE"
+        description: "Number of modifications since last analyze"
+
+pg_lock_stats:
+  query: |
+    SELECT
+      mode,
+      COUNT(*) as count
+    FROM pg_locks
+    GROUP BY mode
+  metrics:
+    - mode:
+        usage: "LABEL"
+        description: "Lock mode"
+    - count:
+        usage: "GAUGE"
+        description: "Number of locks"
+
+pg_long_running_queries:
+  query: |
+    SELECT
+      COUNT(*) as count,
+      MAX(EXTRACT(EPOCH FROM (now() - query_start))) as max_duration_seconds
+    FROM pg_stat_activity
+    WHERE state != 'idle'
+      AND query NOT LIKE 'autovacuum:%'
+      AND query_start < now() - interval '1 minute'
+  metrics:
+    - count:
+        usage: "GAUGE"
+        description: "Number of long-running queries"
+    - max_duration_seconds:
+        usage: "GAUGE"
+        description: "Maximum query duration in seconds"
+
+lucky_gas_business_metrics:
+  query: |
+    SELECT
+      'orders' as metric_name,
+      COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours') as daily_count,
+      COUNT(*) FILTER (WHERE created_at > now() - interval '1 hour') as hourly_count,
+      COUNT(*) FILTER (WHERE status = 'pending') as pending_count,
+      COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_count,
+      COUNT(*) FILTER (WHERE status = 'completed' AND created_at > now() - interval '24 hours') as completed_today
+    FROM orders
+    UNION ALL
+    SELECT
+      'customers' as metric_name,
+      COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours') as daily_count,
+      COUNT(*) FILTER (WHERE created_at > now() - interval '1 hour') as hourly_count,
+      COUNT(*) FILTER (WHERE is_active = true) as pending_count,
+      0 as in_progress_count,
+      0 as completed_today
+    FROM customers
+  metrics:
+    - metric_name:
+        usage: "LABEL"
+        description: "Business metric name"
+    - daily_count:
+        usage: "GAUGE"
+        description: "Count in last 24 hours"
+    - hourly_count:
+        usage: "GAUGE"
+        description: "Count in last hour"
+    - pending_count:
+        usage: "GAUGE"
+        description: "Pending items count"
+    - in_progress_count:
+        usage: "GAUGE"
+        description: "In progress items count"
+    - completed_today:
+        usage: "GAUGE"
+        description: "Completed today count"

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: luckygas-backend-config
+  namespace: luckygas
+data:
+  # Production-specific configuration
+  ENVIRONMENT: "production"
+  DEBUG: "false"
+  LOG_LEVEL: "INFO"
+  
+  # Production database settings
+  DATABASE_POOL_SIZE: "50"
+  DATABASE_MAX_OVERFLOW: "20"
+  DATABASE_POOL_TIMEOUT: "30"
+  DATABASE_POOL_RECYCLE: "3600"
+  
+  # Production Redis settings
+  REDIS_MAX_CONNECTIONS: "100"
+  REDIS_SOCKET_TIMEOUT: "30"
+  REDIS_SOCKET_CONNECT_TIMEOUT: "30"
+  
+  # Production API settings
+  API_RATE_LIMIT: "100"
+  API_RATE_LIMIT_WINDOW: "60"
+  API_TIMEOUT: "30"
+  
+  # Production security settings
+  SECURE_COOKIES: "true"
+  SESSION_COOKIE_SECURE: "true"
+  SESSION_COOKIE_HTTPONLY: "true"
+  SESSION_COOKIE_SAMESITE: "strict"

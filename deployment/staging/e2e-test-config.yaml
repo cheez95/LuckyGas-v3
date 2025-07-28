@@ -1,0 +1,85 @@
+# LuckyGas E2E Testing Infrastructure Configuration
+# Staging Environment Setup
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: e2e-test-config
+  namespace: luckygas-staging
+data:
+  BASE_URL: "https://staging.luckygas.com.tw"
+  API_BASE_URL: "https://api-staging.luckygas.com.tw"
+  TEST_TIMEOUT: "60000"
+  HEADLESS: "true"
+  PARALLEL_WORKERS: "4"
+  RETRY_ATTEMPTS: "2"
+  
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: e2e-test-runner
+  namespace: luckygas-staging
+spec:
+  schedule: "0 */4 * * *"  # Run every 4 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: e2e-tests
+            image: luckygas/e2e-tests:latest
+            env:
+            - name: TEST_ENV
+              value: "staging"
+            - name: COVERAGE_THRESHOLD
+              value: "80"
+            - name: CRITICAL_PATHS_ONLY
+              value: "false"
+            command:
+            - npm
+            - run
+            - test:e2e:staging
+          restartPolicy: OnFailure
+          
+---
+# Test Database Seeder
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-data-seeder
+  namespace: luckygas-staging
+spec:
+  template:
+    spec:
+      containers:
+      - name: seeder
+        image: luckygas/backend:latest
+        command:
+        - python
+        - -m
+        - app.scripts.seed_test_data
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: staging-db-secret
+              key: url
+        - name: SEED_SIZE
+          value: "medium"  # 100 customers, 500 orders
+      restartPolicy: Never
+      
+---
+# E2E Test Monitoring
+apiVersion: v1
+kind: Service
+metadata:
+  name: e2e-test-dashboard
+  namespace: luckygas-staging
+spec:
+  selector:
+    app: test-dashboard
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: LoadBalancer

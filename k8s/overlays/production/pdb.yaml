@@ -1,0 +1,33 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: luckygas-backend-pdb
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: luckygas-backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: luckygas-system
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: luckygas-backend
+      app.kubernetes.io/component: backend
+  unhealthyPodEvictionPolicy: AlwaysAllow
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: luckygas-frontend-pdb
+  namespace: luckygas
+  labels:
+    app.kubernetes.io/name: luckygas-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: luckygas-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: luckygas-frontend
+      app.kubernetes.io/component: frontend
+  unhealthyPodEvictionPolicy: AlwaysAllow

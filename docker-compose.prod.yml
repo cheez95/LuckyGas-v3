@@ -1,0 +1,575 @@
+version: '3.8'
+
+x-common-variables: &common-variables
+  TZ: Asia/Taipei
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+services:
+  # PostgreSQL Primary with pgBouncer
+  postgres-primary:
+    image: postgres:14-alpine
+    container_name: luckygas-postgres-primary
+    restart: unless-stopped
+    environment:
+      <<: *common-variables
+      POSTGRES_DB: ${POSTGRES_DB:?Database name required}
+      POSTGRES_USER: ${POSTGRES_USER:?Database user required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=zh_TW.UTF-8"
+      # Replication settings
+      POSTGRES_REPLICATION_MODE: master
+      POSTGRES_REPLICATION_USER: ${REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:?Replication password required}
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./deployment/postgres/primary/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./deployment/postgres/scripts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # PostgreSQL Replica
+  postgres-replica:
+    image: postgres:14-alpine
+    container_name: luckygas-postgres-replica
+    restart: unless-stopped
+    environment:
+      <<: *common-variables
+      POSTGRES_DB: ${POSTGRES_DB:?Database name required}
+      POSTGRES_USER: ${POSTGRES_USER:?Database user required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+      POSTGRES_REPLICATION_MODE: slave
+      POSTGRES_MASTER_SERVICE: postgres-primary
+      POSTGRES_REPLICATION_USER: ${REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:?Replication password required}
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./deployment/postgres/replica/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      start_period: 60s
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # pgBouncer - Connection Pooler
+  pgbouncer:
+    image: edoburu/pgbouncer:1.19.0
+    container_name: luckygas-pgbouncer
+    restart: unless-stopped
+    environment:
+      <<: *common-variables
+      DATABASES_HOST: postgres-primary
+      DATABASES_PORT: 5432
+      DATABASES_USER: ${POSTGRES_USER:?Database user required}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+      DATABASES_DBNAME: ${POSTGRES_DB:?Database name required}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 10
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      SERVER_LIFETIME: 3600
+      SERVER_IDLE_TIMEOUT: 600
+      LOG_CONNECTIONS: 1
+      LOG_DISCONNECTIONS: 1
+      LOG_POOLER_ERRORS: 1
+      STATS_PERIOD: 60
+    volumes:
+      - ./deployment/postgres/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./deployment/postgres/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    ports:
+      - "6432:6432"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "psql -h localhost -p 6432 -U $$DATABASES_USER -d pgbouncer -c 'SHOW POOLS;'"]
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # Redis Master with Sentinel
+  redis-master:
+    image: redis:7-alpine
+    container_name: luckygas-redis-master
+    restart: unless-stopped
+    command: >
+      sh -c 'redis-server /etc/redis/redis.conf
+      --requirepass "$${REDIS_PASSWORD}"
+      --masterauth "$${REDIS_PASSWORD}"
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --appendonly yes
+      --appendfsync everysec'
+    environment:
+      <<: *common-variables
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+    volumes:
+      - redis_master_data:/data
+      - ./deployment/redis/master/redis.conf:/etc/redis/redis.conf:ro
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Slave
+  redis-slave:
+    image: redis:7-alpine
+    container_name: luckygas-redis-slave
+    restart: unless-stopped
+    command: >
+      sh -c 'redis-server /etc/redis/redis.conf
+      --slaveof redis-master 6379
+      --requirepass "$${REDIS_PASSWORD}"
+      --masterauth "$${REDIS_PASSWORD}"
+      --save ""
+      --appendonly no'
+    environment:
+      <<: *common-variables
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+    volumes:
+      - redis_slave_data:/data
+      - ./deployment/redis/slave/redis.conf:/etc/redis/redis.conf:ro
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Sentinel 1
+  redis-sentinel-1:
+    image: redis:7-alpine
+    container_name: luckygas-redis-sentinel-1
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    environment:
+      <<: *common-variables
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+      SENTINEL_QUORUM: 2
+      SENTINEL_DOWN_AFTER: 5000
+      SENTINEL_PARALLEL_SYNCS: 1
+      SENTINEL_FAILOVER_TIMEOUT: 10000
+    volumes:
+      - redis_sentinel1_data:/data
+      - ./deployment/redis/sentinel/sentinel.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      - redis-master
+      - redis-slave
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+  # Redis Sentinel 2
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: luckygas-redis-sentinel-2
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    environment:
+      <<: *common-variables
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+      SENTINEL_QUORUM: 2
+      SENTINEL_DOWN_AFTER: 5000
+      SENTINEL_PARALLEL_SYNCS: 1
+      SENTINEL_FAILOVER_TIMEOUT: 10000
+    volumes:
+      - redis_sentinel2_data:/data
+      - ./deployment/redis/sentinel/sentinel.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      - redis-master
+      - redis-slave
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+  # Redis Sentinel 3
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: luckygas-redis-sentinel-3
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    environment:
+      <<: *common-variables
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+      SENTINEL_QUORUM: 2
+      SENTINEL_DOWN_AFTER: 5000
+      SENTINEL_PARALLEL_SYNCS: 1
+      SENTINEL_FAILOVER_TIMEOUT: 10000
+    volumes:
+      - redis_sentinel3_data:/data
+      - ./deployment/redis/sentinel/sentinel.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      - redis-master
+      - redis-slave
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+  # Backend API with production optimizations
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+        VERSION: ${VERSION:-latest}
+    image: luckygas-backend:${VERSION:-latest}
+    container_name: luckygas-backend
+    restart: unless-stopped
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis-master:
+        condition: service_healthy
+    environment:
+      <<: *common-variables
+      # Application
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # Database - Use pgBouncer
+      DATABASE_HOST: pgbouncer
+      DATABASE_PORT: 6432
+      DATABASE_NAME: ${POSTGRES_DB:?Database name required}
+      DATABASE_USER: ${POSTGRES_USER:?Database user required}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+      DATABASE_POOL_SIZE: 20
+      DATABASE_MAX_OVERFLOW: 10
+      DATABASE_POOL_TIMEOUT: 30
+      DATABASE_POOL_RECYCLE: 3600
+      
+      # Redis with Sentinel
+      REDIS_HOST: redis-master
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+      REDIS_SENTINEL_HOSTS: "redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379"
+      REDIS_SENTINEL_MASTER: mymaster
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:?Secret key required}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT secret required}
+      
+      # Rate Limiting
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_DEFAULT: "100/minute"
+      
+      # Performance
+      WORKERS: ${WORKERS:-4}
+      WORKER_CONNECTIONS: 1000
+      KEEPALIVE: 5
+      
+      # Google Cloud
+      GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/google/credentials.json
+      
+      # API Keys (from secrets)
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:?Google Maps API key required}
+      SMS_GATEWAY_API_KEY: ${SMS_GATEWAY_API_KEY:?SMS gateway API key required}
+      EINVOICE_APP_ID: ${EINVOICE_APP_ID:?E-invoice app ID required}
+      EINVOICE_API_KEY: ${EINVOICE_API_KEY:?E-invoice API key required}
+      BANKING_API_KEY: ${BANKING_API_KEY:?Banking API key required}
+      
+      # Monitoring
+      PROMETHEUS_ENABLED: "true"
+      OPENTELEMETRY_ENABLED: "true"
+      OPENTELEMETRY_ENDPOINT: ${OPENTELEMETRY_ENDPOINT:-http://otel-collector:4317}
+    volumes:
+      - backend_logs:/app/logs
+      - ${GOOGLE_CREDENTIALS_FILE:?Google credentials file required}:/var/secrets/google/credentials.json:ro
+    ports:
+      - "8000:8000"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+    networks:
+      - luckygas-network
+    deploy:
+      replicas: ${BACKEND_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+
+  # Frontend with Nginx optimizations
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VCS_REF: ${VCS_REF:-$(git rev-parse --short HEAD)}
+        VERSION: ${VERSION:-latest}
+        VITE_API_URL: ${VITE_API_URL:-https://api.luckygas.tw}
+        VITE_WS_URL: ${VITE_WS_URL:-wss://api.luckygas.tw}
+        VITE_ENV: production
+    image: luckygas-frontend:${VERSION:-latest}
+    container_name: luckygas-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      <<: *common-variables
+      NGINX_WORKER_PROCESSES: auto
+      NGINX_WORKER_CONNECTIONS: 1024
+    volumes:
+      - ./deployment/nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+    networks:
+      - luckygas-network
+    deploy:
+      replicas: ${FRONTEND_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      update_config:
+        parallelism: 1
+        delay: 30s
+        failure_action: rollback
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: luckygas-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: luckygas-grafana
+    restart: unless-stopped
+    environment:
+      <<: *common-variables
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Grafana password required}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource,redis-datasource
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-https://grafana.luckygas.tw}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - luckygas-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # PostgreSQL Exporter
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.13.0
+    container_name: luckygas-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-primary:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/etc/postgres_exporter/queries.yaml"
+    volumes:
+      - ./deployment/postgres/monitoring/queries.yaml:/etc/postgres_exporter/queries.yaml:ro
+    depends_on:
+      - postgres-primary
+    ports:
+      - "9187:9187"
+    networks:
+      - luckygas-network
+
+  # Redis Exporter
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: luckygas-redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: "redis://redis-master:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Redis password required}
+    depends_on:
+      - redis-master
+    ports:
+      - "9121:9121"
+    networks:
+      - luckygas-network
+
+  # Node Exporter for system metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: luckygas-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "9100:9100"
+    networks:
+      - luckygas-network
+
+  # Backup service
+  backup:
+    image: postgres:14-alpine
+    container_name: luckygas-backup
+    restart: unless-stopped
+    environment:
+      <<: *common-variables
+      POSTGRES_HOST: postgres-primary
+      POSTGRES_USER: ${POSTGRES_USER:?Database user required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password required}
+      POSTGRES_DB: ${POSTGRES_DB:?Database name required}
+      BACKUP_SCHEDULE: "0 2 * * *"  # Daily at 2 AM
+      BACKUP_RETENTION_DAYS: 7
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - backup_data:/backups
+      - ./deployment/scripts/backup-prod.sh:/usr/local/bin/backup.sh:ro
+    command: >
+      sh -c "chmod +x /usr/local/bin/backup.sh &&
+             echo '$$BACKUP_SCHEDULE /usr/local/bin/backup.sh' | crontab - &&
+             crond -f -l 2"
+    depends_on:
+      - postgres-primary
+    networks:
+      - luckygas-network
+
+networks:
+  luckygas-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_primary_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  redis_master_data:
+    driver: local
+  redis_slave_data:
+    driver: local
+  redis_sentinel1_data:
+    driver: local
+  redis_sentinel2_data:
+    driver: local
+  redis_sentinel3_data:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  backup_data:
+    driver: local

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: luckygas-frontend
+  namespace: luckygas-staging
+  labels:
+    app: luckygas-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: luckygas-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP

@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: luckygas-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://staging.luckygas.com.tw,http://localhost:5173"
+    nginx.ingress.kubernetes.io/rate-limit: "50"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/auth-url: "" # Disable auth for staging
+spec:
+  tls:
+  - hosts:
+    - staging.luckygas.com.tw
+    - api-staging.luckygas.com.tw
+    secretName: luckygas-staging-tls
+  rules:
+  - host: staging.luckygas.com.tw
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: staging-luckygas-backend
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: staging-luckygas-frontend
+            port:
+              number: 80
+  - host: api-staging.luckygas.com.tw
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: staging-luckygas-backend
+            port:
+              number: 8000

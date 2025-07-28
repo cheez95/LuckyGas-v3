@@ -1,0 +1,205 @@
+groups:
+  - name: luckygas_infrastructure
+    interval: 30s
+    rules:
+      # Database alerts
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL exporter cannot connect to database for more than 1 minute"
+
+      - alert: PostgresHighConnections
+        expr: pg_stat_database_numbackends{datname="luckygas"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "PostgreSQL has high number of connections"
+          description: "Database {{ $labels.datname }} has {{ $value }} connections (threshold: 80)"
+
+      - alert: PostgresSlowQueries
+        expr: rate(pg_stat_database_blks_hit{datname="luckygas"}[5m]) < 0.9
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "PostgreSQL cache hit rate is low"
+          description: "Cache hit rate is {{ $value }} (threshold: 0.9), indicating slow queries"
+
+      # Redis alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Redis is down"
+          description: "Redis exporter cannot connect to Redis for more than 1 minute"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value | humanizePercentage }} of max"
+
+      - alert: RedisHighKeyEviction
+        expr: increase(redis_evicted_keys_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Redis is evicting keys"
+          description: "Redis has evicted {{ $value }} keys in the last 5 minutes"
+
+  - name: luckygas_application
+    interval: 30s
+    rules:
+      # API performance alerts
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="luckygas-backend"}[5m])) by (le, endpoint)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "API endpoint has high latency"
+          description: "Endpoint {{ $labels.endpoint }} p95 latency is {{ $value }}s (threshold: 1s)"
+
+      - alert: APIHighErrorRate
+        expr: sum(rate(http_requests_total{job="luckygas-backend",status=~"5.."}[5m])) by (endpoint) / sum(rate(http_requests_total{job="luckygas-backend"}[5m])) by (endpoint) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "API endpoint has high error rate"
+          description: "Endpoint {{ $labels.endpoint }} error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      - alert: APIDown
+        expr: up{job="luckygas-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Lucky Gas API is down"
+          description: "Cannot reach Lucky Gas backend API for more than 1 minute"
+
+      # Business metrics alerts
+      - alert: OrderProcessingDelayed
+        expr: histogram_quantile(0.95, sum(rate(luckygas_order_processing_seconds_bucket[1h])) by (le)) > 7200
+        for: 10m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Order processing is delayed"
+          description: "95th percentile order processing time is {{ $value | humanizeDuration }} (threshold: 2 hours)"
+
+      - alert: LowCustomerSatisfaction
+        expr: luckygas_customer_satisfaction_score < 3.5
+        for: 30m
+        labels:
+          severity: warning
+          team: customer_service
+        annotations:
+          summary: "Customer satisfaction score is low"
+          description: "Customer satisfaction score is {{ $value }} (threshold: 3.5)"
+
+      - alert: RouteOptimizationFailing
+        expr: sum(rate(luckygas_route_optimizations_total{status="failed"}[5m])) / sum(rate(luckygas_route_optimizations_total[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Route optimization failure rate is high"
+          description: "Route optimization failure rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      - alert: PredictionAccuracyLow
+        expr: luckygas_prediction_accuracy < 0.8
+        for: 30m
+        labels:
+          severity: warning
+          team: data_science
+        annotations:
+          summary: "Prediction accuracy is below threshold"
+          description: "Prediction accuracy for {{ $labels.prediction_type }} is {{ $value | humanizePercentage }} (threshold: 80%)"
+
+      # External API alerts
+      - alert: ExternalAPIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(luckygas_external_api_latency_seconds_bucket[5m])) by (le, api_name)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "External API has high latency"
+          description: "{{ $labels.api_name }} API p95 latency is {{ $value }}s (threshold: 5s)"
+
+      - alert: ExternalAPIHighErrorRate
+        expr: sum(rate(luckygas_external_api_calls_total{status!="success"}[5m])) by (api_name) / sum(rate(luckygas_external_api_calls_total[5m])) by (api_name) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "External API has high error rate"
+          description: "{{ $labels.api_name }} API error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+  - name: luckygas_system
+    interval: 30s
+    rules:
+      # System resource alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage on {{ $labels.instance }} is {{ $value }}% (threshold: 80%)"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage on {{ $labels.instance }} is {{ $value }}% (threshold: 85%)"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+          team: devops
+        annotations:
+          summary: "Disk space is running low"
+          description: "Disk space on {{ $labels.instance }} is {{ $value }}% free (threshold: 15%)"
+
+      - alert: ContainerRestarting
+        expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "Container is restarting frequently"
+          description: "Container {{ $labels.container }} in pod {{ $labels.pod }} has restarted {{ $value }} times in 15 minutes"

@@ -1,0 +1,52 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: luckygas
+
+bases:
+- ../../base
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+  app.kubernetes.io/instance: production
+
+resources:
+- ingress.yaml
+- hpa.yaml
+- pdb.yaml
+- monitoring.yaml
+- backup-cronjob.yaml
+
+patchesStrategicMerge:
+- backend-deployment-patch.yaml
+- frontend-deployment-patch.yaml
+- configmap-patch.yaml
+
+configMapGenerator:
+- name: luckygas-backend-config
+  behavior: merge
+  literals:
+  - ENVIRONMENT=production
+  - LOG_LEVEL=INFO
+  - DATABASE_POOL_SIZE=50
+  - DATABASE_MAX_OVERFLOW=20
+
+secretGenerator:
+- name: luckygas-backend-secrets
+  behavior: merge
+  envs:
+  - secrets-production.env
+
+images:
+- name: gcr.io/luckygas-production/luckygas-backend
+  newTag: v1.0.0
+- name: gcr.io/luckygas-production/luckygas-frontend
+  newTag: v1.0.0
+
+replicas:
+- name: luckygas-backend
+  count: 5
+- name: luckygas-frontend
+  count: 3

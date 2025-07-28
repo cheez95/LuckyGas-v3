@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: luckygas
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: luckygas-system
+
+resources:
+- namespace.yaml
+- serviceaccount.yaml
+- configmap.yaml
+- secrets.yaml
+- backend-deployment.yaml
+- frontend-deployment.yaml
+- redis-deployment.yaml
+- celery-deployment.yaml
+- cloud-sql-proxy.yaml
+- services.yaml
+- networkpolicy.yaml
+- ingress.yaml
+- hpa.yaml
+
+images:
+- name: gcr.io/luckygas-production/luckygas-backend
+  newTag: latest
+- name: gcr.io/luckygas-production/luckygas-frontend
+  newTag: latest
+
+configMapGenerator:
+- name: luckygas-version
+  literals:
+  - version=1.0.0
+  - build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+secretGenerator:
+- name: luckygas-backend-secrets
+  type: Opaque
+  envs:
+  - secrets.env
+
+generatorOptions:
+  disableNameSuffixHash: false
+  labels:
+    app.kubernetes.io/component: config
