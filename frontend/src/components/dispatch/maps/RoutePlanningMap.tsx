@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
 import { Card, Spin, message, Button, Space } from 'antd';
 import { AimOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { mapsLoader } from '../../../services/mapLoader.service';
 
 interface Location {
   lat: number;
@@ -34,7 +34,6 @@ interface RoutePlanningMapProps {
 const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
   stops,
   depotLocation = { lat: 25.0330, lng: 121.5654 }, // Default to Taipei
-  onStopsReordered,
   onMapClick,
   height = '600px',
   showOptimizeButton = true,
@@ -52,20 +51,18 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
   // Initialize Google Maps
   useEffect(() => {
     const initializeMap = async () => {
-      const loader = new Loader({
-        apiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
-        version: 'weekly',
-        libraries: ['places', 'drawing', 'geometry'],
-        language: 'zh-TW',
-        region: 'TW',
-      });
-
       try {
-        await loader.load();
+        // Load Google Maps securely through our service
+        await mapsLoader.load({
+          libraries: ['places', 'drawing', 'geometry'],
+          language: 'zh-TW',
+          region: 'TW',
+          version: 'weekly'
+        });
         
         if (!mapRef.current) return;
 
-        const mapInstance = new google.maps.Map(mapRef.current, {
+        const mapInstance = await mapsLoader.createMap(mapRef.current, {
           center: depotLocation,
           zoom: 13,
           mapTypeControl: true,
@@ -81,8 +78,8 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
           ],
         });
 
-        const service = new google.maps.DirectionsService();
-        const renderer = new google.maps.DirectionsRenderer({
+        const service = await mapsLoader.getDirectionsService();
+        const renderer = await mapsLoader.getDirectionsRenderer({
           map: mapInstance,
           suppressMarkers: false,
           polylineOptions: {

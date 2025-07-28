@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Space, message, Image } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import SignatureCanvas from 'react-signature-canvas';
 import PhotoCapture from './PhotoCapture';
+import EnhancedPhotoCapture from './EnhancedPhotoCapture';
 import type { RouteStop } from '../../services/route.service';
 
 const { TextArea } = Input;
@@ -16,6 +17,7 @@ interface DeliveryCompletionModalProps {
     notes?: string;
   }) => void;
   onCancel: () => void;
+  enableOfflineQueue?: boolean;
 }
 
 const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
@@ -23,6 +25,7 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
   stop,
   onComplete,
   onCancel,
+  enableOfflineQueue = false,
 }) => {
   const [form] = Form.useForm();
   const signatureRef = useRef<SignatureCanvas>(null);
@@ -176,11 +179,22 @@ const DeliveryCompletionModal: React.FC<DeliveryCompletionModalProps> = ({
 
         {/* Delivery photos */}
         <Form.Item label="配送照片（選填）">
-          <PhotoCapture
-            onCapture={handlePhotosUpdate}
-            maxPhotos={3}
-            maxSizeMB={1}
-          />
+          {enableOfflineQueue ? (
+            <EnhancedPhotoCapture
+              onCapture={handlePhotosUpdate}
+              maxPhotos={3}
+              maxSizeMB={1}
+              enableOfflineQueue={true}
+              deliveryId={stop.id}
+              requireGeoTag={true}
+            />
+          ) : (
+            <PhotoCapture
+              onCapture={handlePhotosUpdate}
+              maxPhotos={3}
+              maxSizeMB={1}
+            />
+          )}
         </Form.Item>
 
         {/* Delivery notes */}

@@ -24,7 +24,7 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 
 const { Text, Title } = Typography;
 
@@ -61,7 +61,7 @@ const PriorityQueueManager: React.FC<PriorityQueueManagerProps> = ({
   onViewDetails,
 }) => {
   const { t } = useTranslation();
-  const { socket, isConnected } = useWebSocket();
+  const { socket, isConnected } = useWebSocketContext();
   const [emergencyQueue, setEmergencyQueue] = useState<EmergencyOrder[]>([]);
   const [loading, setLoading] = useState(true);
 

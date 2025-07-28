@@ -5,26 +5,34 @@ import {
 } from 'antd';
 import {
   CheckCircleOutlined, CompassOutlined, NavigationOutlined,
-  CameraOutlined, EditOutlined, PhoneOutlined,
+   PhoneOutlined,
   PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined,
   MenuOutlined, UserOutlined, LogoutOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useDriverWebSocket } from '../../../hooks/useWebSocket';
+import { useWebSocket } from '../../../hooks/useWebSocket';
 import { routeService } from '../../../services/route.service';
 import DeliveryCompletionModal from '../DeliveryCompletionModal';
-import type { RouteWithDetails, RouteStop } from '../../../services/route.service';
+import type { RouteWithDetails, RouteStop as BaseRouteStop } from '../../../services/route.service';
 import './MobileDriverInterface.css';
+
+// Extended RouteStop for mobile interface
+interface RouteStop extends BaseRouteStop {
+  customer_name?: string;
+  customer_phone?: string;
+  delivery_notes?: string;
+  latitude?: number;
+  longitude?: number;
+}
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
 const MobileDriverInterface: React.FC = () => {
   const { user, logout } = useAuth();
-  const { on, updateLocation } = useDriverWebSocket();
   
+  // State management
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [route, setRoute] = useState<RouteWithDetails | null>(null);
   const [stops, setStops] = useState<RouteStop[]>([]);
   const [selectedStop, setSelectedStop] = useState<RouteStop | null>(null);
@@ -33,20 +41,32 @@ const MobileDriverInterface: React.FC = () => {
   const [locationTracking, setLocationTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch driver's route for today
   const fetchRoute = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const todayRoute = await routeService.getDriverRoute(user?.id || 0);
-      if (todayRoute) {
-        setRoute(todayRoute);
-        setRouteStarted(todayRoute.status === 'in_progress');
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // First get driver's routes for today
+      const routes = await routeService.getDriverRoutes(user?.id || 0, today);
+      
+      if (routes && routes.length > 0) {
+        // Get the first route (assuming one route per day)
+        const routeId = routes[0].id || 0;
+        const todayRoute = await routeService.getDriverRoute(user?.id || 0, routeId);
         
-        // Sort stops by sequence
-        if (todayRoute.stops) {
-          const sortedStops = [...todayRoute.stops].sort((a, b) => a.stop_sequence - b.stop_sequence);
-          setStops(sortedStops);
+        if (todayRoute) {
+          setRoute(todayRoute);
+          setRouteStarted(todayRoute.status === 'in_progress');
+          
+          // Sort stops by sequence
+          if (todayRoute.stops) {
+            const sortedStops = [...todayRoute.stops].sort((a, b) => a.stop_sequence - b.stop_sequence);
+            setStops(sortedStops);
+          }
         }
       }
     } catch (error) {
@@ -58,29 +78,23 @@ const MobileDriverInterface: React.FC = () => {
     }
   }, [user?.id]);
 
+  // WebSocket setup
+  const { sendMessage } = useWebSocket({
+    endpoint: 'ws/driver',
+    onMessage: (wsMessage) => {
+      if (wsMessage.type === 'route_update' && wsMessage.data?.route_id === route?.id) {
+        fetchRoute(false);
+      } else if (wsMessage.type === 'route_assigned') {
+        fetchRoute();
+        message.info('您有新的配送路線！');
+      }
+    }
+  });
+
   // Initial load
   useEffect(() => {
     fetchRoute();
   }, [fetchRoute]);
-
-  // WebSocket listeners
-  useEffect(() => {
-    const unsubscribeRouteUpdate = on('route_update', (message) => {
-      if (message.route_id === route?.id) {
-        fetchRoute(false);
-      }
-    });
-
-    const unsubscribeRouteAssigned = on('route_assigned', () => {
-      fetchRoute();
-      message.info('您有新的配送路線！');
-    });
-
-    return () => {
-      unsubscribeRouteUpdate();
-      unsubscribeRouteAssigned();
-    };
-  }, [on, route?.id, fetchRoute]);
 
   // Location tracking
   const startLocationTracking = useCallback(() => {
@@ -91,7 +105,18 @@ const MobileDriverInterface: React.FC = () => {
 
     const id = navigator.geolocation.watchPosition(
       (position) => {
-        updateLocation(position.coords.latitude, position.coords.longitude);
+        // Send location update via WebSocket
+        sendMessage({
+          type: 'location_update',
+          data: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        // Also update via API
         routeService.updateDriverLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -111,7 +136,7 @@ const MobileDriverInterface: React.FC = () => {
     setWatchId(id);
     setLocationTracking(true);
     message.success('位置追蹤已開啟');
-  }, [updateLocation]);
+  }, [sendMessage]);
 
   const stopLocationTracking = useCallback(() => {
     if (watchId !== null) {
@@ -193,8 +218,8 @@ const MobileDriverInterface: React.FC = () => {
     window.open(googleMapsUrl, '_blank');
   };
 
-  const completionRate = route && route.total_stops > 0
-    ? Math.round((route.completed_stops / route.total_stops) * 100)
+  const completionRate = route && route.total_orders > 0
+    ? Math.round((route.completed_orders / route.total_orders) * 100)
     : 0;
 
   return (
@@ -209,7 +234,7 @@ const MobileDriverInterface: React.FC = () => {
           />
           <Title level={4} className="header-title">司機介面</Title>
           <Badge 
-            count={route ? route.total_stops - route.completed_stops : 0}
+            count={route ? route.total_orders - route.completed_orders : 0}
             className="header-badge"
           >
             <Avatar icon={<UserOutlined />} />
@@ -245,7 +270,7 @@ const MobileDriverInterface: React.FC = () => {
                 <Progress 
                   percent={completionRate} 
                   strokeColor="#52c41a"
-                  format={() => `${route.completed_stops} / ${route.total_stops}`}
+                  format={() => `${route.completed_orders} / ${route.total_orders}`}
                 />
                 
                 {route.status === 'planned' || route.status === 'optimized' ? (
@@ -265,7 +290,7 @@ const MobileDriverInterface: React.FC = () => {
                       size="large"
                       icon={<CheckCircleOutlined />}
                       onClick={handleCompleteRoute}
-                      disabled={route.completed_stops < route.total_stops}
+                      disabled={route.completed_orders < route.total_orders}
                       style={{ flex: 1 }}
                     >
                       完成路線

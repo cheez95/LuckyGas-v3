@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Typography, List, Button, Space, Tag, Spin, Empty, Progress, Modal, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   EnvironmentOutlined,
   PhoneOutlined,
@@ -11,11 +12,13 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDriverWebSocket } from '../../hooks/useWebSocket';
+import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { routeService } from '../../services/route.service';
 import { orderService } from '../../services/order.service';
 import type { RouteWithDetails, RouteStop } from '../../services/route.service';
 import type { Order } from '../../types/order';
 import DeliveryCompletionModal from './DeliveryCompletionModal';
+import OfflineIndicator from './OfflineIndicator';
 
 const { Title, Text } = Typography;
 
@@ -31,8 +34,15 @@ interface DeliveryStop extends RouteStop {
 }
 
 const DriverInterface: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { on, updateLocation } = useDriverWebSocket();
+  const {
+    isOnline,
+    saveDeliveryOffline,
+    saveLocationOffline,
+    saveRouteStatusOffline,
+  } = useOfflineSync();
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,9 +50,9 @@ const DriverInterface: React.FC = () => {
   const [stops, setStops] = useState<DeliveryStop[]>([]);
   const [selectedStop, setSelectedStop] = useState<DeliveryStop | null>(null);
   const [completionModalVisible, setCompletionModalVisible] = useState(false);
-  const [routeStarted, setRouteStarted] = useState(false);
   const [locationTracking, setLocationTracking] = useState(false);
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [routeStarted, setRouteStarted] = useState(false);
 
   // Fetch driver's route for today
   const fetchRoute = useCallback(async (showLoading = true) => {
@@ -81,7 +91,7 @@ const DriverInterface: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch route:', error);
-      message.error('無法載入路線資料');
+      message.error(t('driver.route.fetchError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,7 +113,7 @@ const DriverInterface: React.FC = () => {
 
     const unsubscribeRouteAssigned = on('route_assigned', () => {
       fetchRoute();
-      message.info('您有新的配送路線！');
+      message.info(t('driver.route.newRouteAssigned'));
     });
 
     return () => {
@@ -115,21 +125,33 @@ const DriverInterface: React.FC = () => {
   // Location tracking
   const startLocationTracking = useCallback(() => {
     if (!navigator.geolocation) {
-      message.error('您的瀏覽器不支援定位功能');
+      message.error(t('driver.gps.notSupported'));
       return;
     }
 
     const id = navigator.geolocation.watchPosition(
-      (position) => {
-        updateLocation(position.coords.latitude, position.coords.longitude);
-        routeService.updateDriverLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }).catch(console.error);
+      async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        
+        // Always save location offline for later sync
+        await saveLocationOffline(latitude, longitude, accuracy);
+        
+        // Update WebSocket if online
+        if (isOnline) {
+          updateLocation(latitude, longitude);
+        }
+        
+        // Try to update server location if online
+        if (isOnline) {
+          routeService.updateDriverLocation({
+            latitude,
+            longitude,
+          }).catch(console.error);
+        }
       },
       (error) => {
         console.error('Location error:', error);
-        message.error('無法取得您的位置');
+        message.error(t('driver.gps.positionUnavailable'));
       },
       {
         enableHighAccuracy: true,
@@ -140,7 +162,7 @@ const DriverInterface: React.FC = () => {
 
     setWatchId(id);
     setLocationTracking(true);
-    message.success('位置追蹤已開啟');
+    message.success(t('driver.gps.trackingStarted'));
   }, [updateLocation]);
 
   const stopLocationTracking = useCallback(() => {
@@ -148,7 +170,7 @@ const DriverInterface: React.FC = () => {
       navigator.geolocation.clearWatch(watchId);
       setWatchId(null);
       setLocationTracking(false);
-      message.info('位置追蹤已關閉');
+      message.info(t('driver.gps.trackingStopped'));
     }
   }, [watchId]);
 
@@ -157,13 +179,29 @@ const DriverInterface: React.FC = () => {
     if (!route) return;
     
     try {
-      await routeService.startRoute(route.id);
-      setRouteStarted(true);
-      startLocationTracking();
-      message.success('路線已開始');
+      if (isOnline) {
+        await routeService.startRoute(route.id);
+        setRouteStarted(true);
+        startLocationTracking();
+        message.success('路線已開始');
+      } else {
+        // Save route start offline
+        await saveRouteStatusOffline(route.id, 'started');
+        setRouteStarted(true);
+        startLocationTracking();
+        message.success('路線已開始（離線模式）');
+      }
     } catch (error) {
       console.error('Failed to start route:', error);
-      message.error('無法開始路線');
+      // Try offline mode
+      if (!isOnline) {
+        await saveRouteStatusOffline(route.id, 'started');
+        setRouteStarted(true);
+        startLocationTracking();
+        message.warning('已在離線模式開始路線');
+      } else {
+        message.error('無法開始路線');
+      }
     }
   };
 
@@ -175,13 +213,27 @@ const DriverInterface: React.FC = () => {
       content: '完成後將無法修改配送狀態',
       onOk: async () => {
         try {
-          await routeService.completeRoute(route.id);
-          stopLocationTracking();
-          message.success('路線已完成！');
-          fetchRoute();
+          if (isOnline) {
+            await routeService.completeRoute(route.id);
+            stopLocationTracking();
+            message.success('路線已完成！');
+            fetchRoute();
+          } else {
+            // Save route completion offline
+            await saveRouteStatusOffline(route.id, 'completed');
+            stopLocationTracking();
+            message.success('路線已完成（離線模式）');
+          }
         } catch (error) {
           console.error('Failed to complete route:', error);
-          message.error('無法完成路線');
+          // Try offline mode
+          if (!isOnline) {
+            await saveRouteStatusOffline(route.id, 'completed');
+            stopLocationTracking();
+            message.warning('已在離線模式完成路線');
+          } else {
+            message.error('無法完成路線');
+          }
         }
       },
     });
@@ -199,23 +251,84 @@ const DriverInterface: React.FC = () => {
     if (!selectedStop) return;
     
     try {
-      // Update stop status
-      await routeService.completeStop(selectedStop.id, data.notes);
-      
-      // Update order status if needed
-      if (selectedStop.order_id) {
-        await orderService.updateOrder(selectedStop.order_id, {
-          status: 'delivered',
-          delivery_notes: data.notes,
-        });
+      if (isOnline) {
+        // Update stop status
+        await routeService.completeStop(selectedStop.id, data.notes);
+        
+        // Update order status if needed
+        if (selectedStop.order_id) {
+          await orderService.updateOrder(selectedStop.order_id, {
+            status: 'delivered',
+            delivery_notes: data.notes,
+          });
+        }
+        
+        message.success('配送完成！');
+      } else {
+        // Save delivery completion offline
+        await saveDeliveryOffline(
+          selectedStop.id,
+          selectedStop.order_id,
+          {
+            signature: data.signature,
+            photos: data.photos,
+            notes: data.notes,
+            customerName: selectedStop.customerName,
+            customerPhone: selectedStop.customerPhone,
+            address: selectedStop.address,
+            products: selectedStop.products,
+          }
+        );
+        
+        // Update local state to show as completed
+        setStops(prevStops => 
+          prevStops.map(stop => 
+            stop.id === selectedStop.id
+              ? { ...stop, is_completed: true }
+              : stop
+          )
+        );
+        
+        message.success('配送完成！（離線模式，將在連線後同步）');
       }
       
-      message.success('配送完成！');
       setCompletionModalVisible(false);
-      fetchRoute(false);
+      if (isOnline) {
+        fetchRoute(false);
+      }
     } catch (error) {
       console.error('Failed to complete delivery:', error);
-      message.error('無法完成配送');
+      
+      // Try offline mode
+      if (!isOnline) {
+        await saveDeliveryOffline(
+          selectedStop.id,
+          selectedStop.order_id,
+          {
+            signature: data.signature,
+            photos: data.photos,
+            notes: data.notes,
+            customerName: selectedStop.customerName,
+            customerPhone: selectedStop.customerPhone,
+            address: selectedStop.address,
+            products: selectedStop.products,
+          }
+        );
+        
+        // Update local state
+        setStops(prevStops => 
+          prevStops.map(stop => 
+            stop.id === selectedStop.id
+              ? { ...stop, is_completed: true }
+              : stop
+          )
+        );
+        
+        message.warning('已在離線模式完成配送');
+        setCompletionModalVisible(false);
+      } else {
+        message.error('無法完成配送');
+      }
     }
   };
 
@@ -258,13 +371,14 @@ const DriverInterface: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Title level={3} style={{ margin: 0 }}>今日配送路線</Title>
               <Space>
+                <OfflineIndicator showDetails={false} />
                 <Button
                   icon={<ReloadOutlined spin={refreshing} />}
                   onClick={() => {
                     setRefreshing(true);
                     fetchRoute();
                   }}
-                  disabled={refreshing}
+                  disabled={refreshing || !isOnline}
                 >
                   重新整理
                 </Button>

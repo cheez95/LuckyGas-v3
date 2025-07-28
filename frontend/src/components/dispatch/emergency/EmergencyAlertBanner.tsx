@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Badge, Space, Button } from 'antd';
 import { ExclamationCircleOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 
 interface EmergencyAlert {
   id: string;
@@ -27,7 +27,7 @@ interface EmergencyAlertBannerProps {
 
 const EmergencyAlertBanner: React.FC<EmergencyAlertBannerProps> = ({ onAlertClick }) => {
   const { t } = useTranslation();
-  const { socket, isConnected } = useWebSocket();
+  const { socket, isConnected } = useWebSocketContext();
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([]);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 

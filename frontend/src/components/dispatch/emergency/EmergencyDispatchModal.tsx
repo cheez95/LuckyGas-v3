@@ -28,7 +28,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import { customerService } from '../../../services/customer.service';
 import { driverService } from '../../../services/driver.service';
-import { orderService } from '../../../services/order.service';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -126,7 +125,7 @@ const EmergencyDispatchModal: React.FC<EmergencyDispatchModalProps> = ({
     }
   };
 
-  const getEmergencyIcon = (type?: string) => {
+  const getEmergencyIcon = (type: string) => {
     switch (type) {
       case 'gas_leak':
         return <FireOutlined style={{ color: '#ff4d4f', fontSize: 20 }} />;

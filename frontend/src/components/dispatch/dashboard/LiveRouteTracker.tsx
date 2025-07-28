@@ -2,17 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Card, List, Tag, Progress, Space, Badge, Avatar, Typography, Empty, Button, Tooltip } from 'antd';
 import {
   EnvironmentOutlined,
-  ClockCircleOutlined,
+  
   UserOutlined,
   PhoneOutlined,
   CarOutlined,
-  CheckCircleOutlined,
+  
   ExclamationCircleOutlined,
   ReloadOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 import { useNavigate } from 'react-router-dom';
 
 const { Text, Title } = Typography;
@@ -55,7 +55,7 @@ interface LiveRouteTrackerProps {
 const LiveRouteTracker: React.FC<LiveRouteTrackerProps> = ({ onRouteClick, maxHeight = '600px' }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { socket, isConnected } = useWebSocket();
+  const { socket, isConnected } = useWebSocketContext();
   const [activeRoutes, setActiveRoutes] = useState<RouteProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const updateIntervalRef = useRef<NodeJS.Timeout>();

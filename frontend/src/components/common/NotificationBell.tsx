@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Badge, Button, Drawer, List, Typography, Space, Empty, Tag } from 'antd';
-import { BellOutlined, CheckOutlined, DeleteOutlined, ReadOutlined } from '@ant-design/icons';
+import { BellOutlined, DeleteOutlined, ReadOutlined } from '@ant-design/icons';
 import { useNotification } from '../../contexts/NotificationContext';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';

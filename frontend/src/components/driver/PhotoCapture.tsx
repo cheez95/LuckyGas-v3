@@ -17,7 +17,6 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
 }) => {
   const [photos, setPhotos] = useState<UploadFile[]>([]);
   const [compressing, setCompressing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const compressImage = async (file: File): Promise<string> => {
     const options = {
@@ -81,19 +80,6 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
     setPhotos(updatedPhotos);
     onCapture(updatedPhotos.map(p => p.url || ''));
   };
-
-  const uploadButton = (
-    <div>
-      {compressing ? (
-        <div>處理中...</div>
-      ) : (
-        <>
-          <PlusOutlined />
-          <div style={{ marginTop: 8 }}>上傳照片</div>
-        </>
-      )}
-    </div>
-  );
 
   // Mobile camera capture support
   const handleMobileCapture = () => {

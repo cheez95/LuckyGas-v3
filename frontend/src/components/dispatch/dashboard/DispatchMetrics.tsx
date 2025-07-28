@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Statistic, Progress, Space, Typography } from 'antd';
 import {
-  CarOutlined,
+  
   CheckCircleOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined,
@@ -11,7 +11,7 @@ import {
   FallOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useWebSocket } from '../../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../../contexts/WebSocketContext';
 
 const { Title, Text } = Typography;
 
@@ -30,7 +30,7 @@ interface DispatchMetricsData {
 
 const DispatchMetrics: React.FC = () => {
   const { t } = useTranslation();
-  const { socket, isConnected } = useWebSocket();
+  const { socket, isConnected } = useWebSocketContext();
   const [metrics, setMetrics] = useState<DispatchMetricsData>({
     activeRoutes: 12,
     completedDeliveries: 156,

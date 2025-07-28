@@ -38,7 +38,6 @@ interface RouteColumnProps {
 
 const RouteColumn: React.FC<RouteColumnProps> = ({
   route,
-  onAssign,
   onUnassign,
   isHighlighted,
 }) => {

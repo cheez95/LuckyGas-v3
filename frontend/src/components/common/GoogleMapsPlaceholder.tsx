@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, Button, Space, Tag, Spin } from 'antd';
-import { EnvironmentOutlined, AimOutlined, CarOutlined } from '@ant-design/icons';
+import { EnvironmentOutlined, AimOutlined } from '@ant-design/icons';
 
 interface MapMarker {
   id: string;

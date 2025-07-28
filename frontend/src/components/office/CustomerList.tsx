@@ -222,6 +222,7 @@ const CustomerList: React.FC = () => {
             size="small"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            data-testid={`edit-customer-${record.id}`}
           >
             編輯
           </Button>
@@ -229,6 +230,7 @@ const CustomerList: React.FC = () => {
             size="small"
             danger
             onClick={() => handleDelete(record)}
+            data-testid={`delete-customer-${record.id}`}
           >
             刪除
           </Button>
@@ -250,7 +252,7 @@ const CustomerList: React.FC = () => {
 
   return (
     <div>
-      <Title level={2}>{t('customer.title')}</Title>
+      <Title level={2} data-testid="customer-list-title">{t('customer.title')}</Title>
       <Card>
         <div style={{ marginBottom: 16 }}>
           <Space>
@@ -261,6 +263,7 @@ const CustomerList: React.FC = () => {
               size="middle"
               onSearch={handleSearch}
               style={{ width: 300 }}
+              data-testid="customer-search-input"
             />
             <Button
               type="primary"
@@ -271,6 +274,7 @@ const CustomerList: React.FC = () => {
                 form.resetFields();
                 setIsModalVisible(true);
               }}
+              data-testid="add-customer-button"
             >
               {t('customer.addButton')}
             </Button>
@@ -290,6 +294,7 @@ const CustomerList: React.FC = () => {
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 筆資料`,
           }}
+          data-testid="customer-table"
         />
       </Card>
 
@@ -303,6 +308,7 @@ const CustomerList: React.FC = () => {
         }}
         onOk={() => form.submit()}
         width={800}
+        data-testid="customer-modal"
       >
         <Form
           form={form}
@@ -316,7 +322,7 @@ const CustomerList: React.FC = () => {
                 label="客戶編號"
                 rules={[{ required: true, message: '請輸入客戶編號' }]}
               >
-                <Input disabled={isEditMode} />
+                <Input disabled={isEditMode} data-testid="customer-code-input" id="customer_code" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -325,7 +331,7 @@ const CustomerList: React.FC = () => {
                 label={t('customer.shortName')}
                 rules={[{ required: true, message: t('validation.required') }]}
               >
-                <Input />
+                <Input data-testid="customer-shortname-input" id="short_name" />
               </Form.Item>
             </Col>
           </Row>
@@ -333,7 +339,7 @@ const CustomerList: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="invoice_title" label="發票抬頭">
-                <Input />
+                <Input data-testid="customer-invoice-input" id="invoice_title" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -355,7 +361,7 @@ const CustomerList: React.FC = () => {
             label={t('customer.address')}
             rules={[{ required: true, message: t('validation.required') }]}
           >
-            <Input.TextArea rows={2} />
+            <Input.TextArea rows={2} data-testid="customer-address-input" id="address" />
           </Form.Item>
 
           <Row gutter={16}>
@@ -383,7 +389,7 @@ const CustomerList: React.FC = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="area" label="配送區域">
-                <Select placeholder="選擇區域">
+                <Select placeholder="選擇區域" data-testid="customer-area-select" id="area">
                   <Option value="A-瑞光">A-瑞光</Option>
                   <Option value="B-四維">B-四維</Option>
                   <Option value="C-漢中">C-漢中</Option>
@@ -435,17 +441,17 @@ const CustomerList: React.FC = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="avg_daily_usage" label="平均日使用量(kg)">
-                <InputNumber min={0} step={0.1} style={{ width: '100%' }} />
+                <InputNumber min={0} step={0.1} style={{ width: '100%' }} data-testid="customer-avg-usage-input" id="avg_daily_usage" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="max_cycle_days" label="最大週期(天)">
-                <InputNumber min={1} style={{ width: '100%' }} />
+                <InputNumber min={1} style={{ width: '100%' }} data-testid="customer-max-cycle-input" id="max_cycle_days" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item name="can_delay_days" label="可延後天數">
-                <InputNumber min={0} style={{ width: '100%' }} />
+                <InputNumber min={0} style={{ width: '100%' }} data-testid="customer-delay-days-input" id="can_delay_days" />
               </Form.Item>
             </Col>
           </Row>

@@ -16,9 +16,11 @@ import {
   message,
   Drawer,
   Descriptions,
-  List,
+  
   Timeline,
+  Typography,
 } from 'antd';
+const { Text } = Typography;
 import {
   EnvironmentOutlined,
   CarOutlined,
@@ -29,13 +31,13 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   RocketOutlined,
-  SyncOutlined,
-  FieldTimeOutlined,
+  
+  
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import { routeService, RouteWithDetails, RouteStop } from '../../services/route.service';
 import { orderService } from '../../services/order.service';
 import GoogleMapsPlaceholder, { MapMarker } from '../common/GoogleMapsPlaceholder';
@@ -43,7 +45,7 @@ import GoogleMapsPlaceholder, { MapMarker } from '../common/GoogleMapsPlaceholde
 
 const RouteManagement: React.FC = () => {
   const { t } = useTranslation();
-  const { on } = useWebSocket();
+  const { on } = useWebSocketContext();
   const [routes, setRoutes] = useState<RouteWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(dayjs());

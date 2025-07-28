@@ -38,7 +38,7 @@ import { useTranslation } from 'react-i18next';
 import { orderService } from '../../services/order.service';
 import { customerService } from '../../services/customer.service';
 import ProductSelector from './ProductSelector';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import {
   Order,
   OrderStatus,
@@ -60,7 +60,7 @@ const { confirm } = Modal;
 
 const OrderList: React.FC = () => {
   const { t } = useTranslation();
-  const { on } = useWebSocket();
+  const { on } = useWebSocketContext();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
