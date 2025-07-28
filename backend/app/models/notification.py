@@ -21,6 +21,7 @@ class NotificationStatus(str, enum.Enum):
 class SMSProvider(str, enum.Enum):
     """Supported SMS providers"""
     TWILIO = "twilio"
+    CHUNGHWA = "chunghwa"  # 中華電信
     EVERY8D = "every8d"
     MITAKE = "mitake"
 
@@ -62,7 +63,7 @@ class SMSLog(Base):
     unicode_message = Column(Boolean, default=True)  # Unicode support for Chinese
     
     # Additional data
-    metadata = Column(JSON)  # Store order_id, customer_id, etc.
+    notification_metadata = Column(JSON)  # Store order_id, customer_id, etc.
     retry_count = Column(Integer, default=0)
     
     # Timestamps
@@ -139,7 +140,7 @@ class NotificationLog(Base):
     order_id = Column(UUID(as_uuid=True), index=True)
     
     # Metadata
-    metadata = Column(JSON)
+    notification_metadata = Column(JSON)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -1,7 +1,7 @@
 """Notification schemas."""
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from uuid import UUID
 
 from app.models.notification import NotificationStatus, SMSProvider, NotificationChannel
@@ -18,7 +18,8 @@ class SMSSendRequest(BaseModel):
     provider: Optional[SMSProvider] = Field(None, description="Specific provider to use")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
     
-    @validator("phone")
+    @field_validator("phone")
+    @classmethod
     def validate_phone(cls, v):
         """Basic phone validation"""
         # Remove spaces and hyphens
@@ -32,10 +33,11 @@ class SMSSendRequest(BaseModel):
             raise ValueError("Invalid Taiwan phone number format")
         return cleaned
         
-    @validator("message", always=True)
-    def validate_message_or_template(cls, v, values):
+    @field_validator("message", mode="after")
+    @classmethod
+    def validate_message_or_template(cls, v, info):
         """Ensure either message or template is provided"""
-        if not v and not values.get("template_code"):
+        if not v and not info.data.get("template_code"):
             raise ValueError("Either message or template_code must be provided")
         return v
 
@@ -114,8 +116,7 @@ class SMSTemplateResponse(SMSTemplateBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Provider Configuration Schemas
@@ -156,8 +157,7 @@ class ProviderConfigResponse(ProviderConfigBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # SMS Log Schemas
@@ -183,8 +183,7 @@ class SMSLogResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Notification Log Schemas
@@ -205,8 +204,7 @@ class NotificationLogResponse(BaseModel):
     delivered_at: Optional[datetime] = None
     read_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 # Statistics Schemas
@@ -217,5 +215,4 @@ class NotificationStatsResponse(BaseModel):
     sms_stats: Dict[str, Any] = Field(..., description="SMS statistics")
     provider_breakdown: List[Dict[str, Any]] = Field(..., description="Stats by provider")
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

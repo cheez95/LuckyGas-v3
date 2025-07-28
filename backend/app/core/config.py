@@ -124,9 +124,25 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     
     # SMS Configuration
-    SMS_PROVIDER_URL: str = "https://api.twsms.com/send"  # Example Taiwan SMS provider
-    SMS_API_KEY: str = ""
-    SMS_SENDER_ID: str = "LuckyGas"
+    SMS_ENABLED: bool = True
+    SMS_PRIMARY_PROVIDER: str = "twilio"  # twilio or chunghwa
+    SMS_FALLBACK_PROVIDERS: List[str] = ["chunghwa"]
+    SMS_RATE_LIMIT_PER_MINUTE: int = 60
+    
+    # Twilio Configuration
+    SMS_TWILIO_ENABLED: bool = True
+    TWILIO_ACCOUNT_SID: str = Field("", description="Twilio Account SID")
+    TWILIO_AUTH_TOKEN: str = Field("", description="Twilio Auth Token")
+    TWILIO_FROM_NUMBER: str = Field("", description="Twilio phone number")
+    TWILIO_WEBHOOK_URL: str = Field("", description="Base URL for Twilio webhooks")
+    
+    # Chunghwa Telecom (中華電信) Configuration
+    SMS_CHUNGHWA_ENABLED: bool = True
+    CHT_SMS_ACCOUNT_ID: str = Field("", description="CHT SMS Account ID")
+    CHT_SMS_PASSWORD: str = Field("", description="CHT SMS Password")
+    CHT_SMS_API_URL: str = Field("https://api.emome.net/SMS/SendSMS", description="CHT SMS API URL")
+    CHT_SMS_STATUS_URL: str = Field("https://api.emome.net/SMS/QueryStatus", description="CHT SMS Status URL")
+    CHT_SMS_WEBHOOK_SECRET: str = Field("", description="CHT webhook verification secret")
     
     # Email Configuration
     SMTP_HOST: str = "smtp.gmail.com"

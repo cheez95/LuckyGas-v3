@@ -16,8 +16,8 @@ class CreditCheckResult(BaseModel):
     exceeds_by: Optional[float] = Field(None, description="超出額度金額")
     is_blocked: bool = Field(default=False, description="信用是否被封鎖")
     
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "approved": True,
                 "reason": "Within credit limit",
@@ -29,6 +29,7 @@ class CreditCheckResult(BaseModel):
                 "is_blocked": False
             }
         }
+    }
 
 
 class CreditSummary(BaseModel):
@@ -42,8 +43,8 @@ class CreditSummary(BaseModel):
     is_credit_blocked: bool = Field(..., description="信用是否被封鎖")
     credit_utilization: float = Field(..., description="信用額度使用率(%)")
     
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "customer_id": 1,
                 "customer_name": "測試客戶",
@@ -55,15 +56,17 @@ class CreditSummary(BaseModel):
                 "credit_utilization": 25.0
             }
         }
+    }
 
 
 class CreditBlockRequest(BaseModel):
     """Request to block/unblock customer credit"""
     reason: str = Field(..., description="封鎖/解除封鎖原因")
     
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "reason": "逾期款項超過30天"
             }
         }
+    }

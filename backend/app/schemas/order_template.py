@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class OrderTemplateProductItem(BaseModel):
@@ -28,19 +28,20 @@ class OrderTemplateBase(BaseModel):
     recurrence_interval: Optional[int] = Field(None, ge=1, le=365)
     recurrence_days: Optional[List[int]] = None  # For weekly pattern: 1-7 (Mon-Sun)
     
-    @validator('products')
+    @field_validator('products')
+    @classmethod
     def validate_products_not_empty(cls, v):
         if not v:
             raise ValueError('Template must have at least one product')
         return v
     
-    @validator('recurrence_pattern', always=True)
-    def validate_recurrence_pattern(cls, v, values):
-        if values.get('is_recurring') and not v:
+    @model_validator(mode='after')
+    def validate_recurrence_pattern(self):
+        if self.is_recurring and not self.recurrence_pattern:
             raise ValueError('Recurrence pattern is required for recurring templates')
-        if not values.get('is_recurring') and v:
+        if not self.is_recurring and self.recurrence_pattern:
             raise ValueError('Cannot set recurrence pattern for non-recurring templates')
-        return v
+        return self
 
 
 class OrderTemplateCreate(OrderTemplateBase):
@@ -78,8 +79,7 @@ class OrderTemplateInDB(OrderTemplateBase):
     created_by: Optional[int] = None
     updated_by: Optional[int] = None
     
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class OrderTemplate(OrderTemplateInDB):

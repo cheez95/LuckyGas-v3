@@ -235,3 +235,107 @@ class PaymentBatchListResponse(BaseModel):
     page: int
     size: int
     pages: int
+
+
+# Banking Monitor Schemas
+class BankingHealthCheck(BaseModel):
+    """Banking system health check response."""
+    status: str
+    timestamp: str
+    circuit_breakers: Dict[str, Dict[str, Any]]
+    connection_pools: Dict[str, Dict[str, Any]]
+    retry_queue_size: int
+    checks: List[Dict[str, str]]
+    daily_batches: Dict[str, int]
+    daily_reconciliations: Dict[str, int]
+
+
+class TransferHistory(BaseModel):
+    """SFTP transfer history entry."""
+    file_name: str
+    remote_path: str
+    success: bool
+    transfer_time: float
+    checksum: str
+    error: Optional[str]
+    retry_count: int
+    timestamp: str
+
+
+class PaymentBatchDetail(BaseModel):
+    """Detailed payment batch information."""
+    batch_id: int
+    batch_number: str
+    bank_code: str
+    status: str
+    processing_date: str
+    total_transactions: int
+    total_amount: float
+    created_at: str
+    uploaded_at: Optional[str]
+    reconciled_at: Optional[str]
+    status_summary: Dict[str, Dict[str, Any]]
+    failed_transactions: List[Dict[str, Any]]
+    reconciliation_file: Optional[str]
+    error_message: Optional[str]
+
+
+class ReconciliationDetail(BaseModel):
+    """Detailed reconciliation information."""
+    id: int
+    file_name: str
+    file_received_at: str
+    status: str
+    total_records: int
+    matched_records: int
+    unmatched_records: int
+    failed_records: int
+    processed_at: Optional[str]
+    error_details: Optional[str]
+    unmatched_transactions: List[Dict[str, Any]]
+
+
+class BankConnectionTest(BaseModel):
+    """Bank SFTP connection test result."""
+    task_id: str
+    bank_code: str
+    status: str
+    message: str
+
+
+class BankingDashboard(BaseModel):
+    """Banking operations dashboard data."""
+    period_days: int
+    batch_trends: List[Dict[str, Any]]
+    success_rates: Dict[str, Dict[str, float]]
+    recent_failures: List[Dict[str, Any]]
+    pending_reconciliations: int
+    last_updated: str
+
+
+class RetryQueueStatus(BaseModel):
+    """Retry queue status information."""
+    queue_size: int
+    oldest_item_age: Optional[int]
+    processing: bool
+    last_processed: Optional[str]
+
+
+class BankConfigurationUpdate(BaseModel):
+    """Schema for updating bank configuration via API."""
+    bank_name: Optional[str] = None
+    sftp_host: Optional[str] = None
+    sftp_port: Optional[int] = None
+    sftp_username: Optional[str] = None
+    upload_path: Optional[str] = None
+    download_path: Optional[str] = None
+    archive_path: Optional[str] = None
+    file_format: Optional[str] = None
+    encoding: Optional[str] = None
+    delimiter: Optional[str] = None
+    payment_file_pattern: Optional[str] = None
+    reconciliation_file_pattern: Optional[str] = None
+    is_active: Optional[bool] = None
+    cutoff_time: Optional[str] = None
+    retry_attempts: Optional[int] = None
+    retry_delay_minutes: Optional[int] = None
