@@ -6,8 +6,7 @@ from sqlalchemy import select, and_, or_, func
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.api.deps import get_db, get_current_user
 from app.models.user import User, UserRole
 from app.models.notification import (
     SMSLog, SMSTemplate, NotificationLog, ProviderConfig,

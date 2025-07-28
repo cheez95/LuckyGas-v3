@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.core.database import get_async_session
+from app.api.deps import get_db
 from app.models.user import User
 from app.schemas.order_template import (
     OrderTemplate,
@@ -22,7 +22,7 @@ router = APIRouter()
 @router.post("/", response_model=OrderTemplate)
 async def create_order_template(
     template_data: OrderTemplateCreate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -50,7 +50,7 @@ async def list_order_templates(
     is_recurring: Optional[bool] = Query(None, description="是否為定期訂單"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -74,7 +74,7 @@ async def list_order_templates(
 @router.get("/{template_id}", response_model=OrderTemplate)
 async def get_order_template(
     template_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """取得特定訂單模板詳情"""
@@ -88,7 +88,7 @@ async def get_order_template(
 async def update_order_template(
     template_id: int,
     template_data: OrderTemplateUpdate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -108,7 +108,7 @@ async def update_order_template(
 @router.delete("/{template_id}")
 async def delete_order_template(
     template_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -129,7 +129,7 @@ async def delete_order_template(
 @router.post("/create-order", response_model=OrderV2)
 async def create_order_from_template(
     request: CreateOrderFromTemplate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -154,7 +154,7 @@ async def create_order_from_template(
 async def get_customer_templates(
     customer_id: int,
     active_only: bool = Query(True, description="只顯示啟用的模板"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """

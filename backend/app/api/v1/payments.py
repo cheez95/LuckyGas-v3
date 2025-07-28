@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, desc, func
 from sqlalchemy.orm import selectinload
 
-from app.core.database import get_async_session
+from app.api.deps import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.invoice import Invoice, InvoicePaymentStatus, Payment, PaymentMethod
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 @router.post("/", response_model=PaymentResponse)
 async def create_payment(
     payment_data: PaymentCreate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Record a payment for an invoice"""
@@ -71,7 +71,7 @@ async def get_payments(
     date_to: Optional[date] = None,
     is_verified: Optional[bool] = None,
     search: Optional[str] = None,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get list of payments with filtering"""
@@ -123,7 +123,7 @@ async def get_payments(
 
 @router.get("/unverified", response_model=List[PaymentResponse])
 async def get_unverified_payments(
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get all unverified payments for reconciliation"""
@@ -145,7 +145,7 @@ async def get_unverified_payments(
 @router.get("/stats", response_model=PaymentStats)
 async def get_payment_stats(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get payment statistics for a period"""
@@ -161,7 +161,7 @@ async def get_payment_stats(
 @router.get("/{payment_id}", response_model=PaymentResponse)
 async def get_payment(
     payment_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get single payment details"""
@@ -179,7 +179,7 @@ async def get_payment(
 async def update_payment(
     payment_id: int,
     payment_update: PaymentUpdate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Update payment details (only unverified payments)"""
@@ -207,7 +207,7 @@ async def update_payment(
 async def verify_payment(
     payment_id: int,
     verification_data: PaymentVerification,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Verify a payment for accounting reconciliation"""
@@ -234,7 +234,7 @@ async def verify_payment(
 @router.delete("/{payment_id}")
 async def delete_payment(
     payment_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Delete a payment (only unverified payments)"""
@@ -258,7 +258,7 @@ async def delete_payment(
 async def reconcile_payments(
     date_from: date = Query(...),
     date_to: date = Query(...),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Reconcile payments for a date range"""
@@ -277,7 +277,7 @@ async def reconcile_payments(
 @router.get("/reports/daily-summary")
 async def get_daily_payment_summary(
     date: date = Query(...),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get daily payment summary report"""
@@ -294,7 +294,7 @@ async def get_daily_payment_summary(
 async def get_customer_balance_report(
     customer_id: Optional[int] = None,
     as_of_date: date = Query(default=date.today()),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get customer balance report"""

@@ -5,12 +5,17 @@ from sqlalchemy import select
 import hmac
 import hashlib
 import logging
+import time
+import base64
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
-from app.core.database import get_db
+from app.api.deps import get_db
 from app.core.config import settings
+from app.core.secrets_manager import get_secret
 from app.models.notification import SMSLog, NotificationStatus, SMSProvider
+from app.core.monitoring import track_webhook_event
 
 logger = logging.getLogger(__name__)
 
@@ -32,28 +37,33 @@ def verify_twilio_signature(
     for k, v in sorted_params:
         s += f"{k}{v}"
         
-    # Calculate signature
+    # Calculate signature using SHA1 and base64
     mac = hmac.new(
         auth_token.encode('utf-8'),
         s.encode('utf-8'),
         hashlib.sha1
     )
-    calculated = mac.hexdigest()
+    calculated = base64.b64encode(mac.digest()).decode('utf-8')
     
     return hmac.compare_digest(calculated, signature)
 
 
 def verify_every8d_signature(
-    data: str,
+    params: dict,
     signature: str,
     secret: str
 ) -> bool:
     """Verify Every8d webhook signature"""
-    calculated = hashlib.md5(
-        f"{data}{secret}".encode('utf-8')
-    ).hexdigest()
+    # Every8d uses MD5(BatchID + RM + STATUS + ST + secret)
+    batch_id = params.get("BatchID", "")
+    phone = params.get("RM", "")
+    status = params.get("STATUS", "")
+    status_time = params.get("ST", "")
     
-    return calculated == signature
+    data_string = f"{batch_id}{phone}{status}{status_time}{secret}"
+    calculated = hashlib.md5(data_string.encode('utf-8')).hexdigest().upper()
+    
+    return hmac.compare_digest(calculated, signature.upper())
 
 
 @router.post("/sms/twilio")
@@ -63,16 +73,55 @@ async def twilio_webhook(
     x_twilio_signature: Optional[str] = Header(None)
 ):
     """Handle Twilio SMS delivery status webhooks"""
+    webhook_received_at = datetime.utcnow()
+    
     try:
         # Get form data
         form_data = await request.form()
         data = dict(form_data)
         
-        # TODO: Verify signature in production
-        # if x_twilio_signature:
-        #     auth_token = "your_auth_token"  # Get from secure storage
-        #     if not verify_twilio_signature(str(request.url), data, x_twilio_signature, auth_token):
-        #         raise HTTPException(status_code=401, detail="Invalid signature")
+        # Verify signature
+        if settings.ENVIRONMENT != "development":
+            if not x_twilio_signature:
+                await track_webhook_event(
+                    provider="twilio",
+                    event_type="missing_signature",
+                    status="rejected",
+                    metadata={"reason": "No signature header"}
+                )
+                raise HTTPException(status_code=401, detail="Missing signature")
+            
+            # Get auth token from secure storage
+            auth_token = await get_secret("TWILIO_AUTH_TOKEN")
+            if not auth_token:
+                logger.error("Twilio auth token not configured")
+                raise HTTPException(status_code=500, detail="Configuration error")
+            
+            # Verify the signature
+            request_url = str(request.url)
+            if not verify_twilio_signature(request_url, data, x_twilio_signature, auth_token):
+                await track_webhook_event(
+                    provider="twilio",
+                    event_type="invalid_signature",
+                    status="rejected",
+                    metadata={"signature": x_twilio_signature[:10] + "..."}
+                )
+                raise HTTPException(status_code=401, detail="Invalid signature")
+        
+        # Check timestamp to prevent replay attacks (5 minute window)
+        if "Timestamp" in data:
+            try:
+                webhook_timestamp = datetime.fromisoformat(data["Timestamp"])
+                if abs((webhook_received_at - webhook_timestamp).total_seconds()) > 300:
+                    await track_webhook_event(
+                        provider="twilio",
+                        event_type="replay_attack",
+                        status="rejected",
+                        metadata={"timestamp_diff": abs((webhook_received_at - webhook_timestamp).total_seconds())}
+                    )
+                    raise HTTPException(status_code=401, detail="Request too old")
+            except Exception as e:
+                logger.warning(f"Failed to parse webhook timestamp: {e}")
         
         # Extract status info
         message_sid = data.get("MessageSid")
@@ -115,24 +164,74 @@ async def twilio_webhook(
                 
         await db.commit()
         
+        # Track successful webhook
+        await track_webhook_event(
+            provider="twilio",
+            event_type="status_update",
+            status="success",
+            metadata={
+                "message_sid": message_sid,
+                "status": status,
+                "processed_in_ms": int((datetime.utcnow() - webhook_received_at).total_seconds() * 1000)
+            }
+        )
+        
         logger.info(f"Updated SMS {message_sid} status to {status}")
         return {"status": "ok"}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error processing Twilio webhook: {e}")
+        await track_webhook_event(
+            provider="twilio",
+            event_type="processing_error",
+            status="failed",
+            metadata={"error": str(e)}
+        )
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sms/every8d")
 async def every8d_webhook(
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    signature: Optional[str] = Query(None, alias="sign")
 ):
     """Handle Every8d SMS delivery status webhooks"""
+    webhook_received_at = datetime.utcnow()
+    
     try:
         # Get form data
         form_data = await request.form()
         data = dict(form_data)
+        
+        # Verify signature
+        if settings.ENVIRONMENT != "development":
+            if not signature:
+                await track_webhook_event(
+                    provider="every8d",
+                    event_type="missing_signature",
+                    status="rejected",
+                    metadata={"reason": "No signature parameter"}
+                )
+                raise HTTPException(status_code=401, detail="Missing signature")
+            
+            # Get secret from secure storage
+            secret = await get_secret("EVERY8D_WEBHOOK_SECRET")
+            if not secret:
+                logger.error("Every8d webhook secret not configured")
+                raise HTTPException(status_code=500, detail="Configuration error")
+            
+            # Verify the signature
+            if not verify_every8d_signature(data, signature, secret):
+                await track_webhook_event(
+                    provider="every8d",
+                    event_type="invalid_signature",
+                    status="rejected",
+                    metadata={"signature": signature[:10] + "..."}
+                )
+                raise HTTPException(status_code=401, detail="Invalid signature")
         
         # Extract status info
         batch_id = data.get("BatchID")
@@ -170,26 +269,81 @@ async def every8d_webhook(
             
         await db.commit()
         
+        # Track successful webhook
+        await track_webhook_event(
+            provider="every8d",
+            event_type="status_update",
+            status="success",
+            metadata={
+                "batch_id": batch_id,
+                "status_code": status_code,
+                "processed_in_ms": int((datetime.utcnow() - webhook_received_at).total_seconds() * 1000)
+            }
+        )
+        
         logger.info(f"Updated SMS {batch_id} status to {sms_log.status}")
         return {"status": "ok"}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error processing Every8d webhook: {e}")
+        await track_webhook_event(
+            provider="every8d",
+            event_type="processing_error",
+            status="failed",
+            metadata={"error": str(e)}
+        )
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/sms/mitake")
 async def mitake_webhook(
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    checksum: Optional[str] = Query(None)
 ):
     """Handle Mitake SMS delivery status webhooks"""
+    webhook_received_at = datetime.utcnow()
+    
     try:
         # Get query parameters or form data
         params = dict(request.query_params)
         if not params:
             form_data = await request.form()
             params = dict(form_data)
+        
+        # Verify checksum for Mitake
+        if settings.ENVIRONMENT != "development":
+            if not checksum:
+                await track_webhook_event(
+                    provider="mitake",
+                    event_type="missing_checksum",
+                    status="rejected",
+                    metadata={"reason": "No checksum parameter"}
+                )
+                raise HTTPException(status_code=401, detail="Missing checksum")
+            
+            # Get secret from secure storage
+            secret = await get_secret("MITAKE_WEBHOOK_SECRET")
+            if not secret:
+                logger.error("Mitake webhook secret not configured")
+                raise HTTPException(status_code=500, detail="Configuration error")
+            
+            # Verify checksum (Mitake uses MD5 of sorted params + secret)
+            sorted_params = sorted([(k, v) for k, v in params.items() if k != "checksum"])
+            param_string = "".join([f"{k}{v}" for k, v in sorted_params])
+            data_string = f"{param_string}{secret}"
+            calculated_checksum = hashlib.md5(data_string.encode('utf-8')).hexdigest()
+            
+            if not hmac.compare_digest(calculated_checksum, checksum):
+                await track_webhook_event(
+                    provider="mitake",
+                    event_type="invalid_checksum",
+                    status="rejected",
+                    metadata={"checksum": checksum[:10] + "..."}
+                )
+                raise HTTPException(status_code=401, detail="Invalid checksum")
             
         # Extract status info
         msgid = params.get("msgid")
@@ -229,11 +383,32 @@ async def mitake_webhook(
             
         await db.commit()
         
+        # Track successful webhook
+        await track_webhook_event(
+            provider="mitake",
+            event_type="status_update",
+            status="success",
+            metadata={
+                "msgid": msgid,
+                "statuscode": statuscode,
+                "statusstr": statusstr,
+                "processed_in_ms": int((datetime.utcnow() - webhook_received_at).total_seconds() * 1000)
+            }
+        )
+        
         logger.info(f"Updated SMS {msgid} status to {sms_log.status}")
         return {"status": "ok"}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error processing Mitake webhook: {e}")
+        await track_webhook_event(
+            provider="mitake",
+            event_type="processing_error",
+            status="failed",
+            metadata={"error": str(e)}
+        )
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

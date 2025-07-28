@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, desc, func
 from sqlalchemy.orm import selectinload
 
-from app.core.database import get_async_session
+from app.api.deps import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoicePaymentStatus
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/invoices", tags=["invoices"])
 @router.post("/", response_model=InvoiceResponse)
 async def create_invoice(
     invoice_data: InvoiceCreate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Create a new invoice"""
@@ -69,7 +69,7 @@ async def get_invoices(
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     search: Optional[str] = None,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get list of invoices with filtering"""
@@ -125,7 +125,7 @@ async def get_invoices(
 @router.get("/stats", response_model=InvoiceStats)
 async def get_invoice_stats(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get invoice statistics for a period"""
@@ -141,7 +141,7 @@ async def get_invoice_stats(
 @router.get("/{invoice_id}", response_model=InvoiceResponse)
 async def get_invoice(
     invoice_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get single invoice details"""
@@ -163,7 +163,7 @@ async def get_invoice(
 async def update_invoice(
     invoice_id: int,
     invoice_update: InvoiceUpdate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Update invoice (only draft invoices can be fully edited)"""
@@ -193,7 +193,7 @@ async def update_invoice(
 @router.post("/{invoice_id}/issue", response_model=InvoiceResponse)
 async def issue_invoice(
     invoice_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Issue a draft invoice (submit to government)"""
@@ -229,7 +229,7 @@ async def issue_invoice(
 async def void_invoice(
     invoice_id: int,
     reason: str = Query(..., min_length=1, max_length=200),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Void an issued invoice"""
@@ -260,7 +260,7 @@ async def void_invoice(
 @router.post("/{invoice_id}/print")
 async def print_invoice(
     invoice_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Generate printable invoice PDF"""
@@ -291,7 +291,7 @@ async def print_invoice(
 @router.post("/bulk-action", response_model=dict)
 async def bulk_invoice_action(
     action: InvoiceBulkAction,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Perform bulk actions on invoices"""
@@ -323,7 +323,7 @@ async def bulk_invoice_action(
 async def download_period_invoices(
     period: str = Path(..., pattern="^\\d{6}$"),
     format: str = Query("excel", pattern="^(excel|csv|pdf)$"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Download all invoices for a period"""

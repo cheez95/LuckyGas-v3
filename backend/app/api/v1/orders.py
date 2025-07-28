@@ -17,7 +17,7 @@ from app.schemas.order import OrderCreateV2, OrderUpdateV2, OrderV2
 from app.schemas.order_item import OrderItemCreate
 from app.schemas.credit import CreditSummary, CreditCheckResult
 from app.schemas.order_search import OrderSearchCriteria, OrderSearchResult
-from app.core.database import get_async_session
+from app.api.deps import get_db
 from app.api.v1.socketio_handler import notify_order_update
 from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
 from app.services.order_service import OrderService
@@ -38,7 +38,7 @@ async def get_orders(
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     is_urgent: Optional[bool] = None,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -103,7 +103,7 @@ async def get_orders(
 @cache_result("order", expire=timedelta(hours=1))
 async def get_order(
     order_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """獲取特定訂單詳情"""
@@ -131,7 +131,7 @@ async def get_order(
 @invalidate_cache("orders:list:*")
 async def create_order(
     order_create: OrderCreate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -162,7 +162,7 @@ async def create_order(
 async def update_order(
     order_id: int,
     order_update: OrderUpdate,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """更新訂單"""
@@ -197,7 +197,7 @@ async def update_order(
 async def cancel_order(
     order_id: int,
     reason: Optional[str] = Query(None, description="取消原因"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """取消訂單"""
@@ -246,7 +246,7 @@ async def cancel_order(
 @router.post("/v2/", response_model=OrderV2)
 async def create_order_v2(
     order_create: OrderCreateV2,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -369,7 +369,7 @@ async def create_order_v2(
 @router.get("/v2/{order_id}", response_model=OrderV2)
 async def get_order_v2(
     order_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """獲取特定訂單詳情（包含彈性產品）"""
@@ -404,7 +404,7 @@ async def get_order_v2(
 async def update_order_v2(
     order_id: int,
     order_update: OrderUpdateV2,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """更新訂單（彈性產品系統）"""
@@ -480,7 +480,7 @@ async def update_order_v2(
 async def get_order_stats(
     date_from: Optional[datetime] = Query(None, description="開始日期"),
     date_to: Optional[datetime] = Query(None, description="結束日期"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """獲取訂單統計摘要"""
@@ -544,7 +544,7 @@ async def get_order_stats(
 @router.post("/search", response_model=OrderSearchResult)
 async def search_orders(
     criteria: OrderSearchCriteria = Body(...),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -732,7 +732,7 @@ async def search_orders(
 @router.get("/credit/{customer_id}", response_model=CreditSummary)
 async def get_customer_credit_summary(
     customer_id: int,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -757,7 +757,7 @@ async def get_customer_credit_summary(
 async def check_credit_limit(
     customer_id: int = Query(..., description="客戶ID"),
     order_amount: float = Query(..., description="訂單金額"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -795,7 +795,7 @@ async def check_credit_limit(
 async def block_customer_credit(
     customer_id: int,
     reason: str = Query(..., description="封鎖原因"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
@@ -821,7 +821,7 @@ async def block_customer_credit(
 async def unblock_customer_credit(
     customer_id: int,
     reason: str = Query(..., description="解除封鎖原因"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
     """

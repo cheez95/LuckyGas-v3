@@ -144,6 +144,10 @@ class EInvoiceService:
         # Get configuration
         self.config = get_einvoice_config(environment)
         
+        # Load production credentials from Secret Manager
+        if settings.ENVIRONMENT == "production":
+            self._load_production_credentials()
+        
         # Validate configuration
         try:
             validate_einvoice_config(self.config)
@@ -167,12 +171,18 @@ class EInvoiceService:
         self.cert_path = self.config.get("cert_path")
         self.key_path = self.config.get("key_path")
         
-        # Initialize circuit breaker
+        # Production health check endpoint
+        self.health_check_url = self.config.get("health_check_url", f"{self.b2b_base_url}/health")
+        
+        # Initialize circuit breaker with production settings
         self.circuit_breaker = CircuitBreaker(
-            failure_threshold=5,
-            recovery_timeout=300,  # 5 minutes
+            failure_threshold=self.config.get("circuit_breaker_threshold", 5),
+            recovery_timeout=self.config.get("circuit_breaker_timeout", 300),  # 5 minutes
             expected_exception=httpx.HTTPError
         )
+        
+        # Initialize metrics
+        self._init_metrics()
         
         # HTTP client configuration
         self.client_config = {
@@ -180,13 +190,115 @@ class EInvoiceService:
             "headers": {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "User-Agent": "LuckyGas-EInvoice-Client/1.0"
-            }
+                "User-Agent": f"LuckyGas-EInvoice-Client/1.0 ({settings.ENVIRONMENT})"
+            },
+            "verify": True,  # Always verify SSL in production
+            "follow_redirects": False  # Security: don't follow redirects
         }
         
         # Add certificate if configured
         if self.cert_path and self.key_path:
             self.client_config["cert"] = (self.cert_path, self.key_path)
+            
+        # Connection pooling
+        self.client_config["limits"] = httpx.Limits(
+            max_keepalive_connections=20,
+            max_connections=100,
+            keepalive_expiry=30
+        )
+    
+    def _load_production_credentials(self):
+        """Load production credentials from Google Secret Manager"""
+        try:
+            from app.core.secrets_manager import get_secrets_manager
+            sm = get_secrets_manager()
+            
+            # Load API credentials
+            api_creds = sm.get_secret_json("einvoice-api-credentials")
+            if api_creds:
+                self.config.update({
+                    "app_id": api_creds.get("app_id", self.config.get("app_id")),
+                    "api_key": api_creds.get("api_key", self.config.get("api_key"))
+                })
+                logger.info("Loaded E-Invoice API credentials from Secret Manager")
+            
+            # Load certificate if stored in Secret Manager
+            cert_data = sm.get_secret("einvoice-certificate")
+            key_data = sm.get_secret("einvoice-private-key")
+            
+            if cert_data and key_data:
+                # Write to temporary files (will be cleaned up)
+                import tempfile
+                cert_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.crt')
+                key_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.key')
+                
+                cert_file.write(cert_data)
+                key_file.write(key_data)
+                
+                cert_file.close()
+                key_file.close()
+                
+                self.config["cert_path"] = cert_file.name
+                self.config["key_path"] = key_file.name
+                
+                logger.info("Loaded E-Invoice certificates from Secret Manager")
+                
+        except Exception as e:
+            logger.error(f"Failed to load production credentials: {e}")
+            # Don't fail initialization, let validation handle it
+    
+    def _init_metrics(self):
+        """Initialize Prometheus metrics for monitoring"""
+        try:
+            from prometheus_client import Counter, Histogram, Gauge
+            
+            self.metrics = {
+                "requests_total": Counter(
+                    'einvoice_requests_total',
+                    'Total E-Invoice API requests',
+                    ['endpoint', 'status']
+                ),
+                "request_duration": Histogram(
+                    'einvoice_request_duration_seconds',
+                    'E-Invoice API request duration',
+                    ['endpoint']
+                ),
+                "circuit_breaker_state": Gauge(
+                    'einvoice_circuit_breaker_state',
+                    'Circuit breaker state (0=closed, 1=open, 2=half-open)'
+                ),
+                "invoice_success_rate": Gauge(
+                    'einvoice_success_rate',
+                    'E-Invoice submission success rate'
+                )
+            }
+        except ImportError:
+            logger.warning("Prometheus client not available, metrics disabled")
+            self.metrics = None
+    
+    async def health_check(self) -> Dict[str, Any]:
+        """Check E-Invoice API health status"""
+        try:
+            async with httpx.AsyncClient(**self.client_config) as client:
+                response = await client.get(
+                    self.health_check_url,
+                    timeout=5.0  # Short timeout for health checks
+                )
+                
+                return {
+                    "status": "healthy" if response.status_code == 200 else "unhealthy",
+                    "response_time": response.elapsed.total_seconds(),
+                    "circuit_breaker": self.circuit_breaker.state.value,
+                    "mock_mode": self.mock_mode
+                }
+                
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "circuit_breaker": self.circuit_breaker.state.value,
+                "mock_mode": self.mock_mode
+            }
     
     def _generate_signature(self, data: Dict[str, Any]) -> str:
         """
@@ -307,18 +419,38 @@ class EInvoiceService:
         return str(random.randint(1000, 9999))
     
     def _log_request(self, endpoint: str, data: Dict[str, Any]):
-        """Log API request for audit trail"""
+        """Log API request for audit trail with compliance requirements"""
         log_data = data.copy()
-        # Mask sensitive data
-        if "CheckMacValue" in log_data:
-            log_data["CheckMacValue"] = "***MASKED***"
+        
+        # Mask sensitive data for security
+        sensitive_fields = ["CheckMacValue", "api_key", "password", "TaxID"]
+        for field in sensitive_fields:
+            if field in log_data:
+                log_data[field] = "***MASKED***"
+        
+        # Create audit log entry
+        audit_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "environment": settings.ENVIRONMENT,
+            "service": "einvoice",
+            "endpoint": endpoint,
+            "invoice_no": log_data.get('InvoiceNo', 'N/A'),
+            "buyer_id": log_data.get('BuyerId', 'N/A'),
+            "amount": log_data.get('TotalAmount', 0),
+            "request_id": f"{time.time()}-{log_data.get('InvoiceNo', 'NA')}"
+        }
         
         logger.info(
-            f"E-Invoice API Request - Endpoint: {endpoint}, "
-            f"Invoice: {log_data.get('InvoiceNo', 'N/A')}, "
-            f"Timestamp: {datetime.now().isoformat()}"
+            f"E-Invoice API Request",
+            extra={"audit": audit_entry}
         )
-        logger.debug(f"Request data: {json.dumps(log_data, ensure_ascii=False)}")
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Request data: {json.dumps(log_data, ensure_ascii=False)}")
+        
+        # Update metrics
+        if self.metrics:
+            self.metrics["requests_total"].labels(endpoint=endpoint, status="sent").inc()
     
     def _log_response(
         self, 
@@ -326,19 +458,52 @@ class EInvoiceService:
         response: httpx.Response, 
         duration: float
     ):
-        """Log API response for audit trail"""
+        """Log API response for audit trail with enhanced monitoring"""
         try:
             response_data = response.json()
         except:
-            response_data = {"raw": response.text}
+            response_data = {"raw": response.text[:500]}  # Limit raw text size
+        
+        success = response_data.get('RtnCode') == '1'
+        
+        # Create audit log entry
+        audit_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "environment": settings.ENVIRONMENT,
+            "service": "einvoice",
+            "endpoint": endpoint,
+            "status_code": response.status_code,
+            "success": success,
+            "duration_seconds": duration,
+            "error_code": response_data.get('RtnCode') if not success else None,
+            "error_message": response_data.get('RtnMsg') if not success else None
+        }
         
         logger.info(
-            f"E-Invoice API Response - Endpoint: {endpoint}, "
-            f"Status: {response.status_code}, "
-            f"Duration: {duration:.2f}s, "
-            f"Success: {response_data.get('RtnCode') == '1'}"
+            f"E-Invoice API Response",
+            extra={"audit": audit_entry}
         )
-        logger.debug(f"Response data: {json.dumps(response_data, ensure_ascii=False)}")
+        
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Response data: {json.dumps(response_data, ensure_ascii=False)}")
+        
+        # Update metrics
+        if self.metrics:
+            self.metrics["requests_total"].labels(
+                endpoint=endpoint, 
+                status="success" if success else "failure"
+            ).inc()
+            self.metrics["request_duration"].labels(endpoint=endpoint).observe(duration)
+            
+            # Update circuit breaker state metric
+            cb_state_map = {
+                CircuitState.CLOSED: 0,
+                CircuitState.OPEN: 1,
+                CircuitState.HALF_OPEN: 2
+            }
+            self.metrics["circuit_breaker_state"].set(
+                cb_state_map.get(self.circuit_breaker.state, -1)
+            )
     
     async def _make_request(
         self,

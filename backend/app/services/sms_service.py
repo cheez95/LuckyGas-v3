@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from app.core.config import settings
-from app.core.database import get_db
+from app.api.deps import get_db
 from app.models.notification import (
     SMSLog, SMSTemplate, ProviderConfig, 
     NotificationStatus, SMSProvider
@@ -328,7 +328,7 @@ response=Y"""
 
 
 class EnhancedSMSService:
-    """Enhanced SMS service with multiple provider support"""
+    """Enhanced SMS service with multiple provider support and production features"""
     
     def __init__(self):
         self.providers = {
@@ -338,13 +338,95 @@ class EnhancedSMSService:
         }
         self._provider_instances = {}
         self._rate_limiters = {}
+        self._circuit_breakers = {}
+        self._delivery_callbacks = {}
+        self._init_metrics()
+        self._load_production_credentials()
+        
+    def _init_metrics(self):
+        """Initialize Prometheus metrics for monitoring"""
+        try:
+            from prometheus_client import Counter, Histogram, Gauge, Summary
+            
+            self.metrics = {
+                "sms_sent": Counter(
+                    'sms_messages_sent_total',
+                    'Total SMS messages sent',
+                    ['provider', 'status', 'message_type']
+                ),
+                "sms_delivery": Counter(
+                    'sms_messages_delivered_total',
+                    'Total SMS messages delivered',
+                    ['provider', 'message_type']
+                ),
+                "sms_cost": Summary(
+                    'sms_message_cost_twd',
+                    'SMS message cost in TWD',
+                    ['provider']
+                ),
+                "provider_latency": Histogram(
+                    'sms_provider_latency_seconds',
+                    'SMS provider API latency',
+                    ['provider', 'operation']
+                ),
+                "provider_health": Gauge(
+                    'sms_provider_health',
+                    'SMS provider health status (1=healthy, 0=unhealthy)',
+                    ['provider']
+                ),
+                "rate_limit_remaining": Gauge(
+                    'sms_rate_limit_remaining',
+                    'Remaining SMS rate limit',
+                    ['provider']
+                )
+            }
+        except ImportError:
+            logger.warning("Prometheus client not available, metrics disabled")
+            self.metrics = None
+            
+    def _load_production_credentials(self):
+        """Load SMS provider credentials from Secret Manager"""
+        if settings.ENVIRONMENT != "production":
+            return
+            
+        try:
+            from app.core.secrets_manager import get_secrets_manager
+            sm = get_secrets_manager()
+            
+            # Load provider credentials
+            for provider in SMSProvider:
+                credentials = sm.get_secret_json(f"sms-{provider.value}-credentials")
+                if credentials:
+                    # Store securely
+                    self._store_provider_credentials(provider, credentials)
+                    logger.info(f"Loaded credentials for SMS provider {provider.value}")
+                    
+        except Exception as e:
+            logger.error(f"Failed to load SMS credentials: {e}")
+            
+    def _store_provider_credentials(self, provider: SMSProvider, credentials: Dict[str, Any]):
+        """Store provider credentials securely"""
+        if not hasattr(self, '_provider_credentials'):
+            self._provider_credentials = {}
+            
+        self._provider_credentials[provider] = credentials
+        
+    def _get_provider_config(self, provider: SMSProvider) -> Dict[str, Any]:
+        """Get provider configuration with production credentials"""
+        config = {}
+        
+        # Get from secure storage if available
+        if hasattr(self, '_provider_credentials') and provider in self._provider_credentials:
+            config.update(self._provider_credentials[provider])
+            
+        return config
         
     async def _get_provider_instance(
         self, 
         provider: SMSProvider,
         db: AsyncSession
     ) -> Optional[SMSProviderBase]:
-        """Get or create provider instance"""
+        """Get or create provider instance with production configuration"""
         if provider not in self._provider_instances:
             # Load config from database
             result = await db.execute(
@@ -363,10 +445,112 @@ class EnhancedSMSService:
             provider_class = self.providers.get(provider)
             if not provider_class:
                 return None
-                
-            self._provider_instances[provider] = provider_class(config_obj.config)
+            
+            # Merge database config with production credentials
+            config = config_obj.config.copy()
+            prod_config = self._get_provider_config(provider)
+            config.update(prod_config)
+            
+            # Create provider instance
+            instance = provider_class(config)
+            self._provider_instances[provider] = instance
+            
+            # Initialize circuit breaker for this provider
+            if provider not in self._circuit_breakers:
+                self._circuit_breakers[provider] = {
+                    'failures': 0,
+                    'last_failure': None,
+                    'state': 'closed',
+                    'half_open_until': None
+                }
+            
+            # Start health monitoring
+            asyncio.create_task(self._monitor_provider_health(provider))
             
         return self._provider_instances[provider]
+    
+    async def _monitor_provider_health(self, provider: SMSProvider):
+        """Monitor provider health with periodic checks"""
+        while True:
+            try:
+                # Wait 5 minutes between health checks
+                await asyncio.sleep(300)
+                
+                instance = self._provider_instances.get(provider)
+                if not instance:
+                    continue
+                    
+                # Perform health check (send test SMS to monitoring number)
+                if hasattr(instance, 'health_check'):
+                    health_status = await instance.health_check()
+                else:
+                    # Basic connectivity check
+                    health_status = {'healthy': True}
+                    
+                # Update metrics
+                if self.metrics:
+                    self.metrics["provider_health"].labels(
+                        provider=provider.value
+                    ).set(1 if health_status.get('healthy') else 0)
+                    
+                # Reset circuit breaker if healthy
+                if health_status.get('healthy') and self._circuit_breakers[provider]['state'] == 'open':
+                    self._circuit_breakers[provider] = {
+                        'failures': 0,
+                        'last_failure': None,
+                        'state': 'closed',
+                        'half_open_until': None
+                    }
+                    logger.info(f"SMS provider {provider.value} recovered, circuit breaker reset")
+                    
+            except Exception as e:
+                logger.error(f"Health check failed for SMS provider {provider.value}: {e}")
+                
+    def _is_circuit_open(self, provider: SMSProvider) -> bool:
+        """Check if circuit breaker is open for provider"""
+        if provider not in self._circuit_breakers:
+            return False
+            
+        breaker = self._circuit_breakers[provider]
+        
+        if breaker['state'] == 'open':
+            # Check if we should transition to half-open
+            if breaker['last_failure']:
+                time_since_failure = (datetime.utcnow() - breaker['last_failure']).total_seconds()
+                if time_since_failure > 300:  # 5 minutes
+                    breaker['state'] = 'half_open'
+                    breaker['half_open_until'] = datetime.utcnow() + timedelta(seconds=30)
+                    logger.info(f"Circuit breaker for {provider.value} transitioning to half-open")
+                else:
+                    return True
+                    
+        elif breaker['state'] == 'half_open':
+            # Check if half-open period expired
+            if datetime.utcnow() > breaker['half_open_until']:
+                breaker['state'] = 'closed'
+                breaker['failures'] = 0
+                logger.info(f"Circuit breaker for {provider.value} closed after successful half-open period")
+                
+        return False
+        
+    def _record_circuit_failure(self, provider: SMSProvider):
+        """Record a failure for circuit breaker"""
+        if provider not in self._circuit_breakers:
+            self._circuit_breakers[provider] = {
+                'failures': 0,
+                'last_failure': None,
+                'state': 'closed',
+                'half_open_until': None
+            }
+            
+        breaker = self._circuit_breakers[provider]
+        breaker['failures'] += 1
+        breaker['last_failure'] = datetime.utcnow()
+        
+        # Open circuit after 3 failures
+        if breaker['failures'] >= 3 and breaker['state'] != 'open':
+            breaker['state'] = 'open'
+            logger.warning(f"Circuit breaker opened for SMS provider {provider.value} after {breaker['failures']} failures")
         
     async def _get_best_provider(self, db: AsyncSession) -> Optional[Tuple[SMSProvider, SMSProviderBase]]:
         """Get best available provider based on priority and success rate"""
@@ -477,7 +661,7 @@ class EnhancedSMSService:
             recipient=phone,
             message=message,
             message_type=message_type,
-            metadata=metadata or {},
+            notification_metadata=metadata or {},
             unicode_message=any(ord(char) > 127 for char in message)
         )
         
@@ -522,7 +706,24 @@ class EnhancedSMSService:
                 sms_log.provider = provider
                 
             try:
+                # Check circuit breaker
+                if self._is_circuit_open(provider):
+                    logger.warning(f"Circuit breaker open for {provider.value}, skipping")
+                    last_error = f"Provider {provider.value} circuit breaker open"
+                    continue
+                
+                # Measure latency
+                start_time = time.time()
+                
                 result = await provider_instance.send_sms(phone, message)
+                
+                # Record metrics
+                latency = time.time() - start_time
+                if self.metrics:
+                    self.metrics["provider_latency"].labels(
+                        provider=provider.value,
+                        operation="send"
+                    ).observe(latency)
                 
                 if result["success"]:
                     sms_log.status = NotificationStatus.SENT
@@ -533,6 +734,31 @@ class EnhancedSMSService:
                     
                     # Update provider stats
                     await self._update_provider_stats(provider, True, db)
+                    
+                    # Update metrics
+                    if self.metrics:
+                        self.metrics["sms_sent"].labels(
+                            provider=provider.value,
+                            status="success",
+                            message_type=message_type or "general"
+                        ).inc()
+                        self.metrics["sms_cost"].labels(
+                            provider=provider.value
+                        ).observe(sms_log.cost)
+                    
+                    # Reset circuit breaker on success
+                    if self._circuit_breakers[provider]['state'] == 'half_open':
+                        self._circuit_breakers[provider]['state'] = 'closed'
+                        self._circuit_breakers[provider]['failures'] = 0
+                        logger.info(f"Circuit breaker for {provider.value} closed after successful send")
+                    
+                    # Register delivery callback if provider supports it
+                    if hasattr(provider_instance, 'register_delivery_callback'):
+                        callback_url = f"{settings.API_V1_STR}/webhooks/sms/delivery/{sms_log.id}"
+                        await provider_instance.register_delivery_callback(
+                            sms_log.provider_message_id,
+                            callback_url
+                        )
                     
                     db.add(sms_log)
                     await db.commit()
@@ -548,10 +774,24 @@ class EnhancedSMSService:
                     last_error = result.get("error", "Unknown error")
                     sms_log.retry_count = attempt + 1
                     
+                    # Record circuit failure
+                    self._record_circuit_failure(provider)
+                    
+                    # Update failure metrics
+                    if self.metrics:
+                        self.metrics["sms_sent"].labels(
+                            provider=provider.value,
+                            status="failure",
+                            message_type=message_type or "general"
+                        ).inc()
+                    
             except Exception as e:
                 logger.error(f"SMS send error: {e}")
                 last_error = str(e)
                 sms_log.retry_count = attempt + 1
+                
+                # Record circuit failure
+                self._record_circuit_failure(provider)
                 
         # All retries failed
         sms_log.status = NotificationStatus.FAILED

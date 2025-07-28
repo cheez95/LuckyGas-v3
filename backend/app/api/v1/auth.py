@@ -1,12 +1,12 @@
 from datetime import timedelta, datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from app.api.deps import get_db, get_current_user
-from app.api.deps.security import (
+from app.api.auth_deps.security import (
     check_account_lockout, require_secure_auth, require_admin_auth,
     rate_limit_by_user
 )
@@ -14,8 +14,9 @@ from app.core.config import settings
 from app.core.security import (
     create_access_token, create_refresh_token, verify_password, get_password_hash,
     decode_refresh_token, PasswordValidator, AccountLockout, TwoFactorAuth,
-    SessionManager, CSRFProtection
+    SessionManager
 )
+from app.middleware.security import CSRFProtection
 from app.core.security_config import get_session_config
 from app.models.user import User as UserModel, UserRole
 from app.schemas.user import (
@@ -353,6 +354,128 @@ async def update_user(
     await db.refresh(user)
     
     return user
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    data: Dict[str, str],
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    Request password reset token
+    """
+    email = data.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=400,
+            detail="電子郵件是必需的"
+        )
+    
+    # Find user by email
+    result = await db.execute(
+        select(UserModel).where(UserModel.email == email)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "如果電子郵件存在，密碼重設連結已發送"}
+    
+    # Generate reset token
+    reset_token = SecureTokenGenerator.generate_token()
+    expiry = datetime.utcnow() + timedelta(hours=1)
+    
+    # Store reset token in cache
+    await cache.set(
+        f"password_reset:{reset_token}",
+        {"user_id": user.id, "email": email},
+        expire=3600  # 1 hour
+    )
+    
+    # TODO: Send email with reset link
+    # For now, just return success
+    
+    # Log password reset request
+    await SecurityAudit.log_security_event(
+        "password_reset_requested",
+        user_id=user.id,
+        ip_address=RequestValidator.get_client_ip(request),
+        severity="INFO"
+    )
+    
+    return {"message": "如果電子郵件存在，密碼重設連結已發送"}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request: Request,
+    data: Dict[str, str],
+    db: AsyncSession = Depends(get_db)
+) -> Any:
+    """
+    Reset password with token
+    """
+    token = data.get("token")
+    new_password = data.get("new_password")
+    
+    if not token or not new_password:
+        raise HTTPException(
+            status_code=400,
+            detail="Token和新密碼是必需的"
+        )
+    
+    # Get reset data from cache
+    reset_data = await cache.get(f"password_reset:{token}")
+    
+    if not reset_data:
+        raise HTTPException(
+            status_code=400,
+            detail="無效或過期的重設連結"
+        )
+    
+    # Validate new password
+    result = await db.execute(
+        select(UserModel).where(UserModel.id == reset_data["user_id"])
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="用戶不存在"
+        )
+    
+    # Validate password against policy
+    is_valid, errors = PasswordValidator.validate_password(
+        new_password,
+        user.username
+    )
+    
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"密碼不符合要求: {'; '.join(errors)}"
+        )
+    
+    # Update password
+    user.hashed_password = get_password_hash(new_password)
+    user.password_changed_at = datetime.utcnow()
+    
+    # Delete reset token
+    await cache.delete(f"password_reset:{token}")
+    
+    await db.commit()
+    
+    # Log password reset
+    await SecurityAudit.log_security_event(
+        "password_reset_completed",
+        user_id=user.id,
+        ip_address=RequestValidator.get_client_ip(request),
+        severity="INFO"
+    )
+    
+    return {"message": "密碼已成功重設"}
 
 
 @router.patch("/users/{user_id}/toggle-status", response_model=User)

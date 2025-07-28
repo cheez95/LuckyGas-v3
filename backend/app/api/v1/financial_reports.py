@@ -8,7 +8,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import io
 
-from app.core.database import get_async_session
+from app.api.deps import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.services.financial_report_service import FinancialReportService
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/financial-reports", tags=["financial-reports"])
 @router.get("/revenue-summary")
 async def get_revenue_summary(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get revenue summary for a period"""
@@ -36,7 +36,7 @@ async def get_revenue_summary(
 async def get_accounts_receivable_report(
     as_of_date: date = Query(default=date.today()),
     customer_id: Optional[int] = None,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get accounts receivable aging report"""
@@ -55,7 +55,7 @@ async def get_accounts_receivable_report(
 @router.get("/tax-report")
 async def get_tax_report(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get tax report for government filing"""
@@ -72,7 +72,7 @@ async def get_tax_report(
 async def get_cash_flow_report(
     date_from: date = Query(...),
     date_to: date = Query(...),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get cash flow report"""
@@ -91,7 +91,7 @@ async def get_cash_flow_report(
 @router.get("/profit-loss")
 async def get_profit_loss_statement(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get profit and loss statement"""
@@ -109,7 +109,7 @@ async def get_customer_statement(
     customer_id: int,
     date_from: date = Query(...),
     date_to: date = Query(...),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get customer account statement"""
@@ -130,7 +130,7 @@ async def get_customer_statement(
 async def get_sales_analysis(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     group_by: str = Query("customer", pattern="^(customer|product|area|date)$"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get sales analysis report"""
@@ -149,7 +149,7 @@ async def get_sales_analysis(
 @router.get("/compliance-report")
 async def get_compliance_report(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get compliance report for regulatory requirements"""
@@ -165,7 +165,7 @@ async def get_compliance_report(
 @router.post("/generate-401")
 async def generate_401_file(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Generate 401 file for government tax filing"""
@@ -188,7 +188,7 @@ async def generate_401_file(
 @router.post("/generate-403")
 async def generate_403_file(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Generate 403 file for government tax filing"""
@@ -210,7 +210,7 @@ async def generate_403_file(
 
 @router.get("/dashboard-metrics")
 async def get_financial_dashboard_metrics(
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get financial metrics for dashboard"""
@@ -227,7 +227,7 @@ async def get_financial_dashboard_metrics(
 async def export_to_accounting_system(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     system: str = Query(..., pattern="^(excel|csv|quickbooks|sap)$"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Export financial data to accounting system"""

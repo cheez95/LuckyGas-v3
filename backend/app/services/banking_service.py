@@ -1,4 +1,4 @@
-"""Banking service for payment processing and reconciliation."""
+"""Banking service for payment processing and reconciliation with production SFTP support."""
 
 import io
 import os
@@ -13,6 +13,10 @@ from sqlalchemy import func
 import csv
 from contextlib import contextmanager
 import time
+import hashlib
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import json
 
 from app.models.banking import (
     PaymentBatch, PaymentTransaction, ReconciliationLog, BankConfiguration,
@@ -21,6 +25,7 @@ from app.models.banking import (
 from app.models.invoice import Invoice, InvoicePaymentStatus
 from app.models.customer import Customer
 from app.core.config import settings
+from app.core.secrets_manager import get_secrets_manager
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +47,88 @@ class BankingService:
         self.db = db
         self._sftp_clients = {}
         self._circuit_breaker_states = {}
+        self._connection_pool = {}
+        self._pool_lock = threading.Lock()
+        self._executor = ThreadPoolExecutor(max_workers=5)
+        self._init_metrics()
+        self._load_production_credentials()
+        
+    def _init_metrics(self):
+        """Initialize Prometheus metrics for monitoring"""
+        try:
+            from prometheus_client import Counter, Histogram, Gauge
+            
+            self.metrics = {
+                "sftp_connections": Gauge(
+                    'banking_sftp_connections',
+                    'Active SFTP connections',
+                    ['bank_code']
+                ),
+                "sftp_failures": Counter(
+                    'banking_sftp_failures_total',
+                    'SFTP connection failures',
+                    ['bank_code', 'error_type']
+                ),
+                "file_transfers": Counter(
+                    'banking_file_transfers_total',
+                    'File transfer operations',
+                    ['bank_code', 'direction', 'status']
+                ),
+                "transfer_duration": Histogram(
+                    'banking_transfer_duration_seconds',
+                    'File transfer duration',
+                    ['bank_code', 'direction']
+                ),
+                "reconciliation_accuracy": Gauge(
+                    'banking_reconciliation_accuracy',
+                    'Reconciliation match rate',
+                    ['bank_code']
+                )
+            }
+        except ImportError:
+            logger.warning("Prometheus client not available, metrics disabled")
+            self.metrics = None
+    
+    def _load_production_credentials(self):
+        """Load bank credentials from Secret Manager"""
+        if settings.ENVIRONMENT != "production":
+            return
+            
+        try:
+            sm = get_secrets_manager()
+            
+            # Load bank-specific credentials
+            banks = ["mega", "ctbc", "esun", "first", "taishin"]
+            for bank in banks:
+                credentials = sm.get_secret_json(f"banking-{bank}-credentials")
+                if credentials:
+                    # Store in secure memory (not logged)
+                    self._store_credentials(bank, credentials)
+                    logger.info(f"Loaded credentials for {bank} from Secret Manager")
+                    
+        except Exception as e:
+            logger.error(f"Failed to load banking credentials: {e}")
+    
+    def _store_credentials(self, bank_code: str, credentials: Dict[str, Any]):
+        """Securely store bank credentials in memory"""
+        # Create secure storage if not exists
+        if not hasattr(self, '_secure_credentials'):
+            self._secure_credentials = {}
+            
+        self._secure_credentials[bank_code] = {
+            'username': credentials.get('sftp_username'),
+            'password': credentials.get('sftp_password'),
+            'private_key': credentials.get('sftp_private_key'),
+            'passphrase': credentials.get('sftp_passphrase'),
+            'api_key': credentials.get('api_key'),
+            'api_secret': credentials.get('api_secret')
+        }
+    
+    def _get_credentials(self, bank_code: str) -> Dict[str, Any]:
+        """Get bank credentials from secure storage"""
+        if hasattr(self, '_secure_credentials') and bank_code in self._secure_credentials:
+            return self._secure_credentials[bank_code]
+        return {}
         
     @contextmanager
     def get_sftp_client(self, bank_config: BankConfiguration):
@@ -64,37 +151,108 @@ class BankingService:
             raise SFTPConnectionError(f"Circuit breaker open for {bank_code}")
         
         try:
-            # Try to get existing client
-            if bank_code in self._sftp_clients:
-                sftp = self._sftp_clients[bank_code]
-                # Test if connection is still alive
-                sftp.stat('.')
-                yield sftp
-                return
+            # Try to get from connection pool
+            with self._pool_lock:
+                if bank_code in self._connection_pool:
+                    pool = self._connection_pool[bank_code]
+                    if pool and len(pool) > 0:
+                        transport, sftp = pool.pop()
+                        # Test if connection is still alive
+                        try:
+                            sftp.stat('.')
+                            if self.metrics:
+                                self.metrics["sftp_connections"].labels(bank_code=bank_code).inc()
+                            yield sftp
+                            # Return to pool
+                            with self._pool_lock:
+                                pool.append((transport, sftp))
+                            return
+                        except:
+                            # Connection dead, close it
+                            try:
+                                transport.close()
+                            except:
+                                pass
             
-            # Create new connection
+            # Create new connection with production settings
             transport = paramiko.Transport((bank_config.sftp_host, bank_config.sftp_port))
+            transport.set_keepalive(30)  # Send keepalive every 30 seconds
+            
+            # Get production credentials
+            creds = self._get_credentials(bank_config.bank_code)
+            username = creds.get('username') or bank_config.sftp_username
+            password = creds.get('password') or bank_config.sftp_password
+            private_key_data = creds.get('private_key') or bank_config.sftp_private_key
             
             # Use password or private key authentication
-            if bank_config.sftp_private_key:
-                # Key-based authentication
-                key = paramiko.RSAKey.from_private_key(io.StringIO(bank_config.sftp_private_key))
-                transport.connect(username=bank_config.sftp_username, pkey=key)
+            if private_key_data:
+                # Key-based authentication (preferred for production)
+                try:
+                    # Try different key types
+                    key = None
+                    key_types = [
+                        (paramiko.RSAKey, "RSA"),
+                        (paramiko.Ed25519Key, "Ed25519"),
+                        (paramiko.ECDSAKey, "ECDSA")
+                    ]
+                    
+                    for key_class, key_type in key_types:
+                        try:
+                            key = key_class.from_private_key(
+                                io.StringIO(private_key_data),
+                                password=creds.get('passphrase')
+                            )
+                            logger.info(f"Using {key_type} key for {bank_code}")
+                            break
+                        except:
+                            continue
+                    
+                    if not key:
+                        raise ValueError("Could not parse private key")
+                        
+                    transport.connect(username=username, pkey=key)
+                except Exception as e:
+                    logger.error(f"Key authentication failed for {bank_code}: {e}")
+                    raise
             else:
-                # Password authentication
-                transport.connect(username=bank_config.sftp_username, password=bank_config.sftp_password)
+                # Password authentication (fallback)
+                transport.connect(username=username, password=password)
             
+            # Configure SFTP client
             sftp = paramiko.SFTPClient.from_transport(transport)
-            self._sftp_clients[bank_code] = sftp
+            sftp.get_channel().settimeout(30.0)  # 30 second timeout
+            
+            # Add to connection pool
+            with self._pool_lock:
+                if bank_code not in self._connection_pool:
+                    self._connection_pool[bank_code] = []
+                # Keep max 5 connections per bank
+                if len(self._connection_pool[bank_code]) < 5:
+                    self._connection_pool[bank_code].append((transport, sftp))
             
             # Reset circuit breaker on successful connection
             self._reset_circuit_breaker(bank_code)
+            
+            # Update metrics
+            if self.metrics:
+                self.metrics["sftp_connections"].labels(bank_code=bank_code).inc()
+            
+            logger.info(f"Established SFTP connection to {bank_code}")
             
             yield sftp
             
         except Exception as e:
             logger.error(f"SFTP connection failed for {bank_code}: {str(e)}")
             self._record_circuit_failure(bank_code)
+            
+            # Update failure metrics
+            if self.metrics:
+                error_type = type(e).__name__
+                self.metrics["sftp_failures"].labels(
+                    bank_code=bank_code,
+                    error_type=error_type
+                ).inc()
+                
             raise SFTPConnectionError(f"Failed to connect to {bank_code}: {str(e)}")
     
     def _is_circuit_open(self, bank_code: str) -> bool:
@@ -265,7 +423,7 @@ class BankingService:
     
     def upload_payment_file(self, batch_id: int) -> bool:
         """
-        Upload payment file to bank via SFTP.
+        Upload payment file to bank via SFTP with production reliability.
         
         Args:
             batch_id: Payment batch ID
@@ -288,6 +446,9 @@ class BankingService:
         if not bank_config:
             raise ValueError(f"No active configuration for bank {batch.bank_code}")
         
+        start_time = time.time()
+        temp_file = None
+        
         try:
             # Generate file name from pattern
             file_name = self._generate_file_name(
@@ -300,33 +461,101 @@ class BankingService:
             if not batch.file_content:
                 batch.file_content = self.generate_payment_file(batch_id)
             
-            # Upload via SFTP
-            with self.get_sftp_client(bank_config) as sftp:
-                # Create remote file path
-                remote_path = os.path.join(bank_config.upload_path, file_name)
-                
-                # Upload file
-                file_obj = io.BytesIO(batch.file_content.encode(bank_config.encoding or 'UTF-8'))
-                sftp.putfo(file_obj, remote_path)
-                
-                logger.info(f"Uploaded payment file {file_name} to {bank_config.bank_code}")
-                
-                # Update batch status
-                batch.status = PaymentBatchStatus.UPLOADED
-                batch.uploaded_at = datetime.utcnow()
-                batch.sftp_upload_path = remote_path
-                batch.file_name = file_name
-                
-                self.db.commit()
-                return True
-                
+            # Calculate checksum for verification
+            content_bytes = batch.file_content.encode(bank_config.encoding or 'UTF-8')
+            checksum = hashlib.sha256(content_bytes).hexdigest()
+            
+            # Create temporary file for atomic upload
+            import tempfile
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_file.write(content_bytes)
+            temp_file.close()
+            
+            # Upload via SFTP with retry
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    with self.get_sftp_client(bank_config) as sftp:
+                        # Create remote paths
+                        remote_path = os.path.join(bank_config.upload_path, file_name)
+                        temp_remote_path = f"{remote_path}.tmp"
+                        
+                        # Ensure remote directory exists
+                        try:
+                            sftp.stat(bank_config.upload_path)
+                        except FileNotFoundError:
+                            # Create directory if it doesn't exist
+                            sftp.makedirs(bank_config.upload_path)
+                        
+                        # Upload to temporary location first
+                        sftp.put(temp_file.name, temp_remote_path)
+                        
+                        # Verify file size
+                        local_size = os.path.getsize(temp_file.name)
+                        remote_size = sftp.stat(temp_remote_path).st_size
+                        
+                        if local_size != remote_size:
+                            raise ValueError(f"File size mismatch: local={local_size}, remote={remote_size}")
+                        
+                        # Atomic rename to final location
+                        sftp.rename(temp_remote_path, remote_path)
+                        
+                        # Set file permissions (read-only for security)
+                        sftp.chmod(remote_path, 0o444)
+                        
+                        logger.info(f"Successfully uploaded payment file {file_name} to {bank_config.bank_code}")
+                        
+                        # Update batch status
+                        batch.status = PaymentBatchStatus.UPLOADED
+                        batch.uploaded_at = datetime.utcnow()
+                        batch.sftp_upload_path = remote_path
+                        batch.file_name = file_name
+                        batch.file_checksum = checksum
+                        
+                        # Update metrics
+                        duration = time.time() - start_time
+                        if self.metrics:
+                            self.metrics["file_transfers"].labels(
+                                bank_code=bank_config.bank_code,
+                                direction="upload",
+                                status="success"
+                            ).inc()
+                            self.metrics["transfer_duration"].labels(
+                                bank_code=bank_config.bank_code,
+                                direction="upload"
+                            ).observe(duration)
+                        
+                        self.db.commit()
+                        return True
+                        
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Upload attempt {attempt + 1} failed, retrying: {e}")
+                        time.sleep(2 ** attempt)  # Exponential backoff
+                    else:
+                        raise
+                        
         except Exception as e:
             logger.error(f"Failed to upload payment file: {str(e)}")
             batch.status = PaymentBatchStatus.FAILED
             batch.error_message = str(e)
             batch.retry_count += 1
+            
+            # Update failure metrics
+            if self.metrics:
+                self.metrics["file_transfers"].labels(
+                    bank_code=bank_config.bank_code,
+                    direction="upload",
+                    status="failure"
+                ).inc()
+                
             self.db.commit()
             return False
+            
+        finally:
+            # Clean up temporary file
+            if temp_file and os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
     
     def check_reconciliation_files(self, bank_code: str) -> List[str]:
         """
