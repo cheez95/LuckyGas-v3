@@ -1,0 +1,3593 @@
+{
+  "scan_date": "2025-07-28T19:49:31.042221",
+  "root_path": ".",
+  "statistics": {
+    "files_scanned": 488,
+    "secrets_found": 358,
+    "high_risk": 142,
+    "medium_risk": 15,
+    "low_risk": 201
+  },
+  "findings": [
+    {
+      "file": "gcp-monitor-fix.sh",
+      "line": 13,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0250721213",
+      "context": "# Example: 2025-07-21T21:36:52Z -> 20250721213652"
+    },
+    {
+      "file": "gcp-monitor-fix.sh",
+      "line": 13,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "20250721213652",
+      "context": "# Example: 2025-07-21T21:36:52Z -> 20250721213652"
+    },
+    {
+      "file": "GOOGLE_API_INTEGRATION.md",
+      "line": 171,
+      "type": "generic_api_key",
+      "risk": "LOW",
+      "match": "API_KEY=your-routes-api-key",
+      "context": "GOOGLE_API_KEY=your-routes-api-key"
+    },
+    {
+      "file": "SECURITY_IMPLEMENTATION_GUIDE.md",
+      "line": 58,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "/frontend/src/components/common/SecureGo",
+      "context": "- `/frontend/src/components/common/SecureGoogleMap.tsx`"
+    },
+    {
+      "file": "run.py",
+      "line": 6,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "host=\"0.0.0.0\","
+    },
+    {
+      "file": "SETUP_INSTRUCTIONS.md",
+      "line": 52,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+    },
+    {
+      "file": "start_test_server.sh",
+      "line": 25,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    },
+    {
+      "file": "Dockerfile",
+      "line": 80,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "CMD [\"uvicorn\", \"app.main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\", \"--workers\", \"4\", \"--loop\", \"uvloop\", \"--access-log\"]"
+    },
+    {
+      "file": ".env.backup",
+      "line": 16,
+      "type": "generic_api_key",
+      "risk": "MEDIUM",
+      "match": "API_KEY=\nVERTEX_AI_LOCATION",
+      "context": "GOOGLE_MAPS_API_KEY="
+    },
+    {
+      "file": "SECURITY_ARCHITECTURE_PLAN.md",
+      "line": 14,
+      "type": "google_maps_api_key",
+      "risk": "HIGH",
+      "match": "AIzaSyDPHBiMtFoSAmd12SbbQU5gZYMQdF6DOcY",
+      "context": "1. **Revoke exposed Google Maps API key**: `AIzaSyDPHBiMtFoSAmd12SbbQU5gZYMQdF6DOcY`"
+    },
+    {
+      "file": "test_websocket_direct.py",
+      "line": 11,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "eyJzdWIiOiJzdGFmZkBsdWNreWdhcy5jb20udHci",
+      "context": "TOKEN = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGFmZkBsdWNreWdhcy5jb20udHciLCJyb2xlIjoib2ZmaWNlX3N0YWZmIiwiZXhwIjoxNzUzNDA1MTg1fQ.ipm9RdGT9ZFPASMK6guV7tuztPwFNpYWSfihbKSbSK8\""
+    },
+    {
+      "file": "test_websocket_direct.py",
+      "line": 11,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "LCJyb2xlIjoib2ZmaWNlX3N0YWZmIiwiZXhwIjox",
+      "context": "TOKEN = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGFmZkBsdWNreWdhcy5jb20udHciLCJyb2xlIjoib2ZmaWNlX3N0YWZmIiwiZXhwIjoxNzUzNDA1MTg1fQ.ipm9RdGT9ZFPASMK6guV7tuztPwFNpYWSfihbKSbSK8\""
+    },
+    {
+      "file": "test_websocket_direct.py",
+      "line": 11,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "ipm9RdGT9ZFPASMK6guV7tuztPwFNpYWSfihbKSb",
+      "context": "TOKEN = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGFmZkBsdWNreWdhcy5jb20udHciLCJyb2xlIjoib2ZmaWNlX3N0YWZmIiwiZXhwIjoxNzUzNDA1MTg1fQ.ipm9RdGT9ZFPASMK6guV7tuztPwFNpYWSfihbKSbSK8\""
+    },
+    {
+      "file": "test_websocket_direct.py",
+      "line": 11,
+      "type": "jwt_token",
+      "risk": "LOW",
+      "match": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzd...",
+      "context": "TOKEN = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdGFmZkBsdWNreWdhcy5jb20udHciLCJyb2xlIjoib2ZmaWNlX3N0YWZmIiwiZXhwIjoxNzUzNDA1MTg1fQ.ipm9RdGT9ZFPASMK6guV7tuztPwFNpYWSfihbKSbSK8\""
+    },
+    {
+      "file": "E_INVOICE_QA_REPORT.md",
+      "line": 222,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "PYTHONPATH=/Users/lgee258/Desktop/LuckyG",
+      "context": "PYTHONPATH=/Users/lgee258/Desktop/LuckyGas-v3/backend uv run pytest tests/services/test_einvoice_service.py -v --cov=app.services.einvoice_service --cov=app.core.einvoice_config --cov-report=term-missing"
+    },
+    {
+      "file": "test-websocket.html",
+      "line": 53,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "eyJzdWIiOiJ0ZXN0dXNlciIsInJvbGUiOiJvZmZp",
+      "context": "tokenInput.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInJvbGUiOiJvZmZpY2Vfc3RhZmYiLCJleHAiOjE3NTM1MzY5MTF9.lWnIPSbhQPivcAra6z7aH_3nlPXf8Otqo70AP2B1NZw';"
+    },
+    {
+      "file": "test-websocket.html",
+      "line": 53,
+      "type": "jwt_token",
+      "risk": "LOW",
+      "match": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0Z...",
+      "context": "tokenInput.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInJvbGUiOiJvZmZpY2Vfc3RhZmYiLCJleHAiOjE3NTM1MzY5MTF9.lWnIPSbhQPivcAra6z7aH_3nlPXf8Otqo70AP2B1NZw';"
+    },
+    {
+      "file": "ARCHITECTURE_HARDENING_REPORT.md",
+      "line": 22,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "169.254.169.254",
+      "context": "- Metadata service (169.254.169.254) explicitly blocked"
+    },
+    {
+      "file": "ARCHITECTURE_HARDENING_REPORT.md",
+      "line": 28,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "169.254.169.254",
+      "context": "- 169.254.169.254/32  # Block metadata service"
+    },
+    {
+      "file": "run_all_tests.sh",
+      "line": 20,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo -e \"${BLUE}===========================================${NC}\\n\""
+    },
+    {
+      "file": "ENVIRONMENT_SETUP_COMPLETE.md",
+      "line": 12,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "GRGStgmmX7wHAGIpFuRTWcU3OyH7UMb5cRzBc9GW",
+      "context": "- \u2705 Generated secure SECRET_KEY: `GRGStgmmX7wHAGIpFuRTWcU3OyH7UMb5cRzBc9GW8tI`"
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 119,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 135,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 153,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 157,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "\"phone\": \"0923456789\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 242,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"customer_phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 276,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 71,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"from_number\": \"+886912345678\""
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 119,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 135,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 153,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 157,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "\"phone\": \"0923456789\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 242,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"customer_phone\": \"0912345678\","
+    },
+    {
+      "file": "SMS_GATEWAY_README.md",
+      "line": 276,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "PRODUCTION_SECURITY_IMPLEMENTATION.md",
+      "line": 220,
+      "type": "generic_api_key",
+      "risk": "MEDIUM",
+      "match": "API-Key: lgas_xxxxxxxxxxxxxxxxxxxxx",
+      "context": "X-API-Key: lgas_xxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "file": "gcp-setup-rollback.sh",
+      "line": 33,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo \"=============================================\""
+    },
+    {
+      "file": "E_INVOICE_FIXES_REQUIRED.md",
+      "line": 295,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "PYTHONPATH=/Users/lgee258/Desktop/LuckyG",
+      "context": "PYTHONPATH=/Users/lgee258/Desktop/LuckyGas-v3/backend uv run pytest tests/services/test_einvoice_service.py -v"
+    },
+    {
+      "file": "E_INVOICE_FIXES_REQUIRED.md",
+      "line": 298,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "PYTHONPATH=/Users/lgee258/Desktop/LuckyG",
+      "context": "PYTHONPATH=/Users/lgee258/Desktop/LuckyGas-v3/backend uv run pytest tests/integration/test_einvoice_integration.py -v"
+    },
+    {
+      "file": "E_INVOICE_FIXES_REQUIRED.md",
+      "line": 301,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "PYTHONPATH=/Users/lgee258/Desktop/LuckyG",
+      "context": "PYTHONPATH=/Users/lgee258/Desktop/LuckyGas-v3/backend uv run pytest tests/performance/test_einvoice_performance.py -v"
+    },
+    {
+      "file": "E_INVOICE_FIXES_REQUIRED.md",
+      "line": 304,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "PYTHONPATH=/Users/lgee258/Desktop/LuckyG",
+      "context": "PYTHONPATH=/Users/lgee258/Desktop/LuckyGas-v3/backend uv run pytest tests/ -k \"einvoice\" -v"
+    },
+    {
+      "file": ".env",
+      "line": 12,
+      "type": "generic_api_key",
+      "risk": "MEDIUM",
+      "match": "API_KEY=\nVERTEX_AI_LOCATION",
+      "context": "GOOGLE_MAPS_API_KEY="
+    },
+    {
+      "file": ".env.staging",
+      "line": 38,
+      "type": "google_maps_api_key",
+      "risk": "HIGH",
+      "match": "AIza-staging-maps-api-key-from-secret-m",
+      "context": "GOOGLE_MAPS_API_KEY=AIza-staging-maps-api-key-from-secret-manager"
+    },
+    {
+      "file": ".env.staging",
+      "line": 38,
+      "type": "generic_api_key",
+      "risk": "MEDIUM",
+      "match": "API_KEY=AIza-staging-maps-api-key-from-secret-mana...",
+      "context": "GOOGLE_MAPS_API_KEY=AIza-staging-maps-api-key-from-secret-manager"
+    },
+    {
+      "file": ".env.staging",
+      "line": 21,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "10.0.0.1",
+      "context": "POSTGRES_SERVER=10.0.0.1  # Replace with actual Cloud SQL IP"
+    },
+    {
+      "file": ".env.staging",
+      "line": 28,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "10.0.0.2",
+      "context": "REDIS_URL=redis://10.0.0.2:6379  # Replace with actual MemoryStore IP"
+    },
+    {
+      "file": "SPAWN_COMMANDS.sh",
+      "line": 6,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo \"===========================================================\""
+    },
+    {
+      "file": "SPAWN_COMMANDS.sh",
+      "line": 49,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo \"===========================================================\""
+    },
+    {
+      "file": "SPAWN_COMMANDS.sh",
+      "line": 99,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo \"===========================================================\""
+    },
+    {
+      "file": "SECURITY_KEY_INVENTORY.md",
+      "line": 10,
+      "type": "google_maps_api_key",
+      "risk": "HIGH",
+      "match": "AIzaSyDPHBiMtFoSAmd12SbbQU5gZYMQdF6DOcY",
+      "context": "- **Google Maps API Key**: `AIzaSyDPHBiMtFoSAmd12SbbQU5gZYMQdF6DOcY`"
+    },
+    {
+      "file": "ARCHITECTURAL_TEST_REQUIREMENTS.md",
+      "line": 41,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "169.254.169.254",
+      "context": "- Metadata service access blocking (169.254.169.254)"
+    },
+    {
+      "file": "gcp-monitor.sh",
+      "line": 40,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo \"=============================================\""
+    },
+    {
+      "file": "GCP_SETUP_GUIDE.md",
+      "line": 265,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "--allowed-ips=\"0.0.0.0/0\" \\"
+    },
+    {
+      "file": "GCP_SETUP_GUIDE.md",
+      "line": 339,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "203.0.113.0",
+      "context": "- \"203.0.113.0/24\"  # Replace with your corporate IP range"
+    },
+    {
+      "file": "gcp-setup-execute.sh",
+      "line": 49,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "========================================",
+      "context": "echo \"=============================================\""
+    },
+    {
+      "file": "SECURITY.md",
+      "line": 211,
+      "type": "generic_api_key",
+      "risk": "LOW",
+      "match": "API-Key: lgas_xxxxxxxxxxxxxxxxxxxxx",
+      "context": "Headers: X-API-Key: lgas_xxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "file": "app/main.py",
+      "line": 140,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "127.0.0.1",
+      "context": "\"http://127.0.0.1:*\""
+    },
+    {
+      "file": "tests/test_encoding_converter.py",
+      "line": 147,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "assert validate_taiwan_data('0912345678', 'phone') is True"
+    },
+    {
+      "file": "tests/test_encoding_converter.py",
+      "line": 149,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0223456789",
+      "context": "assert validate_taiwan_data('0223456789', 'phone') is True"
+    },
+    {
+      "file": "tests/test_encoding_converter.py",
+      "line": 147,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "assert validate_taiwan_data('0912345678', 'phone') is True"
+    },
+    {
+      "file": "tests/test_encoding_converter.py",
+      "line": 149,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0223456789",
+      "context": "assert validate_taiwan_data('0223456789', 'phone') is True"
+    },
+    {
+      "file": "tests/test_encoding_converter.py",
+      "line": 152,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "assert validate_taiwan_data('1234567890', 'phone') is False"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 24,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "('0912345678', '0912-345-678'),"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 27,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0987654321",
+      "context": "('0987654321', '0987-654-321'),"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 36,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "invalid_cases = ['091234567', '09123456789', '0812345678', '123456789']"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 36,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0812345678",
+      "context": "invalid_cases = ['091234567', '09123456789', '0812345678', '123456789']"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 47,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0223456789",
+      "context": "('0223456789', '02-2345-6789'),  # Taipei"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 49,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0423456789",
+      "context": "('0423456789', '04-2345-6789'),  # Taichung"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 50,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0712345678",
+      "context": "('0712345678', '07-1234-5678'),  # Kaohsiung"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 128,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "'phone': ['0912345678', '0223456789', 'invalid', '', '0987654321'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 128,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0223456789",
+      "context": "'phone': ['0912345678', '0223456789', 'invalid', '', '0987654321'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 128,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0987654321",
+      "context": "'phone': ['0912345678', '0223456789', 'invalid', '', '0987654321'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 129,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "'contact_person': ['\u5f35\u5148\u751f 0912345678', '\u674e\u5c0f\u59d0', None, '\u738b\u5148\u751f', '\u9673\u592a\u592a'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 24,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "('0912345678', '0912-345-678'),"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 27,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0987654321",
+      "context": "('0987654321', '0987-654-321'),"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 36,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "09123456789",
+      "context": "invalid_cases = ['091234567', '09123456789', '0812345678', '123456789']"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 36,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0812345678",
+      "context": "invalid_cases = ['091234567', '09123456789', '0812345678', '123456789']"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 47,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0223456789",
+      "context": "('0223456789', '02-2345-6789'),  # Taipei"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 49,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0423456789",
+      "context": "('0423456789', '04-2345-6789'),  # Taichung"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 50,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0712345678",
+      "context": "('0712345678', '07-1234-5678'),  # Kaohsiung"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 128,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "'phone': ['0912345678', '0223456789', 'invalid', '', '0987654321'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 128,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0223456789",
+      "context": "'phone': ['0912345678', '0223456789', 'invalid', '', '0987654321'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 128,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0987654321",
+      "context": "'phone': ['0912345678', '0223456789', 'invalid', '', '0987654321'],"
+    },
+    {
+      "file": "tests/test_data_validator.py",
+      "line": 129,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "'contact_person': ['\u5f35\u5148\u751f 0912345678', '\u674e\u5c0f\u59d0', None, '\u738b\u5148\u751f', '\u9673\u592a\u592a'],"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 57,
+      "type": "generic_secret",
+      "risk": "LOW",
+      "match": "SECRET=your_webhook_secret",
+      "context": "CHT_SMS_WEBHOOK_SECRET=your_webhook_secret"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 79,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 89,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 103,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 104,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"data\": {\"name\": \"\u674e\u56db\"}}"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 123,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 50,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "TWILIO_FROM_NUMBER=+1234567890"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 79,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 89,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 103,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 104,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"data\": {\"name\": \"\u674e\u56db\"}}"
+    },
+    {
+      "file": "docs/SMS_INTEGRATION_GUIDE.md",
+      "line": 123,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "docs/PRODUCTION_API_DEPLOYMENT.md",
+      "line": 60,
+      "type": "private_key",
+      "risk": "HIGH",
+      "match": "-----BEGIN RSA PRIVATE KEY-----",
+      "context": "\"sftp_private_key\": \"-----BEGIN RSA PRIVATE KEY-----...\""
+    },
+    {
+      "file": "docs/PRODUCTION_API_DEPLOYMENT.md",
+      "line": 353,
+      "type": "taiwan_phone",
+      "risk": "MEDIUM",
+      "match": "0912345678",
+      "context": "-d '{\"phone\": \"0912345678\", \"message\": \"Test message\"}'"
+    },
+    {
+      "file": "docs/PRODUCTION_API_DEPLOYMENT.md",
+      "line": 353,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "-d '{\"phone\": \"0912345678\", \"message\": \"Test message\"}'"
+    },
+    {
+      "file": "docs/BANKING_INTEGRATION.md",
+      "line": 77,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "12345678901234",
+      "context": "000001,12345678901234,\u5f35\u4e09,3000,2024/01/20,Invoice: 1"
+    },
+    {
+      "file": "logs/gcloud-debug-config.sh",
+      "line": 43,
+      "type": "aws_secret_key",
+      "risk": "MEDIUM",
+      "match": "========================================",
+      "context": "echo \"================================================\""
+    },
+    {
+      "file": "logs/gcloud-debug-config.sh",
+      "line": 57,
+      "type": "aws_secret_key",
+      "risk": "MEDIUM",
+      "match": "========================================",
+      "context": "echo \"================================================\""
+    },
+    {
+      "file": ".keys/encrypted_keys.json",
+      "line": 2,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "5K02N3rM7DgOfsWlTOfKJSvpd6SaLPd4ysc1PBe7",
+      "context": "\"routes\": \"gAAAAABogNW04oKLjjVh1B1nUDQhxWFJF-5K02N3rM7DgOfsWlTOfKJSvpd6SaLPd4ysc1PBe75pj61oE6ZhpH3S-SRSjK7lag==\","
+    },
+    {
+      "file": "scripts/validate-env.py",
+      "line": 134,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "127.0.0.1",
+      "context": "elif origin.startswith(\"http://\") and \"localhost\" not in origin and \"127.0.0.1\" not in origin:"
+    },
+    {
+      "file": "scripts/start_test_env.sh",
+      "line": 74,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "uv run uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload &"
+    },
+    {
+      "file": "scripts/init_production_secrets.py",
+      "line": 174,
+      "type": "generic_secret",
+      "risk": "MEDIUM",
+      "match": "secret = generate_random_secret",
+      "context": "jwt_secret = generate_random_secret(32)"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 7,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0362052917",
+      "context": "\"duration\": 0.711036205291748,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 14,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0451507568",
+      "context": "\"duration\": 0.5118310451507568,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 28,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0701446533",
+      "context": "\"duration\": 0.48480701446533203,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 48,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0533351898",
+      "context": "\"total_duration\": 2.7405333518981934"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 7,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "711036205291748",
+      "context": "\"duration\": 0.711036205291748,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 14,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "5118310451507568",
+      "context": "\"duration\": 0.5118310451507568,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 21,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "4897451400756836",
+      "context": "\"duration\": 0.4897451400756836,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 35,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "5431139469146729",
+      "context": "\"duration\": 0.5431139469146729,"
+    },
+    {
+      "file": "chaos_results/chaos_test_summary.json",
+      "line": 48,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "7405333518981934",
+      "context": "\"total_duration\": 2.7405333518981934"
+    },
+    {
+      "file": "app/middleware/security.py",
+      "line": 76,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "127.0.0.1",
+      "context": "\"script-src 'self' 'unsafe-inline' 'unsafe-eval' localhost:* 127.0.0.1:*; \""
+    },
+    {
+      "file": "app/core/config.py",
+      "line": 176,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "127.0.0.1",
+      "context": "\"http://127.0.0.1:3000\","
+    },
+    {
+      "file": "app/core/config.py",
+      "line": 177,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "127.0.0.1",
+      "context": "\"http://127.0.0.1:5173\","
+    },
+    {
+      "file": "app/core/config.py",
+      "line": 178,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "127.0.0.1",
+      "context": "\"http://127.0.0.1:8000\","
+    },
+    {
+      "file": "app/core/config_manager.py",
+      "line": 416,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "127.0.0.1",
+      "context": "\"http://127.0.0.1:3000\","
+    },
+    {
+      "file": "app/core/config_manager.py",
+      "line": 417,
+      "type": "hardcoded_ip",
+      "risk": "MEDIUM",
+      "match": "127.0.0.1",
+      "context": "\"http://127.0.0.1:5173\""
+    },
+    {
+      "file": "app/core/validators.py",
+      "line": 17,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "Accepts: 0912345678, 0912-345-678, 09-1234-5678"
+    },
+    {
+      "file": "app/core/validators.py",
+      "line": 17,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "Accepts: 0912345678, 0912-345-678, 09-1234-5678"
+    },
+    {
+      "file": "app/core/security.py",
+      "line": 271,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0123456789",
+      "context": "code = ''.join(secrets.choice('0123456789') for _ in range(config.backup_code_length))"
+    },
+    {
+      "file": "app/core/security.py",
+      "line": 284,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0123456789",
+      "context": "code = ''.join(secrets.choice('0123456789') for _ in range(config.sms_code_length))"
+    },
+    {
+      "file": "app/core/api_security.py",
+      "line": 225,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "127.0.0.1",
+      "context": "return request.client.host if request.client else \"127.0.0.1\""
+    },
+    {
+      "file": "app/scripts/init_sms_providers.py",
+      "line": 33,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"from_number\": \"+886912345678\"  # Replace with actual number"
+    },
+    {
+      "file": "app/api/v1/health.py",
+      "line": 281,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0900000000",
+      "context": "phone=\"0900000000\",  # Test number"
+    },
+    {
+      "file": "app/api/v1/health.py",
+      "line": 281,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0900000000",
+      "context": "phone=\"0900000000\",  # Test number"
+    },
+    {
+      "file": "app/api/v1/socketio_handler.py",
+      "line": 26,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "127.0.0.1",
+      "context": "cors_origins.append(\"http://127.0.0.1:*\")"
+    },
+    {
+      "file": "app/services/encryption/pgp_handler.py",
+      "line": 464,
+      "type": "private_key",
+      "risk": "HIGH",
+      "match": "-----BEGIN PRIVATE KEY-----",
+      "context": "private_key = f\"\"\"-----BEGIN PRIVATE KEY-----"
+    },
+    {
+      "file": "app/services/file_generators/ach_format.py",
+      "line": 309,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "9999999999",
+      "context": "elif transaction.amount > Decimal('9999999999.99'):"
+    },
+    {
+      "file": "k8s/base/kustomization.yaml",
+      "line": 50,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "/spec/template/spec/containers/0/securit",
+      "context": "path: /spec/template/spec/containers/0/securityContext"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 33,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "35.191.0.0",
+      "context": "cidr: 35.191.0.0/16"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 35,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "130.211.0.0",
+      "context": "cidr: 130.211.0.0/22"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 54,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "cidr: 0.0.0.0/0"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 56,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "169.254.169.254",
+      "context": "- 169.254.169.254/32  # Block metadata service"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 63,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "10.0.0.0",
+      "context": "cidr: 10.0.0.0/8  # Internal network"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 70,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "cidr: 0.0.0.0/0"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 72,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "169.254.169.254",
+      "context": "- 169.254.169.254/32"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 103,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "35.191.0.0",
+      "context": "cidr: 35.191.0.0/16"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 105,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "130.211.0.0",
+      "context": "cidr: 130.211.0.0/22"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 132,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "0.0.0.0",
+      "context": "cidr: 0.0.0.0/0"
+    },
+    {
+      "file": "k8s/base/network-policy.yaml",
+      "line": 134,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "169.254.169.254",
+      "context": "- 169.254.169.254/32"
+    },
+    {
+      "file": "k8s/base/frontend-deployment.yaml",
+      "line": 90,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "preferredDuringSchedulingIgnoredDuringEx",
+      "context": "preferredDuringSchedulingIgnoredDuringExecution:"
+    },
+    {
+      "file": "k8s/base/backend-deployment.yaml",
+      "line": 109,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "preferredDuringSchedulingIgnoredDuringEx",
+      "context": "preferredDuringSchedulingIgnoredDuringExecution:"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 242,
+      "type": "password_assignment",
+      "risk": "LOW",
+      "match": "password = \"test_password\"",
+      "context": "provider.password = \"test_password\""
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 81,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 107,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 120,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "(\"0912345678\", \"886912345678\"),"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 196,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 81,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 107,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 120,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "(\"0912345678\", \"886912345678\"),"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 120,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"0912345678\", \"886912345678\"),"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 121,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"886912345678\", \"886912345678\"),"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 121,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"886912345678\", \"886912345678\"),"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 122,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"912345678\", \"886912345678\"),"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 123,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"+886912345678\", \"+886912345678\")"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 123,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"+886912345678\", \"+886912345678\")"
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 196,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/unit/test_sms_gateway.py",
+      "line": 244,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "timestamp = 1234567890"
+    },
+    {
+      "file": "tests/security/penetration-tests.py",
+      "line": 240,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "127.0.0.1",
+      "context": "\"; ping -c 10 127.0.0.1\","
+    },
+    {
+      "file": "tests/security/penetration-tests.py",
+      "line": 664,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/security/penetration-tests.py",
+      "line": 716,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\""
+    },
+    {
+      "file": "tests/security/penetration-tests.py",
+      "line": 664,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/security/penetration-tests.py",
+      "line": 716,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\""
+    },
+    {
+      "file": "tests/integration/test_banking_integration.py",
+      "line": 47,
+      "type": "password_assignment",
+      "risk": "LOW",
+      "match": "password=\"testpass\"",
+      "context": "sftp_password=\"testpass\","
+    },
+    {
+      "file": "tests/integration/test_banking_integration.py",
+      "line": 79,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "123456789012",
+      "context": "bank_account_number=f\"123456789012{i:02d}\","
+    },
+    {
+      "file": "tests/integration/test_einvoice_integration.py",
+      "line": 328,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0250126123",
+      "context": "\"AllowanceNo\": \"D20250126123456\""
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 170,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 170,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_full_system_integration.py",
+      "line": 61,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_full_system_integration.py",
+      "line": 72,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "phone=\"0923456789\","
+    },
+    {
+      "file": "tests/integration/test_full_system_integration.py",
+      "line": 61,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_full_system_integration.py",
+      "line": 72,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "phone=\"0923456789\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 160,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "AB12345678114010000027100000271000000000",
+      "context": "\"QRCode1\": \"AB12345678114010000027100000271000000000ABCDEF12==:**********:1:1:1:\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 134,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 160,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0271000002",
+      "context": "\"QRCode1\": \"AB12345678114010000027100000271000000000ABCDEF12==:**********:1:1:1:\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 350,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 351,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "order_number=\"ORD20240126001\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 360,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "assert \"0912345678\" in call_args[\"to\"]"
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 361,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "assert \"ORD20240126001\" in call_args[\"message\"]"
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 350,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_external_api_mocks.py",
+      "line": 360,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "assert \"0912345678\" in call_args[\"to\"]"
+    },
+    {
+      "file": "tests/integration/test_database_transactions.py",
+      "line": 75,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "order_number=\"ORD20240126001\","
+    },
+    {
+      "file": "tests/integration/test_database_transactions.py",
+      "line": 104,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "payment_number=\"PAY20240126001\","
+    },
+    {
+      "file": "tests/integration/test_database_transactions.py",
+      "line": 286,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "invoice_number=\"INV20240126001\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 82,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 93,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0223456789",
+      "context": "phone=\"0223456789\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 105,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0234567890",
+      "context": "phone=\"0234567890\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 257,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120001",
+      "context": "\"reference_number\": \"TRF20240120001\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 421,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120000",
+      "context": "\"invoice_id\": \"EINV2024012000001\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 464,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120000",
+      "context": "assert invoice.einvoice_id == \"EINV2024012000001\""
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 82,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 93,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0223456789",
+      "context": "phone=\"0223456789\","
+    },
+    {
+      "file": "tests/integration/test_financial_integration.py",
+      "line": 105,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0234567890",
+      "context": "phone=\"0234567890\","
+    },
+    {
+      "file": "tests/integration/test_api_endpoints.py",
+      "line": 26,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/integration/test_api_endpoints.py",
+      "line": 26,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/utils/customer.py",
+      "line": 28,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/utils/customer.py",
+      "line": 28,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/load/locustfile.py",
+      "line": 317,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAf",
+      "context": "\"signature\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\","
+    },
+    {
+      "file": "tests/load/locustfile.py",
+      "line": 317,
+      "type": "aws_secret_key",
+      "risk": "LOW",
+      "match": "FcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAA",
+      "context": "\"signature\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\","
+    },
+    {
+      "file": "tests/load/k6-load-test.js",
+      "line": 43,
+      "type": "password_assignment",
+      "risk": "LOW",
+      "match": "password: 'password123'",
+      "context": "password: 'password123',"
+    },
+    {
+      "file": "tests/business-continuity/continuity-tests.py",
+      "line": 836,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/business-continuity/continuity-tests.py",
+      "line": 495,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "{\"type\": \"sms\", \"target\": \"+886912345678\"},"
+    },
+    {
+      "file": "tests/business-continuity/continuity-tests.py",
+      "line": 836,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 31,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 59,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 98,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 139,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0934567890",
+      "context": "{\"recipient\": \"0934567890\", \"error\": \"Invalid number\"}"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 148,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"template_data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 149,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"template_data\": {\"name\": \"\u674e\u56db\"}},"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 150,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0934567890",
+      "context": "{\"phone\": \"0934567890\", \"template_data\": {\"name\": \"\u738b\u4e94\"}}"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 449,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345671",
+      "context": "\"/api/v1/notifications/sms-logs?recipient=0912345671\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 455,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345671",
+      "context": "assert any(\"0912345671\" in log[\"recipient\"] for log in data)"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 538,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 31,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 59,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 98,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 139,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0934567890",
+      "context": "{\"recipient\": \"0934567890\", \"error\": \"Invalid number\"}"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 148,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"template_data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 149,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"template_data\": {\"name\": \"\u674e\u56db\"}},"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 150,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0934567890",
+      "context": "{\"phone\": \"0934567890\", \"template_data\": {\"name\": \"\u738b\u4e94\"}}"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 338,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"from_number\": \"+886912345678\""
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 449,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345671",
+      "context": "\"/api/v1/notifications/sms-logs?recipient=0912345671\","
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 455,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345671",
+      "context": "assert any(\"0912345671\" in log[\"recipient\"] for log in data)"
+    },
+    {
+      "file": "tests/api/test_notifications.py",
+      "line": 538,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/fixtures/test_data.py",
+      "line": 173,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0231215000",
+      "context": "\"reference_number\": \"TRF202312150001\","
+    },
+    {
+      "file": "tests/fixtures/test_data.py",
+      "line": 181,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0231210000",
+      "context": "\"reference_number\": \"CHK202312100001\","
+    },
+    {
+      "file": "tests/fixtures/test_data.py",
+      "line": 189,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0231205000",
+      "context": "\"reference_number\": \"TRF202312050002\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 171,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 196,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 222,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "recipient=\"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 253,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 254,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"data\": {\"name\": \"\u674e\u56db\"}},"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 255,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0934567890",
+      "context": "{\"phone\": \"0934567890\", \"data\": {\"name\": \"\u738b\u4e94\"}}"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 369,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "recipient=\"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 408,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "recipient=\"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 426,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "<Recipient>0912345678</Recipient>"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 41,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "\"from_number\": \"+1234567890\""
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 171,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 196,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 222,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "recipient=\"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 253,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 254,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"data\": {\"name\": \"\u674e\u56db\"}},"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 255,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0934567890",
+      "context": "{\"phone\": \"0934567890\", \"data\": {\"name\": \"\u738b\u4e94\"}}"
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 369,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "recipient=\"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 386,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"To\": \"+886912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 387,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "\"From\": \"+1234567890\""
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 408,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "recipient=\"0912345678\","
+    },
+    {
+      "file": "tests/e2e/test_sms_e2e.py",
+      "line": 426,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "<Recipient>0912345678</Recipient>"
+    },
+    {
+      "file": "tests/chaos/chaos-engineering-tests.py",
+      "line": 521,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/chaos/chaos-engineering-tests.py",
+      "line": 521,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\","
+    },
+    {
+      "file": "tests/chaos/test_external_api_chaos.py",
+      "line": 175,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\""
+    },
+    {
+      "file": "tests/chaos/test_external_api_chaos.py",
+      "line": 326,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\""
+    },
+    {
+      "file": "tests/chaos/test_external_api_chaos.py",
+      "line": 175,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\""
+    },
+    {
+      "file": "tests/chaos/test_external_api_chaos.py",
+      "line": 326,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"phone\": \"0912345678\""
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 39,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 51,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "order_number=\"ORD20240126001\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 144,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "assert invoice_number == \"INV202401260006\"  # Next sequence is 6"
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 179,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 206,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 226,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 259,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 269,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "result = await invoice_service.get_by_invoice_number(\"INV202401260001\")"
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 273,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "assert result.invoice_number == \"INV202401260001\""
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 282,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/services/test_invoice_service.py",
+      "line": 39,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_financial_report_service.py",
+      "line": 34,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240101000",
+      "context": "invoice_number=\"INV202401010001\","
+    },
+    {
+      "file": "tests/services/test_financial_report_service.py",
+      "line": 49,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240102000",
+      "context": "invoice_number=\"INV202401020001\","
+    },
+    {
+      "file": "tests/services/test_financial_report_service.py",
+      "line": 63,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240103000",
+      "context": "invoice_number=\"INV202401030001\","
+    },
+    {
+      "file": "tests/services/test_financial_report_service.py",
+      "line": 214,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240101000",
+      "context": "assert tax_report[\"invoices\"][0][\"invoice_number\"] == \"INV202401010001\""
+    },
+    {
+      "file": "tests/services/test_financial_report_service.py",
+      "line": 323,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240101000",
+      "context": "assert \"INV202401010001\" in first_line"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 70,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 140,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 160,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 173,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "(\"+886912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 174,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "(\"886912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 175,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "(\"0912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 175,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "(\"0912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 176,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "(\"912345678\", \"0912345678\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 213,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 308,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 324,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "assert sms_log.recipient == \"0912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 356,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 412,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 450,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 459,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 527,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 528,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"data\": {\"name\": \"\u674e\u56db\"}},"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 529,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0934567890",
+      "context": "{\"phone\": \"0934567890\", \"data\": {\"name\": \"\u738b\u4e94\"}}"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 558,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0923456789",
+      "context": "assert result[\"errors\"][0][\"recipient\"] == \"0923456789\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 568,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 577,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"0912345678\", \"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 582,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "022345678",
+      "context": "\"022345678\",  # Taipei"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 584,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "073456789",
+      "context": "\"073456789\",  # Kaohsiung"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 595,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0812345678",
+      "context": "\"0812345678\",  # Invalid prefix"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 597,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0912345678",
+      "context": "\"09123456789\",  # Too long mobile"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 57,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"from_number\": \"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 70,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 83,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"from_number\": \"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 140,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 160,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 173,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"+886912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 173,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "(\"+886912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 174,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "(\"886912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 174,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "(\"886912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 175,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "(\"0912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 175,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "(\"0912345678\", \"0912345678\"),"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 176,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "(\"912345678\", \"0912345678\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 208,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "msgid=1234567890"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 213,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "result = await provider.send_sms(\"0912345678\", \"\u6e2c\u8a66\u8a0a\u606f\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 216,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "assert result[\"message_id\"] == \"1234567890\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 254,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "result = await provider.check_status(\"1234567890\")"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 281,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"from_number\": \"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 308,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 324,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "assert sms_log.recipient == \"0912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 356,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 412,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 450,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 459,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "phone=\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 527,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "{\"phone\": \"0912345678\", \"data\": {\"name\": \"\u5f35\u4e09\"}},"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 528,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "{\"phone\": \"0923456789\", \"data\": {\"name\": \"\u674e\u56db\"}},"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 529,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0934567890",
+      "context": "{\"phone\": \"0934567890\", \"data\": {\"name\": \"\u738b\u4e94\"}}"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 558,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0923456789",
+      "context": "assert result[\"errors\"][0][\"recipient\"] == \"0923456789\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 568,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"0912345678\","
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 571,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 577,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0912345678",
+      "context": "\"0912345678\", \"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 577,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886912345678",
+      "context": "\"0912345678\", \"+886912345678\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 585,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "886223456789",
+      "context": "\"+886223456789\""
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 595,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0812345678",
+      "context": "\"0812345678\",  # Invalid prefix"
+    },
+    {
+      "file": "tests/services/test_sms_service.py",
+      "line": 597,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "09123456789",
+      "context": "\"09123456789\",  # Too long mobile"
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 43,
+      "type": "password_assignment",
+      "risk": "LOW",
+      "match": "password = \"testpass\"",
+      "context": "config.sftp_password = \"testpass\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 132,
+      "type": "private_key",
+      "risk": "HIGH",
+      "match": "-----BEGIN RSA PRIVATE KEY-----",
+      "context": "bank_config.sftp_private_key = \"-----BEGIN RSA PRIVATE KEY-----\\ntest_key\\n-----END RSA PRIVATE KEY-----\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 62,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "batch.batch_number = \"CTBC202401201001\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 81,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "t1.transaction_id = \"CTBC202401201001-000001\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 94,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "t2.transaction_id = \"CTBC202401201001-000002\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 290,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "D000001CTBC202401201001-000001REF001000Payment successful       20240120"
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 291,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "D000002CTBC202401201001-000002REF002001Card declined           20240120"
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 292,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0200000300",
+      "context": "T00000200000300000\"\"\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 296,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "Mock(transaction_id=\"CTBC202401201001-000001\", invoice_id=1, batch=payment_batch),"
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 297,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240120100",
+      "context": "Mock(transaction_id=\"CTBC202401201001-000002\", invoice_id=2, batch=payment_batch),"
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 84,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "12345678901234",
+      "context": "t1.account_number = \"12345678901234\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 97,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "98765432109876",
+      "context": "t2.account_number = \"98765432109876\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 225,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "12345678901234",
+      "context": "assert '12345678901234' in lines[1]"
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 403,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0000000010000",
+      "context": "assert banking_service._format_amount(Decimal(\"100.00\")) == \"0000000010000\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 404,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0000000000150",
+      "context": "assert banking_service._format_amount(Decimal(\"1.50\")) == \"0000000000150\""
+    },
+    {
+      "file": "tests/services/test_banking_service.py",
+      "line": 405,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "0000000000001",
+      "context": "assert banking_service._format_amount(Decimal(\"0.01\")) == \"0000000000001\""
+    },
+    {
+      "file": "tests/services/test_einvoice_service.py",
+      "line": 163,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890",
+      "context": "\"TimeStamp\": \"1234567890\""
+    },
+    {
+      "file": "tests/services/test_einvoice_service.py",
+      "line": 299,
+      "type": "bank_account",
+      "risk": "HIGH",
+      "match": "1234567890123456",
+      "context": "assert not einvoice_service.validate_carrier(\"CQ0001\", \"1234567890123456\")"
+    },
+    {
+      "file": "tests/services/test_payment_service.py",
+      "line": 33,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "invoice_number=\"INV202401260001\","
+    },
+    {
+      "file": "tests/services/test_payment_service.py",
+      "line": 51,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126000",
+      "context": "payment_number=\"PAY202401260001\","
+    },
+    {
+      "file": "tests/services/test_payment_service.py",
+      "line": 301,
+      "type": "taiwan_phone",
+      "risk": "LOW",
+      "match": "0240126001",
+      "context": "assert payment_number == \"PAY202401260011\"  # Next sequence is 11"
+    },
+    {
+      "file": "infrastructure/terraform/main.tf",
+      "line": 141,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "35.191.0.0",
+      "context": "source_ranges = [\"35.191.0.0/16\", \"130.211.0.0/22\"]  # Google health check IPs"
+    },
+    {
+      "file": "infrastructure/terraform/main.tf",
+      "line": 141,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "130.211.0.0",
+      "context": "source_ranges = [\"35.191.0.0/16\", \"130.211.0.0/22\"]  # Google health check IPs"
+    },
+    {
+      "file": "infrastructure/terraform/database.tf",
+      "line": 22,
+      "type": "generic_secret",
+      "risk": "LOW",
+      "match": "secret      = google_secret_manager_secret",
+      "context": "secret      = google_secret_manager_secret.db_password.id"
+    },
+    {
+      "file": "infrastructure/terraform/variables.tf",
+      "line": 74,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "10.0.1.0",
+      "context": "default     = \"10.0.1.0/24\""
+    },
+    {
+      "file": "infrastructure/terraform/variables.tf",
+      "line": 80,
+      "type": "hardcoded_ip",
+      "risk": "LOW",
+      "match": "10.0.2.0",
+      "context": "default     = \"10.0.2.0/24\""
+    }
+  ],
+  "summary": {
+    "total_issues": 358,
+    "critical_action_required": true,
+    "requires_immediate_attention": [
+      {
+        "file": "gcp-monitor-fix.sh",
+        "type": "bank_account",
+        "line": 13
+      },
+      {
+        "file": "SECURITY_ARCHITECTURE_PLAN.md",
+        "type": "google_maps_api_key",
+        "line": 14
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 71
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 119
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 135
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 153
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 157
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 242
+      },
+      {
+        "file": "SMS_GATEWAY_README.md",
+        "type": "bank_account",
+        "line": 276
+      },
+      {
+        "file": ".env.staging",
+        "type": "google_maps_api_key",
+        "line": 38
+      },
+      {
+        "file": "SECURITY_KEY_INVENTORY.md",
+        "type": "google_maps_api_key",
+        "line": 10
+      },
+      {
+        "file": "tests/test_encoding_converter.py",
+        "type": "bank_account",
+        "line": 147
+      },
+      {
+        "file": "tests/test_encoding_converter.py",
+        "type": "bank_account",
+        "line": 149
+      },
+      {
+        "file": "tests/test_encoding_converter.py",
+        "type": "bank_account",
+        "line": 152
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 24
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 27
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 36
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 36
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 47
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 49
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 50
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 128
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 128
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 128
+      },
+      {
+        "file": "tests/test_data_validator.py",
+        "type": "bank_account",
+        "line": 129
+      },
+      {
+        "file": "docs/SMS_INTEGRATION_GUIDE.md",
+        "type": "bank_account",
+        "line": 50
+      },
+      {
+        "file": "docs/SMS_INTEGRATION_GUIDE.md",
+        "type": "bank_account",
+        "line": 79
+      },
+      {
+        "file": "docs/SMS_INTEGRATION_GUIDE.md",
+        "type": "bank_account",
+        "line": 89
+      },
+      {
+        "file": "docs/SMS_INTEGRATION_GUIDE.md",
+        "type": "bank_account",
+        "line": 103
+      },
+      {
+        "file": "docs/SMS_INTEGRATION_GUIDE.md",
+        "type": "bank_account",
+        "line": 104
+      },
+      {
+        "file": "docs/SMS_INTEGRATION_GUIDE.md",
+        "type": "bank_account",
+        "line": 123
+      },
+      {
+        "file": "docs/PRODUCTION_API_DEPLOYMENT.md",
+        "type": "private_key",
+        "line": 60
+      },
+      {
+        "file": "docs/PRODUCTION_API_DEPLOYMENT.md",
+        "type": "bank_account",
+        "line": 353
+      },
+      {
+        "file": "docs/BANKING_INTEGRATION.md",
+        "type": "bank_account",
+        "line": 77
+      },
+      {
+        "file": "chaos_results/chaos_test_summary.json",
+        "type": "bank_account",
+        "line": 7
+      },
+      {
+        "file": "chaos_results/chaos_test_summary.json",
+        "type": "bank_account",
+        "line": 14
+      },
+      {
+        "file": "chaos_results/chaos_test_summary.json",
+        "type": "bank_account",
+        "line": 21
+      },
+      {
+        "file": "chaos_results/chaos_test_summary.json",
+        "type": "bank_account",
+        "line": 35
+      },
+      {
+        "file": "chaos_results/chaos_test_summary.json",
+        "type": "bank_account",
+        "line": 48
+      },
+      {
+        "file": "app/core/validators.py",
+        "type": "bank_account",
+        "line": 17
+      },
+      {
+        "file": "app/core/security.py",
+        "type": "bank_account",
+        "line": 271
+      },
+      {
+        "file": "app/core/security.py",
+        "type": "bank_account",
+        "line": 284
+      },
+      {
+        "file": "app/scripts/init_sms_providers.py",
+        "type": "bank_account",
+        "line": 33
+      },
+      {
+        "file": "app/api/v1/health.py",
+        "type": "bank_account",
+        "line": 281
+      },
+      {
+        "file": "app/services/encryption/pgp_handler.py",
+        "type": "private_key",
+        "line": 464
+      },
+      {
+        "file": "app/services/file_generators/ach_format.py",
+        "type": "bank_account",
+        "line": 309
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 81
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 107
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 120
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 120
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 121
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 121
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 122
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 123
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 123
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 196
+      },
+      {
+        "file": "tests/unit/test_sms_gateway.py",
+        "type": "bank_account",
+        "line": 244
+      },
+      {
+        "file": "tests/security/penetration-tests.py",
+        "type": "bank_account",
+        "line": 664
+      },
+      {
+        "file": "tests/security/penetration-tests.py",
+        "type": "bank_account",
+        "line": 716
+      },
+      {
+        "file": "tests/integration/test_banking_integration.py",
+        "type": "bank_account",
+        "line": 79
+      },
+      {
+        "file": "tests/integration/conftest.py",
+        "type": "bank_account",
+        "line": 170
+      },
+      {
+        "file": "tests/integration/test_full_system_integration.py",
+        "type": "bank_account",
+        "line": 61
+      },
+      {
+        "file": "tests/integration/test_full_system_integration.py",
+        "type": "bank_account",
+        "line": 72
+      },
+      {
+        "file": "tests/integration/test_external_api_mocks.py",
+        "type": "bank_account",
+        "line": 350
+      },
+      {
+        "file": "tests/integration/test_external_api_mocks.py",
+        "type": "bank_account",
+        "line": 360
+      },
+      {
+        "file": "tests/integration/test_financial_integration.py",
+        "type": "bank_account",
+        "line": 82
+      },
+      {
+        "file": "tests/integration/test_financial_integration.py",
+        "type": "bank_account",
+        "line": 93
+      },
+      {
+        "file": "tests/integration/test_financial_integration.py",
+        "type": "bank_account",
+        "line": 105
+      },
+      {
+        "file": "tests/integration/test_api_endpoints.py",
+        "type": "bank_account",
+        "line": 26
+      },
+      {
+        "file": "tests/utils/customer.py",
+        "type": "bank_account",
+        "line": 28
+      },
+      {
+        "file": "tests/business-continuity/continuity-tests.py",
+        "type": "bank_account",
+        "line": 495
+      },
+      {
+        "file": "tests/business-continuity/continuity-tests.py",
+        "type": "bank_account",
+        "line": 836
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 31
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 59
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 98
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 139
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 148
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 149
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 150
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 338
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 449
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 455
+      },
+      {
+        "file": "tests/api/test_notifications.py",
+        "type": "bank_account",
+        "line": 538
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 41
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 171
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 196
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 222
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 253
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 254
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 255
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 369
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 386
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 387
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 408
+      },
+      {
+        "file": "tests/e2e/test_sms_e2e.py",
+        "type": "bank_account",
+        "line": 426
+      },
+      {
+        "file": "tests/chaos/chaos-engineering-tests.py",
+        "type": "bank_account",
+        "line": 521
+      },
+      {
+        "file": "tests/chaos/test_external_api_chaos.py",
+        "type": "bank_account",
+        "line": 175
+      },
+      {
+        "file": "tests/chaos/test_external_api_chaos.py",
+        "type": "bank_account",
+        "line": 326
+      },
+      {
+        "file": "tests/services/test_invoice_service.py",
+        "type": "bank_account",
+        "line": 39
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 57
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 70
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 83
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 140
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 160
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 173
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 173
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 174
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 174
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 175
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 175
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 176
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 208
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 213
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 216
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 254
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 281
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 308
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 324
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 356
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 412
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 450
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 459
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 527
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 528
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 529
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 558
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 568
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 571
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 577
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 577
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 585
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 595
+      },
+      {
+        "file": "tests/services/test_sms_service.py",
+        "type": "bank_account",
+        "line": 597
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "private_key",
+        "line": 132
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "bank_account",
+        "line": 84
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "bank_account",
+        "line": 97
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "bank_account",
+        "line": 225
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "bank_account",
+        "line": 403
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "bank_account",
+        "line": 404
+      },
+      {
+        "file": "tests/services/test_banking_service.py",
+        "type": "bank_account",
+        "line": 405
+      },
+      {
+        "file": "tests/services/test_einvoice_service.py",
+        "type": "bank_account",
+        "line": 163
+      },
+      {
+        "file": "tests/services/test_einvoice_service.py",
+        "type": "bank_account",
+        "line": 299
+      }
+    ]
+  }
+}
