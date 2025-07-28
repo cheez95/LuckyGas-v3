@@ -1,33 +1,38 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { message } from 'antd';
-import { routeService } from '../services/route.service';
-import { orderService } from '../services/order.service';
-
-interface SyncQueueItem {
-  id: string;
-  type: 'delivery_completion' | 'location_update' | 'route_status';
-  data: any;
-  timestamp: number;
-  retries: number;
-}
-
-const SYNC_QUEUE_KEY = 'luckygas_sync_queue';
-const MAX_RETRIES = 3;
-const SYNC_INTERVAL = 30000; // 30 seconds
+import { offlineStorage } from '../services/offline/offlineStorage';
+import { syncQueue } from '../services/offline/syncQueue';
+import type { SyncProgress } from '../services/offline/syncQueue';
 
 export const useOfflineSync = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [syncQueue, setSyncQueue] = useState<SyncQueueItem[]>([]);
-  const [syncPending, setSyncPending] = useState(0);
-  const [syncing, setSyncing] = useState(false);
-  const syncIntervalRef = useRef<NodeJS.Timeout>();
+  const [syncProgress, setSyncProgress] = useState<SyncProgress>({
+    total: 0,
+    completed: 0,
+    failed: 0,
+    inProgress: false,
+  });
+  const [storageQuota, setStorageQuota] = useState<{
+    usage: number;
+    quota: number;
+    percentage: number;
+    status: 'ok' | 'warning' | 'critical';
+  }>({ usage: 0, quota: 0, percentage: 0, status: 'ok' });
+  const checkStorageIntervalRef = useRef<NodeJS.Timeout>();
+
+  // Initialize offline storage
+  useEffect(() => {
+    offlineStorage.initialize().catch((error) => {
+      console.error('Failed to initialize offline storage:', error);
+      message.error('離線儲存初始化失敗');
+    });
+  }, []);
 
   // Monitor online status
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       message.success('已連接網路，開始同步資料');
-      syncPendingData();
     };
 
     const handleOffline = () => {
@@ -47,185 +52,194 @@ export const useOfflineSync = () => {
     };
   }, []);
 
-  // Load queue from localStorage
+  // Subscribe to sync progress
   useEffect(() => {
-    const savedQueue = localStorage.getItem(SYNC_QUEUE_KEY);
-    if (savedQueue) {
-      try {
-        const queue = JSON.parse(savedQueue);
-        setSyncQueue(queue);
-        setSyncPending(queue.length);
-      } catch (error) {
-        console.error('Failed to load sync queue:', error);
-        localStorage.removeItem(SYNC_QUEUE_KEY);
-      }
-    }
+    const unsubscribe = syncQueue.onProgress((progress) => {
+      setSyncProgress(progress);
+    });
+
+    return unsubscribe;
   }, []);
 
-  // Periodic sync when online
+  // Check storage quota periodically
   useEffect(() => {
-    if (isOnline && syncQueue.length > 0) {
-      syncIntervalRef.current = setInterval(() => {
-        syncPendingData();
-      }, SYNC_INTERVAL);
-    }
+    const checkQuota = async () => {
+      const quota = await offlineStorage.checkStorageQuota();
+      setStorageQuota(quota);
+      
+      if (quota.status === 'warning') {
+        message.warning('儲存空間即將不足，請清理舊資料');
+      } else if (quota.status === 'critical') {
+        message.error('儲存空間嚴重不足，部分功能可能無法使用');
+      }
+    };
+
+    checkQuota();
+    checkStorageIntervalRef.current = setInterval(checkQuota, 60000); // Check every minute
 
     return () => {
-      if (syncIntervalRef.current) {
-        clearInterval(syncIntervalRef.current);
+      if (checkStorageIntervalRef.current) {
+        clearInterval(checkStorageIntervalRef.current);
       }
     };
-  }, [isOnline, syncQueue.length]);
-
-  // Save queue to localStorage
-  const saveQueue = useCallback((queue: SyncQueueItem[]) => {
-    try {
-      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
-      setSyncQueue(queue);
-      setSyncPending(queue.length);
-    } catch (error) {
-      console.error('Failed to save sync queue:', error);
-    }
   }, []);
 
-  // Add item to sync queue
-  const addToQueue = useCallback((type: SyncQueueItem['type'], data: any) => {
-    const item: SyncQueueItem = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      data,
+  // Save delivery completion offline
+  const saveDeliveryOffline = useCallback(async (stopId: number, orderId: number, data: {
+    signature?: string;
+    photos?: string[];
+    notes?: string;
+    customerName?: string;
+    customerPhone?: string;
+    address?: string;
+    products?: any[];
+  }) => {
+    const orderData = {
+      id: `${stopId}-${orderId}`,
+      orderId,
+      customerId: 0, // Will be filled from server data
+      customerName: data.customerName || '',
+      customerPhone: data.customerPhone || '',
+      address: data.address || '',
+      products: data.products || [],
+      status: 'delivered' as const,
+      deliveryNotes: data.notes,
+      signature: data.signature,
+      photos: data.photos,
       timestamp: Date.now(),
-      retries: 0,
+      synced: false,
     };
 
-    const newQueue = [...syncQueue, item];
-    saveQueue(newQueue);
+    await offlineStorage.saveOrder(orderData);
+    
+    // Add to sync queue
+    await syncQueue.addToQueue({
+      type: 'delivery_completion',
+      data: {
+        stopId,
+        orderId,
+        signature: data.signature,
+        photos: data.photos,
+        notes: data.notes,
+        timestamp: Date.now(),
+      },
+      priority: 'high',
+    });
 
-    // Try to sync immediately if online
-    if (isOnline) {
-      setTimeout(() => syncPendingData(), 1000);
-    }
-  }, [syncQueue, isOnline, saveQueue]);
-
-  // Sync specific item
-  const syncItem = async (item: SyncQueueItem): Promise<boolean> => {
-    try {
-      switch (item.type) {
-        case 'delivery_completion':
-          await syncDeliveryCompletion(item.data);
-          break;
-          
-        case 'location_update':
-          await syncLocationUpdate(item.data);
-          break;
-          
-        case 'route_status':
-          await syncRouteStatus(item.data);
-          break;
-          
-        default:
-          console.warn('Unknown sync type:', item.type);
-          return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error(`Sync failed for item ${item.id}:`, error);
-      return false;
-    }
-  };
-
-  // Sync all pending data
-  const syncPendingData = useCallback(async () => {
-    if (!isOnline || syncQueue.length === 0 || syncing) return;
-
-    setSyncing(true);
-    const processed: string[] = [];
-    const failed: SyncQueueItem[] = [];
-    let successCount = 0;
-
-    for (const item of syncQueue) {
-      const success = await syncItem(item);
-      
-      if (success) {
-        processed.push(item.id);
-        successCount++;
-      } else {
-        // Increment retry count
-        item.retries++;
-        
-        // Keep in queue if under retry limit
-        if (item.retries < MAX_RETRIES) {
-          failed.push(item);
-        } else {
-          console.error(`Item ${item.id} exceeded max retries, removing from queue`);
-        }
-      }
-    }
-
-    // Update queue with failed items
-    const remainingQueue = failed.filter(item => !processed.includes(item.id));
-    saveQueue(remainingQueue);
-
-    if (successCount > 0) {
-      message.success(`已同步 ${successCount} 筆資料`);
-    }
-
-    setSyncing(false);
-  }, [isOnline, syncQueue, saveQueue]);
-
-  // Sync delivery completion
-  const syncDeliveryCompletion = async (data: any) => {
-    const { stopId, signature, photos, notes } = data;
-    await routeService.completeStop(stopId, { signature, photos, notes });
-  };
-
-  // Sync location update
-  const syncLocationUpdate = async (data: any) => {
-    const { latitude, longitude, timestamp } = data;
-    await routeService.updateDriverLocation({ latitude, longitude, timestamp });
-  };
-
-  // Sync route status
-  const syncRouteStatus = async (data: any) => {
-    const { routeId, status } = data;
-    if (status === 'started') {
-      await routeService.startRoute(routeId);
-    } else if (status === 'completed') {
-      await routeService.completeRoute(routeId);
-    }
-  };
-
-  // Clear sync queue
-  const clearQueue = useCallback(() => {
-    setSyncQueue([]);
-    setSyncPending(0);
-    localStorage.removeItem(SYNC_QUEUE_KEY);
-    message.info('離線資料已清除');
+    message.success('配送資料已儲存，將在連線後同步');
   }, []);
 
-  // Get queue status
-  const getQueueStatus = useCallback(() => {
-    const now = Date.now();
-    const oldestItem = syncQueue.length > 0 
-      ? Math.min(...syncQueue.map(item => item.timestamp))
-      : null;
-      
+  // Save location update offline
+  const saveLocationOffline = useCallback(async (latitude: number, longitude: number, accuracy: number = 0) => {
+    await offlineStorage.saveLocation({
+      latitude,
+      longitude,
+      accuracy,
+      timestamp: Date.now(),
+      synced: false,
+    });
+
+    // Batch location updates (send every 10 locations or 5 minutes)
+    const unsyncedLocations = await offlineStorage.getUnsyncedLocations();
+    if (unsyncedLocations.length >= 10) {
+      await syncQueue.addToQueue({
+        type: 'location_update',
+        data: {
+          locations: unsyncedLocations.map(loc => ({
+            id: loc.id,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            timestamp: loc.timestamp,
+          })),
+        },
+        priority: 'low',
+      });
+    }
+  }, []);
+
+  // Save route status offline
+  const saveRouteStatusOffline = useCallback(async (routeId: number, status: 'started' | 'completed') => {
+    await syncQueue.addToQueue({
+      type: 'route_status',
+      data: {
+        routeId,
+        status,
+        timestamp: Date.now(),
+      },
+      priority: 'high',
+    });
+
+    message.info(`路線狀態已儲存，將在連線後同步`);
+  }, []);
+
+  // Save photo offline
+  const savePhotoOffline = useCallback(async (orderId: string, blob: Blob, mimeType: string = 'image/jpeg'): Promise<string> => {
+    const photoId = await offlineStorage.savePhoto({
+      orderId,
+      blob,
+      mimeType,
+      size: blob.size,
+      timestamp: Date.now(),
+      synced: false,
+    });
+
+    return photoId;
+  }, []);
+
+  // Get offline orders
+  const getOfflineOrders = useCallback(async () => {
+    return await offlineStorage.getAllOrders();
+  }, []);
+
+  // Get sync status
+  const getSyncStatus = useCallback(async () => {
+    const status = await syncQueue.getSyncStatus();
     return {
-      pendingCount: syncQueue.length,
-      oldestItemAge: oldestItem ? now - oldestItem : null,
-      failedItems: syncQueue.filter(item => item.retries > 0).length,
+      ...status,
+      storageQuota,
     };
-  }, [syncQueue]);
+  }, [storageQuota]);
+
+  // Trigger manual sync
+  const triggerSync = useCallback(async () => {
+    if (!isOnline) {
+      message.error('無法在離線狀態下進行同步');
+      return;
+    }
+
+    try {
+      await syncQueue.triggerSync();
+      message.info('開始手動同步...');
+    } catch (error: any) {
+      message.error(error.message || '同步失敗');
+    }
+  }, [isOnline]);
+
+  // Clear all offline data
+  const clearOfflineData = useCallback(async () => {
+    await offlineStorage.clearAllData();
+    syncQueue.clearConflicts();
+    message.success('所有離線資料已清除');
+  }, []);
+
+  // Clean up old data
+  const cleanupOldData = useCallback(async (daysToKeep: number = 7) => {
+    await offlineStorage.cleanupOldData(daysToKeep);
+    message.info(`已清理 ${daysToKeep} 天前的舊資料`);
+  }, []);
 
   return {
     isOnline,
-    syncPending,
-    syncing,
-    syncQueue,
-    addToQueue,
-    syncData: syncPendingData,
-    clearQueue,
-    getQueueStatus,
+    syncProgress,
+    storageQuota,
+    saveDeliveryOffline,
+    saveLocationOffline,
+    saveRouteStatusOffline,
+    savePhotoOffline,
+    getOfflineOrders,
+    getSyncStatus,
+    triggerSync,
+    clearOfflineData,
+    cleanupOldData,
   };
 };

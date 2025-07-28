@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>離線模式 - 幸福氣</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        
+        .offline-container {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 500px;
+        }
+        
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .offline-icon svg {
+            width: 60px;
+            height: 60px;
+            fill: white;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .status-info {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .status-value {
+            color: #666;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #1890ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #40a9ff;
+        }
+        
+        .btn-secondary {
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #d9d9d9;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .offline-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #ff4d4f;
+            color: white;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M1 21L12 2l11 19H1zm11-3h2v-2h-2v2zm0-4h2v-4h-2v4z"/>
+            </svg>
+        </div>
+        
+        <div class="offline-badge">離線模式</div>
+        
+        <h1>您目前處於離線狀態</h1>
+        <p>別擔心！您仍可以繼續工作。所有操作都會在您恢復連線後自動同步。</p>
+        
+        <div class="status-info">
+            <div class="status-item">
+                <span class="status-label">離線功能</span>
+                <span class="status-value">✓ 可用</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">本地儲存</span>
+                <span class="status-value">✓ 啟用</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">待同步資料</span>
+                <span class="status-value" id="pending-count">0 筆</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">最後同步</span>
+                <span class="status-value" id="last-sync">尚未同步</span>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn-primary" onclick="window.location.reload()">
+                重新載入
+            </button>
+            <button class="btn-secondary" onclick="window.history.back()">
+                返回上一頁
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Check if we're online periodically
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }, 5000);
+        
+        // Update pending count from localStorage
+        function updatePendingCount() {
+            const syncQueue = localStorage.getItem('luckygas_sync_queue');
+            if (syncQueue) {
+                try {
+                    const queue = JSON.parse(syncQueue);
+                    document.getElementById('pending-count').textContent = `${queue.length} 筆`;
+                } catch (e) {
+                    console.error('Failed to parse sync queue:', e);
+                }
+            }
+        }
+        
+        // Update last sync time
+        function updateLastSync() {
+            const lastSync = localStorage.getItem('luckygas_last_sync');
+            if (lastSync) {
+                const date = new Date(parseInt(lastSync));
+                const now = new Date();
+                const diff = now - date;
+                
+                let timeAgo;
+                if (diff < 60000) {
+                    timeAgo = '剛剛';
+                } else if (diff < 3600000) {
+                    timeAgo = `${Math.floor(diff / 60000)} 分鐘前`;
+                } else if (diff < 86400000) {
+                    timeAgo = `${Math.floor(diff / 3600000)} 小時前`;
+                } else {
+                    timeAgo = `${Math.floor(diff / 86400000)} 天前`;
+                }
+                
+                document.getElementById('last-sync').textContent = timeAgo;
+            }
+        }
+        
+        updatePendingCount();
+        updateLastSync();
+        
+        // Listen for storage changes
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'luckygas_sync_queue') {
+                updatePendingCount();
+            } else if (e.key === 'luckygas_last_sync') {
+                updateLastSync();
+            }
+        });
+    </script>
+</body>
+</html>
