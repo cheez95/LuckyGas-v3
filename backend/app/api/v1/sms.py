@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import uuid
 
 from app.api.deps import get_db
-from app.api.auth_deps import get_current_active_user, get_current_superuser
+from app.api.deps import get_current_user, get_current_active_superuser
 from app.models.user import User
 from app.models.notification import (
     SMSLog, SMSTemplate, ProviderConfig, 
@@ -34,7 +34,7 @@ async def get_sms_logs(
     search: Optional[str] = Query(None, description="搜尋電話號碼"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, le=1000),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get SMS logs with filtering"""
@@ -73,7 +73,7 @@ async def get_sms_logs(
 async def get_sms_stats(
     start_date: datetime = Query(..., description="開始日期"),
     end_date: datetime = Query(..., description="結束日期"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get SMS statistics"""
@@ -165,7 +165,7 @@ async def get_sms_stats(
 @router.get("/sms/templates", response_model=List[SMSTemplateResponse])
 async def get_sms_templates(
     is_active: Optional[bool] = Query(None),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get SMS templates"""
@@ -186,7 +186,7 @@ async def get_sms_templates(
 @router.post("/sms/templates", response_model=SMSTemplateResponse)
 async def create_sms_template(
     template: SMSTemplateCreate,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_superuser),
     db: AsyncSession = Depends(get_db)
 ):
     """Create new SMS template (superuser only)"""
@@ -223,7 +223,7 @@ async def create_sms_template(
 async def update_sms_template(
     template_id: str,
     template_update: SMSTemplateUpdate,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_superuser),
     db: AsyncSession = Depends(get_db)
 ):
     """Update SMS template (superuser only)"""
@@ -248,7 +248,7 @@ async def update_sms_template(
 
 @router.get("/sms/providers", response_model=List[ProviderConfigResponse])
 async def get_sms_providers(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Get SMS provider configurations"""
@@ -270,7 +270,7 @@ async def get_sms_providers(
 async def update_provider_config(
     provider: SMSProvider,
     config_update: ProviderConfigUpdate,
-    current_user: User = Depends(get_current_superuser),
+    current_user: User = Depends(get_current_active_superuser),
     db: AsyncSession = Depends(get_db)
 ):
     """Update provider configuration (superuser only)"""
@@ -304,7 +304,7 @@ async def update_provider_config(
 @router.post("/sms/send")
 async def send_sms(
     request: SMSSendRequest,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Send SMS message"""
@@ -334,7 +334,7 @@ async def send_sms(
 @router.post("/sms/resend/{message_id}")
 async def resend_sms(
     message_id: str,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Resend failed SMS"""
@@ -382,7 +382,7 @@ async def send_bulk_sms(
     message_type: str = Body(...),
     template_code: Optional[str] = Body(None),
     provider: Optional[SMSProvider] = Body(None),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Send bulk SMS to multiple recipients"""

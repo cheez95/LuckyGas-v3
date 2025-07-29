@@ -207,7 +207,7 @@ async def get_rate_limit_key(request: Request) -> str:
 limiter = Limiter(
     key_func=get_rate_limit_key,
     storage_uri=settings.REDIS_URL if settings.REDIS_URL else "memory://",
-    strategy="fixed-window-elastic-expiry",
+    strategy="fixed-window",
     default_limits=["100/hour", "20/minute"]  # Default limits
 )
 

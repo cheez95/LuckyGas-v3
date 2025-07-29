@@ -9,14 +9,18 @@ export const authService = {
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
     
+    console.log('🔐 Sending login request...');
     const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
     
+    console.log('🔐 Login response:', response.data);
+    
     // Store tokens
     const { access_token, refresh_token, token_type } = response.data;
+    console.log('🔐 Storing tokens...');
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('refresh_token', refresh_token);
     
@@ -24,7 +28,13 @@ export const authService = {
     const expiryTime = new Date().getTime() + (2 * 60 * 60 * 1000); // 2 hours in milliseconds
     localStorage.setItem('token_expiry', expiryTime.toString());
     
+    console.log('🔐 Tokens stored, checking localStorage:', {
+      hasAccessToken: !!localStorage.getItem('access_token'),
+      hasRefreshToken: !!localStorage.getItem('refresh_token'),
+    });
+    
     // Fetch user data after successful login
+    console.log('🔐 Fetching current user...');
     const user = await this.getCurrentUser();
     
     // Return combined response

@@ -10,7 +10,7 @@ import {
   ExclamationCircleOutlined,
   ClockCircleOutlined,
   MessageOutlined,
-  NavigationOutlined
+  AimOutlined
 } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import { useTranslation } from 'react-i18next';
@@ -312,7 +312,7 @@ const DriverRoute: React.FC = () => {
             </Button>
             {!isNavigating && (
               <Button
-                icon={<NavigationOutlined />}
+                icon={<AimOutlined />}
                 onClick={handleStartNavigation}
                 data-testid="start-navigation-button"
               >

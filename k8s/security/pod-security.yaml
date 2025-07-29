@@ -1,0 +1,232 @@
+# Pod Security Standards for LuckyGas
+# Enforces security best practices at the pod level
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: luckygas
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+
+---
+# Security Context Constraints
+apiVersion: policy/v1
+kind: PodSecurityPolicy
+metadata:
+  name: luckygas-restricted
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+  readOnlyRootFilesystem: true
+
+---
+# RBAC for pod security policy
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: luckygas-psp-restricted
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs: ['use']
+  resourceNames:
+  - luckygas-restricted
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: luckygas-psp-restricted-binding
+roleRef:
+  kind: ClusterRole
+  name: luckygas-psp-restricted
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+- kind: ServiceAccount
+  name: luckygas-backend
+  namespace: default
+- kind: ServiceAccount
+  name: luckygas-frontend
+  namespace: default
+
+---
+# Service Account for Backend
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: luckygas-backend
+  namespace: default
+automountServiceAccountToken: false
+
+---
+# Service Account for Frontend
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: luckygas-frontend
+  namespace: default
+automountServiceAccountToken: false
+
+---
+# RBAC for backend service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: luckygas-backend-role
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["database-credentials", "google-api-keys", "jwt-secret"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["backend-config"]
+  verbs: ["get", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: luckygas-backend-rolebinding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: luckygas-backend-role
+subjects:
+- kind: ServiceAccount
+  name: luckygas-backend
+  namespace: default
+
+---
+# Security Context for Backend Deployment
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-security-patch
+  namespace: default
+data:
+  patch.yaml: |
+    spec:
+      template:
+        spec:
+          serviceAccountName: luckygas-backend
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 2000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: backend
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+              capabilities:
+                drop:
+                - ALL
+            volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: app-logs
+              mountPath: /app/logs
+          volumes:
+          - name: tmp
+            emptyDir: {}
+          - name: app-logs
+            emptyDir: {}
+
+---
+# Security Context for Frontend Deployment
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-security-patch
+  namespace: default
+data:
+  patch.yaml: |
+    spec:
+      template:
+        spec:
+          serviceAccountName: luckygas-frontend
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            fsGroup: 101
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: frontend
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 101
+              capabilities:
+                drop:
+                - ALL
+            volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+          volumes:
+          - name: nginx-cache
+            emptyDir: {}
+          - name: nginx-run
+            emptyDir: {}
+
+---
+# Admission Controller Configuration
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: luckygas-security-webhook
+webhooks:
+- name: pod-security.luckygas.com.tw
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: default
+      path: "/validate"
+    caBundle: LS0tLS1CRUdJTi... # Base64 encoded CA cert
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  failurePolicy: Fail
+  namespaceSelector:
+    matchLabels:
+      enforce-security: "true"

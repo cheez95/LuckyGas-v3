@@ -5,6 +5,10 @@ import secrets
 import re
 import os
 from enum import Enum
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 
 class Environment(str, Enum):

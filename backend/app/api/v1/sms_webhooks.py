@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 from app.api.deps import get_db
-from app.api.auth_deps import get_current_superuser
+from app.api.deps import get_current_active_superuser
 from app.core.config import settings
 from app.models.notification import SMSLog, NotificationStatus, SMSProvider, SMSTemplate
 from app.services.notification_service import notification_service
@@ -335,7 +335,7 @@ async def chunghwa_delivery_webhook(
 async def test_webhook(
     provider: str,
     request: Request,
-    current_user=Depends(get_current_superuser)
+    current_user=Depends(get_current_active_superuser)
 ):
     """Test webhook endpoint for development and debugging (superuser only)"""
     

@@ -76,7 +76,7 @@ class SecurityHeaders:
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' localhost:* 127.0.0.1:*; "
                 "style-src 'self' 'unsafe-inline'; "
                 "img-src 'self' data: https: http: blob:; "
-                "connect-src 'self' ws: wss: http: https:; "
+                "connect-src 'self' ws: wss: http: https:;"
             )
         
         return headers

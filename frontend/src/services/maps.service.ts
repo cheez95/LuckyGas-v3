@@ -66,7 +66,7 @@ class GoogleMapsService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     
     this.api = axios.create({
       baseURL: `${this.baseURL}/api/v1/maps`,

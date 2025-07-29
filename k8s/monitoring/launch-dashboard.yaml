@@ -1,0 +1,352 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: luckygas-launch-dashboard
+  namespace: monitoring
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "uid": "luckygas-launch",
+        "title": "LuckyGas Launch Command Center",
+        "tags": ["launch", "production", "luckygas"],
+        "timezone": "Asia/Taipei",
+        "schemaVersion": 30,
+        "version": 1,
+        "refresh": "5s",
+        "time": {
+          "from": "now-6h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "🚦 System Health Overview",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "up{job=\"luckygas-backend\"}",
+                "legendFormat": "Backend",
+                "refId": "A"
+              },
+              {
+                "expr": "up{job=\"luckygas-frontend\"}",
+                "legendFormat": "Frontend",
+                "refId": "B"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [
+                  {"type": "value", "value": 1, "text": "✅ UP"},
+                  {"type": "value", "value": 0, "text": "❌ DOWN"}
+                ],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "green", "value": 1}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "📊 Traffic Distribution",
+            "type": "piechart",
+            "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_name=\"luckygas-backend\"}[5m]))",
+                "legendFormat": "Stable",
+                "refId": "A"
+              },
+              {
+                "expr": "sum(rate(istio_request_total{destination_service_name=\"luckygas-backend-canary\"}[5m]))",
+                "legendFormat": "Canary",
+                "refId": "B"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "⚡ API Response Time (p95)",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"luckygas-backend\"}[5m])) by (le)) * 1000",
+                "legendFormat": "P95 Response Time",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "ms",
+                "label": "Response Time",
+                "max": 2000,
+                "min": 0
+              }
+            ],
+            "alert": {
+              "conditions": [
+                {
+                  "evaluator": {
+                    "params": [2000],
+                    "type": "gt"
+                  },
+                  "query": {
+                    "params": ["A", "5m", "now"]
+                  },
+                  "reducer": {
+                    "type": "avg"
+                  },
+                  "type": "query"
+                }
+              ],
+              "name": "High API Response Time"
+            }
+          },
+          {
+            "id": 4,
+            "title": "❌ Error Rate",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 4},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"luckygas-backend\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"luckygas-backend\"}[5m])) * 100",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "decimals": 2,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "📈 Requests Per Second",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"luckygas-backend\"}[1m]))",
+                "legendFormat": "Total RPS",
+                "refId": "A"
+              },
+              {
+                "expr": "sum(rate(http_requests_total{job=\"luckygas-backend\",status=~\"2..\"}[1m]))",
+                "legendFormat": "Success RPS",
+                "refId": "B"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "🎯 Analytics Endpoints Health",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "up{job=\"luckygas-backend\",endpoint=~\"/api/v1/analytics/.*\"}",
+                "format": "table",
+                "instant": true,
+                "refId": "A"
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {
+                    "Time": true,
+                    "job": true
+                  },
+                  "renameByName": {
+                    "endpoint": "Analytics Endpoint",
+                    "Value": "Status"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "🗄️ Database Performance",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "pg_stat_activity_count{datname=\"luckygas_prod\"}",
+                "legendFormat": "Active Connections",
+                "refId": "A"
+              },
+              {
+                "expr": "rate(pg_stat_database_xact_commit{datname=\"luckygas_prod\"}[5m])",
+                "legendFormat": "Transactions/sec",
+                "refId": "B"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "📱 Active Orders & Drivers",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "luckygas_active_orders_total",
+                "legendFormat": "Active Orders",
+                "refId": "A"
+              },
+              {
+                "expr": "luckygas_online_drivers_total",
+                "legendFormat": "Online Drivers",
+                "refId": "B"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "green", "value": 0}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 9,
+            "title": "🌐 Google API Latency",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(google_api_request_duration_seconds_bucket{api=\"maps\"}[5m])) by (le)) * 1000",
+                "legendFormat": "Maps API",
+                "refId": "A"
+              },
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(google_api_request_duration_seconds_bucket{api=\"routes\"}[5m])) by (le)) * 1000",
+                "legendFormat": "Routes API",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "ms",
+                "label": "Latency"
+              }
+            ]
+          },
+          {
+            "id": 10,
+            "title": "💾 System Resources",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+            "targets": [
+              {
+                "expr": "avg(container_cpu_usage_seconds_total{pod=~\"luckygas-.*\"}) * 100",
+                "legendFormat": "CPU Usage %",
+                "refId": "A"
+              },
+              {
+                "expr": "avg(container_memory_usage_bytes{pod=~\"luckygas-.*\"}) / 1024 / 1024 / 1024",
+                "legendFormat": "Memory Usage GB",
+                "refId": "B"
+              }
+            ]
+          },
+          {
+            "id": 11,
+            "title": "🚨 Active Alerts",
+            "type": "alertlist",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+            "options": {
+              "showOptions": "current",
+              "maxItems": 10,
+              "sortOrder": 1,
+              "dashboardAlerts": true,
+              "alertName": "",
+              "dashboardTitle": "",
+              "tags": []
+            }
+          },
+          {
+            "id": 12,
+            "title": "📅 Orders with 預定配送日期",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+            "targets": [
+              {
+                "expr": "luckygas_scheduled_orders_total",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "blue", "value": 0}
+                  ]
+                },
+                "unit": "short"
+              }
+            }
+          }
+        ],
+        "annotations": {
+          "list": [
+            {
+              "builtIn": 1,
+              "datasource": "-- Grafana --",
+              "enable": true,
+              "hide": false,
+              "iconColor": "rgba(0, 211, 255, 1)",
+              "name": "Deployment Markers",
+              "type": "dashboard"
+            }
+          ]
+        },
+        "templating": {
+          "list": [
+            {
+              "current": {
+                "selected": false,
+                "text": "production",
+                "value": "production"
+              },
+              "hide": 0,
+              "includeAll": false,
+              "label": "Environment",
+              "multi": false,
+              "name": "env",
+              "options": [
+                {"selected": true, "text": "production", "value": "production"},
+                {"selected": false, "text": "canary", "value": "canary"}
+              ],
+              "query": "production,canary",
+              "skipUrlSync": false,
+              "type": "custom"
+            }
+          ]
+        }
+      }
+    }

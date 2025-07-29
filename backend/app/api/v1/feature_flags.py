@@ -190,8 +190,8 @@ async def evaluate_feature_flag(
 async def add_customer_to_flag(
     flag_name: str,
     customer_id: str,
-    enabled: bool = Body(True, description="Whether to enable or disable for customer"),
     request: Request,
+    enabled: bool = Body(True, description="Whether to enable or disable for customer"),
     current_user: User = Depends(get_current_active_superuser),
     service = Depends(get_feature_flag_service)
 ) -> Dict[str, str]:
@@ -407,8 +407,8 @@ async def remove_pilot_customer(
 @router.put("/{flag_name}/percentage", response_model=Dict[str, str])
 async def update_percentage_rollout(
     flag_name: str,
-    percentage: float = Body(..., ge=0, le=100, description="Rollout percentage"),
     request: Request,
+    percentage: float = Body(..., ge=0, le=100, description="Rollout percentage"),
     current_user: User = Depends(get_current_active_superuser),
     service = Depends(get_feature_flag_service)
 ) -> Dict[str, str]:

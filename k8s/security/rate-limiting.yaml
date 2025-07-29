@@ -1,0 +1,283 @@
+# Rate Limiting and WAF Configuration for LuckyGas
+# Protects against DDoS and application-layer attacks
+
+---
+# Rate limiting middleware configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-rate-limit-config
+  namespace: ingress-nginx
+data:
+  rate-limit.conf: |
+    # Global rate limiting zones
+    limit_req_zone $binary_remote_addr zone=global:10m rate=100r/s;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=50r/s;
+    limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=analytics:10m rate=20r/s;
+    
+    # Connection limiting
+    limit_conn_zone $binary_remote_addr zone=addr:10m;
+    limit_conn addr 100;
+    
+    # Request size limits
+    client_body_buffer_size 1K;
+    client_header_buffer_size 1k;
+    client_max_body_size 10M;
+    large_client_header_buffers 2 1k;
+
+---
+# Ingress with rate limiting annotations
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: luckygas-ingress-secure
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-rpm: "300"
+    nginx.ingress.kubernetes.io/limit-connections: "100"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://maps.googleapis.com https://api.luckygas.com.tw wss://api.luckygas.com.tw; frame-ancestors 'none';";
+      more_set_headers "Permissions-Policy: geolocation=(self), microphone=(), camera=()";
+      
+    # WAF rules
+    nginx.ingress.kubernetes.io/server-snippet: |
+      # Block common attack patterns
+      if ($request_uri ~* "(\.\./|\.\.\\|%2e%2e%2f|%252e%252e%252f)") {
+        return 403;
+      }
+      
+      # Block SQL injection attempts
+      if ($args ~* "(union.*select|select.*from|insert.*into|delete.*from|drop.*table|script.*>|<.*script)") {
+        return 403;
+      }
+      
+      # Block common scanners
+      if ($http_user_agent ~* "(nikto|sqlmap|nmap|masscan|shodan)") {
+        return 403;
+      }
+      
+      # Geo-blocking (allow only from Taiwan and nearby regions)
+      # Requires GeoIP module
+      # if ($geoip_country_code !~ ^(TW|HK|JP|SG)$) {
+      #   return 403;
+      # }
+      
+spec:
+  tls:
+  - hosts:
+    - api.luckygas.com.tw
+    - app.luckygas.com.tw
+    secretName: luckygas-tls
+  rules:
+  - host: api.luckygas.com.tw
+    http:
+      paths:
+      - path: /api/v1/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: luckygas-backend
+            port:
+              number: 80
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: luckygas-backend
+            port:
+              number: 80
+  - host: app.luckygas.com.tw
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: luckygas-frontend
+            port:
+              number: 80
+
+---
+# ModSecurity WAF Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: modsecurity-config
+  namespace: ingress-nginx
+data:
+  modsecurity.conf: |
+    SecRuleEngine On
+    SecRequestBodyAccess On
+    SecRule REQUEST_HEADERS:Content-Type "text/xml|application/xml|application/json" \
+         "id:'200000',phase:1,t:none,t:lowercase,pass,nolog,ctl:requestBodyProcessor=JSON"
+    
+    # Request limits
+    SecRequestBodyLimit 13107200
+    SecRequestBodyNoFilesLimit 131072
+    SecRequestBodyInMemoryLimit 131072
+    SecRequestBodyLimitAction Reject
+    
+    # Response body access
+    SecResponseBodyAccess On
+    SecResponseBodyMimeType text/plain text/html text/xml application/json
+    SecResponseBodyLimit 524288
+    SecResponseBodyLimitAction ProcessPartial
+    
+    # Filesystem configuration
+    SecTmpDir /tmp/
+    SecDataDir /tmp/
+    
+    # Audit logging
+    SecAuditEngine RelevantOnly
+    SecAuditLogRelevantStatus "^(?:5|4(?!04))"
+    SecAuditLogParts ABIJDEFHZ
+    SecAuditLogType Serial
+    SecAuditLog /var/log/modsec_audit.log
+    
+    # Include OWASP CRS rules
+    Include /etc/modsecurity/crs/crs-setup.conf
+    Include /etc/modsecurity/crs/rules/*.conf
+    
+    # Custom rules for LuckyGas
+    # Protect against 預定配送日期 field manipulation
+    SecRule ARGS:預定配送日期 "!@rx ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}" \
+        "id:1001,\
+        phase:2,\
+        block,\
+        msg:'Invalid date format for 預定配送日期',\
+        logdata:'Matched Data: %{MATCHED_VAR} found within %{MATCHED_VAR_NAME}',\
+        severity:'ERROR'"
+    
+    # Protect analytics endpoints
+    SecRule REQUEST_URI "@beginsWith /api/v1/analytics/" \
+        "id:1002,\
+        phase:1,\
+        pass,\
+        nolog,\
+        ctl:ruleEngine=On,\
+        setvar:'tx.analytics_request=1'"
+    
+    # Rate limit analytics endpoints more strictly
+    SecRule TX:analytics_request "@eq 1" \
+        "id:1003,\
+        phase:2,\
+        deny,\
+        status:429,\
+        msg:'Analytics endpoint rate limit exceeded',\
+        chain"
+    SecRule IP:analytics_req_count "@gt 20" \
+        "setvar:'ip.analytics_req_count=+1',\
+        expirevar:'ip.analytics_req_count=60'"
+
+---
+# API Gateway rate limiting per endpoint
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-rate-limits
+  namespace: default
+data:
+  limits.yaml: |
+    endpoints:
+      # Authentication endpoints - strict limits
+      /api/v1/auth/login:
+        rate: 5
+        burst: 10
+        period: minute
+        
+      /api/v1/auth/register:
+        rate: 2
+        burst: 5
+        period: minute
+        
+      # Analytics endpoints - moderate limits
+      /api/v1/analytics/executive:
+        rate: 20
+        burst: 30
+        period: minute
+        
+      /api/v1/analytics/operations:
+        rate: 30
+        burst: 50
+        period: minute
+        
+      /api/v1/analytics/financial:
+        rate: 20
+        burst: 30
+        period: minute
+        
+      /api/v1/analytics/performance:
+        rate: 10
+        burst: 20
+        period: minute
+        
+      # General API endpoints
+      /api/v1/customers:
+        rate: 100
+        burst: 200
+        period: minute
+        
+      /api/v1/orders:
+        rate: 100
+        burst: 200
+        period: minute
+        
+      # Bulk operations - very strict
+      /api/v1/orders/bulk:
+        rate: 1
+        burst: 2
+        period: minute
+        
+      /api/v1/customers/import:
+        rate: 1
+        burst: 1
+        period: hour
+
+---
+# DDoS Protection Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ddos-protection
+  namespace: ingress-nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ddos-protection
+  template:
+    metadata:
+      labels:
+        app: ddos-protection
+    spec:
+      containers:
+      - name: ddos-analyzer
+        image: gcr.io/lucky-gas-prod/ddos-protection:latest
+        env:
+        - name: THRESHOLD_RPS
+          value: "1000"
+        - name: BLOCK_DURATION
+          value: "3600"
+        - name: DETECTION_WINDOW
+          value: "60"
+        ports:
+        - containerPort: 9090
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

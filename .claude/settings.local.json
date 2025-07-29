@@ -49,7 +49,10 @@
       "Bash(curl:*)",
       "Bash(chmod:*)",
       "Bash(git config:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "mcp__playwright__browser_navigate_forward",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_navigate_back"
     ],
     "deny": []
   }

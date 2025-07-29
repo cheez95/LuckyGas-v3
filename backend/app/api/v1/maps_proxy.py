@@ -19,10 +19,9 @@ from sqlalchemy.orm import Session
 from redis import Redis
 import json
 
-from app.core.database import get_db
+from app.api.deps import get_db, get_current_user
 from app.core.config import settings
 from app.core.secrets_manager import get_secret
-from app.api.auth_deps.core import get_current_active_user
 from app.models.user import User
 from app.core.monitoring import track_api_usage
 
@@ -279,7 +278,7 @@ async def geocode(
     address: str = Query(..., description="Address to geocode"),
     language: str = Query("zh-TW", description="Response language"),
     region: str = Query("TW", description="Region bias"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -288,7 +287,7 @@ async def geocode(
     This endpoint proxies requests to Google Maps Geocoding API
     with authentication, rate limiting, and caching.
     """
-    service = "geocoding"
+    service = "geocode"
     endpoint = "json"
     
     # Check rate limit
@@ -306,10 +305,11 @@ async def geocode(
     }
     
     # Check cache
-    cached_response = await maps_proxy.get_cached_response(service, params)
+    # Use "geocoding" as key for backward compatibility with existing cache
+    cached_response = await maps_proxy.get_cached_response("geocoding", params)
     if cached_response:
         await maps_proxy.log_usage(
-            current_user.id, service, params, 0.0, cached=True
+            current_user.id, "geocoding", params, 0.0, cached=True
         )
         return cached_response
     
@@ -320,11 +320,11 @@ async def geocode(
         response_time = time.time() - start_time
         
         # Cache successful response
-        await maps_proxy.cache_response(service, params, response)
+        await maps_proxy.cache_response("geocoding", params, response)
         
         # Log usage
         await maps_proxy.log_usage(
-            current_user.id, service, params, response_time
+            current_user.id, "geocoding", params, response_time
         )
         
         return response
@@ -343,7 +343,7 @@ async def directions(
     departure_time: Optional[str] = Query(None, description="Departure time"),
     avoid: Optional[str] = Query(None, description="Features to avoid"),
     language: str = Query("zh-TW", description="Response language"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -414,7 +414,7 @@ async def places_nearby(
     type: Optional[str] = Query(None, description="Place type"),
     keyword: Optional[str] = Query(None, description="Search keyword"),
     language: str = Query("zh-TW", description="Response language"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -483,7 +483,7 @@ async def distance_matrix(
     mode: str = Query("driving", description="Travel mode"),
     departure_time: Optional[str] = Query(None, description="Departure time"),
     language: str = Query("zh-TW", description="Response language"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -551,7 +551,7 @@ async def get_maps_script_url(
     language: str = Query("zh-TW", description="Language"),
     region: str = Query("TW", description="Region"),
     version: str = Query("weekly", description="API version"),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -588,7 +588,7 @@ async def get_maps_script_url(
 
 @router.get("/usage-stats")
 async def get_usage_stats(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """

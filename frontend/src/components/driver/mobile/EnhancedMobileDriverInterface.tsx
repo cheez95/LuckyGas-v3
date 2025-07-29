@@ -5,7 +5,7 @@ import {
   Switch, Statistic, Row, Col, Alert
 } from 'antd';
 import {
-  CheckCircleOutlined, CompassOutlined, NavigationOutlined,
+  CheckCircleOutlined, CompassOutlined, AimOutlined,
   PhoneOutlined, BatteryFull20Outlined, BatteryFullOutlined,
   PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined,
   MenuOutlined, UserOutlined, LogoutOutlined, WifiOutlined,
@@ -488,7 +488,7 @@ const EnhancedMobileDriverInterface: React.FC = () => {
                     action={
                       <Button 
                         size="small" 
-                        icon={<NavigationOutlined />}
+                        icon={<AimOutlined />}
                         onClick={() => handleNavigation(nextStop)}
                       >
                         導航
@@ -601,7 +601,7 @@ const EnhancedMobileDriverInterface: React.FC = () => {
                       </Button>
                       <Button
                         type="link"
-                        icon={<NavigationOutlined />}
+                        icon={<AimOutlined />}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleNavigation(stop);

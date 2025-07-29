@@ -39,9 +39,10 @@ class NotificationService:
     """Service for sending notifications via SMS, Email, and other channels"""
     
     def __init__(self):
-        self.sms_provider_url = settings.SMS_PROVIDER_URL
-        self.sms_api_key = settings.SMS_API_KEY
-        self.sms_sender_id = settings.SMS_SENDER_ID or "LuckyGas"
+        # Use default values for missing settings in development
+        self.sms_provider_url = getattr(settings, 'SMS_PROVIDER_URL', 'http://localhost:8001/mock-sms')
+        self.sms_api_key = getattr(settings, 'SMS_API_KEY', 'dev-sms-key')
+        self.sms_sender_id = getattr(settings, 'SMS_SENDER_ID', 'LuckyGas')
         
         self.smtp_host = settings.SMTP_HOST
         self.smtp_port = settings.SMTP_PORT

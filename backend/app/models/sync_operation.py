@@ -86,7 +86,7 @@ class SyncOperation(Base):
     conflict_detected = Column(Boolean, default=False)
     conflict_resolution = Column(Enum(ConflictResolution))
     conflict_details = Column(JSON)
-    resolved_by = Column(String, ForeignKey("users.id"))
+    resolved_by = Column(Integer, ForeignKey("users.id"))
     resolved_at = Column(DateTime)
     
     # Error tracking
@@ -107,8 +107,8 @@ class SyncOperation(Base):
     next_retry_at = Column(DateTime)
     
     # Audit fields
-    created_by = Column(String, ForeignKey("users.id"))
-    updated_by = Column(String, ForeignKey("users.id"))
+    created_by = Column(Integer, ForeignKey("users.id"))
+    updated_by = Column(Integer, ForeignKey("users.id"))
     
     # Performance tracking
     sync_duration_ms = Column(Integer)
@@ -197,7 +197,7 @@ class SyncTransaction(Base):
     completed_at = Column(DateTime)
     
     # Audit
-    created_by = Column(String, ForeignKey("users.id"))
+    created_by = Column(Integer, ForeignKey("users.id"))
     
     # Relationships
     creator = relationship("User", foreign_keys=[created_by])

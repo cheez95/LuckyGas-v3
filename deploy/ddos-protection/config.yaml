@@ -1,0 +1,88 @@
+# DDoS Protection Service Configuration
+service:
+  name: ddos-protection
+  version: 1.0.0
+  port: 9090
+
+# Detection thresholds
+thresholds:
+  requests_per_second: 1000
+  requests_per_minute: 50000
+  burst_size: 2000
+  
+# Blocking settings
+blocking:
+  duration_seconds: 3600  # 1 hour
+  max_blocked_ips: 10000
+  
+# Detection patterns
+patterns:
+  scanners:
+    - nikto
+    - sqlmap
+    - nmap
+    - masscan
+    - shodan
+    - zgrab
+    
+  suspicious_paths:
+    - /.git
+    - /.env
+    - /wp-admin
+    - /phpmyadmin
+    - /.aws
+    - /.ssh
+    - /backup
+    
+  sql_injection:
+    - "union select"
+    - "drop table"
+    - "insert into"
+    - "delete from"
+    - "update set"
+    - "exec("
+    - "xp_cmdshell"
+    
+  path_traversal:
+    - "../"
+    - "..%2f"
+    - "%2e%2e%2f"
+    - "..%252f"
+    
+# Whitelist (never block these)
+whitelist:
+  ips:
+    - 10.0.0.0/8      # Internal network
+    - 172.16.0.0/12   # Internal network
+    - 192.168.0.0/16  # Internal network
+    
+  user_agents:
+    - GoogleBot
+    - BingBot
+    - Prometheus
+    
+# Geographic restrictions (optional)
+geo_restrictions:
+  enabled: false
+  allowed_countries:
+    - TW  # Taiwan
+    - HK  # Hong Kong
+    - JP  # Japan
+    - SG  # Singapore
+    
+# Redis settings
+redis:
+  host: redis
+  port: 6379
+  db: 0
+  
+# Kubernetes integration
+kubernetes:
+  enabled: true
+  namespace: default
+  network_policy: luckygas-blocked-ips
+  
+# Monitoring
+monitoring:
+  metrics_port: 9090
+  log_level: INFO

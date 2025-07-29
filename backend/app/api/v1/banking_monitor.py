@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
-from app.api.auth_deps.core import get_current_user
-from app.core.database import get_db
+from app.api.auth_deps.security import get_current_user
+from app.api.deps import get_db
 from app.models.user import User
 from app.models.banking import (
     PaymentBatch, PaymentBatchStatus, PaymentTransaction,
@@ -16,11 +16,12 @@ from app.models.banking import (
 )
 from app.services.banking_sftp import BankingSFTPService
 from app.services.banking_service import BankingService
-from app.tasks.banking_transfers import (
-    test_bank_connection,
-    generate_and_upload_payments,
-    check_and_process_reconciliation
-)
+# TODO: Fix async notifications in banking_transfers.py
+# from app.tasks.banking_transfers import (
+#     test_bank_connection,
+#     generate_and_upload_payments,
+#     check_and_process_reconciliation
+# )
 from app.schemas.banking import (
     BankingHealthCheck, TransferHistory, PaymentBatchDetail,
     ReconciliationDetail, BankConnectionTest, BankingDashboard,

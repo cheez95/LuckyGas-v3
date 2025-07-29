@@ -89,9 +89,19 @@ async def login_access_token(
     await AccountLockout.clear_failed_attempts(client_ip, is_ip=True)
     await AccountLockout.clear_failed_attempts(user.username)
     
-    # Create session
+    # Create session with proper token data
     remember_me = form_data.scopes and "remember_me" in form_data.scopes
-    session_data = await SessionManager.create_session(user.id, remember_me)
+    
+    # Create tokens directly with correct data
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username, "role": user.role.value},
+        expires_delta=access_token_expires
+    )
+    
+    refresh_token = create_refresh_token(
+        data={"sub": user.username, "role": user.role.value}
+    )
     
     # Update last login
     await db.execute(
@@ -112,10 +122,10 @@ async def login_access_token(
     needs_2fa = user.two_factor_enabled
     
     return {
-        "access_token": session_data["access_token"],
-        "refresh_token": session_data["refresh_token"],
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
-        "expires_in": session_data["expires_in"],
+        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "requires_2fa": needs_2fa
     }
 

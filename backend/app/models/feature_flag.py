@@ -54,9 +54,9 @@ feature_flag_enabled_customers = Table(
     'feature_flag_enabled_customers',
     Base.metadata,
     Column('feature_flag_id', String, ForeignKey('feature_flags.id')),
-    Column('customer_id', String, ForeignKey('customers.id')),
+    Column('customer_id', Integer, ForeignKey('customers.id')),
     Column('enabled_at', DateTime, server_default=func.now()),
-    Column('enabled_by', String, ForeignKey('users.id')),
+    Column('enabled_by', Integer, ForeignKey('users.id')),
     UniqueConstraint('feature_flag_id', 'customer_id', name='uq_flag_customer_enabled')
 )
 
@@ -64,9 +64,9 @@ feature_flag_disabled_customers = Table(
     'feature_flag_disabled_customers',
     Base.metadata,
     Column('feature_flag_id', String, ForeignKey('feature_flags.id')),
-    Column('customer_id', String, ForeignKey('customers.id')),
+    Column('customer_id', Integer, ForeignKey('customers.id')),
     Column('disabled_at', DateTime, server_default=func.now()),
-    Column('disabled_by', String, ForeignKey('users.id')),
+    Column('disabled_by', Integer, ForeignKey('users.id')),
     UniqueConstraint('feature_flag_id', 'customer_id', name='uq_flag_customer_disabled')
 )
 
@@ -101,8 +101,8 @@ class FeatureFlag(Base):
     # Audit fields
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
-    created_by = Column(String, ForeignKey("users.id"))
-    updated_by = Column(String, ForeignKey("users.id"))
+    created_by = Column(Integer, ForeignKey("users.id"))
+    updated_by = Column(Integer, ForeignKey("users.id"))
     
     # Statistics
     evaluation_count = Column(Integer, default=0)
@@ -217,7 +217,7 @@ class FeatureFlagAudit(Base):
     
     # Audit information
     action = Column(Enum(AuditAction), nullable=False)
-    user_id = Column(String, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     timestamp = Column(DateTime, nullable=False, server_default=func.now())
     
     # Change details
@@ -269,8 +269,8 @@ class FeatureFlagEvaluation(Base):
     feature_flag_id = Column(String, ForeignKey("feature_flags.id"), nullable=False, index=True)
     
     # Evaluation context
-    customer_id = Column(String, ForeignKey("customers.id"), index=True)
-    user_id = Column(String, ForeignKey("users.id"), index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
     timestamp = Column(DateTime, nullable=False, server_default=func.now(), index=True)
     
     # Result

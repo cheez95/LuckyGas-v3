@@ -21,7 +21,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/demand/daily", response_model=List[DemandPredictionResponse])
-@rate_limit(requests_per_minute=10)
 async def predict_daily_demand(
     request: DemandPredictionRequest,
     db: AsyncSession = Depends(get_db),
@@ -262,7 +261,6 @@ async def get_prediction_metrics(
         raise HTTPException(status_code=500, detail="獲取預測指標時發生錯誤")
 
 @router.post("/train/demand-model")
-@rate_limit(requests_per_minute=1)
 async def train_demand_model(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

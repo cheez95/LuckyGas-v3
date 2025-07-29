@@ -4,8 +4,8 @@ import {
   Modal, message, Drawer, Badge, Typography, Avatar
 } from 'antd';
 import {
-  CheckCircleOutlined, CompassOutlined, NavigationOutlined,
-   PhoneOutlined,
+  CheckCircleOutlined, CompassOutlined, AimOutlined,
+  PhoneOutlined,
   PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined,
   MenuOutlined, UserOutlined, LogoutOutlined
 } from '@ant-design/icons';
@@ -362,7 +362,7 @@ const MobileDriverInterface: React.FC = () => {
                       </Button>
                       <Button
                         type="link"
-                        icon={<NavigationOutlined />}
+                        icon={<AimOutlined />}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleNavigation(stop);

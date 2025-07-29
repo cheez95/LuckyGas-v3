@@ -1,0 +1,296 @@
+# SSL/TLS Configuration for LuckyGas
+# Implements strong encryption and certificate management
+
+---
+# Certificate Manager Configuration
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: devops@luckygas.com.tw
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# Production SSL Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: luckygas-tls-cert
+  namespace: default
+spec:
+  secretName: luckygas-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: luckygas.com.tw
+  dnsNames:
+  - luckygas.com.tw
+  - app.luckygas.com.tw
+  - api.luckygas.com.tw
+  - '*.luckygas.com.tw'
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  subject:
+    organizations:
+    - Lucky Gas Co., Ltd.
+    countries:
+    - TW
+    provinces:
+    - Taiwan
+    localities:
+    - Taipei
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+
+---
+# TLS Configuration for Services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-tls-config
+  namespace: ingress-nginx
+data:
+  tls.conf: |
+    # Modern TLS configuration (supports TLS 1.2+)
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    
+    # SSL session caching
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    
+    # OCSP stapling
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+    
+    # HSTS (6 months)
+    add_header Strict-Transport-Security "max-age=15768000; includeSubDomains; preload" always;
+
+---
+# Internal TLS for Pod-to-Pod Communication
+apiVersion: v1
+kind: Secret
+metadata:
+  name: internal-tls-ca
+  namespace: default
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi... # Base64 encoded CA certificate
+  tls.key: LS0tLS1CRUdJTi... # Base64 encoded CA private key
+
+---
+# Webhook TLS Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webhook-tls
+  namespace: default
+spec:
+  secretName: webhook-tls-secret
+  issuerRef:
+    name: internal-ca-issuer
+    kind: Issuer
+  commonName: webhook-service.default.svc
+  dnsNames:
+  - webhook-service
+  - webhook-service.default
+  - webhook-service.default.svc
+  - webhook-service.default.svc.cluster.local
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+
+---
+# Database TLS Configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-tls
+  namespace: default
+type: Opaque
+stringData:
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    # Cloud SQL CA certificate
+    -----END CERTIFICATE-----
+  client.crt: |
+    -----BEGIN CERTIFICATE-----
+    # Client certificate for mTLS
+    -----END CERTIFICATE-----
+  client.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    # Client private key
+    -----END RSA PRIVATE KEY-----
+
+---
+# Audit Logging Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: audit-policy
+  namespace: kube-system
+data:
+  audit-policy.yaml: |
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    rules:
+      # Don't log requests to these paths
+      - level: None
+        paths:
+        - /healthz*
+        - /version
+        - /swagger*
+        
+      # Don't log watch requests
+      - level: None
+        verbs: ["watch"]
+        
+      # Don't log secrets details
+      - level: Metadata
+        resources:
+        - group: ""
+          resources: ["secrets", "configmaps"]
+          
+      # Log pod creation and deletion at Metadata level
+      - level: Metadata
+        resources:
+        - group: ""
+          resources: ["pods", "pods/log", "pods/status"]
+          
+      # Log service account token creation
+      - level: RequestResponse
+        resources:
+        - group: ""
+          resources: ["serviceaccounts/token"]
+          
+      # Log all requests to our application namespace at RequestResponse level
+      - level: RequestResponse
+        namespaces: ["default", "luckygas"]
+        
+      # Log authentication attempts
+      - level: RequestResponse
+        resources:
+        - group: "authentication.k8s.io"
+          resources: ["tokenreviews"]
+          
+      # Log all other requests at Metadata level
+      - level: Metadata
+
+---
+# Fluentd Configuration for Audit Logs
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+  namespace: kube-system
+data:
+  fluent.conf: |
+    <source>
+      @type tail
+      path /var/log/kubernetes/audit.log
+      pos_file /var/log/fluentd/audit.log.pos
+      tag audit.*
+      format json
+      time_key timestamp
+      time_format %Y-%m-%dT%H:%M:%S.%NZ
+    </source>
+    
+    <filter audit.**>
+      @type record_transformer
+      <record>
+        cluster lucky-gas-prod
+        environment production
+        region asia-east1
+      </record>
+    </filter>
+    
+    # Send to Cloud Logging
+    <match audit.**>
+      @type google_cloud
+      project lucky-gas-prod
+      resource kubernetes_cluster
+      log_name k8s-audit
+      use_metadata_service true
+      
+      # Buffer configuration
+      <buffer>
+        @type file
+        path /var/log/fluentd/audit-buffer
+        flush_mode interval
+        flush_interval 5s
+        flush_at_shutdown true
+        retry_type exponential_backoff
+        retry_wait 5s
+        retry_max_interval 30s
+        retry_forever false
+        retry_max_times 5
+      </buffer>
+    </match>
+    
+    # Also send security-relevant logs to SIEM
+    <match audit.**>
+      @type copy
+      <store>
+        @type forward
+        <server>
+          host siem.luckygas.com.tw
+          port 24224
+        </server>
+        <security>
+          self_hostname ${hostname}
+          shared_key luckygas-audit-key
+        </security>
+      </store>
+    </match>
+
+---
+# Security Scanner CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: security-scanner
+  namespace: default
+spec:
+  schedule: "0 2 * * *" # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: scanner
+            image: aquasec/trivy:latest
+            command:
+            - sh
+            - -c
+            - |
+              # Scan all running images
+              kubectl get pods -A -o jsonpath="{.items[*].spec.containers[*].image}" | \
+              tr -s '[[:space:]]' '\n' | \
+              sort | uniq | \
+              while read image; do
+                echo "Scanning $image"
+                trivy image --severity HIGH,CRITICAL "$image"
+              done
+              
+              # Generate report
+              trivy image --format json -o /tmp/scan-report.json gcr.io/lucky-gas-prod/backend:latest
+              
+              # Send to Cloud Storage
+              gsutil cp /tmp/scan-report.json gs://lucky-gas-security/scans/$(date +%Y%m%d)/
+          restartPolicy: OnFailure
+          serviceAccountName: security-scanner

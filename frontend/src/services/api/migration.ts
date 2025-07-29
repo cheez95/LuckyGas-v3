@@ -171,7 +171,7 @@ export const migrationApi = {
   ) => {
     // This would connect to WebSocket for real-time updates
     // Implementation depends on your WebSocket setup
-    const ws = new WebSocket(`${process.env.REACT_APP_WS_URL}/sync-status`);
+    const ws = new WebSocket(`${import.meta.env.VITE_WS_URL || 'ws://localhost:8000'}/sync-status`);
     
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);

@@ -1,5 +1,5 @@
 """Webhook handlers for external services."""
-from fastapi import APIRouter, Request, HTTPException, Depends, Header
+from fastapi import APIRouter, Request, HTTPException, Depends, Header, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import hmac

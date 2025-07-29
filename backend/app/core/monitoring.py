@@ -11,7 +11,7 @@ from sqlalchemy import select, func
 import asyncio
 from collections import defaultdict
 
-from app.core.database import get_db_session
+from app.core.database import async_session_maker
 from app.models.webhook import WebhookLog, WebhookStatus
 from app.models.audit import AuditLog, AuditAction
 from app.core.config import settings

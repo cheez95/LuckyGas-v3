@@ -53,7 +53,7 @@ import {
 import { Line, Bar, Radar, Doughnut } from 'react-chartjs-2';
 import dayjs from 'dayjs';
 import api from '../../services/api';
-import { useWebSocket } from '../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
@@ -171,7 +171,7 @@ const OperationsDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<OperationsMetrics | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout>();
-  const { socket, connected } = useWebSocket();
+  const { socket, isConnected } = useWebSocketContext();
 
   useEffect(() => {
     fetchMetrics();
@@ -194,7 +194,7 @@ const OperationsDashboard: React.FC = () => {
 
   // WebSocket real-time updates
   useEffect(() => {
-    if (!socket || !connected) return;
+    if (!socket || !isConnected) return;
 
     const handleOrderUpdate = (data: any) => {
       message.info(`新訂單: ${data.orderNumber}`);
@@ -214,7 +214,7 @@ const OperationsDashboard: React.FC = () => {
       socket.off('order:updated', handleOrderUpdate);
       socket.off('route:updated', handleRouteUpdate);
     };
-  }, [socket, connected]);
+  }, [socket, isConnected]);
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -472,7 +472,7 @@ const OperationsDashboard: React.FC = () => {
               >
                 {autoRefresh ? '自動刷新' : '手動刷新'}
               </Button>
-              <Badge dot={connected} status={connected ? 'success' : 'error'}>
+              <Badge dot={isConnected} status={isConnected ? 'success' : 'error'}>
                 <Button icon={<BellOutlined />}>
                   即時通知
                 </Button>

@@ -33,6 +33,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(`🔐 Adding Authorization header to ${config.url}:`, config.headers.Authorization.substring(0, 50) + '...');
+    } else {
+      console.log(`🔐 No token found for ${config.url}`);
     }
     
     // Add request timestamp for performance monitoring
@@ -118,10 +121,12 @@ api.interceptors.response.use(
     
     // Handle 401 errors - try to refresh token first
     if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/login') && !originalRequest.url?.includes('/auth/refresh')) {
+      console.log(`🔐 Got 401 for ${originalRequest.url}, retry status:`, originalRequest._retry);
       
       // Mark request as retry to avoid infinite loop
       if (originalRequest._retry) {
         // Already tried to refresh, clear tokens and redirect
+        console.log('🔐 Already tried refresh, clearing tokens...');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('token_expiry');

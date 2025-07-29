@@ -48,6 +48,9 @@ class Customer(Base):
     
     # Consumption data
     avg_daily_usage = Column(Float)
+    
+    # Relationships
+    order_templates = relationship("OrderTemplate", back_populates="customer")
     max_cycle_days = Column(Integer)
     can_delay_days = Column(Integer)
     monthly_delivery_volume = Column(Float)

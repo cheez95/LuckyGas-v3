@@ -22,7 +22,7 @@ class GoogleMapsLoader {
   private apiUrl: string;
 
   private constructor() {
-    this.apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    this.apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   }
 
   static getInstance(): GoogleMapsLoader {
