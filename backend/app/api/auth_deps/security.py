@@ -21,6 +21,7 @@ from app.core.security_config import get_2fa_config
 from app.middleware.security import CSRFProtection, SecurityValidation
 from app.models.user import User
 from app.utils.security_utils import RequestValidator, SecurityAudit
+from fastapi.security import HTTPBearer, APIKeyHeader
 
 # Security schemes
 bearer_scheme = HTTPBearer()

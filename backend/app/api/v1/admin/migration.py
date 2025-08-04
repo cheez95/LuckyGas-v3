@@ -1,13 +1,28 @@
-"""
-from app.models.sync_operation import SyncStatus
-from app.services.feature_flags import get_feature_flag_service
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth_deps.security import get_current_active_superuser
+from app.core.database import get_db
+from app.core.logging import get_logger
+from app.models.customer import Customer
+from app.models.sync_operation import SyncOperation, SyncStatus, ConflictResolution
+from app.models.user import User
+from app.schemas.admin.migration import (
+    ConflictResolutionRequest,
+    MigrationMetrics,
+    MigrationStartRequest,
+)
 from app.services.sync_service import get_sync_service
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Query
-from sqlalchemy import func
-from sqlalchemy import select
+from app.services.feature_flags import get_feature_flag_service
+
+logger = get_logger(__name__)
+
+router = APIRouter()
+
 Admin API endpoints for migration monitoring and control.
 """
 
@@ -98,8 +113,8 @@ async def get_migration_metrics(
         migrated_customers = migrated_result.scalar() or 0
 
         # Get sync service metrics
-    # sync_service = await get_sync_service()
-        sync_metrics = await sync_service.get_metrics()
+    sync_service = await get_sync_service()
+        sync_metrics = await get_sync_service().get_metrics()
 
         # Calculate aggregate metrics
         total_synced = sum(m.total_synced for m in sync_metrics.values())
@@ -158,8 +173,7 @@ async def get_sync_operations(
 ) -> List[Dict[str, Any]]:
     """Get recent sync operations."""
     try:
-    # sync_service = await get_sync_service()
-
+    sync_service = await get_sync_service()
         # In production, this would query from database
         # For now, return mock data
         operations = []
@@ -209,7 +223,7 @@ async def get_conflicts(
 ) -> List[Dict[str, Any]]:
     """Get unresolved conflicts."""
     try:
-    # sync_service = await get_sync_service()
+    sync_service = await get_sync_service()
         conflicts = await sync_service.get_conflicts(limit)
 
         # Enhance with customer names (in production)
@@ -286,7 +300,7 @@ async def start_migration(
 ):
     """Start migration for selected customers."""
     try:
-    # sync_service = await get_sync_service()
+    sync_service = await get_sync_service()
         feature_service = await get_feature_flag_service()
 
         # Process customers in batches
@@ -321,7 +335,7 @@ async def start_migration(
 async def pause_sync(current_user: User = Depends(get_current_active_superuser)):
     """Pause synchronization service."""
     try:
-    # sync_service = await get_sync_service()
+    sync_service = await get_sync_service()
         await sync_service.pause_sync()
         return {"status": "paused"}
     except Exception as e:
@@ -333,7 +347,7 @@ async def pause_sync(current_user: User = Depends(get_current_active_superuser))
 async def resume_sync(current_user: User = Depends(get_current_active_superuser)):
     """Resume synchronization service."""
     try:
-    # sync_service = await get_sync_service()
+    sync_service = await get_sync_service()
         await sync_service.resume_sync()
         return {"status": "resumed"}
     except Exception as e:
@@ -381,7 +395,7 @@ async def resolve_conflict(
 ):
     """Resolve a sync conflict."""
     try:
-    # sync_service = await get_sync_service()
+    sync_service = await get_sync_service()
         success = await sync_service.resolve_conflict(
             conflict_id, request.resolution, request.resolvedData
         )

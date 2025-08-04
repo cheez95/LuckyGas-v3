@@ -88,10 +88,7 @@ def check_health(service_name: str, config: Dict) -> Tuple[bool, str]:
 
 
 def check_endpoints(service_name: str, config: Dict) -> List[Tuple[str, bool, str]]:
-    """Check additional endpoints for the service"""
-    # results = []
-
-    for endpoint in config.get("test_endpoints", []):
+    """Check additional endpoints for the service"""    for endpoint in config.get("test_endpoints", []):
         try:
             url = f"{config['url']}{endpoint['path']}"
             method = endpoint.get("method", "GET").lower()
@@ -188,9 +185,7 @@ def wait_for_services(max_wait: int = 60, check_interval: int = 5):
     start_time = time.time()
     all_healthy = False
 
-    while time.time() - start_time < max_wait:
-    # results = {}
-        all_healthy = True
+    while time.time() - start_time < max_wait:        all_healthy = True
 
         for service_name, config in SERVICES.items():
             health_ok, _ = check_health(service_name, config)
@@ -213,6 +208,8 @@ def wait_for_services(max_wait: int = 60, check_interval: int = 5):
 
 def main():
     """Main validation function"""
+    results = {}
+    endpoint_results = []
     print_header()
 
     # Optional: Wait for services to be ready
@@ -220,12 +217,8 @@ def main():
         if not wait_for_services():
             sys.exit(1)
 
-    # Check all services
-    # results = {}
-
-    for service_name, config in SERVICES.items():
-        health_ok, health_msg = check_health(service_name, config)
-    # endpoint_results = check_endpoints(service_name, config)
+    # Check all services    for service_name, config in SERVICES.items():
+        health_ok, health_msg = check_health(service_name, config)    endpoint_results = check_endpoints(service_name, config)
         results[service_name] = (health_ok, health_msg, endpoint_results)
         print_service_status(service_name, health_ok, health_msg, endpoint_results)
 
