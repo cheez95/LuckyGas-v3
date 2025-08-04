@@ -7,15 +7,15 @@ from .banking_transfers import (
     process_retry_queue,
     generate_daily_report,
     perform_health_check,
-    test_bank_connection
+    test_bank_connection,
 )
 
 __all__ = [
-    'celery_app',
-    'generate_and_upload_payments',
-    'check_and_process_reconciliation',
-    'process_retry_queue',
-    'generate_daily_report',
-    'perform_health_check',
-    'test_bank_connection'
+    "celery_app",
+    "generate_and_upload_payments",
+    "check_and_process_reconciliation",
+    "process_retry_queue",
+    "generate_daily_report",
+    "perform_health_check",
+    "test_bank_connection",
 ]

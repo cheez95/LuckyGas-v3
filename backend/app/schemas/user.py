@@ -15,11 +15,11 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    
-    @field_validator('password')
+
+    @field_validator("password")
     def validate_password(cls, v):
         if len(v) < 8:
-            raise ValueError('密碼長度必須至少8個字符')
+            raise ValueError("密碼長度必須至少8個字符")
         return v
 
 
@@ -34,7 +34,7 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -63,11 +63,11 @@ class RefreshTokenRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
-    
-    @field_validator('new_password')
+
+    @field_validator("new_password")
     def validate_password(cls, v):
         if len(v) < 8:
-            raise ValueError('密碼長度必須至少8個字符')
+            raise ValueError("密碼長度必須至少8個字符")
         return v
 
 
@@ -79,11 +79,11 @@ class TwoFactorSetup(BaseModel):
 
 class TwoFactorVerify(BaseModel):
     code: str
-    
-    @field_validator('code')
+
+    @field_validator("code")
     def validate_code(cls, v):
         if len(v) != 6 or not v.isdigit():
-            raise ValueError('驗證碼必須是6位數字')
+            raise ValueError("驗證碼必須是6位數字")
         return v
 
 
@@ -94,11 +94,11 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str
-    
-    @field_validator('new_password')
+
+    @field_validator("new_password")
     def validate_password(cls, v):
         if len(v) < 8:
-            raise ValueError('密碼長度必須至少8個字符')
+            raise ValueError("密碼長度必須至少8個字符")
         return v
 
 

@@ -1,6 +1,7 @@
 """
 Payment schemas for API requests and responses
 """
+
 from typing import Optional, Dict, Any, List
 from datetime import date, datetime
 from pydantic import BaseModel, Field, ConfigDict, field_validator
@@ -10,22 +11,27 @@ from app.models.invoice import PaymentMethod
 
 class PaymentBase(BaseModel):
     """Base schema for payments"""
+
     invoice_id: int
     payment_date: date
     payment_method: PaymentMethod
     amount: float = Field(..., gt=0, description="付款金額")
-    reference_number: Optional[str] = Field(None, max_length=100, description="轉帳編號/支票號碼")
+    reference_number: Optional[str] = Field(
+        None, max_length=100, description="轉帳編號/支票號碼"
+    )
     bank_account: Optional[str] = Field(None, max_length=50, description="銀行帳號")
     notes: Optional[str] = Field(None, max_length=500)
 
 
 class PaymentCreate(PaymentBase):
     """Schema for creating payments"""
+
     pass
 
 
 class PaymentUpdate(BaseModel):
     """Schema for updating payments"""
+
     payment_date: Optional[date] = None
     payment_method: Optional[PaymentMethod] = None
     amount: Optional[float] = Field(None, gt=0)
@@ -36,22 +42,25 @@ class PaymentUpdate(BaseModel):
 
 class PaymentVerification(BaseModel):
     """Schema for payment verification"""
+
     notes: Optional[str] = Field(None, max_length=500, description="核對備註")
 
 
 class InvoiceInfo(BaseModel):
     """Invoice information for payment response"""
+
     id: int
     invoice_number: str
     buyer_name: str
     total_amount: float
     paid_amount: float
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentResponse(PaymentBase):
     """Schema for payment responses"""
+
     id: int
     payment_number: str
     is_verified: bool
@@ -59,15 +68,16 @@ class PaymentResponse(PaymentBase):
     verified_at: Optional[datetime]
     created_at: datetime
     created_by: int
-    
+
     # Related invoice info
     invoice: Optional[InvoiceInfo] = None
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentSearchParams(BaseModel):
     """Parameters for searching payments"""
+
     invoice_id: Optional[int] = None
     payment_method: Optional[PaymentMethod] = None
     date_from: Optional[date] = None
@@ -79,10 +89,11 @@ class PaymentSearchParams(BaseModel):
 
 class PaymentStats(BaseModel):
     """Payment statistics for a period"""
+
     period: str
     total_count: int
     total_amount: float
-    
+
     # By payment method
     cash_count: int
     cash_amount: float
@@ -94,13 +105,13 @@ class PaymentStats(BaseModel):
     credit_card_amount: float
     monthly_count: int
     monthly_amount: float
-    
+
     # Verification stats
     verified_count: int
     verified_amount: float
     unverified_count: int
     unverified_amount: float
-    
+
     # Daily average
     daily_average_count: float
     daily_average_amount: float
@@ -108,13 +119,14 @@ class PaymentStats(BaseModel):
 
 class DailyPaymentSummary(BaseModel):
     """Daily payment summary"""
+
     date: date
     total_count: int
     total_amount: float
-    
+
     # By payment method breakdown
     by_method: Dict[str, Dict[str, float]]  # method -> {count, amount}
-    
+
     # Verification status
     verified_count: int
     verified_amount: float
@@ -124,27 +136,28 @@ class DailyPaymentSummary(BaseModel):
 
 class CustomerBalance(BaseModel):
     """Customer balance information"""
+
     customer_id: int
     customer_code: str
     customer_name: str
-    
+
     # Invoice totals
     total_invoiced: float
     total_paid: float
     outstanding_balance: float
-    
+
     # Aging
     current: float  # Not due yet
     overdue_30: float  # 1-30 days overdue
     overdue_60: float  # 31-60 days overdue
     overdue_90: float  # 61-90 days overdue
     overdue_over_90: float  # >90 days overdue
-    
+
     # Credit info
     credit_limit: float
     available_credit: float
     is_credit_blocked: bool
-    
+
     # Outstanding invoices
     outstanding_invoice_count: int
     oldest_unpaid_date: Optional[date]
@@ -152,18 +165,19 @@ class CustomerBalance(BaseModel):
 
 class ReconciliationResult(BaseModel):
     """Result of payment reconciliation"""
+
     date_from: date
     date_to: date
-    
+
     # Totals
     total_payments: int
     total_amount: float
-    
+
     # Matched/Unmatched
     matched_count: int
     matched_amount: float
     unmatched_count: int
     unmatched_amount: float
-    
+
     # Issues found
     issues: List[Dict[str, Any]]

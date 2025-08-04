@@ -9,6 +9,7 @@ from enum import Enum
 
 class PaymentBatchStatus(str, Enum):
     """Payment batch processing status."""
+
     DRAFT = "draft"
     GENERATED = "generated"
     UPLOADED = "uploaded"
@@ -20,6 +21,7 @@ class PaymentBatchStatus(str, Enum):
 
 class ReconciliationStatus(str, Enum):
     """Reconciliation matching status."""
+
     PENDING = "pending"
     MATCHED = "matched"
     UNMATCHED = "unmatched"
@@ -29,6 +31,7 @@ class ReconciliationStatus(str, Enum):
 
 class TransactionStatus(str, Enum):
     """Individual transaction status."""
+
     PENDING = "pending"
     SUCCESS = "success"
     FAILED = "failed"
@@ -39,33 +42,54 @@ class TransactionStatus(str, Enum):
 # Bank Configuration Schemas
 class BankConfigBase(BaseModel):
     """Base schema for bank configuration."""
-    bank_code: str = Field(..., max_length=10, description="Bank code (e.g., CTBC, ESUN)")
+
+    bank_code: str = Field(
+        ..., max_length=10, description="Bank code (e.g., CTBC, ESUN)"
+    )
     bank_name: str = Field(..., max_length=100, description="Bank name")
     sftp_host: str = Field(..., description="SFTP server hostname")
     sftp_port: int = Field(default=22, description="SFTP server port")
     sftp_username: str = Field(..., description="SFTP username")
     upload_path: str = Field(..., description="Remote upload directory path")
     download_path: str = Field(..., description="Remote download directory path")
-    archive_path: Optional[str] = Field(None, description="Remote archive directory path")
-    file_format: str = Field(..., pattern="^(fixed_width|csv)$", description="File format type")
+    archive_path: Optional[str] = Field(
+        None, description="Remote archive directory path"
+    )
+    file_format: str = Field(
+        ..., pattern="^(fixed_width|csv)$", description="File format type"
+    )
     encoding: str = Field(default="UTF-8", description="File encoding (UTF-8 or Big5)")
     delimiter: Optional[str] = Field(None, max_length=5, description="CSV delimiter")
-    payment_file_pattern: Optional[str] = Field(None, description="Payment file naming pattern")
-    reconciliation_file_pattern: Optional[str] = Field(None, description="Reconciliation file naming pattern")
+    payment_file_pattern: Optional[str] = Field(
+        None, description="Payment file naming pattern"
+    )
+    reconciliation_file_pattern: Optional[str] = Field(
+        None, description="Reconciliation file naming pattern"
+    )
     is_active: bool = Field(default=True, description="Configuration active status")
-    cutoff_time: Optional[str] = Field(None, pattern="^\\d{2}:\\d{2}$", description="Daily cutoff time (HH:MM)")
-    retry_attempts: int = Field(default=3, ge=0, le=10, description="Number of retry attempts")
-    retry_delay_minutes: int = Field(default=30, ge=5, le=360, description="Delay between retries in minutes")
+    cutoff_time: Optional[str] = Field(
+        None, pattern="^\\d{2}:\\d{2}$", description="Daily cutoff time (HH:MM)"
+    )
+    retry_attempts: int = Field(
+        default=3, ge=0, le=10, description="Number of retry attempts"
+    )
+    retry_delay_minutes: int = Field(
+        default=30, ge=5, le=360, description="Delay between retries in minutes"
+    )
 
 
 class BankConfigCreate(BankConfigBase):
     """Schema for creating bank configuration."""
+
     sftp_password: str = Field(..., description="SFTP password (will be encrypted)")
-    sftp_private_key: Optional[str] = Field(None, description="SSH private key for key-based auth")
+    sftp_private_key: Optional[str] = Field(
+        None, description="SSH private key for key-based auth"
+    )
 
 
 class BankConfigUpdate(BaseModel):
     """Schema for updating bank configuration."""
+
     bank_name: Optional[str] = None
     sftp_host: Optional[str] = None
     sftp_port: Optional[int] = None
@@ -88,23 +112,28 @@ class BankConfigUpdate(BaseModel):
 
 class BankConfigResponse(BankConfigBase):
     """Schema for bank configuration response."""
+
     id: int
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 # Payment Batch Schemas
 class PaymentBatchCreate(BaseModel):
     """Schema for creating a payment batch."""
+
     bank_code: str = Field(..., description="Bank code for processing")
     processing_date: datetime = Field(..., description="Date to process payments")
-    invoice_ids: Optional[List[int]] = Field(None, description="Specific invoice IDs to include")
+    invoice_ids: Optional[List[int]] = Field(
+        None, description="Specific invoice IDs to include"
+    )
 
 
 class PaymentBatchResponse(BaseModel):
     """Schema for payment batch response."""
+
     id: int
     batch_number: str
     bank_code: str
@@ -121,13 +150,14 @@ class PaymentBatchResponse(BaseModel):
     retry_count: int
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 # Payment Transaction Schemas
 class PaymentTransactionResponse(BaseModel):
     """Schema for payment transaction response."""
+
     id: int
     batch_id: int
     transaction_id: str
@@ -144,13 +174,14 @@ class PaymentTransactionResponse(BaseModel):
     processed_date: Optional[datetime]
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 # Reconciliation Schemas
 class ReconciliationLogResponse(BaseModel):
     """Schema for reconciliation log response."""
+
     id: int
     batch_id: Optional[int]
     file_name: str
@@ -165,18 +196,20 @@ class ReconciliationLogResponse(BaseModel):
     manual_review_notes: Optional[str]
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
 # File Operation Schemas
 class GeneratePaymentFileRequest(BaseModel):
     """Request to generate a payment file."""
+
     batch_id: int = Field(..., description="Payment batch ID")
 
 
 class GeneratePaymentFileResponse(BaseModel):
     """Response after generating a payment file."""
+
     success: bool
     file_name: str
     file_size: int
@@ -185,11 +218,13 @@ class GeneratePaymentFileResponse(BaseModel):
 
 class UploadFileRequest(BaseModel):
     """Request to upload a file to bank."""
+
     batch_id: int = Field(..., description="Payment batch ID")
 
 
 class UploadFileResponse(BaseModel):
     """Response after uploading a file."""
+
     success: bool
     uploaded_at: datetime
     remote_path: str
@@ -198,6 +233,7 @@ class UploadFileResponse(BaseModel):
 
 class CheckReconciliationResponse(BaseModel):
     """Response for checking reconciliation files."""
+
     bank_code: str
     new_files: List[str]
     checked_at: datetime
@@ -205,6 +241,7 @@ class CheckReconciliationResponse(BaseModel):
 
 class ProcessReconciliationRequest(BaseModel):
     """Request to process a reconciliation file."""
+
     bank_code: str = Field(..., description="Bank code")
     file_name: str = Field(..., description="File name to process")
 
@@ -212,6 +249,7 @@ class ProcessReconciliationRequest(BaseModel):
 # Report Schemas
 class PaymentStatusReport(BaseModel):
     """Detailed payment status report."""
+
     batch_id: int
     batch_number: str
     bank_code: str
@@ -230,6 +268,7 @@ class PaymentStatusReport(BaseModel):
 
 class PaymentBatchListResponse(BaseModel):
     """Response for listing payment batches."""
+
     items: List[PaymentBatchResponse]
     total: int
     page: int
@@ -240,6 +279,7 @@ class PaymentBatchListResponse(BaseModel):
 # Banking Monitor Schemas
 class BankingHealthCheck(BaseModel):
     """Banking system health check response."""
+
     status: str
     timestamp: str
     circuit_breakers: Dict[str, Dict[str, Any]]
@@ -252,6 +292,7 @@ class BankingHealthCheck(BaseModel):
 
 class TransferHistory(BaseModel):
     """SFTP transfer history entry."""
+
     file_name: str
     remote_path: str
     success: bool
@@ -264,6 +305,7 @@ class TransferHistory(BaseModel):
 
 class PaymentBatchDetail(BaseModel):
     """Detailed payment batch information."""
+
     batch_id: int
     batch_number: str
     bank_code: str
@@ -282,6 +324,7 @@ class PaymentBatchDetail(BaseModel):
 
 class ReconciliationDetail(BaseModel):
     """Detailed reconciliation information."""
+
     id: int
     file_name: str
     file_received_at: str
@@ -297,6 +340,7 @@ class ReconciliationDetail(BaseModel):
 
 class BankConnectionTest(BaseModel):
     """Bank SFTP connection test result."""
+
     task_id: str
     bank_code: str
     status: str
@@ -305,6 +349,7 @@ class BankConnectionTest(BaseModel):
 
 class BankingDashboard(BaseModel):
     """Banking operations dashboard data."""
+
     period_days: int
     batch_trends: List[Dict[str, Any]]
     success_rates: Dict[str, Dict[str, float]]
@@ -315,6 +360,7 @@ class BankingDashboard(BaseModel):
 
 class RetryQueueStatus(BaseModel):
     """Retry queue status information."""
+
     queue_size: int
     oldest_item_age: Optional[int]
     processing: bool
@@ -323,6 +369,7 @@ class RetryQueueStatus(BaseModel):
 
 class BankConfigurationUpdate(BaseModel):
     """Schema for updating bank configuration via API."""
+
     bank_name: Optional[str] = None
     sftp_host: Optional[str] = None
     sftp_port: Optional[int] = None

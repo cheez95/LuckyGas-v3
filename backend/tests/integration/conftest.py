@@ -1,6 +1,7 @@
 """
 Integration test configuration and fixtures
 """
+
 import os
 import asyncio
 import pytest
@@ -21,6 +22,7 @@ os.environ["TESTING"] = "1"
 test_env_path = Path(__file__).parent.parent.parent / ".env.test"
 if test_env_path.exists():
     from dotenv import load_dotenv
+
     load_dotenv(test_env_path)
 
 from app.main import app
@@ -48,23 +50,19 @@ def event_loop():
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
     """Create test database engine that persists for the session"""
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        poolclass=NullPool,
-        echo=False
-    )
-    
+    engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool, echo=False)
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     # Clean up
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await engine.dispose()
 
 
@@ -76,7 +74,7 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    
+
     async with async_session_maker() as session:
         yield session
         await session.rollback()
@@ -85,18 +83,18 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create test client with database override"""
-    
+
     # Override database dependency
     async def override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_async_session] = override_get_db
-    
+
     # Create test client
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-    
+
     # Clear overrides
     app.dependency_overrides.clear()
 
@@ -105,18 +103,17 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 async def redis_client():
     """Create test Redis client"""
     # Use the test Redis instance from docker-compose
-    redis_url = settings.REDIS_URL or "redis://:test_redis_password_123@localhost:6380/1"
-    
-    client = await redis.from_url(
-        redis_url,
-        decode_responses=True
+    redis_url = (
+        settings.REDIS_URL or "redis://:test_redis_password_123@localhost:6380/1"
     )
-    
+
+    client = await redis.from_url(redis_url, decode_responses=True)
+
     # Clear test database
     await client.flushdb()
-    
+
     yield client
-    
+
     # Cleanup
     await client.flushdb()
     await client.close()
@@ -131,7 +128,7 @@ async def test_admin_user(db_session: AsyncSession) -> User:
         full_name="Test Admin",
         hashed_password=get_password_hash("admin123"),
         role=UserRole.SUPER_ADMIN,
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -148,7 +145,7 @@ async def test_office_user(db_session: AsyncSession) -> User:
         full_name="Test Office",
         hashed_password=get_password_hash("office123"),
         role=UserRole.OFFICE_STAFF,
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -165,7 +162,7 @@ async def test_driver_user(db_session: AsyncSession) -> User:
         full_name="Test Driver",
         hashed_password=get_password_hash("driver123"),
         role=UserRole.DRIVER,
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -187,7 +184,7 @@ async def test_customer(db_session: AsyncSession) -> Customer:
         customer_type=CustomerType.COMMERCIAL,
         credit_limit=100000,
         payment_terms=30,
-        is_active=True
+        is_active=True,
     )
     db_session.add(customer)
     await db_session.commit()
@@ -216,7 +213,7 @@ async def test_order(db_session: AsyncSession, test_customer: Customer) -> Order
         unit_price_4kg=120,
         total_amount=4800,  # (2*1500) + (1*600) + (3*300)
         delivery_address=test_customer.address,
-        is_taxable=True
+        is_taxable=True,
     )
     db_session.add(order)
     await db_session.commit()
@@ -255,12 +252,14 @@ async def driver_auth_headers(test_driver_user: User) -> dict:
 @pytest.fixture
 def mock_google_routes_api(mocker):
     """Mock Google Routes API responses"""
-    mock = mocker.patch('app.services.optimization.google_routes_service.GoogleRoutesService.optimize_route')
+    mock = mocker.patch(
+        "app.services.optimization.google_routes_service.GoogleRoutesService.optimize_route"
+    )
     mock.return_value = {
         "optimized_waypoint_order": [0, 1, 2],
         "total_distance_meters": 15000,
         "total_duration_seconds": 3600,
-        "warnings": []
+        "warnings": [],
     }
     return mock
 
@@ -268,12 +267,12 @@ def mock_google_routes_api(mocker):
 @pytest.fixture
 def mock_einvoice_api(mocker):
     """Mock Taiwan E-Invoice API responses"""
-    mock = mocker.patch('app.services.einvoice_service.EInvoiceService.submit_invoice')
+    mock = mocker.patch("app.services.einvoice_service.EInvoiceService.submit_invoice")
     mock.return_value = {
         "success": True,
         "invoice_number": "AB12345678",
         "message": "發票開立成功",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
     return mock
 
@@ -281,7 +280,7 @@ def mock_einvoice_api(mocker):
 @pytest.fixture
 def mock_websocket_manager(mocker):
     """Mock WebSocket manager for real-time updates"""
-    mock = mocker.patch('app.services.websocket_service.websocket_manager.broadcast')
+    mock = mocker.patch("app.services.websocket_service.websocket_manager.broadcast")
     mock.return_value = None
     return mock
 
@@ -292,25 +291,22 @@ async def test_route(db_session: AsyncSession, test_driver_user: User) -> None:
     """Create test route"""
     from app.models.route import Route
     from app.models.vehicle import Vehicle
-    
+
     # Create vehicle first
     vehicle = Vehicle(
-        license_plate="TEST-001",
-        type="truck",
-        capacity_kg=1000,
-        status="active"
+        license_plate="TEST-001", type="truck", capacity_kg=1000, status="active"
     )
     db_session.add(vehicle)
     await db_session.commit()
     await db_session.refresh(vehicle)
-    
+
     route = Route(
         route_date=date.today(),
         driver_id=test_driver_user.id,
         vehicle_id=vehicle.id,
         status="pending",
         total_distance_km=0,
-        total_duration_minutes=0
+        total_duration_minutes=0,
     )
     db_session.add(route)
     await db_session.commit()
@@ -322,42 +318,30 @@ async def test_route(db_session: AsyncSession, test_driver_user: User) -> None:
 async def test_gas_products(db_session: AsyncSession) -> list:
     """Create test gas products"""
     from app.models.gas_product import GasProduct
-    
+
     products = [
         GasProduct(
             product_name="50kg 瓦斯桶",
             size="50kg",
             unit_price=1500.0,
-            is_available=True
+            is_available=True,
         ),
         GasProduct(
-            product_name="20kg 瓦斯桶",
-            size="20kg",
-            unit_price=600.0,
-            is_available=True
+            product_name="20kg 瓦斯桶", size="20kg", unit_price=600.0, is_available=True
         ),
         GasProduct(
-            product_name="16kg 瓦斯桶",
-            size="16kg",
-            unit_price=480.0,
-            is_available=True
+            product_name="16kg 瓦斯桶", size="16kg", unit_price=480.0, is_available=True
         ),
         GasProduct(
-            product_name="10kg 瓦斯桶",
-            size="10kg",
-            unit_price=300.0,
-            is_available=True
+            product_name="10kg 瓦斯桶", size="10kg", unit_price=300.0, is_available=True
         ),
         GasProduct(
-            product_name="4kg 瓦斯桶",
-            size="4kg",
-            unit_price=120.0,
-            is_available=True
-        )
+            product_name="4kg 瓦斯桶", size="4kg", unit_price=120.0, is_available=True
+        ),
     ]
-    
+
     for product in products:
         db_session.add(product)
-    
+
     await db_session.commit()
     return products

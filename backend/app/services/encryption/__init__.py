@@ -2,4 +2,4 @@
 
 from .pgp_handler import PGPHandler
 
-__all__ = ['PGPHandler']
+__all__ = ["PGPHandler"]

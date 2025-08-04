@@ -31,7 +31,7 @@ class RouteStopUpdate(BaseModel):
 
 class RouteStop(RouteStopBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     route_id: int
     distance_from_previous_km: float
@@ -66,29 +66,30 @@ class RouteUpdate(BaseModel):
 
 class Route(RouteBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     status: RouteStatus
     total_stops: int
     total_distance_km: float
     estimated_duration_minutes: int
-    
+
     is_optimized: bool
     optimization_score: Optional[float] = None
     optimization_timestamp: Optional[datetime] = None
-    
+
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     actual_duration_minutes: Optional[int] = None
-    
+
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
+
     stops: List[RouteStop] = []
 
 
 class RouteWithDetails(Route):
     """Route with additional details like driver and vehicle info"""
+
     driver_name: Optional[str] = None
     vehicle_plate: Optional[str] = None
     total_orders: int = 0
@@ -118,6 +119,7 @@ class RouteOptimizationResponse(BaseModel):
 
 class AdjustmentRequest(BaseModel):
     """Request for route adjustment."""
+
     route_id: int
     order_id: int
     trigger: str = "manual"  # manual, emergency, delay, cancellation
@@ -126,6 +128,7 @@ class AdjustmentRequest(BaseModel):
 
 class AdjustmentResult(BaseModel):
     """Result of route adjustment."""
+
     success: bool
     route_id: int
     adjustment_type: str

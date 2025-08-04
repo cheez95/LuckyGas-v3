@@ -7,20 +7,51 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 import time
+
 # from prometheus_fastapi_instrumentator import Instrumentator  # Removed during compaction
 
-from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products, driver, communications, order_templates, invoices, payments, financial_reports, banking, notifications, health, monitoring, sms, analytics, api_keys, maps_proxy
+from app.api.v1 import (
+    auth,
+    customers,
+    orders,
+    routes,
+    predictions,
+    websocket,
+    delivery_history,
+    products,
+    driver,
+    communications,
+    order_templates,
+    invoices,
+    payments,
+    financial_reports,
+    banking,
+    notifications,
+    health,
+    monitoring,
+    sms,
+    analytics,
+    api_keys,
+    maps_proxy,
+)
 from app.api.v1.admin import migration
+
 # Socket.IO handler removed during compaction
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
 from app.core.logging import setup_logging, get_logger
 from app.middleware.logging import LoggingMiddleware, CorrelationIdMiddleware
 from app.middleware.metrics import MetricsMiddleware
-from app.middleware.enhanced_rate_limiting import limiter, RateLimitExceeded, _rate_limit_exceeded_handler
+from app.middleware.enhanced_rate_limiting import (
+    limiter,
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
+)
 from app.middleware.security import SecurityMiddleware
+
 # from app.core.api_security import APISecurityMiddleware, api_validator, rate_limiter  # TODO: Fix missing dependencies
 from app.middleware.performance import PerformanceMiddleware
+
 # from app.core.db_metrics import DatabaseMetricsCollector  # Removed during compaction
 from app.core.env_validation import validate_environment
 from app.services.websocket_service import websocket_manager
@@ -34,87 +65,90 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Lucky Gas backend service")
-    
+
     # Validate environment variables
     # Note: Environment validation is done by Pydantic Settings during initialization
     # validate_environment()
     logger.info("Environment loaded from settings")
-    
+
     # Create database tables
     await create_db_and_tables()
     logger.info("Database tables created/verified")
-    
+
     # Initialize custom cache service
     from app.core.cache import cache
+
     await cache.connect()
     logger.info("Custom cache service initialized")
-    
+
     # Initialize performance monitoring
     from app.middleware.performance import PerformanceMiddleware
+
     app.state.performance_middleware = PerformanceMiddleware(redis_client=cache.redis)
     logger.info("Performance monitoring initialized")
-    
+
     # Database metrics collector removed during compaction
     # db_metrics_collector = DatabaseMetricsCollector(engine)
     # import asyncio
     # metrics_task = asyncio.create_task(db_metrics_collector.start())
     # logger.info("Database metrics collector started")
-    
+
     # Initialize WebSocket manager
     await websocket_manager.initialize()
     logger.info("WebSocket manager initialized")
-    
+
     # API monitoring removed during compaction
     # from app.core.api_monitoring import init_api_monitoring, api_monitor
     # init_api_monitoring()
     # await api_monitor.start_monitoring(interval=300)  # 5 minute interval
     # logger.info("API monitoring initialized")
-    
+
     # Initialize enhanced feature flag service
     # TODO: Fix enum mismatch between feature_flag.py and audit.py AuditAction enums
     # from app.services.feature_flags_enhanced import get_feature_flag_service
     # feature_service = await get_feature_flag_service()
     # logger.info("Enhanced feature flag service initialized with persistence")
-    
+
     # Initialize enhanced sync service
     # TODO: Fix initialization issues
     # from app.services.sync_service_enhanced import get_sync_service
     # sync_service = await get_sync_service()
     # logger.info("Enhanced sync service initialized with persistence")
-    
+
     # Initialize enhanced monitoring
     # TODO: Fix monitoring service initialization
     # from app.core.enhanced_monitoring import monitoring_service
     # await monitoring_service.initialize(app)
     # logger.info("Enhanced monitoring service initialized")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Lucky Gas backend service")
-    
+
     # Close WebSocket connections
     await websocket_manager.close()
     logger.info("WebSocket connections closed")
-    
+
     # Metrics collector removed during compaction
     # db_metrics_collector.stop()
     # metrics_task.cancel()
-    
+
     # Enhanced sync service removed during compaction
     # from app.services.sync_service import get_sync_service
     # sync_service = await get_sync_service()
     # await sync_service.close()
     # logger.info("Enhanced sync service closed")
-    
+
     # Enhanced feature flag service removed during compaction
     # from app.services.feature_flags import get_feature_flag_service
     # feature_service = await get_feature_flag_service()
     # await feature_service.close()
     # logger.info("Enhanced feature flag service closed")
-    
+
     # Close custom cache connection
     from app.core.cache import cache
+
     await cache.disconnect()
     logger.info("Cleanup completed")
 
@@ -126,7 +160,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
-    openapi_url="/api/v1/openapi.json"
+    openapi_url="/api/v1/openapi.json",
 )
 
 # Socket.IO app mounting removed during compaction
@@ -138,10 +172,7 @@ cors_origins = settings.get_all_cors_origins()
 # Add environment-specific CORS origins
 if settings.is_development():
     # Additional development origins
-    cors_origins.extend([
-        "http://localhost:*",
-        "http://127.0.0.1:*"
-    ])
+    cors_origins.extend(["http://localhost:*", "http://127.0.0.1:*"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -158,7 +189,7 @@ app.add_middleware(
         "Accept-Language",
         "Accept-Encoding",
         "Access-Control-Request-Headers",
-        "Access-Control-Request-Method"
+        "Access-Control-Request-Method",
     ],
     expose_headers=[
         "X-Request-ID",
@@ -166,9 +197,9 @@ app.add_middleware(
         "X-RateLimit-Limit",
         "X-RateLimit-Remaining",
         "X-RateLimit-Reset",
-        "X-Total-Count"
+        "X-Total-Count",
     ],
-    max_age=3600  # Cache preflight requests for 1 hour
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Add security middleware (should be first)
@@ -203,6 +234,7 @@ app.add_middleware(MetricsMiddleware)
 if settings.ENVIRONMENT.value == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
 
+
 # Add timing middleware
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -211,6 +243,7 @@ async def add_process_time_header(request: Request, call_next):
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(f"{process_time:.3f}")
     return response
+
 
 # Exception handlers
 @app.exception_handler(RequestValidationError)
@@ -221,8 +254,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "path": request.url.path,
             "method": request.method,
             "errors": exc.errors(),
-            "body": str(exc.body) if exc.body else None
-        }
+            "body": str(exc.body) if exc.body else None,
+        },
     )
     # Convert validation errors to serializable format
     errors = []
@@ -230,17 +263,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         serializable_error = {
             "loc": error.get("loc", []),
             "msg": str(error.get("msg", "")),
-            "type": str(error.get("type", ""))
+            "type": str(error.get("type", "")),
         }
         errors.append(serializable_error)
-    
+
     return JSONResponse(
-        status_code=422,
-        content={
-            "detail": "資料驗證失敗",
-            "errors": errors
-        }
+        status_code=422, content={"detail": "資料驗證失敗", "errors": errors}
     )
+
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
@@ -250,34 +280,46 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             "path": request.url.path,
             "method": request.method,
             "status_code": exc.status_code,
-            "detail": exc.detail
-        }
+            "detail": exc.detail,
+        },
     )
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            "detail": exc.detail,
-            "type": "http_error"
-        }
+        content={"detail": exc.detail, "type": "http_error"},
     )
+
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
-app.include_router(order_templates.router, prefix="/api/v1/order-templates", tags=["order_templates"])
+app.include_router(
+    order_templates.router, prefix="/api/v1/order-templates", tags=["order_templates"]
+)
 # Consolidated routes router
 app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
-app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["predictions"])
-app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
+app.include_router(
+    predictions.router, prefix="/api/v1/predictions", tags=["predictions"]
+)
+app.include_router(
+    delivery_history.router,
+    prefix="/api/v1/delivery-history",
+    tags=["delivery_history"],
+)
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
 # Removed google_api_dashboard during compaction
 app.include_router(driver.router, prefix="/api/v1/drivers", tags=["drivers"])
-app.include_router(communications.router, prefix="/api/v1/communications", tags=["communications"])
+app.include_router(
+    communications.router, prefix="/api/v1/communications", tags=["communications"]
+)
 app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocket"])
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
-app.include_router(financial_reports.router, prefix="/api/v1/financial-reports", tags=["financial_reports"])
+app.include_router(
+    financial_reports.router,
+    prefix="/api/v1/financial-reports",
+    tags=["financial_reports"],
+)
 app.include_router(banking.router, prefix="/api/v1/banking", tags=["banking"])
 # Removed banking_monitor during compaction
 app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"])
@@ -320,6 +362,7 @@ async def api_health_check():
 async def api_v1_health_check():
     """Health check endpoint for API v1."""
     return {"status": "healthy", "message": "系統正常運行", "version": "1.0.0"}
+
 
 # Prometheus metrics removed during compaction
 # instrumentator = Instrumentator()

@@ -25,15 +25,16 @@ class DeliveryHistoryItemUpdate(BaseModel):
 
 class DeliveryHistoryItem(DeliveryHistoryItemBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     delivery_history_id: int
     subtotal: float
-    
+
     # Computed properties
     is_cylinder_product: bool
 
 
 class DeliveryHistoryItemInDB(DeliveryHistoryItem):
     """Schema with full database fields"""
+
     pass

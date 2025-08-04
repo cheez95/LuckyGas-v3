@@ -1,6 +1,7 @@
 """
 Test configuration for service unit tests
 """
+
 import pytest
 import sys
 from pathlib import Path

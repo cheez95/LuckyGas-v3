@@ -1,4 +1,5 @@
 """Test package initialization."""
+
 import sys
 from pathlib import Path
 

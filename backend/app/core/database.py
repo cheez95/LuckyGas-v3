@@ -20,7 +20,7 @@ engine = create_async_engine(
         "server_settings": {
             "application_name": settings.PROJECT_NAME.lower().replace(" ", "_"),
             "jit": "off",
-            "statement_timeout": str(settings.database.statement_timeout)
+            "statement_timeout": str(settings.database.statement_timeout),
         },
         "command_timeout": settings.database.command_timeout,
         "timeout": 10,
@@ -28,14 +28,12 @@ engine = create_async_engine(
         "prepared_statement_cache_size": 0,  # Disable for better compatibility
         # Note: keepalives parameters are not supported by asyncpg
         # They are only for psycopg2/libpq connections
-    }
+    },
 )
 
 # Create async session factory
 async_session_maker = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    engine, class_=AsyncSession, expire_on_commit=False
 )
 
 

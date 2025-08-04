@@ -19,15 +19,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_user(
-    db: AsyncSession = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+    db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)
 ) -> UserModel:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="無法驗證憑據",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         payload = decode_access_token(token)
         username: str = payload.get("sub")
@@ -37,22 +36,22 @@ async def get_current_user(
         token_data = TokenData(username=username, role=role)
     except (JWTError, ValueError):
         raise credentials_exception
-    
+
     result = await db.execute(
         select(UserModel).where(UserModel.username == token_data.username)
     )
     user = result.scalar_one_or_none()
-    
+
     if user is None:
         raise credentials_exception
     if not user.is_active:
         raise HTTPException(status_code=400, detail="用戶已停用")
-    
+
     return user
 
 
 async def get_current_active_user(
-    current_user: UserModel = Depends(get_current_user)
+    current_user: UserModel = Depends(get_current_user),
 ) -> UserModel:
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="用戶已停用")
@@ -61,10 +60,11 @@ async def get_current_active_user(
 
 def check_permission(required_permission: str):
     async def permission_checker(
-        current_user: UserModel = Depends(get_current_active_user)
+        current_user: UserModel = Depends(get_current_active_user),
     ) -> UserModel:
         # For now, just return the user - implement permission checking later
         return current_user
+
     return permission_checker
 
 
@@ -72,7 +72,5 @@ async def get_current_active_superuser(
     current_user: UserModel = Depends(get_current_user),
 ) -> UserModel:
     if current_user.role != "super_admin":
-        raise HTTPException(
-            status_code=400, detail="權限不足"
-        )
+        raise HTTPException(status_code=400, detail="權限不足")
     return current_user

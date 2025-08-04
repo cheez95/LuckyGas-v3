@@ -1,6 +1,7 @@
 """
 Configuration and fixtures for E2E tests using Playwright
 """
+
 import pytest
 import pytest_asyncio
 import asyncio
@@ -23,10 +24,7 @@ SLOW_MO = int(os.getenv("E2E_SLOW_MO", "0"))  # Milliseconds to slow down operat
 async def browser():
     """Create browser instance for tests"""
     p = await async_playwright().start()
-    browser = await p.chromium.launch(
-        headless=HEADLESS,
-        slow_mo=SLOW_MO
-    )
+    browser = await p.chromium.launch(headless=HEADLESS, slow_mo=SLOW_MO)
     yield browser
     await browser.close()
     await p.stop()
@@ -39,14 +37,14 @@ async def context(browser: Browser) -> BrowserContext:
         base_url=BASE_URL,
         viewport={"width": 1280, "height": 720},
         locale="zh-TW",  # Traditional Chinese locale
-        timezone_id="Asia/Taipei"
+        timezone_id="Asia/Taipei",
     )
-    
+
     # Add auth state if exists
     auth_file = "tests/e2e/.auth/state.json"
     if os.path.exists(auth_file):
         await context.add_cookies(auth_file)
-    
+
     yield context
     await context.close()
 
@@ -66,7 +64,7 @@ def test_credentials() -> Dict[str, str]:
     return {
         "email": "test@example.com",
         "password": "testpass123",
-        "role": "office_staff"
+        "role": "office_staff",
     }
 
 
@@ -76,7 +74,7 @@ def admin_credentials() -> Dict[str, str]:
     return {
         "email": "admin@example.com",
         "password": "adminpass123",
-        "role": "super_admin"
+        "role": "super_admin",
     }
 
 
@@ -86,7 +84,7 @@ def driver_credentials() -> Dict[str, str]:
     return {
         "email": "driver@example.com",
         "password": "driverpass123",
-        "role": "driver"
+        "role": "driver",
     }
 
 
@@ -96,7 +94,7 @@ def office_credentials() -> Dict[str, str]:
     return {
         "email": "office@example.com",
         "password": "officepass123",
-        "role": "office_staff"
+        "role": "office_staff",
     }
 
 
@@ -109,40 +107,44 @@ async def authenticated_page(page: Page, test_credentials: Dict[str, str]) -> Pa
     await page.fill('input[name="email"]', test_credentials["email"])
     await page.fill('input[name="password"]', test_credentials["password"])
     await page.click('button[type="submit"]')
-    
+
     # Wait for redirect
     await page.wait_for_url(f"{BASE_URL}/dashboard", timeout=5000)
-    
+
     return page
 
 
 @pytest_asyncio.fixture
-async def admin_authenticated_page(page: Page, admin_credentials: Dict[str, str]) -> Page:
+async def admin_authenticated_page(
+    page: Page, admin_credentials: Dict[str, str]
+) -> Page:
     """Create authenticated page for admin"""
     # Login
     await page.goto(f"{BASE_URL}/login")
     await page.fill('input[name="email"]', admin_credentials["email"])
     await page.fill('input[name="password"]', admin_credentials["password"])
     await page.click('button[type="submit"]')
-    
+
     # Wait for redirect
     await page.wait_for_url(f"{BASE_URL}/dashboard", timeout=5000)
-    
+
     return page
 
 
 @pytest_asyncio.fixture
-async def driver_authenticated_page(page: Page, driver_credentials: Dict[str, str]) -> Page:
+async def driver_authenticated_page(
+    page: Page, driver_credentials: Dict[str, str]
+) -> Page:
     """Create authenticated page for driver"""
     # Login
     await page.goto(f"{BASE_URL}/driver/login")
     await page.fill('input[name="email"]', driver_credentials["email"])
     await page.fill('input[name="password"]', driver_credentials["password"])
     await page.click('button[type="submit"]')
-    
+
     # Wait for redirect
     await page.wait_for_url(f"{BASE_URL}/driver/dashboard", timeout=5000)
-    
+
     return page
 
 
@@ -150,16 +152,20 @@ async def driver_authenticated_page(page: Page, driver_credentials: Dict[str, st
 @pytest.fixture
 def format_date():
     """Helper to format dates in Taiwan format"""
+
     def _format_date(date: datetime) -> str:
         return date.strftime("%Y/%m/%d")
+
     return _format_date
 
 
 @pytest.fixture
 def format_currency():
     """Helper to format currency in TWD"""
+
     def _format_currency(amount: float) -> str:
         return f"NT${amount:,.0f}"
+
     return _format_currency
 
 
@@ -167,15 +173,16 @@ def format_currency():
 @pytest_asyncio.fixture
 async def take_screenshot(page: Page):
     """Helper to take screenshots during tests"""
+
     async def _take_screenshot(name: str):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         screenshot_dir = "tests/e2e/screenshots"
         os.makedirs(screenshot_dir, exist_ok=True)
-        
+
         await page.screenshot(
-            path=f"{screenshot_dir}/{timestamp}_{name}.png",
-            full_page=True
+            path=f"{screenshot_dir}/{timestamp}_{name}.png", full_page=True
         )
+
     return _take_screenshot
 
 
@@ -184,7 +191,7 @@ async def take_screenshot(page: Page):
 async def api_client():
     """Create API client for test data setup"""
     import httpx
-    
+
     async with httpx.AsyncClient(base_url=API_URL) as client:
         yield client
 
@@ -192,50 +199,52 @@ async def api_client():
 @pytest_asyncio.fixture
 async def create_test_customer(api_client, admin_credentials):
     """Helper to create test customers via API"""
+
     async def _create_customer(customer_data: Dict) -> Dict:
         # Login first
         login_response = await api_client.post(
             "/api/v1/auth/login",
             data={
                 "username": admin_credentials["email"],
-                "password": admin_credentials["password"]
-            }
+                "password": admin_credentials["password"],
+            },
         )
         token = login_response.json()["access_token"]
-        
+
         # Create customer
         response = await api_client.post(
             "/api/v1/customers",
             json=customer_data,
-            headers={"Authorization": f"Bearer {token}"}
+            headers={"Authorization": f"Bearer {token}"},
         )
         return response.json()
-    
+
     return _create_customer
 
 
 @pytest_asyncio.fixture
 async def create_test_order(api_client, admin_credentials):
     """Helper to create test orders via API"""
+
     async def _create_order(order_data: Dict) -> Dict:
         # Login first
         login_response = await api_client.post(
             "/api/v1/auth/login",
             data={
                 "username": admin_credentials["email"],
-                "password": admin_credentials["password"]
-            }
+                "password": admin_credentials["password"],
+            },
         )
         token = login_response.json()["access_token"]
-        
+
         # Create order
         response = await api_client.post(
             "/api/v1/orders",
             json=order_data,
-            headers={"Authorization": f"Bearer {token}"}
+            headers={"Authorization": f"Bearer {token}"},
         )
         return response.json()
-    
+
     return _create_order
 
 
@@ -247,6 +256,7 @@ async def cleanup_screenshots():
     if os.path.exists(screenshot_dir):
         # Remove screenshots older than 7 days
         import time
+
         now = time.time()
         for filename in os.listdir(screenshot_dir):
             filepath = os.path.join(screenshot_dir, filename)
@@ -257,18 +267,8 @@ async def cleanup_screenshots():
 # Test markers
 def pytest_configure(config):
     """Register custom markers"""
-    config.addinivalue_line(
-        "markers", "e2e: mark test as end-to-end test"
-    )
-    config.addinivalue_line(
-        "markers", "mobile: mark test as mobile-specific test"
-    )
-    config.addinivalue_line(
-        "markers", "desktop: mark test as desktop-specific test"
-    )
-    config.addinivalue_line(
-        "markers", "critical: mark test as critical path test"
-    )
-    config.addinivalue_line(
-        "markers", "smoke: mark test as smoke test"
-    )
+    config.addinivalue_line("markers", "e2e: mark test as end-to-end test")
+    config.addinivalue_line("markers", "mobile: mark test as mobile-specific test")
+    config.addinivalue_line("markers", "desktop: mark test as desktop-specific test")
+    config.addinivalue_line("markers", "critical: mark test as critical path test")
+    config.addinivalue_line("markers", "smoke: mark test as smoke test")

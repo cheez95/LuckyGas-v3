@@ -6,6 +6,7 @@ from app.schemas.gas_product import GasProduct
 
 class CustomerInventoryBase(BaseModel):
     """Base schema for customer inventory"""
+
     quantity_owned: int = 0
     quantity_rented: int = 0
     quantity_total: int = 0
@@ -17,12 +18,14 @@ class CustomerInventoryBase(BaseModel):
 
 class CustomerInventoryCreate(CustomerInventoryBase):
     """Schema for creating customer inventory"""
+
     customer_id: int
     gas_product_id: int
 
 
 class CustomerInventoryUpdate(BaseModel):
     """Schema for updating customer inventory"""
+
     quantity_owned: Optional[int] = None
     quantity_rented: Optional[int] = None
     flow_meter_count: Optional[int] = None
@@ -33,8 +36,9 @@ class CustomerInventoryUpdate(BaseModel):
 
 class CustomerInventory(CustomerInventoryBase):
     """Schema for customer inventory response"""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     customer_id: int
     gas_product_id: int
@@ -45,6 +49,7 @@ class CustomerInventory(CustomerInventoryBase):
 
 class CustomerInventoryList(BaseModel):
     """Schema for paginated customer inventory list"""
+
     items: List[CustomerInventory]
     total: int
     skip: int

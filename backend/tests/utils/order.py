@@ -1,6 +1,7 @@
 """
 Order test utilities
 """
+
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.order import Order, OrderStatus, PaymentStatus
@@ -21,19 +22,21 @@ async def create_test_order(
     qty_50kg: int = 0,
     qty_10kg: int = 0,
     qty_4kg: int = 0,
-    **kwargs
+    **kwargs,
 ) -> Order:
     """Create a test order"""
     if order_number is None:
         timestamp = datetime.utcnow()
-        order_number = f"TEST-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
-    
+        order_number = (
+            f"TEST-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
+        )
+
     if scheduled_date is None:
         scheduled_date = datetime.utcnow()
-    
+
     if final_amount is None:
         final_amount = total_amount - discount_amount
-    
+
     order = Order(
         order_number=order_number,
         customer_id=customer_id,
@@ -49,7 +52,7 @@ async def create_test_order(
         qty_10kg=qty_10kg,
         qty_4kg=qty_4kg,
         payment_method="現金",
-        **kwargs
+        **kwargs,
     )
     db.add(order)
     await db.commit()

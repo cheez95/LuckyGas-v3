@@ -31,25 +31,25 @@ MOCK_PORT = 8888
 def pact() -> Generator[Pact, None, None]:
     """
     Create a Pact instance for consumer contract testing.
-    
+
     This fixture sets up a mock provider server that the consumer
     tests can interact with to generate contract specifications.
     """
     consumer = Consumer(CONSUMER_NAME)
     provider = Provider(PROVIDER_NAME)
-    
+
     pact = consumer.has_pact_with(
         provider,
         host_name=MOCK_HOST,
         port=MOCK_PORT,
         pact_dir=PACT_DIR,
-        file_write_mode=PACT_FILE_WRITE_MODE
+        file_write_mode=PACT_FILE_WRITE_MODE,
     )
-    
+
     pact.start_service()
-    
+
     yield pact
-    
+
     pact.stop_service()
 
 
@@ -62,16 +62,13 @@ def mock_provider_url() -> str:
 @pytest.fixture
 def auth_headers() -> dict:
     """Common authentication headers for API requests."""
-    return {
-        "Authorization": "Bearer test-token",
-        "Content-Type": "application/json"
-    }
+    return {"Authorization": "Bearer test-token", "Content-Type": "application/json"}
 
 
 def publish_pact_to_broker(pact_file: str, version: str = "1.0.0") -> None:
     """
     Publish pact file to Pact Broker.
-    
+
     Args:
         pact_file: Path to the pact file
         version: Consumer version
@@ -79,22 +76,29 @@ def publish_pact_to_broker(pact_file: str, version: str = "1.0.0") -> None:
     if not PACT_BROKER_URL:
         print("Pact Broker URL not configured, skipping publish")
         return
-    
+
     import subprocess
-    
+
     cmd = [
-        "pact-broker", "publish",
+        "pact-broker",
+        "publish",
         pact_file,
-        "--consumer-app-version", version,
-        "--broker-base-url", PACT_BROKER_URL
+        "--consumer-app-version",
+        version,
+        "--broker-base-url",
+        PACT_BROKER_URL,
     ]
-    
+
     if PACT_BROKER_USERNAME and PACT_BROKER_PASSWORD:
-        cmd.extend([
-            "--broker-username", PACT_BROKER_USERNAME,
-            "--broker-password", PACT_BROKER_PASSWORD
-        ])
-    
+        cmd.extend(
+            [
+                "--broker-username",
+                PACT_BROKER_USERNAME,
+                "--broker-password",
+                PACT_BROKER_PASSWORD,
+            ]
+        )
+
     try:
         subprocess.run(cmd, check=True)
         print(f"Successfully published pact to broker: {PACT_BROKER_URL}")
@@ -102,14 +106,16 @@ def publish_pact_to_broker(pact_file: str, version: str = "1.0.0") -> None:
         print(f"Failed to publish pact to broker: {e}")
 
 
-def verify_pact_version_compatibility(consumer_version: str, provider_version: str) -> bool:
+def verify_pact_version_compatibility(
+    consumer_version: str, provider_version: str
+) -> bool:
     """
     Verify that consumer and provider versions are compatible.
-    
+
     Args:
         consumer_version: Consumer application version
         provider_version: Provider application version
-        
+
     Returns:
         True if versions are compatible
     """
@@ -128,7 +134,7 @@ def generate_customer_data(customer_id: str = "CUST0001") -> dict:
         "address": "台北市信義區測試路123號",
         "area": "信義區",
         "is_active": True,
-        "created_at": "2024-01-20T00:00:00Z"
+        "created_at": "2024-01-20T00:00:00Z",
     }
 
 
@@ -141,14 +147,8 @@ def generate_order_data(order_id: int = 1) -> dict:
         "status": "pending",
         "payment_status": "unpaid",
         "is_urgent": False,
-        "items": [
-            {
-                "product_id": 1,
-                "quantity": 2,
-                "unit_price": 800.0
-            }
-        ],
-        "total_amount": 1600.0
+        "items": [{"product_id": 1, "quantity": 2, "unit_price": 800.0}],
+        "total_amount": 1600.0,
     }
 
 
@@ -158,7 +158,7 @@ def generate_auth_token_response() -> dict:
         "access_token": "test-access-token",
         "refresh_token": "test-refresh-token",
         "token_type": "bearer",
-        "expires_in": 3600
+        "expires_in": 3600,
     }
 
 
@@ -172,6 +172,6 @@ def generate_prediction_data() -> dict:
         "factors": {
             "days_since_last_order": 25,
             "average_consumption": 2.1,
-            "seasonal_factor": 1.05
-        }
+            "seasonal_factor": 1.05,
+        },
     }

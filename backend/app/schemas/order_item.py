@@ -16,33 +16,35 @@ class OrderItemBase(BaseModel):
     meter_reading_end: Optional[float] = None
     actual_quantity: Optional[float] = None
     notes: Optional[str] = None
-    
-    @field_validator('quantity')
+
+    @field_validator("quantity")
     def validate_quantity(cls, v):
         if v <= 0:
-            raise ValueError('數量必須大於0')
+            raise ValueError("數量必須大於0")
         return v
-    
-    @field_validator('unit_price')
+
+    @field_validator("unit_price")
     def validate_unit_price(cls, v):
         if v < 0:
-            raise ValueError('單價不能為負數')
+            raise ValueError("單價不能為負數")
         return v
-    
-    @field_validator('discount_percentage')
+
+    @field_validator("discount_percentage")
     def validate_discount_percentage(cls, v):
         if v < 0 or v > 100:
-            raise ValueError('折扣百分比必須在0-100之間')
+            raise ValueError("折扣百分比必須在0-100之間")
         return v
 
 
 class OrderItemCreate(OrderItemBase):
     """Schema for creating order item"""
+
     pass
 
 
 class OrderItemUpdate(BaseModel):
     """Schema for updating order item"""
+
     quantity: Optional[int] = None
     unit_price: Optional[float] = None
     discount_percentage: Optional[float] = None
@@ -57,14 +59,15 @@ class OrderItemUpdate(BaseModel):
 
 class OrderItem(OrderItemBase):
     """Schema for order item response"""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     order_id: int
     subtotal: float
     final_amount: float
     gas_product: Optional[GasProduct] = None
-    
+
     @property
     def display_name(self) -> str:
         """Get display name from product"""
@@ -75,6 +78,7 @@ class OrderItem(OrderItemBase):
 
 class OrderItemSummary(BaseModel):
     """Summary view for order item listing"""
+
     id: int
     gas_product_id: int
     product_name: str

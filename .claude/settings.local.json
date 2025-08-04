@@ -147,7 +147,11 @@
       "Bash(./deploy_integrated_backend.sh:*)",
       "Bash(npm run playwright test:*)",
       "Bash(npm run test:e2e:debug:*)",
-      "Bash(npm run test:e2e:*)"
+      "Bash(npm run test:e2e:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(gh pr:*)"
     ],
     "deny": []
   }

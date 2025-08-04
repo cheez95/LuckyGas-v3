@@ -1,6 +1,7 @@
 """
 Customer test utilities
 """
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.customer import Customer
 
@@ -14,7 +15,7 @@ async def create_test_customer(
     current_balance: float = 0.0,
     is_credit_blocked: bool = False,
     is_terminated: bool = False,
-    **kwargs
+    **kwargs,
 ) -> Customer:
     """Create a test customer"""
     customer = Customer(
@@ -28,7 +29,7 @@ async def create_test_customer(
         phone="0912345678",
         area="台北市",
         customer_type="商業",
-        **kwargs
+        **kwargs,
     )
     db.add(customer)
     await db.commit()

@@ -1,6 +1,7 @@
 """
 Analytics schemas for route performance metrics.
 """
+
 from pydantic import BaseModel
 from datetime import date, datetime
 from typing import List, Dict, Optional
@@ -9,8 +10,9 @@ from enum import Enum
 
 class MetricPeriod(str, Enum):
     """Time periods for analytics."""
+
     DAILY = "daily"
-    WEEKLY = "weekly" 
+    WEEKLY = "weekly"
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     YEARLY = "yearly"
@@ -18,6 +20,7 @@ class MetricPeriod(str, Enum):
 
 class RoutePerformanceMetrics(BaseModel):
     """Route performance metrics."""
+
     route_id: str
     date: date
     total_distance_km: float
@@ -30,6 +33,7 @@ class RoutePerformanceMetrics(BaseModel):
 
 class FuelSavingsReport(BaseModel):
     """Fuel savings report."""
+
     start_date: date
     end_date: date
     total_distance_baseline_km: float
@@ -47,6 +51,7 @@ class FuelSavingsReport(BaseModel):
 
 class DriverPerformanceMetrics(BaseModel):
     """Driver performance metrics."""
+
     driver_id: str
     driver_name: Optional[str]
     period: str
@@ -66,6 +71,7 @@ class DriverPerformanceMetrics(BaseModel):
 
 class DailyAnalyticsSummary(BaseModel):
     """Daily analytics summary."""
+
     date: date
     total_routes: int
     total_deliveries: int
@@ -82,6 +88,7 @@ class DailyAnalyticsSummary(BaseModel):
 
 class WeeklyTrendReport(BaseModel):
     """Weekly trend analysis report."""
+
     start_date: date
     end_date: date
     daily_summaries: List[DailyAnalyticsSummary]

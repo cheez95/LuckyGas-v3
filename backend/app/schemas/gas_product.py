@@ -5,6 +5,7 @@ from app.models.gas_product import DeliveryMethod, ProductAttribute
 
 class GasProductBase(BaseModel):
     """Base schema for gas products"""
+
     delivery_method: DeliveryMethod
     size_kg: int
     attribute: ProductAttribute
@@ -22,11 +23,13 @@ class GasProductBase(BaseModel):
 
 class GasProductCreate(GasProductBase):
     """Schema for creating gas products"""
+
     pass
 
 
 class GasProductUpdate(BaseModel):
     """Schema for updating gas products"""
+
     name_zh: Optional[str] = None
     name_en: Optional[str] = None
     description: Optional[str] = None
@@ -40,14 +43,16 @@ class GasProductUpdate(BaseModel):
 
 class GasProduct(GasProductBase):
     """Schema for gas product response"""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     display_name: str
 
 
 class GasProductList(BaseModel):
     """Schema for paginated gas product list"""
+
     items: List[GasProduct]
     total: int
     skip: int

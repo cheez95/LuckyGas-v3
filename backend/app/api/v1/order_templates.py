@@ -10,7 +10,7 @@ from app.schemas.order_template import (
     OrderTemplateCreate,
     OrderTemplateUpdate,
     OrderTemplateList,
-    CreateOrderFromTemplate
+    CreateOrderFromTemplate,
 )
 from app.schemas.order import OrderV2
 from app.services.order_template_service import OrderTemplateService
@@ -23,19 +23,21 @@ router = APIRouter()
 async def create_order_template(
     template_data: OrderTemplateCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     建立訂單模板
-    
+
     - 需要 office_staff 以上權限
     - 每個客戶可以建立多個模板
     - 支援定期訂單設定
     """
     verify_user_role(current_user, ["super_admin", "manager", "office_staff"])
-    
+
     try:
-        template = await OrderTemplateService.create_template(db, template_data, current_user)
+        template = await OrderTemplateService.create_template(
+            db, template_data, current_user
+        )
         return template
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -51,11 +53,11 @@ async def list_order_templates(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     取得訂單模板列表
-    
+
     - 支援多種篩選條件
     - 按使用次數和建立時間排序
     """
@@ -66,7 +68,7 @@ async def list_order_templates(
         is_active=is_active,
         is_recurring=is_recurring,
         skip=skip,
-        limit=limit
+        limit=limit,
     )
     return result
 
@@ -75,7 +77,7 @@ async def list_order_templates(
 async def get_order_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """取得特定訂單模板詳情"""
     template = await OrderTemplateService.get_template(db, template_id, current_user)
@@ -89,17 +91,19 @@ async def update_order_template(
     template_id: int,
     template_data: OrderTemplateUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     更新訂單模板
-    
+
     - 需要 office_staff 以上權限
     - 記錄更新歷程
     """
     verify_user_role(current_user, ["super_admin", "manager", "office_staff"])
-    
-    template = await OrderTemplateService.update_template(db, template_id, template_data, current_user)
+
+    template = await OrderTemplateService.update_template(
+        db, template_id, template_data, current_user
+    )
     if not template:
         raise HTTPException(status_code=404, detail="模板不存在")
     return template
@@ -109,20 +113,20 @@ async def update_order_template(
 async def delete_order_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     刪除訂單模板
-    
+
     - 需要 manager 以上權限
     - 軟刪除，保留歷史記錄
     """
     verify_user_role(current_user, ["super_admin", "manager"])
-    
+
     success = await OrderTemplateService.delete_template(db, template_id, current_user)
     if not success:
         raise HTTPException(status_code=404, detail="模板不存在")
-    
+
     return {"message": "模板已停用"}
 
 
@@ -130,19 +134,21 @@ async def delete_order_template(
 async def create_order_from_template(
     request: CreateOrderFromTemplate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     從模板建立訂單
-    
+
     - 需要 office_staff 以上權限
     - 可覆寫模板中的部分設定
     - 自動更新模板使用次數
     """
     verify_user_role(current_user, ["super_admin", "manager", "office_staff"])
-    
+
     try:
-        order = await OrderTemplateService.create_order_from_template(db, request, current_user)
+        order = await OrderTemplateService.create_order_from_template(
+            db, request, current_user
+        )
         return order
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -155,11 +161,11 @@ async def get_customer_templates(
     customer_id: int,
     active_only: bool = Query(True, description="只顯示啟用的模板"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user)
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     取得特定客戶的所有模板
-    
+
     - 用於訂單建立頁面的快速選擇
     - 預設只顯示啟用的模板
     """
@@ -167,6 +173,6 @@ async def get_customer_templates(
         db,
         current_user,
         customer_id=customer_id,
-        is_active=active_only if active_only else None
+        is_active=active_only if active_only else None,
     )
     return result["templates"]
