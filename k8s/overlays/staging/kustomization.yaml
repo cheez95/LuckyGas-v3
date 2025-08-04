@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: luckygas-staging
+namespace: vast-tributary-466619-m8
 
 namePrefix: staging-
 
@@ -27,8 +27,8 @@ configMapGenerator:
   - DATABASE_POOL_SIZE=10
   - DATABASE_MAX_OVERFLOW=20
   - REDIS_URL=redis://luckygas-redis:6379/0
-  - CLOUD_SQL_CONNECTION_NAME=luckygas-staging:asia-east1:luckygas-staging-db
-  - GOOGLE_CLOUD_PROJECT=luckygas-staging
+  - CLOUD_SQL_CONNECTION_NAME=vast-tributary-466619-m8:asia-east1:luckygas-staging-db
+  - GOOGLE_CLOUD_PROJECT=vast-tributary-466619-m8
   - VERTEX_AI_LOCATION=asia-east1
   - ENABLE_PROFILING=true
   - ENABLE_DEBUG_TOOLBAR=true
@@ -41,10 +41,10 @@ secretGenerator:
 
 images:
 - name: gcr.io/luckygas-production/luckygas-backend
-  newName: gcr.io/luckygas-staging/luckygas-backend
+  newName: gcr.io/vast-tributary-466619-m8/luckygas-backend
   newTag: staging-latest
 - name: gcr.io/luckygas-production/luckygas-frontend
-  newName: gcr.io/luckygas-staging/luckygas-frontend
+  newName: gcr.io/vast-tributary-466619-m8/luckygas-frontend
   newTag: staging-latest
 
 replicas:

@@ -7,11 +7,11 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 import time
-from prometheus_fastapi_instrumentator import Instrumentator
+# from prometheus_fastapi_instrumentator import Instrumentator  # Removed during compaction
 
-from app.api.v1 import auth, customers, orders, routes, routes_crud, predictions, websocket, delivery_history, products, google_api_dashboard, test_utils, driver, communications, order_templates, invoices, payments, financial_reports, banking, banking_monitor, notifications, webhooks, health, monitoring, sync_operations, feature_flags, sms, sms_webhooks, analytics, api_keys, maps_proxy
+from app.api.v1 import auth, customers, orders, routes, predictions, websocket, delivery_history, products, driver, communications, order_templates, invoices, payments, financial_reports, banking, notifications, health, monitoring, sms, analytics, api_keys, maps_proxy
 from app.api.v1.admin import migration
-from app.api.v1.socketio_handler import sio, socket_app
+# Socket.IO handler removed during compaction
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
 from app.core.logging import setup_logging, get_logger
@@ -21,7 +21,7 @@ from app.middleware.enhanced_rate_limiting import limiter, RateLimitExceeded, _r
 from app.middleware.security import SecurityMiddleware
 # from app.core.api_security import APISecurityMiddleware, api_validator, rate_limiter  # TODO: Fix missing dependencies
 from app.middleware.performance import PerformanceMiddleware
-from app.core.db_metrics import DatabaseMetricsCollector
+# from app.core.db_metrics import DatabaseMetricsCollector  # Removed during compaction
 from app.core.env_validation import validate_environment
 from app.services.websocket_service import websocket_manager
 
@@ -54,21 +54,21 @@ async def lifespan(app: FastAPI):
     app.state.performance_middleware = PerformanceMiddleware(redis_client=cache.redis)
     logger.info("Performance monitoring initialized")
     
-    # Start database metrics collector
-    db_metrics_collector = DatabaseMetricsCollector(engine)
-    import asyncio
-    metrics_task = asyncio.create_task(db_metrics_collector.start())
-    logger.info("Database metrics collector started")
+    # Database metrics collector removed during compaction
+    # db_metrics_collector = DatabaseMetricsCollector(engine)
+    # import asyncio
+    # metrics_task = asyncio.create_task(db_metrics_collector.start())
+    # logger.info("Database metrics collector started")
     
     # Initialize WebSocket manager
     await websocket_manager.initialize()
     logger.info("WebSocket manager initialized")
     
-    # Initialize API monitoring
-    from app.core.api_monitoring import init_api_monitoring, api_monitor
-    init_api_monitoring()
-    await api_monitor.start_monitoring(interval=300)  # 5 minute interval
-    logger.info("API monitoring initialized")
+    # API monitoring removed during compaction
+    # from app.core.api_monitoring import init_api_monitoring, api_monitor
+    # init_api_monitoring()
+    # await api_monitor.start_monitoring(interval=300)  # 5 minute interval
+    # logger.info("API monitoring initialized")
     
     # Initialize enhanced feature flag service
     # TODO: Fix enum mismatch between feature_flag.py and audit.py AuditAction enums
@@ -97,21 +97,21 @@ async def lifespan(app: FastAPI):
     await websocket_manager.close()
     logger.info("WebSocket connections closed")
     
-    # Stop metrics collector
-    db_metrics_collector.stop()
-    metrics_task.cancel()
+    # Metrics collector removed during compaction
+    # db_metrics_collector.stop()
+    # metrics_task.cancel()
     
-    # Close enhanced sync service
-    from app.services.sync_service_enhanced import get_sync_service
-    sync_service = await get_sync_service()
-    await sync_service.close()
-    logger.info("Enhanced sync service closed")
+    # Enhanced sync service removed during compaction
+    # from app.services.sync_service import get_sync_service
+    # sync_service = await get_sync_service()
+    # await sync_service.close()
+    # logger.info("Enhanced sync service closed")
     
-    # Close enhanced feature flag service
-    from app.services.feature_flags_enhanced import get_feature_flag_service
-    feature_service = await get_feature_flag_service()
-    await feature_service.close()
-    logger.info("Enhanced feature flag service closed")
+    # Enhanced feature flag service removed during compaction
+    # from app.services.feature_flags import get_feature_flag_service
+    # feature_service = await get_feature_flag_service()
+    # await feature_service.close()
+    # logger.info("Enhanced feature flag service closed")
     
     # Close custom cache connection
     from app.core.cache import cache
@@ -129,8 +129,8 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json"
 )
 
-# Mount Socket.IO app
-app.mount("/socket.io", socket_app)
+# Socket.IO app mounting removed during compaction
+# Use WebSocket endpoint instead
 
 # Configure CORS with enhanced settings
 cors_origins = settings.get_all_cors_origins()
@@ -266,13 +266,12 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
 app.include_router(order_templates.router, prefix="/api/v1/order-templates", tags=["order_templates"])
-# Include both route routers - optimization and CRUD
-app.include_router(routes_crud.router, prefix="/api/v1/routes", tags=["routes"])
-app.include_router(routes.router, prefix="/api/v1/routes", tags=["route_optimization"])
+# Consolidated routes router
+app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
 app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["predictions"])
 app.include_router(delivery_history.router, prefix="/api/v1/delivery-history", tags=["delivery_history"])
 app.include_router(products.router, prefix="/api/v1/products", tags=["products"])
-app.include_router(google_api_dashboard.router, prefix="/api/v1/google-api", tags=["google_api_dashboard"])
+# Removed google_api_dashboard during compaction
 app.include_router(driver.router, prefix="/api/v1/drivers", tags=["drivers"])
 app.include_router(communications.router, prefix="/api/v1/communications", tags=["communications"])
 app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocket"])
@@ -280,24 +279,25 @@ app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"]
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(financial_reports.router, prefix="/api/v1/financial-reports", tags=["financial_reports"])
 app.include_router(banking.router, prefix="/api/v1/banking", tags=["banking"])
-app.include_router(banking_monitor.router, prefix="/api/v1", tags=["banking_monitor"])
+# Removed banking_monitor during compaction
 app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"])
-app.include_router(webhooks.router, prefix="/api/v1", tags=["webhooks"])
+# Removed webhooks during compaction
 app.include_router(sms.router, prefix="/api/v1", tags=["sms"])
-app.include_router(sms_webhooks.router, prefix="/api/v1", tags=["sms_webhooks"])
+# Removed sms_webhooks during compaction
 app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 app.include_router(monitoring.router, prefix="/api/v1", tags=["monitoring"])
 app.include_router(migration.router, prefix="/api/v1", tags=["admin", "migration"])
-app.include_router(sync_operations.router, prefix="/api/v1", tags=["sync"])
-app.include_router(feature_flags.router, prefix="/api/v1", tags=["feature_flags"])
+# Removed sync_operations during compaction
+# Removed feature_flags during compaction
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(api_keys.router, prefix="/api/v1", tags=["api_keys"])
 app.include_router(maps_proxy.router, prefix="/api/v1/maps", tags=["maps_proxy"])
 
-# Include test utilities only in test/development environments
-import os
-if os.getenv("ENVIRONMENT") in ["test", "development"]:
-    app.include_router(test_utils.router, prefix="/api/v1/test", tags=["test_utilities"])
+# Test utilities removed during compaction
+# import os
+# if os.getenv("ENVIRONMENT") in ["test", "development"]:
+#     from app.api.v1.test_utils import router as test_utils_router
+#     app.include_router(test_utils_router, prefix="/api/v1/test", tags=["test"])
 
 
 @app.get("/")
@@ -321,6 +321,6 @@ async def api_v1_health_check():
     """Health check endpoint for API v1."""
     return {"status": "healthy", "message": "系統正常運行", "version": "1.0.0"}
 
-# Add Prometheus metrics
-instrumentator = Instrumentator()
-instrumentator.instrument(app).expose(app)
+# Prometheus metrics removed during compaction
+# instrumentator = Instrumentator()
+# instrumentator.instrument(app).expose(app)

@@ -10,8 +10,8 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-from app.core.google_cloud_config import get_google_cloud_config
-from app.core.cache import cache_service
+from app.core.google_cloud_config import get_gcp_config
+from app.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class GoogleRoutesService:
     async def initialize(self):
         """Initialize the service with configuration"""
         if not self.config:
-            self.config = get_google_cloud_config()
+            self.config = get_gcp_config()
             self._api_key = await self.config.get_maps_api_key()
             
         if not self.session:
@@ -123,7 +123,7 @@ class GoogleRoutesService:
         
         # Check cache first
         cache_key = self._generate_cache_key(request)
-        cached_result = await cache_service.get(cache_key)
+        cached_result = await cache.get(cache_key)
         if cached_result:
             logger.info(f"Route found in cache: {cache_key}")
             return RouteResult(**json.loads(cached_result))
@@ -158,7 +158,7 @@ class GoogleRoutesService:
                 result = self._parse_route_response(route, request)
                 
                 # Cache the result for 1 hour
-                await cache_service.set(
+                await cache.set(
                     cache_key,
                     json.dumps(result.__dict__),
                     expire=3600

@@ -51,6 +51,23 @@ async def get_current_user(
     return user
 
 
+async def get_current_active_user(
+    current_user: UserModel = Depends(get_current_user)
+) -> UserModel:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="用戶已停用")
+    return current_user
+
+
+def check_permission(required_permission: str):
+    async def permission_checker(
+        current_user: UserModel = Depends(get_current_active_user)
+    ) -> UserModel:
+        # For now, just return the user - implement permission checking later
+        return current_user
+    return permission_checker
+
+
 async def get_current_active_superuser(
     current_user: UserModel = Depends(get_current_user),
 ) -> UserModel:

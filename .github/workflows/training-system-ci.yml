@@ -1,0 +1,345 @@
+name: Training System CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'packages/training-portal/**'
+      - 'packages/training-api/**'
+      - 'packages/video-processor/**'
+      - 'packages/practice-environment/**'
+      - '.github/workflows/training-system-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'packages/training-portal/**'
+      - 'packages/training-api/**'
+      - 'packages/video-processor/**'
+      - 'packages/practice-environment/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}/training
+
+jobs:
+  # Frontend Testing and Building
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/training-portal
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: packages/training-portal/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linting
+        run: npm run lint
+      
+      - name: Run type checking
+        run: npm run type-check
+      
+      - name: Run tests
+        run: npm run test:ci
+        env:
+          CI: true
+      
+      - name: Build application
+        run: npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: packages/training-portal/.next
+          retention-days: 1
+
+  # Backend Testing
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/training-api
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements.txt
+          uv pip install -r requirements-dev.txt
+      
+      - name: Run linting
+        run: |
+          source .venv/bin/activate
+          ruff check .
+          mypy app
+      
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest -v --cov=app --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: test-secret-key
+          ENVIRONMENT: test
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./packages/training-api/coverage.xml
+          flags: backend
+
+  # Video Processor Lambda Testing
+  lambda-test:
+    name: Lambda Function Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/video-processor
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-mock
+      
+      - name: Run tests
+        run: pytest -v tests/
+      
+      - name: Package Lambda
+        run: |
+          mkdir -p dist
+          cp -r lambda/* dist/
+          pip install -r requirements.txt -t dist/
+          cd dist && zip -r ../lambda-package.zip . && cd ..
+      
+      - name: Upload Lambda package
+        uses: actions/upload-artifact@v3
+        with:
+          name: lambda-package
+          path: packages/video-processor/lambda-package.zip
+
+  # Build Docker Images
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [frontend-test, backend-test]
+    if: github.event_name == 'push'
+    
+    strategy:
+      matrix:
+        include:
+          - service: training-portal
+            context: packages/training-portal
+            dockerfile: Dockerfile
+          - service: training-api
+            context: packages/training-api
+            dockerfile: Dockerfile
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-images, lambda-test]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Deploy Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name luckygas-training-video-processor-staging \
+            --zip-file fileb://lambda-package.zip
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/training-portal \
+            training-portal=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-training-portal:develop-${{ github.sha }} \
+            -n training-staging
+          
+          kubectl set image deployment/training-api \
+            training-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-training-api:develop-${{ github.sha }} \
+            -n training-staging
+          
+          kubectl rollout status deployment/training-portal -n training-staging
+          kubectl rollout status deployment/training-api -n training-staging
+      
+      - name: Run smoke tests
+        run: |
+          chmod +x scripts/smoke-tests.sh
+          ./scripts/smoke-tests.sh staging
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-images, lambda-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: ap-northeast-1
+      
+      - name: Deploy Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name luckygas-training-video-processor-prod \
+            --zip-file fileb://lambda-package.zip
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/training-portal \
+            training-portal=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-training-portal:main-${{ github.sha }} \
+            -n training-production
+          
+          kubectl set image deployment/training-api \
+            training-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-training-api:main-${{ github.sha }} \
+            -n training-production
+          
+          kubectl rollout status deployment/training-portal -n training-production
+          kubectl rollout status deployment/training-api -n training-production
+      
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: training-v${{ github.run_number }}
+          release_name: Training System Release ${{ github.run_number }}
+          body: |
+            Training System production deployment
+            - Portal: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-training-portal:main-${{ github.sha }}
+            - API: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-training-api:main-${{ github.sha }}
+          draft: false
+          prerelease: false

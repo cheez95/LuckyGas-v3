@@ -14,8 +14,6 @@ resources:
 - secrets.yaml
 - backend-deployment.yaml
 - frontend-deployment.yaml
-- redis-deployment.yaml
-- celery-deployment.yaml
 - cloud-sql-proxy.yaml
 - services.yaml
 - networkpolicy.yaml

@@ -13,7 +13,7 @@ from app.models.customer import Customer
 from app.schemas.customer import CustomerCreate, CustomerUpdate
 from app.core.cache import invalidate_cache
 from app.core.metrics import cache_operations_counter, orders_created_counter
-from app.api.v1.socketio_handler import send_notification
+# from app.api.v1.socketio_handler import send_notification  # Removed during compaction
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +54,14 @@ class CustomerService:
         logger.info(f"Created customer {customer.customer_code}")
         
         # Send notification to office staff
-        await send_notification(
-            user_id=0,  # Broadcast to role
-            title="新客戶建立",
-            message=f"新客戶 {customer.short_name} 已建立",
-            priority="normal",
-            callback=False
-        )
+        # Notification removed during compaction
+        # await send_notification(
+        #     user_id=0,  # Broadcast to role
+        #     title="新客戶建立",
+        #     message=f"新客戶 {customer.short_name} 已建立",
+        #     priority="normal",
+        #     callback=False
+        # )
         
         return customer
     

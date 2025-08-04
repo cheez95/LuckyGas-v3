@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import os
 
 from app.core.config import settings
-from app.services.message_queue_service import message_queue, QueuePriority
+# from app.services.message_queue_service import message_queue, QueuePriority  # Removed during compaction
 
 logger = logging.getLogger(__name__)
 

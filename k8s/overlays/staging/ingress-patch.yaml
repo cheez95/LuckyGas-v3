@@ -13,7 +13,7 @@ spec:
   - hosts:
     - staging.luckygas.com.tw
     - api-staging.luckygas.com.tw
-    secretName: luckygas-staging-tls
+    secretName: vast-tributary-466619-m8-staging-tls
   rules:
   - host: staging.luckygas.com.tw
     http:

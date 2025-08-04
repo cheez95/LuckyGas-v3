@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: luckygas-staging
+namespace: vast-tributary-466619-m8
 
 resources:
 - backend-deployment.yaml
@@ -19,9 +19,9 @@ commonLabels:
 
 # Configure image tags through kustomize
 images:
-- name: gcr.io/luckygas-staging/backend
+- name: gcr.io/vast-tributary-466619-m8/backend
   newTag: "1.0.0"  # Override with actual tag during deployment
-- name: gcr.io/luckygas-staging/frontend
+- name: gcr.io/vast-tributary-466619-m8/frontend
   newTag: "1.0.0"  # Override with actual tag during deployment
 
 # ConfigMap generator for environment-specific configs

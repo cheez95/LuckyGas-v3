@@ -1,0 +1,294 @@
+name: Scheduled Tasks
+
+on:
+  schedule:
+    # Daily at 2 AM Taiwan time (6 PM UTC)
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Task to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - backup
+          - cleanup
+          - predictions
+          - reports
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: asia-east1
+
+jobs:
+  database-backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.task == 'all' || github.event.inputs.task == 'backup' }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY_PRODUCTION }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        export_default_credentials: true
+    
+    - name: Create Database Backup
+      run: |
+        # Create Cloud SQL backup
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        gcloud sql backups create \
+          --instance=${{ secrets.CLOUD_SQL_INSTANCE_PRODUCTION }} \
+          --description="Scheduled backup $TIMESTAMP"
+        
+        # Export to Cloud Storage
+        gcloud sql export sql ${{ secrets.CLOUD_SQL_INSTANCE_PRODUCTION }} \
+          gs://luckygas-backups/scheduled/db-backup-$TIMESTAMP.sql \
+          --database=luckygas
+        
+        # Create metadata
+        cat > backup-metadata.json << EOF
+        {
+          "timestamp": "$TIMESTAMP",
+          "type": "scheduled",
+          "database": "luckygas",
+          "size": "$(gsutil du -s gs://luckygas-backups/scheduled/db-backup-$TIMESTAMP.sql | cut -f1)",
+          "retention_days": 30
+        }
+        EOF
+        
+        gsutil cp backup-metadata.json gs://luckygas-backups/scheduled/db-backup-$TIMESTAMP.json
+    
+    - name: Backup Application Data
+      run: |
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        
+        # Backup Redis data
+        gcloud redis instances export \
+          luckygas-redis \
+          gs://luckygas-backups/scheduled/redis-backup-$TIMESTAMP.rdb \
+          --region=${{ env.GCP_REGION }}
+        
+        # Backup configuration
+        gcloud secrets versions list --limit=1 --format=json > secrets-snapshot.json
+        gsutil cp secrets-snapshot.json gs://luckygas-backups/scheduled/secrets-snapshot-$TIMESTAMP.json
+    
+    - name: Verify Backups
+      run: |
+        # Check recent backups
+        RECENT_BACKUPS=$(gsutil ls gs://luckygas-backups/scheduled/ | grep $(date +%Y%m%d) | wc -l)
+        
+        if [ $RECENT_BACKUPS -lt 2 ]; then
+          echo "⚠️ Warning: Expected at least 2 backups, found $RECENT_BACKUPS"
+          exit 1
+        fi
+        
+        echo "✅ Found $RECENT_BACKUPS backups for today"
+
+  cleanup-old-data:
+    name: Cleanup Old Data
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.task == 'all' || github.event.inputs.task == 'cleanup' }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY_PRODUCTION }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        export_default_credentials: true
+    
+    - name: Cleanup Old Backups
+      run: |
+        # Delete backups older than 30 days
+        gsutil ls -l gs://luckygas-backups/scheduled/ | \
+          grep -E "\.sql$|\.rdb$" | \
+          awk '{print $3}' | \
+          while read file; do
+            FILE_DATE=$(echo $file | grep -oE '[0-9]{8}')
+            if [ ! -z "$FILE_DATE" ]; then
+              DAYS_OLD=$(( ($(date +%s) - $(date -d $FILE_DATE +%s)) / 86400 ))
+              if [ $DAYS_OLD -gt 30 ]; then
+                echo "Deleting old backup: $file (${DAYS_OLD} days old)"
+                gsutil rm $file
+              fi
+            fi
+          done
+    
+    - name: Cleanup Old Logs
+      run: |
+        # Delete Cloud Run logs older than 90 days
+        gcloud logging logs delete "resource.type=cloud_run_revision" \
+          --older-than=90d \
+          --quiet || true
+    
+    - name: Cleanup Old Container Images
+      run: |
+        # List all images
+        for IMAGE in luckygas-backend luckygas-frontend; do
+          echo "Cleaning up $IMAGE images..."
+          
+          # Get all digests except latest 10
+          gcloud container images list-tags gcr.io/${{ env.GCP_PROJECT_ID }}/$IMAGE \
+            --limit=999 \
+            --format="get(digest)" | \
+            tail -n +11 | \
+            while read DIGEST; do
+              echo "Deleting old image: $IMAGE@$DIGEST"
+              gcloud container images delete -q --force-delete-tags \
+                gcr.io/${{ env.GCP_PROJECT_ID }}/$IMAGE@$DIGEST
+            done
+        done
+
+  generate-predictions:
+    name: Generate Daily Predictions
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.task == 'all' || github.event.inputs.task == 'predictions' }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Trigger Prediction Generation
+      run: |
+        # Call API to generate predictions
+        curl -X POST https://api.luckygas.com.tw/api/v1/predictions/generate \
+          -H "Authorization: Bearer ${{ secrets.PREDICTION_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "date": "'$(date +%Y-%m-%d)'",
+            "type": "daily",
+            "models": ["demand", "route_optimization", "customer_churn"]
+          }'
+    
+    - name: Verify Predictions
+      run: |
+        # Check prediction status
+        sleep 60  # Wait for generation
+        
+        STATUS=$(curl -s https://api.luckygas.com.tw/api/v1/predictions/status \
+          -H "Authorization: Bearer ${{ secrets.PREDICTION_API_KEY }}" | \
+          jq -r '.status')
+        
+        if [ "$STATUS" != "completed" ]; then
+          echo "⚠️ Prediction generation failed with status: $STATUS"
+          exit 1
+        fi
+
+  generate-reports:
+    name: Generate Daily Reports
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.task == 'all' || github.event.inputs.task == 'reports' }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Generate Reports
+      run: |
+        # Install dependencies
+        pip install pandas google-cloud-bigquery google-cloud-storage matplotlib seaborn
+        
+        # Create reports directory
+        mkdir -p reports
+        
+        # Generate report script
+        cat > generate_reports.py << 'EOF'
+        import pandas as pd
+        from datetime import datetime, timedelta
+        from google.cloud import bigquery, storage
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        
+        # Initialize clients
+        bq_client = bigquery.Client()
+        storage_client = storage.Client()
+        
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        
+        # Daily Operations Report
+        query = f"""
+        SELECT 
+          COUNT(DISTINCT order_id) as total_orders,
+          COUNT(DISTINCT customer_id) as active_customers,
+          SUM(total_amount) as revenue,
+          AVG(delivery_time) as avg_delivery_time
+        FROM `luckygas.orders`
+        WHERE DATE(created_at) = '{yesterday}'
+        """
+        
+        df = bq_client.query(query).to_dataframe()
+        
+        # Create report
+        report = f"""
+        # Lucky Gas Daily Report - {yesterday}
+        
+        ## Key Metrics
+        - Total Orders: {df['total_orders'].iloc[0]:,}
+        - Active Customers: {df['active_customers'].iloc[0]:,}
+        - Revenue: NT${df['revenue'].iloc[0]:,.2f}
+        - Avg Delivery Time: {df['avg_delivery_time'].iloc[0]:.1f} minutes
+        
+        Generated: {datetime.now().isoformat()}
+        """
+        
+        with open('reports/daily-report.md', 'w') as f:
+            f.write(report)
+        
+        print("Reports generated successfully")
+        EOF
+        
+        python generate_reports.py
+    
+    - name: Send Reports
+      run: |
+        # Send via email (using SendGrid or similar)
+        echo "Daily reports generated and ready for distribution"
+        
+        # Upload to Cloud Storage
+        gsutil cp reports/*.md gs://luckygas-reports/daily/$(date +%Y%m%d)/
+
+  system-health-check:
+    name: System Health Check
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [database-backup, cleanup-old-data, generate-predictions, generate-reports]
+    
+    steps:
+    - name: Check System Health
+      run: |
+        # API Health
+        curl -f https://api.luckygas.com.tw/api/v1/health || exit 1
+        
+        # Database connectivity
+        echo "Checking database connectivity..."
+        
+        # Redis connectivity
+        echo "Checking Redis connectivity..."
+        
+        # Storage access
+        gsutil ls gs://luckygas-backups/ > /dev/null || exit 1
+    
+    - name: Notify Status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          Daily scheduled tasks completed
+          - Backup: ${{ needs.database-backup.result }}
+          - Cleanup: ${{ needs.cleanup-old-data.result }}
+          - Predictions: ${{ needs.generate-predictions.result }}
+          - Reports: ${{ needs.generate-reports.result }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}

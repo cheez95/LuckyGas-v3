@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'add_sync_operations'
-down_revision = None  # Update with actual previous revision
+down_revision = '008_rename_metadata_columns'
 branch_labels = None
 depends_on = None
 

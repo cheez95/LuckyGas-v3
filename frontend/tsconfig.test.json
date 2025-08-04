@@ -7,7 +7,7 @@
     "module": "commonjs",
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["jest", "@testing-library/jest-dom"],
+    "types": ["jest", "@testing-library/jest-dom", "node"],
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "allowJs": true,
@@ -15,12 +15,13 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false
   },
   "include": [
     "src/**/*",
     "src/**/*.test.ts",
-    "src/**/*.test.tsx",
+    "src/**/*.test.tsx", 
     "src/**/*.spec.ts",
     "src/**/*.spec.tsx"
   ],

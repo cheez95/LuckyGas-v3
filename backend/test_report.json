@@ -1,0 +1,28 @@
+{
+  "test_date": "2025-08-04T05:37:50.558355",
+  "suites": [
+    {
+      "name": "Backend Health",
+      "status": "passed",
+      "tests": 1,
+      "passed": 1
+    },
+    {
+      "name": "Authentication",
+      "status": "passed",
+      "tests": 6,
+      "passed": 6
+    },
+    {
+      "name": "Database",
+      "status": "passed",
+      "tests": 1,
+      "passed": 1
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "passed": 12,
+    "failed": 1
+  }
+}

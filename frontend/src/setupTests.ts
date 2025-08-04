@@ -51,6 +51,25 @@ global.IntersectionObserver = class IntersectionObserver {
   }
 } as any;
 
+// Mock WebSocket
+global.WebSocket = class WebSocket {
+  url: string;
+  readyState: number = 1;
+  CONNECTING = 0;
+  OPEN = 1;
+  CLOSING = 2;
+  CLOSED = 3;
+  
+  constructor(url: string) {
+    this.url = url;
+  }
+  
+  send = jest.fn();
+  close = jest.fn();
+  addEventListener = jest.fn();
+  removeEventListener = jest.fn();
+} as any;
+
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
   constructor(callback: ResizeObserverCallback) {}
@@ -86,6 +105,8 @@ jest.mock('react-router-dom', () => ({
     state: null,
   }),
   useParams: () => ({}),
+  Link: ({ children, to }: any) => children,
+  NavLink: ({ children, to }: any) => children,
 }));
 
 // Suppress console errors in tests
@@ -105,3 +126,78 @@ beforeAll(() => {
 afterAll(() => {
   console.error = originalError;
 });
+
+// Mock WebSocket context
+jest.mock('./contexts/WebSocketContext', () => ({
+  WebSocketProvider: ({ children }: { children: React.ReactNode }) => children,
+  useWebSocketContext: () => ({
+    isConnected: true,
+    sendMessage: jest.fn(),
+    on: jest.fn(),
+    off: jest.fn(),
+    error: null,
+  }),
+}));
+
+// Mock notification context  
+jest.mock('./contexts/NotificationContext', () => ({
+  NotificationProvider: ({ children }: { children: React.ReactNode }) => children,
+  useNotification: () => ({
+    api: {
+      success: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warning: jest.fn(),
+    },
+    contextHolder: null,
+  }),
+}));
+
+// Mock auth context
+jest.mock('./contexts/AuthContext', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({
+    user: { id: 1, username: 'testuser', role: 'admin' },
+    isAuthenticated: true,
+    login: jest.fn(),
+    logout: jest.fn(),
+    loading: false,
+  }),
+}));
+
+// Mock useWebSocket hooks
+jest.mock('./hooks/useWebSocket', () => ({
+  useWebSocket: () => ({
+    isConnected: true,
+    ws: null,
+    sendMessage: jest.fn(),
+    lastMessage: null,
+    reconnect: jest.fn(),
+    disconnect: jest.fn(),
+    error: null,
+    readyState: 1,
+  }),
+  useDriverWebSocket: () => ({
+    on: jest.fn(),
+    off: jest.fn(),
+    emit: jest.fn(),
+    updateLocation: jest.fn(),
+    updateDeliveryStatus: jest.fn(),
+    completedDelivery: jest.fn(),
+    isConnected: true,
+    error: null,
+  }),
+  useOfficeWebSocket: () => ({
+    on: jest.fn(),
+    off: jest.fn(),
+    emit: jest.fn(),
+    subscribeToCustomerUpdates: jest.fn(),
+    unsubscribeFromCustomerUpdates: jest.fn(),
+    subscribeToOrderUpdates: jest.fn(),
+    unsubscribeFromOrderUpdates: jest.fn(),
+    subscribeToRouteUpdates: jest.fn(),
+    unsubscribeFromRouteUpdates: jest.fn(),
+    isConnected: true,
+    error: null,
+  }),
+}));

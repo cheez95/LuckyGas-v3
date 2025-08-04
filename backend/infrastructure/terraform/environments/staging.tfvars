@@ -1,5 +1,5 @@
 # Staging environment configuration
-project_id  = "luckygas-staging"  # Replace with actual staging project ID
+project_id  = "vast-tributary-466619-m8"  # Actual staging project ID
 environment = "staging"
 region      = "asia-east1"
 zone        = "asia-east1-a"

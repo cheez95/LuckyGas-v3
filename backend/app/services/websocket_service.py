@@ -8,7 +8,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from enum import Enum
 
 from app.core.config import settings
-from app.services.message_queue_service import message_queue, QueuePriority
+# from app.services.message_queue_service import message_queue, QueuePriority  # Removed during compaction
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,8 @@ class WebSocketManager:
             task.add_done_callback(self._background_tasks.discard)
             
             # Initialize message queue with delivery callback
-            await message_queue.initialize(self._deliver_queued_message)
+            # Removed during compaction
+            # await message_queue.initialize(self._deliver_queued_message)
             
             logger.info("WebSocket manager initialized with Redis pub/sub and message queue")
             
@@ -247,7 +248,7 @@ class WebSocketManager:
         self, 
         channel: str, 
         event_data: Dict[str, Any],
-        priority: QueuePriority = QueuePriority.NORMAL,
+        # priority parameter removed during compaction
         use_queue: bool = False,
         target_user_id: Optional[str] = None,
         target_role: Optional[str] = None
@@ -255,30 +256,14 @@ class WebSocketManager:
         """Publish event to Redis for cross-instance broadcasting"""
         event_data["timestamp"] = datetime.now().isoformat()
         
-        # Use message queue for critical messages or when requested
-        if use_queue:
-            await message_queue.enqueue(
-                channel=channel,
-                event_type=event_data.get("type", "unknown"),
-                data=event_data,
-                priority=priority,
-                target_user_id=target_user_id,
-                target_role=target_role
-            )
-        elif self.redis_client:
+        # Removed message queue during compaction - use Redis directly
+        if self.redis_client:
             try:
                 await self.redis_client.publish(channel, json.dumps(event_data))
             except Exception as e:
                 logger.error(f"Error publishing to Redis: {e}")
-                # Fallback to message queue on Redis publish failure
-                await message_queue.enqueue(
-                    channel=channel,
-                    event_type=event_data.get("type", "unknown"),
-                    data=event_data,
-                    priority=priority,
-                    target_user_id=target_user_id,
-                    target_role=target_role
-                )
+                # Fallback to direct broadcast on Redis failure
+                await self.broadcast(event_data, channel)
         else:
             # Fallback to direct broadcast (single instance)
             await self.broadcast(event_data, channel)
@@ -377,12 +362,11 @@ class WebSocketManager:
         }
         # Use message queue for critical order updates
         use_queue = status in ["delivered", "cancelled", "assigned"]
-        priority = QueuePriority.HIGH if status in ["delivered", "cancelled"] else QueuePriority.NORMAL
+        # priority removed during compaction
         
         await self.publish_event(
             "orders", 
             event_data,
-            priority=priority,
             use_queue=use_queue
         )
     
@@ -404,12 +388,11 @@ class WebSocketManager:
             **notification
         }
         # Always use message queue for customer notifications to ensure delivery
-        priority = QueuePriority.HIGH if notification.get("urgent", False) else QueuePriority.NORMAL
+        # priority removed during compaction
         
         await self.publish_event(
             "customers", 
             event_data,
-            priority=priority,
             use_queue=True,
             target_user_id=customer_id
         )
@@ -455,7 +438,8 @@ class WebSocketManager:
             await self.disconnect(connection_id)
         
         # Shutdown message queue service
-        await message_queue.shutdown()
+        # Removed during compaction
+        # await message_queue.shutdown()
         
         # Close Redis connections
         if self.pubsub:

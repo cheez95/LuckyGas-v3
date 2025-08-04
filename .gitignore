@@ -62,6 +62,9 @@ frontend/screenshots/
 *.log
 logs/
 *.log.*
+tunnel*.log
+minimal_backend*.log
+integrated_backend.log
 
 # Environment files (except examples)
 .env

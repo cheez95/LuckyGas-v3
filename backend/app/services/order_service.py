@@ -12,7 +12,8 @@ from app.repositories.customer_repository import CustomerRepository
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.schemas.order import OrderCreate, OrderUpdate, OrderCreateV2
 from app.core.metrics import orders_created_counter, background_tasks_counter
-from app.api.v1.socketio_handler import notify_order_update, notify_driver_assigned
+# Removed during compaction
+# from app.api.v1.socketio_handler import notify_order_update, notify_driver_assigned
 from app.services.google_cloud.routes_service import google_routes_service
 from app.services.credit_service import CreditService
 
@@ -101,16 +102,17 @@ class OrderService:
             customer_type=customer.customer_type or "regular"
         ).inc()
         
+        # Removed during compaction
         # Notify relevant parties
-        await notify_order_update(
-            order_id=order.id,
-            status="created",
-            details={
-                "order_number": order.order_number,
-                "customer_name": customer.short_name,
-                "scheduled_date": order.scheduled_date.isoformat()
-            }
-        )
+        # await notify_order_update(
+        #     order_id=order.id,
+        #     status="created",
+        #     details={
+        #         "order_number": order.order_number,
+        #         "customer_name": customer.short_name,
+        #         "scheduled_date": order.scheduled_date.isoformat()
+        #     }
+        # )
         
         logger.info(f"Created order {order.order_number} for customer {customer.customer_code}")
         
@@ -164,13 +166,14 @@ class OrderService:
         # Update order
         updated_order = await self.order_repo.update(order_id, **update_data)
         
+        # Removed during compaction
         # Notify if status changed
-        if "status" in update_data:
-            await notify_order_update(
-                order_id=order_id,
-                status=update_data["status"],
-                details={"updated_by": updated_by}
-            )
+        # if "status" in update_data:
+        #     await notify_order_update(
+        #         order_id=order_id,
+        #         status=update_data["status"],
+        #         details={"updated_by": updated_by}
+        #     )
         
         logger.info(f"Updated order {order_id} by user {updated_by}")
         
@@ -260,15 +263,16 @@ class OrderService:
             )
             assigned_count += count
             
+            # Removed during compaction
             # Notify driver
-            await notify_driver_assigned(
-                driver_id=route_data["driver_id"],
-                route_id=int(route_id),
-                details={
-                    "total_stops": route_data["total_stops"],
-                    "estimated_duration": route_data["estimated_duration_minutes"]
-                }
-            )
+            # await notify_driver_assigned(
+            #     driver_id=route_data["driver_id"],
+            #     route_id=int(route_id),
+            #     details={
+            #         "total_stops": route_data["total_stops"],
+            #         "estimated_duration": route_data["estimated_duration_minutes"]
+            #     }
+            # )
         
         logger.info(f"Assigned {assigned_count} orders to {len(optimized_routes)} routes")
         
@@ -321,15 +325,16 @@ class OrderService:
         )
         
         if order:
+            # Removed during compaction
             # Notify updates
-            await notify_order_update(
-                order_id=order_id,
-                status=status,
-                details={
-                    "updated_by": updated_by,
-                    "notes": notes
-                }
-            )
+            # await notify_order_update(
+            #     order_id=order_id,
+            #     status=status,
+            #     details={
+            #         "updated_by": updated_by,
+            #         "notes": notes
+            #     }
+            # )
             
             logger.info(f"Updated order {order_id} status to {status}")
         

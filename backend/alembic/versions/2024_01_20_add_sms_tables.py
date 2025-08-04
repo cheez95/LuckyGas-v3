@@ -12,7 +12,7 @@ import uuid
 
 # revision identifiers, used by Alembic.
 revision = 'add_sms_tables_2024_01_20'
-down_revision = '2024_01_20_add_sync_operations_tables'
+down_revision = 'add_sync_operations'
 branch_labels = None
 depends_on = None
 

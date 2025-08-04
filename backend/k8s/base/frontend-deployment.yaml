@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: luckygas-frontend
-  namespace: luckygas-staging
+  namespace: vast-tributary-466619-m8
   labels:
     app: luckygas-frontend
     version: "1.0.0"
@@ -24,7 +24,7 @@ spec:
       containers:
       - name: frontend
         # Use specific image tag, not latest
-        image: gcr.io/luckygas-staging/frontend:${IMAGE_TAG}
+        image: gcr.io/vast-tributary-466619-m8/frontend:${IMAGE_TAG}
         imagePullPolicy: Always
         ports:
         - containerPort: 80

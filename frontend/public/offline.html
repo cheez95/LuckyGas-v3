@@ -2,7 +2,9 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1890ff">
+    <link rel="manifest" href="/manifest.json">
     <title>離線模式 - 幸福氣</title>
     <style>
         body {
@@ -129,13 +131,117 @@
             font-weight: 500;
             margin-bottom: 20px;
         }
+        
+        .sync-progress {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .sync-progress.active {
+            display: block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #bfbfbf;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #1890ff;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .storage-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f6ffed;
+            border-radius: 8px;
+        }
+        
+        .storage-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #d9d9d9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .storage-bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .storage-ok { background-color: #52c41a; }
+        .storage-warning { background-color: #faad14; }
+        .storage-critical { background-color: #ff4d4f; }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: left;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #f0f2f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .feature-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        @media (max-width: 600px) {
+            .offline-container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="offline-container">
         <div class="offline-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M1 21L12 2l11 19H1zm11-3h2v-2h-2v2zm0-4h2v-4h-2v4z"/>
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.23 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96zM3 5.27l2.75 2.74C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l2 2L21 20.73 4.27 4 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h1.73z"/>
             </svg>
         </div>
         
@@ -163,9 +269,77 @@
             </div>
         </div>
         
+        <div class="sync-progress" id="sync-progress">
+            <div class="status-item">
+                <span class="status-label">同步進度</span>
+                <span class="status-value" id="sync-status">等待同步...</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progress-bar"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; color: #666;">
+                <span id="sync-completed">0</span>
+                <span id="sync-total">0</span>
+            </div>
+        </div>
+        
+        <div class="storage-info">
+            <div class="status-item">
+                <span class="status-label">儲存空間使用</span>
+                <span class="status-value" id="storage-percentage">計算中...</span>
+            </div>
+            <div class="storage-bar">
+                <div class="storage-bar-fill" id="storage-bar"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; color: #666;">
+                <span id="storage-used">0 MB</span>
+                <span id="storage-total">0 MB</span>
+            </div>
+        </div>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1890ff" stroke-width="2">
+                        <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    </svg>
+                </div>
+                <div class="feature-title">離線工作</div>
+                <div class="feature-desc">即使沒有網路也能繼續配送工作</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1890ff" stroke-width="2">
+                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </div>
+                <div class="feature-title">自動同步</div>
+                <div class="feature-desc">連線恢復後自動上傳所有資料</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1890ff" stroke-width="2">
+                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <div class="feature-title">資料安全</div>
+                <div class="feature-desc">所有資料都安全儲存在您的裝置中</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1890ff" stroke-width="2">
+                        <path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div class="feature-title">照片儲存</div>
+                <div class="feature-desc">配送照片暫存直到網路恢復</div>
+            </div>
+        </div>
+        
         <div class="action-buttons">
-            <button class="btn-primary" onclick="window.location.reload()">
-                重新載入
+            <button class="btn-primary" onclick="checkConnection()">
+                檢查連線狀態
             </button>
             <button class="btn-secondary" onclick="window.history.back()">
                 返回上一頁
@@ -174,15 +348,70 @@
     </div>
     
     <script>
-        // Check if we're online periodically
-        setInterval(() => {
-            if (navigator.onLine) {
-                window.location.reload();
-            }
-        }, 5000);
+        // Check online status
+        let isOnline = navigator.onLine;
+        let syncCheckInterval;
+        let connectionCheckInterval;
         
-        // Update pending count from localStorage
-        function updatePendingCount() {
+        // Check connection status
+        function checkConnection() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '檢查中...';
+            
+            // Try to fetch a small resource
+            fetch('/health.json', { cache: 'no-cache' })
+                .then(response => {
+                    if (response.ok) {
+                        // We're online!
+                        window.location.reload();
+                    } else {
+                        showConnectionError();
+                    }
+                })
+                .catch(() => {
+                    showConnectionError();
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.textContent = '檢查連線狀態';
+                });
+        }
+        
+        function showConnectionError() {
+            const badge = document.querySelector('.offline-badge');
+            badge.textContent = '仍然離線';
+            badge.style.backgroundColor = '#ff4d4f';
+            setTimeout(() => {
+                badge.textContent = '離線模式';
+            }, 3000);
+        }
+        
+        // Update sync queue information
+        async function updateSyncInfo() {
+            try {
+                // Try to access IndexedDB
+                const dbRequest = indexedDB.open('luckygas-offline', 1);
+                
+                dbRequest.onsuccess = (event) => {
+                    const db = event.target.result;
+                    
+                    if (db.objectStoreNames.contains('syncQueue')) {
+                        const tx = db.transaction(['syncQueue'], 'readonly');
+                        const store = tx.objectStore('syncQueue');
+                        const countRequest = store.count();
+                        
+                        countRequest.onsuccess = () => {
+                            const count = countRequest.result;
+                            document.getElementById('pending-count').textContent = `${count} 筆`;
+                        };
+                    }
+                };
+            } catch (e) {
+                console.error('Failed to access IndexedDB:', e);
+            }
+            
+            // Update from localStorage as fallback
             const syncQueue = localStorage.getItem('luckygas_sync_queue');
             if (syncQueue) {
                 try {
@@ -214,19 +443,130 @@
                 }
                 
                 document.getElementById('last-sync').textContent = timeAgo;
+            } else {
+                document.getElementById('last-sync').textContent = '尚未同步';
             }
         }
         
-        updatePendingCount();
+        // Update storage information
+        async function updateStorageInfo() {
+            if ('storage' in navigator && 'estimate' in navigator.storage) {
+                try {
+                    const estimate = await navigator.storage.estimate();
+                    const usage = estimate.usage || 0;
+                    const quota = estimate.quota || 0;
+                    const percentage = quota > 0 ? (usage / quota) * 100 : 0;
+                    
+                    // Update display
+                    document.getElementById('storage-percentage').textContent = `${percentage.toFixed(1)}%`;
+                    document.getElementById('storage-used').textContent = `${(usage / 1024 / 1024).toFixed(1)} MB`;
+                    document.getElementById('storage-total').textContent = `${(quota / 1024 / 1024).toFixed(1)} MB`;
+                    
+                    // Update bar
+                    const bar = document.getElementById('storage-bar');
+                    bar.style.width = `${percentage}%`;
+                    
+                    // Set color based on usage
+                    if (percentage >= 95) {
+                        bar.className = 'storage-bar-fill storage-critical';
+                    } else if (percentage >= 80) {
+                        bar.className = 'storage-bar-fill storage-warning';
+                    } else {
+                        bar.className = 'storage-bar-fill storage-ok';
+                    }
+                } catch (e) {
+                    console.error('Failed to estimate storage:', e);
+                }
+            }
+        }
+        
+        // Listen for messages from service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                const { type, data } = event.data;
+                
+                switch (type) {
+                    case 'SYNC_PROGRESS':
+                        updateSyncProgress(data);
+                        break;
+                    case 'SYNC_COMPLETE':
+                        updateSyncComplete(data);
+                        break;
+                }
+            });
+        }
+        
+        // Update sync progress
+        function updateSyncProgress(data) {
+            const progressDiv = document.getElementById('sync-progress');
+            progressDiv.classList.add('active');
+            
+            document.getElementById('sync-status').textContent = '同步中...';
+            document.getElementById('sync-completed').textContent = `已完成: ${data.completed}`;
+            document.getElementById('sync-total').textContent = `總計: ${data.total}`;
+            
+            const percentage = data.total > 0 ? (data.completed / data.total) * 100 : 0;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+        
+        // Update sync complete
+        function updateSyncComplete(data) {
+            const progressDiv = document.getElementById('sync-progress');
+            
+            document.getElementById('sync-status').textContent = '同步完成';
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            // Update last sync time
+            localStorage.setItem('luckygas_last_sync', Date.now().toString());
+            updateLastSync();
+            
+            // Hide progress after 3 seconds
+            setTimeout(() => {
+                progressDiv.classList.remove('active');
+            }, 3000);
+        }
+        
+        // Initialize
+        updateSyncInfo();
         updateLastSync();
+        updateStorageInfo();
+        
+        // Update periodically
+        setInterval(() => {
+            updateSyncInfo();
+            updateLastSync();
+            updateStorageInfo();
+        }, 5000);
+        
+        // Check if we're online periodically
+        connectionCheckInterval = setInterval(() => {
+            if (navigator.onLine) {
+                // Try to actually connect
+                fetch('/health.json', { cache: 'no-cache' })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }, 10000);
         
         // Listen for storage changes
         window.addEventListener('storage', (e) => {
-            if (e.key === 'luckygas_sync_queue') {
-                updatePendingCount();
-            } else if (e.key === 'luckygas_last_sync') {
+            if (e.key === 'luckygas_sync_queue' || e.key === 'luckygas_last_sync') {
+                updateSyncInfo();
                 updateLastSync();
             }
+        });
+        
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+        
+        window.addEventListener('offline', () => {
+            // Already offline, no action needed
         });
     </script>
 </body>

@@ -2,19 +2,23 @@
 Integration tests for API endpoints
 """
 import pytest
+import pytest_asyncio
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 import json
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.order import OrderStatus
 from app.models.invoice import InvoiceStatus, InvoiceType
+from app.models.user import User
 
 
 class TestCustomerAPIIntegration:
     """Test customer API endpoints with full integration"""
     
     @pytest.mark.asyncio
-    async def test_customer_lifecycle(self, client, auth_headers):
+    async def test_customer_lifecycle(self, client: AsyncClient, auth_headers: dict):
         """Test complete customer lifecycle: create, read, update, delete"""
         # Create customer
         customer_data = {
@@ -72,7 +76,7 @@ class TestCustomerAPIIntegration:
         assert any(c["id"] == customer_id for c in customers["items"])
     
     @pytest.mark.asyncio
-    async def test_customer_validation(self, client, auth_headers):
+    async def test_customer_validation(self, client: AsyncClient, auth_headers: dict):
         """Test customer data validation"""
         # Invalid tax ID
         invalid_data = {
@@ -97,7 +101,7 @@ class TestOrderAPIIntegration:
     """Test order API endpoints with full integration"""
     
     @pytest.mark.asyncio
-    async def test_order_workflow(self, client, auth_headers, test_customer):
+    async def test_order_workflow(self, client: AsyncClient, auth_headers: dict, test_customer):
         """Test complete order workflow from creation to delivery"""
         # Create order
         order_data = {
@@ -155,7 +159,7 @@ class TestOrderAPIIntegration:
         assert delivered_order["status"] == OrderStatus.DELIVERED.value
     
     @pytest.mark.asyncio
-    async def test_bulk_order_creation(self, client, auth_headers, test_customer):
+    async def test_bulk_order_creation(self, client: AsyncClient, auth_headers: dict, test_customer):
         """Test bulk order creation"""
         bulk_data = {
             "orders": [
@@ -187,7 +191,7 @@ class TestInvoiceAPIIntegration:
     
     @pytest.mark.asyncio
     async def test_invoice_generation_flow(
-        self, client, auth_headers, test_customer, mock_einvoice_api
+        self, client: AsyncClient, auth_headers: dict, test_customer, mock_einvoice_api
     ):
         """Test invoice generation from order"""
         # First create an order
@@ -242,7 +246,7 @@ class TestFinancialReportIntegration:
     
     @pytest.mark.asyncio
     async def test_revenue_report_generation(
-        self, client, auth_headers, test_customer, db_session
+        self, client: AsyncClient, auth_headers: dict, test_customer, db_session: AsyncSession
     ):
         """Test revenue report with actual data"""
         # Create test invoices
@@ -277,7 +281,7 @@ class TestFinancialReportIntegration:
         assert report["period"]["year"] == int(current_month[:4])
     
     @pytest.mark.asyncio
-    async def test_accounts_receivable_report(self, client, auth_headers):
+    async def test_accounts_receivable_report(self, client: AsyncClient, auth_headers: dict):
         """Test AR aging report"""
         response = await client.get(
             "/api/v1/financial-reports/accounts-receivable",
@@ -296,7 +300,7 @@ class TestAuthenticationIntegration:
     
     @pytest.mark.asyncio
     async def test_role_based_access(
-        self, client, test_customer, office_auth_headers, driver_auth_headers
+        self, client: AsyncClient, test_customer, office_auth_headers: dict, driver_auth_headers: dict
     ):
         """Test different roles have appropriate access"""
         # Office staff can create orders
@@ -330,7 +334,7 @@ class TestAuthenticationIntegration:
         assert response.status_code == 200
     
     @pytest.mark.asyncio
-    async def test_token_expiration(self, client):
+    async def test_token_expiration(self, client: AsyncClient):
         """Test expired token handling"""
         expired_token = "Bearer expired.token.here"
         
@@ -346,7 +350,7 @@ class TestWebSocketIntegration:
     
     @pytest.mark.asyncio
     async def test_order_status_broadcast(
-        self, client, auth_headers, test_customer, mock_websocket_manager
+        self, client: AsyncClient, auth_headers: dict, test_customer, mock_websocket_manager
     ):
         """Test that order status changes trigger WebSocket broadcasts"""
         # Create order

@@ -29,6 +29,24 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  user: User;
+}
+
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}
+
+export interface ErrorResponse {
+  detail: string;
+  status_code?: number;
+  timestamp?: string;
+}
+
 export interface AuthState {
   user: User | null;
   accessToken: string | null;

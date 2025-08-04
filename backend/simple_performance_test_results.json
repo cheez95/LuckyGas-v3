@@ -1,0 +1,68 @@
+{
+  "timestamp": "2025-07-30T22:19:23.309384",
+  "results": [
+    {
+      "test": "Route Optimization",
+      "target": 5.0,
+      "runs": 5,
+      "mean": 0.0025526248005917295,
+      "min": 0.0020543749997159466,
+      "max": 0.0032407079997938126,
+      "passed": true
+    },
+    {
+      "test": "WebSocket Latency",
+      "target": 0.1,
+      "runs": 50,
+      "mean": 0.02770960762136383,
+      "min": 0.026784999994561076,
+      "max": 0.02829437500622589,
+      "p95": 0.028247583002666943,
+      "passed": true
+    },
+    {
+      "test": "API Response Times",
+      "target": 0.2,
+      "endpoints": {
+        "/routes": {
+          "mean": 0.0668083853481221,
+          "max": 0.09091295799589716,
+          "passed": true
+        },
+        "/routes/optimize": {
+          "mean": 0.19449976050309487,
+          "max": 0.2570605840010103,
+          "passed": false
+        },
+        "/analytics/daily": {
+          "mean": 0.1347558728986769,
+          "max": 0.1770640829927288,
+          "passed": true
+        },
+        "/orders": {
+          "mean": 0.04253474599972833,
+          "max": 0.053060167003422976,
+          "passed": true
+        }
+      },
+      "passed": false
+    },
+    {
+      "test": "Analytics Generation",
+      "target": 2.0,
+      "runs": 7,
+      "mean": 0.6033119287104844,
+      "min": 0.6026817919919267,
+      "max": 0.604208375007147,
+      "passed": true
+    },
+    {
+      "test": "Memory Efficiency",
+      "routes_tested": 1000,
+      "avg_bytes_per_route": 192.8,
+      "total_mb": 0.18392181396484375,
+      "passed": true
+    }
+  ],
+  "all_passed": false
+}

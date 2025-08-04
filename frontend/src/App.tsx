@@ -47,6 +47,7 @@ import OrderTracking from './pages/customer/OrderTracking';
 
 // Analytics Pages
 import ReportingDashboard from './pages/analytics/ReportingDashboard';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 // Admin Pages
 import ExecutiveDashboard from './pages/admin/ExecutiveDashboard';
@@ -119,6 +120,7 @@ const App: React.FC = () => {
                         <Route path="customer" element={<CustomerPortal />} />
                         <Route path="customer/track/:orderId" element={<OrderTracking />} />
                         <Route path="analytics" element={<ReportingDashboard />} />
+                        <Route path="analytics/dashboard" element={<AnalyticsPage />} />
                         
                         {/* Admin Routes */}
                         <Route path="admin/executive" element={<ExecutiveDashboard />} />

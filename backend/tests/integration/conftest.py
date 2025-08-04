@@ -1,6 +1,7 @@
 """
 Integration test configuration and fixtures
 """
+import os
 import asyncio
 import pytest
 import pytest_asyncio
@@ -10,6 +11,17 @@ from sqlalchemy.pool import NullPool
 from httpx import AsyncClient, ASGITransport
 import redis.asyncio as redis
 from datetime import datetime, timedelta
+from pathlib import Path
+
+# Set test environment before importing app
+os.environ["ENVIRONMENT"] = "test"
+os.environ["TESTING"] = "1"
+
+# Load test environment from .env.test
+test_env_path = Path(__file__).parent.parent.parent / ".env.test"
+if test_env_path.exists():
+    from dotenv import load_dotenv
+    load_dotenv(test_env_path)
 
 from app.main import app
 from app.core.database import Base, get_async_session
@@ -21,8 +33,8 @@ from app.models.order import Order, OrderStatus
 from app.models.invoice import Invoice, InvoiceStatus
 from app.core.security import get_password_hash, create_access_token
 
-# Test database URL - use a separate test database
-TEST_DATABASE_URL = settings.DATABASE_URL.replace("/luckygas", "/luckygas_test")
+# Test database URL - use PostgreSQL test database from docker-compose
+TEST_DATABASE_URL = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 
 
 @pytest.fixture(scope="session")
@@ -92,8 +104,11 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 @pytest_asyncio.fixture(scope="function")
 async def redis_client():
     """Create test Redis client"""
+    # Use the test Redis instance from docker-compose
+    redis_url = settings.REDIS_URL or "redis://:test_redis_password_123@localhost:6380/1"
+    
     client = await redis.from_url(
-        settings.REDIS_URL.replace("/0", "/1"),  # Use database 1 for tests
+        redis_url,
         decode_responses=True
     )
     
@@ -240,7 +255,7 @@ async def driver_auth_headers(test_driver_user: User) -> dict:
 @pytest.fixture
 def mock_google_routes_api(mocker):
     """Mock Google Routes API responses"""
-    mock = mocker.patch('app.services.dispatch.google_routes_service.GoogleRoutesService.optimize_route')
+    mock = mocker.patch('app.services.optimization.google_routes_service.GoogleRoutesService.optimize_route')
     mock.return_value = {
         "optimized_waypoint_order": [0, 1, 2],
         "total_distance_meters": 15000,
@@ -269,3 +284,80 @@ def mock_websocket_manager(mocker):
     mock = mocker.patch('app.services.websocket_service.websocket_manager.broadcast')
     mock.return_value = None
     return mock
+
+
+# Additional fixtures for integration tests
+@pytest_asyncio.fixture
+async def test_route(db_session: AsyncSession, test_driver_user: User) -> None:
+    """Create test route"""
+    from app.models.route import Route
+    from app.models.vehicle import Vehicle
+    
+    # Create vehicle first
+    vehicle = Vehicle(
+        license_plate="TEST-001",
+        type="truck",
+        capacity_kg=1000,
+        status="active"
+    )
+    db_session.add(vehicle)
+    await db_session.commit()
+    await db_session.refresh(vehicle)
+    
+    route = Route(
+        route_date=date.today(),
+        driver_id=test_driver_user.id,
+        vehicle_id=vehicle.id,
+        status="pending",
+        total_distance_km=0,
+        total_duration_minutes=0
+    )
+    db_session.add(route)
+    await db_session.commit()
+    await db_session.refresh(route)
+    return route
+
+
+@pytest_asyncio.fixture
+async def test_gas_products(db_session: AsyncSession) -> list:
+    """Create test gas products"""
+    from app.models.gas_product import GasProduct
+    
+    products = [
+        GasProduct(
+            product_name="50kg 瓦斯桶",
+            size="50kg",
+            unit_price=1500.0,
+            is_available=True
+        ),
+        GasProduct(
+            product_name="20kg 瓦斯桶",
+            size="20kg",
+            unit_price=600.0,
+            is_available=True
+        ),
+        GasProduct(
+            product_name="16kg 瓦斯桶",
+            size="16kg",
+            unit_price=480.0,
+            is_available=True
+        ),
+        GasProduct(
+            product_name="10kg 瓦斯桶",
+            size="10kg",
+            unit_price=300.0,
+            is_available=True
+        ),
+        GasProduct(
+            product_name="4kg 瓦斯桶",
+            size="4kg",
+            unit_price=120.0,
+            is_available=True
+        )
+    ]
+    
+    for product in products:
+        db_session.add(product)
+    
+    await db_session.commit()
+    return products

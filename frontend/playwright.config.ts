@@ -12,74 +12,139 @@ dotenv.config({ path: '.env.test' });
  */
 export default defineConfig({
   testDir: './e2e',
-  /* Run tests in files in parallel */
+  
+  // Run tests in parallel
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
+  
+  // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
+  
+  // Retry on CI only
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
+  
+  // Parallel workers
   workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  
+  // Reporter to use
+  reporter: [
+    ['html', { open: 'never' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['list']
+  ],
+  
+  // Shared settings for all projects
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    // Base URL to use in actions
+    baseURL: process.env.VITE_APP_URL || 'http://localhost:5173',
+    
+    // Collect trace when retrying the failed test
     trace: 'on-first-retry',
-
-    /* Take screenshot on failure */
+    
+    // Screenshot on failure
     screenshot: 'only-on-failure',
-
-    /* Test against real browsers */
-    headless: true,
-
-    /* Maximum time for each action */
+    
+    // Video on failure
+    video: 'retain-on-failure',
+    
+    // Maximum time per action
     actionTimeout: 15000,
-
-    /* Default locale for testing Traditional Chinese */
+    
+    // Test against real browsers
+    headless: true,
+    
+    // Viewport
+    viewport: { width: 1280, height: 720 },
+    
+    // Locale
     locale: 'zh-TW',
+    
+    // Timezone
+    timezoneId: 'Asia/Taipei',
   },
 
-  /* Configure projects for major browsers */
+  // Configure projects for test suites
   projects: [
+    // Test suites
     {
-      name: 'chromium',
+      name: 'critical',
+      testMatch: /critical\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    
+    {
+      name: 'visual',
+      testMatch: /visual\/.*\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Visual tests need consistent viewport
+        viewport: { width: 1920, height: 1080 },
+      },
+    },
+    
+    {
+      name: 'performance',
+      testMatch: /performance\/.*\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Performance tests need real browser context
+        launchOptions: {
+          args: ['--enable-precise-memory-info'],
+        },
+      },
+    },
+    
+    {
+      name: 'api',
+      testMatch: /api\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    
+    {
+      name: 'resilience',
+      testMatch: /resilience\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
 
+    // Original comprehensive test
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'comprehensive',
+      testMatch: /comprehensive-frontend-test\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
     },
 
+    // Cross-browser testing for critical paths
     {
-      name: 'webkit',
+      name: 'critical-firefox',
+      testMatch: /critical\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    
+    {
+      name: 'critical-webkit',
+      testMatch: /critical\/.*\.spec\.ts/,
       use: { ...devices['Desktop Safari'] },
     },
 
-    /* Test against mobile viewports. */
+    // Mobile testing
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
-
-    /* Test against branded browsers. */
-    {
-      name: 'Microsoft Edge',
-      use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    },
-    {
-      name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      name: 'mobile-critical',
+      testMatch: /critical\/.*\.spec\.ts/,
+      use: { ...devices['iPhone 13'] },
     },
   ],
+
+  // Timeout settings
+  timeout: 30000, // 30 seconds per test
+  expect: {
+    timeout: 5000, // 5 seconds for expect assertions
+  },
+
+  // Output folder for test artifacts
+  outputDir: 'test-results/',
+
+  // Folder for test artifacts such as screenshots, videos, traces, etc.
+  snapshotDir: './e2e/screenshots',
+  snapshotPathTemplate: '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}{-projectName}{-snapshotSuffix}{ext}',
 
   /* Run your local dev server before starting the tests */
   webServer: {

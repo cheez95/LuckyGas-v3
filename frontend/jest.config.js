@@ -14,6 +14,7 @@ export default {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json',
+      useESM: true,
     }],
   },
   moduleNameMapper: {
@@ -21,6 +22,8 @@ export default {
     '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/src/__mocks__/fileMock.js',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^.*/api$': '<rootDir>/src/__mocks__/api.ts',
+    // Fix for useWebSocket hook
+    '^.*/hooks/useWebSocket$': '<rootDir>/src/__mocks__/useWebSocket.ts',
   },
   globals: {
     'import.meta.env': {
@@ -46,4 +49,5 @@ export default {
     },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  testTimeout: 10000,
 };

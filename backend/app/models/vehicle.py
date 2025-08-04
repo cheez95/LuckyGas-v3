@@ -82,6 +82,7 @@ class Vehicle(Base):
     
     # Relationships
     assigned_driver = relationship("User", back_populates="assigned_vehicle")
+    driver = relationship("Driver", back_populates="vehicle")
     
     def __repr__(self):
         return f"<Vehicle {self.vehicle_number} - {self.license_plate}>"

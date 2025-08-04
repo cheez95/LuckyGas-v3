@@ -23,12 +23,15 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from app.core.database import Base
 from app.models import *  # Import all models
+from app.core.config import settings
 
 target_metadata = Base.metadata
 
-# Get DATABASE_URL from environment if available
-if os.getenv("DATABASE_URL"):
-    config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
+# Get synchronous DATABASE_URL for Alembic
+# Use DATABASE_URL_SYNC from environment or settings
+database_url = os.getenv("DATABASE_URL_SYNC") or settings.DATABASE_URL_SYNC
+if database_url:
+    config.set_main_option("sqlalchemy.url", database_url)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

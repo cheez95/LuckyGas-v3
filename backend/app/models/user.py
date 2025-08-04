@@ -40,4 +40,5 @@ class User(Base):
     # Relationships
     assigned_routes = relationship("RoutePlan", foreign_keys="RoutePlan.driver_id", back_populates="driver")
     assigned_vehicle = relationship("Vehicle", foreign_keys="Vehicle.assigned_driver_id", back_populates="assigned_driver", uselist=False)
-    audit_logs = relationship("AuditLog", back_populates="user")
+    driver_profile = relationship("Driver", back_populates="user", uselist=False)
+    # audit_logs = relationship("AuditLog", back_populates="user")  # Removed during compaction

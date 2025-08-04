@@ -7,6 +7,7 @@ from app.models.delivery import Delivery, DeliveryPrediction
 from app.models.route import Route, RouteStop, RouteStatus
 from app.models.route_delivery import RouteDelivery, DeliveryStatus, DeliveryStatusHistory
 from app.models.vehicle import Vehicle
+from app.models.driver import Driver
 from app.models.delivery_history import DeliveryHistory
 from app.models.delivery_history_item import DeliveryHistoryItem
 from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
@@ -40,6 +41,7 @@ __all__ = [
     "DeliveryStatus",
     "DeliveryStatusHistory",
     "Vehicle",
+    "Driver",
     "DeliveryHistory",
     "DeliveryHistoryItem",
     "GasProduct",

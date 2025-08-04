@@ -1,0 +1,123 @@
+{
+  "file_info": {
+    "total_records": 349920,
+    "columns": [
+      "客戶",
+      "電子發票抬頭",
+      "客戶簡稱",
+      "地址",
+      "最後十次日期"
+    ],
+    "memory_usage_mb": 91.9754638671875,
+    "estimated_migration_time_minutes": 139.968
+  },
+  "data_quality": {
+    "issues": [],
+    "quality_score": 100,
+    "duplicate_records": 0
+  },
+  "column_analysis": {
+    "客戶": {
+      "data_type": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 13294,
+      "sample_values": [
+        1200001,
+        1200001,
+        1200001,
+        1200001,
+        1200001
+      ],
+      "client_code_format": {
+        "most_common_length": 7,
+        "all_numeric": true,
+        "sample_codes": [
+          1200001,
+          1200001,
+          1200001,
+          1200001,
+          1200001
+        ]
+      }
+    },
+    "電子發票抬頭": {
+      "data_type": "object",
+      "null_count": 9,
+      "null_percentage": 0.00257201646090535,
+      "unique_values": 12738,
+      "sample_values": [
+        "維修現金客戶",
+        "維修現金客戶",
+        "維修現金客戶",
+        "維修現金客戶",
+        "維修現金客戶"
+      ]
+    },
+    "客戶簡稱": {
+      "data_type": "object",
+      "null_count": 1155,
+      "null_percentage": 0.33007544581618653,
+      "unique_values": 12082,
+      "sample_values": [
+        "維修現金客戶",
+        "維修現金客戶",
+        "維修現金客戶",
+        "維修現金客戶",
+        "維修現金客戶"
+      ],
+      "client_code_format": {
+        "most_common_length": 6,
+        "all_numeric": false,
+        "sample_codes": [
+          "維修現金客戶",
+          "維修現金客戶",
+          "維修現金客戶",
+          "維修現金客戶",
+          "維修現金客戶"
+        ]
+      }
+    },
+    "地址": {
+      "data_type": "object",
+      "null_count": 2415,
+      "null_percentage": 0.6901577503429356,
+      "unique_values": 12221,
+      "sample_values": [
+        "台東縣台東市仁愛街12號",
+        "台東縣台東市仁愛街12號",
+        "台東縣台東市仁愛街12號",
+        "台東縣台東市仁愛街12號",
+        "台東縣台東市仁愛街12號"
+      ]
+    },
+    "最後十次日期": {
+      "data_type": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "unique_values": 1609,
+      "sample_values": [
+        1100102,
+        1100103,
+        1100104,
+        1100105,
+        1100106
+      ],
+      "date_format": "taiwan_minguo"
+    }
+  },
+  "business_insights": {
+    "date_range": {
+      "min": 1100101,
+      "max": 1140528
+    }
+  },
+  "migration_recommendations": {
+    "recommendations": [
+      "Use batch size of 5000 for optimal performance",
+      "Implement Taiwan date converter for 民國年 dates"
+    ],
+    "estimated_complexity": "high",
+    "suggested_approach": "batch_processing"
+  }
+}

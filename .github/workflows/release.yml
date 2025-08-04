@@ -1,0 +1,131 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Generate Changelog
+      id: changelog
+      run: |
+        # Get previous tag
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        if [ -z "$PREVIOUS_TAG" ]; then
+          echo "No previous tag found, including all commits"
+          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        else
+          echo "Generating changelog from $PREVIOUS_TAG to ${{ github.ref_name }}"
+          COMMITS=$(git log $PREVIOUS_TAG..${{ github.ref_name }} --pretty=format:"- %s (%h)" --no-merges)
+        fi
+        
+        # Format changelog
+        cat > RELEASE_NOTES.md << EOF
+        # Release ${{ github.ref_name }}
+        
+        ## 🚀 What's New
+        
+        ### Features
+        $(echo "$COMMITS" | grep -E "feat:|feature:" || echo "- No new features")
+        
+        ### Bug Fixes
+        $(echo "$COMMITS" | grep -E "fix:|bugfix:" || echo "- No bug fixes")
+        
+        ### Improvements
+        $(echo "$COMMITS" | grep -E "improve:|enhancement:|perf:" || echo "- No improvements")
+        
+        ### Documentation
+        $(echo "$COMMITS" | grep -E "docs:|doc:" || echo "- No documentation updates")
+        
+        ## 📊 Statistics
+        - Total commits: $(echo "$COMMITS" | wc -l)
+        - Contributors: $(git log $PREVIOUS_TAG..${{ github.ref_name }} --pretty=format:"%an" | sort -u | wc -l)
+        
+        ## 🔗 Links
+        - [Full Changelog](https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ github.ref_name }})
+        - [Documentation](https://docs.luckygas.com.tw)
+        EOF
+        
+        # Set output
+        echo "::set-output name=body::$(cat RELEASE_NOTES.md)"
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Lucky Gas ${{ github.ref_name }}
+        body_path: RELEASE_NOTES.md
+        draft: false
+        prerelease: ${{ contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
+    
+    - name: Build Release Artifacts
+      run: |
+        # Create release directory
+        mkdir -p release-artifacts
+        
+        # Backend artifact
+        cd backend
+        tar -czf ../release-artifacts/luckygas-backend-${{ github.ref_name }}.tar.gz \
+          --exclude='.venv' \
+          --exclude='__pycache__' \
+          --exclude='*.pyc' \
+          --exclude='.pytest_cache' \
+          .
+        
+        # Frontend artifact
+        cd ../frontend
+        npm ci
+        npm run build
+        tar -czf ../release-artifacts/luckygas-frontend-${{ github.ref_name }}.tar.gz dist/
+        
+        # Database migrations
+        cd ../backend
+        tar -czf ../release-artifacts/luckygas-migrations-${{ github.ref_name }}.tar.gz alembic/
+        
+        # Documentation
+        cd ..
+        tar -czf release-artifacts/luckygas-docs-${{ github.ref_name }}.tar.gz \
+          *.md \
+          docs/ \
+          infrastructure/terraform/*.tf \
+          k8s/
+    
+    - name: Upload Release Artifacts
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release-artifacts/luckygas-backend-${{ github.ref_name }}.tar.gz
+        asset_name: luckygas-backend-${{ github.ref_name }}.tar.gz
+        asset_content_type: application/gzip
+    
+    - name: Trigger Production Deployment
+      if: ${{ !contains(github.ref_name, '-beta') && !contains(github.ref_name, '-alpha') }}
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        event-type: production-release
+        client-payload: '{"version": "${{ github.ref_name }}"}'
+    
+    - name: Notify Release
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          🎉 New Release Published: ${{ github.ref_name }}
+          View: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}

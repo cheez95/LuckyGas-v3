@@ -114,3 +114,27 @@ class RouteOptimizationResponse(BaseModel):
     time_saved_minutes: int
     optimization_score: float
     optimized_stops: List[RouteStop]
+
+
+class AdjustmentRequest(BaseModel):
+    """Request for route adjustment."""
+    route_id: int
+    order_id: int
+    trigger: str = "manual"  # manual, emergency, delay, cancellation
+    reason: Optional[str] = None
+
+
+class AdjustmentResult(BaseModel):
+    """Result of route adjustment."""
+    success: bool
+    route_id: int
+    adjustment_type: str
+    impact_minutes: int
+    affected_stops: int
+    message: str
+    new_route: Optional["Route"] = None
+
+
+# Alias for backward compatibility
+RouteResponse = Route
+RouteStopResponse = RouteStop

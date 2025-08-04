@@ -117,12 +117,19 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "luckygas"
     POSTGRES_PORT: int = Field(5433, ge=1024, le=65535, description="PostgreSQL port")
     DATABASE_URL: str = ""
+    DATABASE_URL_SYNC: str = ""
     
     @field_validator("DATABASE_URL", mode="after")
     def assemble_db_connection(cls, v: str, values) -> str:
         if v:
             return v
         return f"postgresql+asyncpg://{values.data.get('POSTGRES_USER')}:{values.data.get('POSTGRES_PASSWORD')}@{values.data.get('POSTGRES_SERVER')}:{values.data.get('POSTGRES_PORT')}/{values.data.get('POSTGRES_DB')}"
+    
+    @field_validator("DATABASE_URL_SYNC", mode="after")
+    def assemble_sync_db_connection(cls, v: str, values) -> str:
+        if v:
+            return v
+        return f"postgresql://{values.data.get('POSTGRES_USER')}:{values.data.get('POSTGRES_PASSWORD')}@{values.data.get('POSTGRES_SERVER')}:{values.data.get('POSTGRES_PORT')}/{values.data.get('POSTGRES_DB')}"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
@@ -160,13 +167,18 @@ class Settings(BaseSettings):
     
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if v is None:
+            return []
         if isinstance(v, str):
-            if not v:
+            if not v or v == "":
                 return []
             if v.startswith("["):
-                import json
-                return json.loads(v)
-            return [i.strip() for i in v.split(",")]
+                try:
+                    import json
+                    return json.loads(v)
+                except:
+                    return []
+            return [i.strip() for i in v.split(",") if i.strip()]
         elif isinstance(v, list):
             return v
         return []

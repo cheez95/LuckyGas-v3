@@ -18,7 +18,8 @@ from app.schemas.order_item import OrderItemCreate
 from app.schemas.credit import CreditSummary, CreditCheckResult
 from app.schemas.order_search import OrderSearchCriteria, OrderSearchResult
 from app.api.deps import get_db
-from app.api.v1.socketio_handler import notify_order_update
+# Removed during compaction
+# from app.api.v1.socketio_handler import notify_order_update
 from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
 from app.services.order_service import OrderService
 from app.services.credit_service import CreditService
@@ -224,18 +225,19 @@ async def cancel_order(
         await cache.invalidate(f"order:cancel_order:{order_id}:*")
         await cache.invalidate("orders:list:*")
         
+        # Removed during compaction
         # Send real-time notification
-        await notify_order_update(
-            order_id=order_id,
-            status="cancelled",
-            details={
-                "order_number": order.order_number,
-                "customer_id": order.customer_id,
-                "cancelled_by": current_user.username,
-                "reason": reason or "未提供原因",
-                "cancelled_at": datetime.utcnow().isoformat()
-            }
-        )
+        # await notify_order_update(
+        #     order_id=order_id,
+        #     status="cancelled",
+        #     details={
+        #         "order_number": order.order_number,
+        #         "customer_id": order.customer_id,
+        #         "cancelled_by": current_user.username,
+        #         "reason": reason or "未提供原因",
+        #         "cancelled_at": datetime.utcnow().isoformat()
+        #     }
+        # )
         
         return {"message": "訂單已成功取消", "order_id": order_id}
     except ValueError as e:
@@ -349,19 +351,20 @@ async def create_order_v2(
     result = await db.execute(query)
     order = result.scalar_one()
     
+    # Removed during compaction
     # Send real-time notification
-    await notify_order_update(
-        order_id=order.id,
-        status="created",
-        details={
-            "order_number": order.order_number,
-            "customer_id": order.customer_id,
-            "customer_name": customer.name,
-            "total_amount": float(order.final_amount),
-            "scheduled_date": order.scheduled_date.isoformat() if order.scheduled_date else None,
-            "created_by": current_user.username
-        }
-    )
+    # await notify_order_update(
+    #     order_id=order.id,
+    #     status="created",
+    #     details={
+    #         "order_number": order.order_number,
+    #         "customer_id": order.customer_id,
+    #         "customer_name": customer.name,
+    #         "total_amount": float(order.final_amount),
+    #         "scheduled_date": order.scheduled_date.isoformat() if order.scheduled_date else None,
+    #         "created_by": current_user.username
+    #     }
+    # )
     
     return order
 
@@ -452,20 +455,21 @@ async def update_order_v2(
     result = await db.execute(query)
     order = result.scalar_one()
     
+    # Removed during compaction
     # Send real-time notification
-    await notify_order_update(
-        order_id=order.id,
-        status=order.status.value,
-        details={
-            "order_number": order.order_number,
-            "customer_id": order.customer_id,
-            "customer_name": order.customer.name,
-            "previous_status": original_status,
-            "new_status": order.status.value,
-            "updated_by": current_user.username,
-            "delivered_at": order.delivered_at.isoformat() if order.delivered_at else None
-        }
-    )
+    # await notify_order_update(
+    #     order_id=order.id,
+    #     status=order.status.value,
+    #     details={
+    #         "order_number": order.order_number,
+    #         "customer_id": order.customer_id,
+    #         "customer_name": order.customer.name,
+    #         "previous_status": original_status,
+    #         "new_status": order.status.value,
+    #         "updated_by": current_user.username,
+    #         "delivered_at": order.delivered_at.isoformat() if order.delivered_at else None
+    #     }
+    # )
     
     # Add customer info
     if order.customer:

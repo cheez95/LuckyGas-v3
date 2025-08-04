@@ -23,6 +23,36 @@ route_optimization_histogram = Histogram(
     buckets=(0.5, 1, 2, 5, 10, 30, 60, 120)
 )
 
+vrp_optimization_summary = Summary(
+    'lucky_gas_vrp_optimization_summary',
+    'VRP optimization performance summary',
+    ['optimization_mode', 'clustered']
+)
+
+vrp_solution_quality_gauge = Gauge(
+    'lucky_gas_vrp_solution_quality',
+    'Quality metrics for VRP solutions',
+    ['metric_type']  # savings_percentage, efficiency_score, unassigned_ratio
+)
+
+vrp_constraint_violations_counter = Counter(
+    'lucky_gas_vrp_constraint_violations_total',
+    'Number of constraint violations in VRP solutions',
+    ['constraint_type']  # time_window, capacity, shift_time
+)
+
+route_adjustment_counter = Counter(
+    'lucky_gas_route_adjustments_total',
+    'Total number of route adjustments made',
+    ['adjustment_type', 'trigger']
+)
+
+route_adjustment_summary = Summary(
+    'lucky_gas_route_adjustment_duration_seconds',
+    'Time spent on route adjustments',
+    ['adjustment_type']
+)
+
 active_deliveries_gauge = Gauge(
     'lucky_gas_active_deliveries',
     'Number of active deliveries',

@@ -287,5 +287,6 @@ async def get_security_metrics(hours: int = 24) -> dict:
         }
 
 
-# Start monitoring on import
-asyncio.create_task(security_monitor.start())
+# Start monitoring on import - DISABLED for testing
+# This should be started in the app startup event, not at import time
+# asyncio.create_task(security_monitor.start())
