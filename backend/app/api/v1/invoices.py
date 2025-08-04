@@ -2,30 +2,27 @@
 Invoice management API endpoints
 """
 
-from typing import List, Optional
 from datetime import date, datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, File, UploadFile
+from typing import List, Optional
+
+from fastapi import (APIRouter, Depends, File, HTTPException, Path, Query,
+                     UploadFile)
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, desc, func
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_db
-from app.api.deps import get_current_user
-from app.models.user import User
-from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoicePaymentStatus
+from app.api.deps import get_current_user, get_db
 from app.models.customer import Customer
+from app.models.invoice import (Invoice, InvoiceItem, InvoicePaymentStatus,
+                                InvoiceStatus)
 from app.models.order import Order
-from app.schemas.invoice import (
-    InvoiceCreate,
-    InvoiceUpdate,
-    InvoiceResponse,
-    InvoiceItemCreate,
-    InvoiceSearchParams,
-    InvoiceStats,
-    InvoiceBulkAction,
-)
-from app.services.invoice_service import InvoiceService
+from app.models.user import User
+from app.schemas.invoice import (InvoiceBulkAction, InvoiceCreate,
+                                 InvoiceItemCreate, InvoiceResponse,
+                                 InvoiceSearchParams, InvoiceStats,
+                                 InvoiceUpdate)
 from app.services.einvoice_service import EInvoiceService
+from app.services.invoice_service import InvoiceService
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 

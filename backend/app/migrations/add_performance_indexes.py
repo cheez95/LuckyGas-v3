@@ -2,10 +2,12 @@
 Add performance indexes for optimized database queries
 """
 
+import logging
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
+
 from app.core.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -5,6 +5,7 @@ Tests for security middleware
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
+
 from app.middleware.security import SecurityMiddleware, SecurityValidation
 
 

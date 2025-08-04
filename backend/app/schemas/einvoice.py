@@ -2,9 +2,10 @@
 Taiwan E-Invoice Pydantic schemas for API validation
 """
 
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional, Literal
 from datetime import date, datetime
+from typing import List, Literal, Optional
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class InvoiceData(BaseModel):

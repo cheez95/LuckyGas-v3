@@ -2,23 +2,17 @@
 Financial reporting service
 """
 
-from typing import Dict, Any, Optional, List
+import io
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, case
-import pandas as pd
-import io
+from typing import Any, Dict, List, Optional
 
-from app.models import (
-    Invoice,
-    Payment,
-    Customer,
-    Order,
-    InvoiceItem,
-    InvoiceStatus,
-    InvoicePaymentStatus,
-)
+import pandas as pd
+from sqlalchemy import and_, case, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import (Customer, Invoice, InvoiceItem, InvoicePaymentStatus,
+                        InvoiceStatus, Order, Payment)
 
 
 class FinancialReportService:

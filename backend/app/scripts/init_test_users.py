@@ -8,13 +8,14 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
-from app.models.user import User
-from app.core.security import get_password_hash
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
 from app.core.config import settings
 from app.core.database import Base
+from app.core.security import get_password_hash
+from app.models.user import User
 
 # Test users matching E2E test data
 TEST_USERS = [

@@ -1,17 +1,16 @@
 """
 Test cases for Big5 to UTF-8 encoding converter
 """
-import pytest
-import tempfile
 import sqlite3
-import pandas as pd
+import tempfile
 from pathlib import Path
 
-from app.utils.encoding_converter import (
-    Big5ToUTF8Converter, 
-    validate_taiwan_data,
-    convert_customer_data
-)
+import pandas as pd
+import pytest
+
+from app.utils.encoding_converter import (Big5ToUTF8Converter,
+                                          convert_customer_data,
+                                          validate_taiwan_data)
 
 
 class TestBig5ToUTF8Converter:

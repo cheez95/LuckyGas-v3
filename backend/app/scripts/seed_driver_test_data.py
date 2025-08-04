@@ -2,26 +2,28 @@
 """Seed test data for driver functionality testing"""
 
 import asyncio
-import sys
-from pathlib import Path
-from datetime import datetime, date, timedelta
 import random
+import sys
+from datetime import date, datetime, timedelta
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
-from app.models.user import User
-from app.models.customer import Customer
-from app.models.order import Order, OrderStatus
-from app.models.order_item import OrderItem
-from app.models.gas_product import GasProduct
-from app.models.route import Route, RouteStatus
-from app.models.route_delivery import RouteDelivery, DeliveryStatus
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
 from app.core.config import settings
 from app.core.database import Base
+from app.models.customer import Customer
+from app.models.gas_product import GasProduct
+from app.models.order import Order, OrderStatus
+from app.models.order_item import OrderItem
+from app.models.route import Route, RouteStatus
+from app.models.route_delivery import DeliveryStatus, RouteDelivery
+from app.models.user import User
+
 
 async def seed_driver_test_data():
     """Create test routes and deliveries for driver testing"""

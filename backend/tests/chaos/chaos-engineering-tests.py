@@ -4,19 +4,20 @@ Tests system resilience under various failure scenarios
 """
 
 import asyncio
+import json
+import logging
 import random
 import time
-from datetime import datetime
-from typing import Dict, List, Any
-import httpx
-import websockets
-import psutil
-import kubernetes
-from kubernetes import client, config
-import pytest
-import json
 from concurrent.futures import ThreadPoolExecutor
-import logging
+from datetime import datetime
+from typing import Any, Dict, List
+
+import httpx
+import kubernetes
+import psutil
+import pytest
+import websockets
+from kubernetes import client, config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

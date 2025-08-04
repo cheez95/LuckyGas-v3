@@ -1,24 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta, date
 import logging
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User, UserRole
-from app.models.route import Route, RouteStatus, RouteStop
-from app.models.order import Order, OrderStatus
-from app.models.vehicle import Vehicle
-from app.schemas.prediction import (
-    RouteOptimizationRequest,
-    RouteOptimizationResponse,
-    OptimizedRoute,
-)
-from app.services.route_optimization_service import route_optimization_service
-from app.services.realtime_route_adjustment import realtime_route_adjustment_service
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
 from app.core.decorators import rate_limit
+from app.models.order import Order, OrderStatus
+from app.models.route import Route, RouteStatus, RouteStop
+from app.models.user import User, UserRole
+from app.models.vehicle import Vehicle
+from app.schemas.prediction import (OptimizedRoute, RouteOptimizationRequest,
+                                    RouteOptimizationResponse)
 from app.schemas.route import AdjustmentRequest, AdjustmentResult
+from app.services.realtime_route_adjustment import \
+    realtime_route_adjustment_service
+from app.services.route_optimization_service import route_optimization_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

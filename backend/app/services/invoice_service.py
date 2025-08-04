@@ -2,25 +2,18 @@
 Invoice service for business logic
 """
 
-from typing import List, Optional, Dict, Any
-from datetime import date, datetime, timedelta
 import random
 import string
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.orm import selectinload
 
-from app.models import (
-    Invoice,
-    InvoiceItem,
-    Payment,
-    CreditNote,
-    InvoiceStatus,
-    InvoicePaymentStatus,
-    Customer,
-    Order,
-)
-from app.schemas.invoice import InvoiceCreate, InvoiceUpdate, InvoiceStats
+from app.models import (CreditNote, Customer, Invoice, InvoiceItem,
+                        InvoicePaymentStatus, InvoiceStatus, Order, Payment)
+from app.schemas.invoice import InvoiceCreate, InvoiceStats, InvoiceUpdate
 
 
 class InvoiceService:

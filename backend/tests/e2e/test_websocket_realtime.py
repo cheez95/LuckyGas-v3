@@ -1,16 +1,17 @@
 """
 E2E tests for WebSocket and real-time features (Sprint 2)
 """
-import pytest
 import asyncio
 from typing import Dict, List
-from httpx import AsyncClient
-import socketio
 from unittest.mock import AsyncMock, patch
 
+import pytest
+import socketio
+from httpx import AsyncClient
+
+from app.models.customer import Customer
 from app.models.order import OrderStatus
 from app.models.user import User
-from app.models.customer import Customer
 
 
 @pytest.mark.asyncio

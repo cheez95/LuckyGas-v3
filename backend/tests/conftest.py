@@ -1,10 +1,10 @@
 """Pytest configuration and fixtures."""
 
+import asyncio
 import os
 import sys
 from pathlib import Path
-import asyncio
-from typing import AsyncGenerator, Generator, List, Dict, Any
+from typing import Any, AsyncGenerator, Dict, Generator, List
 
 # Add backend to Python path
 backend_dir = Path(__file__).parent.parent
@@ -23,18 +23,20 @@ os.environ["REDIS_URL"] = "redis://localhost:6379/1"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/dev/null"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "test-project"
 
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock
+
 import pytest
 import pytest_asyncio
-from unittest.mock import Mock, AsyncMock
-from datetime import datetime, timedelta
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
 from sqlalchemy.pool import NullPool
 
+from app.api.deps import get_db
 # Import after environment setup
 from app.core.database import Base
 from app.main import app
-from app.api.deps import get_db
 
 # Create test engine
 test_engine = create_async_engine(

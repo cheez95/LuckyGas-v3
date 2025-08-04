@@ -2,16 +2,16 @@
 Performance monitoring middleware for tracking API response times and metrics.
 """
 
-import time
 import asyncio
-from typing import Callable, Dict, Optional, Any
-from contextlib import asynccontextmanager
 import logging
+import time
+from contextlib import asynccontextmanager
+from typing import Any, Callable, Dict, Optional
 
+import redis.asyncio as redis
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-from prometheus_client import Counter, Histogram, Gauge
-import redis.asyncio as redis
+from prometheus_client import Counter, Gauge, Histogram
 from sqlalchemy import text
 
 from app.core.config import settings

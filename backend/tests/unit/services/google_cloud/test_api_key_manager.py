@@ -1,18 +1,16 @@
 """
 Unit tests for API Key Manager
 """
-import pytest
-from unittest.mock import Mock, patch, AsyncMock
-import os
-from cryptography.fernet import Fernet
 import base64
+import os
+from unittest.mock import AsyncMock, Mock, patch
 
-from app.core.api_key_manager import (
-    APIKeyManager,
-    LocalEncryptedKeyManager,
-    GCPSecretManager,
-    get_api_key_manager
-)
+import pytest
+from cryptography.fernet import Fernet
+
+from app.core.api_key_manager import (APIKeyManager, GCPSecretManager,
+                                      LocalEncryptedKeyManager,
+                                      get_api_key_manager)
 
 
 class TestLocalEncryptedKeyManager:

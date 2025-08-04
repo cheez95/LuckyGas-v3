@@ -1,11 +1,12 @@
 """
 End-to-end test for complete order lifecycle from creation to payment
 """
-import pytest
-from playwright.async_api import Page, expect
-from datetime import datetime, timedelta
 import asyncio
 import os
+from datetime import datetime, timedelta
+
+import pytest
+from playwright.async_api import Page, expect
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")
 API_URL = os.getenv("E2E_API_URL", "http://localhost:8000")

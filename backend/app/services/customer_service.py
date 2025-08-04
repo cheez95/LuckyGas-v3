@@ -3,17 +3,18 @@ Customer service layer for business logic
 Handles customer-related operations and coordinates with repositories
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from datetime import datetime, date
-from sqlalchemy.ext.asyncio import AsyncSession
 import logging
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.repositories.customer_repository import CustomerRepository
-from app.repositories.order_repository import OrderRepository
-from app.models.customer import Customer
-from app.schemas.customer import CustomerCreate, CustomerUpdate
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.cache import invalidate_cache
 from app.core.metrics import cache_operations_counter, orders_created_counter
+from app.models.customer import Customer
+from app.repositories.customer_repository import CustomerRepository
+from app.repositories.order_repository import OrderRepository
+from app.schemas.customer import CustomerCreate, CustomerUpdate
 
 # from app.api.v1.socketio_handler import send_notification  # Removed during compaction
 

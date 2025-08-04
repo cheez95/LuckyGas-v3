@@ -4,16 +4,18 @@ Implements predictive caching, TTL optimization, and cache warming
 """
 
 import asyncio
-import json
 import hashlib
-from typing import Any, Dict, Optional, Tuple, List
-from datetime import datetime, timedelta
+import json
 import logging
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
-from app.core.cache import get_redis_client
 import redis.asyncio as redis
+
+from app.core.cache import get_redis_client
 
 logger = logging.getLogger(__name__)
 

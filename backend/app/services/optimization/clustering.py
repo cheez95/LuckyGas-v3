@@ -1,11 +1,12 @@
 """Geographic clustering for route optimization."""
 
+import logging
+from math import radians
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import List, Dict, Tuple, Optional
 from sklearn.cluster import DBSCAN, KMeans
 from sklearn.metrics.pairwise import haversine_distances
-from math import radians
-import logging
 
 from app.models.optimization import ClusterInfo
 

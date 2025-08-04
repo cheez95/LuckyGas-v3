@@ -1,6 +1,7 @@
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict
 
 from app.models.route import RouteStatus
 

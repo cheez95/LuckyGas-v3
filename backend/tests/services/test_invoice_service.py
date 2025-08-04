@@ -1,16 +1,17 @@
 """
 Unit tests for invoice service
 """
-import pytest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from app.services.invoice_service import InvoiceService
-from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
+import pytest
+
 from app.models.customer import Customer, CustomerType
+from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
 from app.models.order import Order, OrderStatus
 from app.schemas.invoice import InvoiceCreate
+from app.services.invoice_service import InvoiceService
 
 
 @pytest.fixture

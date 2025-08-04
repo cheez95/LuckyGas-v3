@@ -1,9 +1,10 @@
 """Vehicle service for managing delivery vehicles."""
 
-from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import logging
+from typing import List, Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.vehicle import Vehicle
 

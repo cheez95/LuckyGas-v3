@@ -5,25 +5,23 @@ Integrates Google Routes API with OR-Tools for optimal route planning
 
 import asyncio
 import logging
-from typing import List, Dict, Tuple, Optional, Any
-from datetime import datetime, timedelta, time
-from dataclasses import dataclass, field
 from collections import defaultdict
-import numpy as np
-from sklearn.cluster import DBSCAN
-from ortools.constraint_solver import routing_enums_pb2
-from ortools.constraint_solver import pywrapcp
+from dataclasses import dataclass, field
+from datetime import datetime, time, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.order import Order, OrderStatus
+import numpy as np
+from ortools.constraint_solver import pywrapcp, routing_enums_pb2
+from sklearn.cluster import DBSCAN
+
 from app.models.customer import Customer
-from app.models.user import User
+from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus, RouteStop
-from app.services.dispatch.google_routes_service import (
-    get_routes_service,
-    Location,
-    RouteStop as GoogleRouteStop,
-    RouteRequest,
-)
+from app.models.user import User
+from app.services.dispatch.google_routes_service import Location, RouteRequest
+from app.services.dispatch.google_routes_service import \
+    RouteStop as GoogleRouteStop
+from app.services.dispatch.google_routes_service import get_routes_service
 from app.services.optimization.ortools_optimizer import VRPStop, VRPVehicle
 
 logger = logging.getLogger(__name__)

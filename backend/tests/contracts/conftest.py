@@ -6,8 +6,9 @@ using Pact framework to ensure API stability and prevent breaking changes.
 """
 
 import os
-import pytest
 from typing import Generator
+
+import pytest
 from pact import Consumer, Provider
 from pact.pact import Pact
 

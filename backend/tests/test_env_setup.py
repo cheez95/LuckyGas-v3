@@ -4,7 +4,7 @@ This prevents module-level service initialization errors during testing.
 """
 import os
 import sys
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
 
 # Set test environment
 os.environ["ENVIRONMENT"] = "test"

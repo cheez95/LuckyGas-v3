@@ -5,29 +5,23 @@ Migrates data from SQLite (Big5) to PostgreSQL (UTF-8)
 """
 import asyncio
 import logging
-from datetime import datetime, date
-from typing import Dict, List, Optional, Any, Tuple
-import pandas as pd
 import sqlite3
+from datetime import date, datetime
 from pathlib import Path
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert
+from typing import Any, Dict, List, Optional, Tuple
+
 import click
+import pandas as pd
+from sqlalchemy import insert, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
-from app.utils.encoding_converter import Big5ToUTF8Converter, validate_taiwan_data
-from app.models import (
-    Customer,
-    User,
-    Order,
-    OrderItem,
-    GasProduct,
-    Route,
-    Vehicle,
-    DeliveryHistory,
-)
+from app.models import (Customer, DeliveryHistory, GasProduct, Order,
+                        OrderItem, Route, User, Vehicle)
 from app.models.order import OrderStatus, PaymentStatus
 from app.models.user import UserRole
+from app.utils.encoding_converter import (Big5ToUTF8Converter,
+                                          validate_taiwan_data)
 
 # Set up logging
 logging.basicConfig(

@@ -3,9 +3,9 @@ Environment Variable Validation
 Ensures all required configuration is present at startup
 """
 
+import logging
 import os
 import sys
-import logging
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 

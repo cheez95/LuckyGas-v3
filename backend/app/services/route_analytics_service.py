@@ -3,29 +3,26 @@ Route performance analytics service for tracking and analyzing delivery metrics.
 """
 
 import logging
-from datetime import datetime, timedelta, date
-from typing import List, Dict, Optional, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from datetime import date, datetime, timedelta
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
 from sqlalchemy.orm import selectinload
 
-from app.models.route import Route, RouteStop
-from app.models.order import Order
 from app.models.driver import Driver
 from app.models.optimization import OptimizationHistory
-from app.services.google_cloud.monitoring.intelligent_cache import get_intelligent_cache
-from app.schemas.analytics import (
-    RoutePerformanceMetrics,
-    FuelSavingsReport,
-    DriverPerformanceMetrics,
-    DailyAnalyticsSummary,
-    WeeklyTrendReport,
-)
+from app.models.order import Order
+from app.models.route import Route, RouteStop
+from app.schemas.analytics import (DailyAnalyticsSummary,
+                                   DriverPerformanceMetrics, FuelSavingsReport,
+                                   RoutePerformanceMetrics, WeeklyTrendReport)
+from app.services.google_cloud.monitoring.intelligent_cache import \
+    get_intelligent_cache
 
 logger = logging.getLogger(__name__)
 

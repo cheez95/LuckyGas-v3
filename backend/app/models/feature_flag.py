@@ -6,24 +6,12 @@ and complete audit history of all changes.
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any
 from enum import Enum as PyEnum
+from typing import Any, Dict, Optional
 
-from sqlalchemy import (
-    Column,
-    String,
-    DateTime,
-    Integer,
-    JSON,
-    Enum,
-    Boolean,
-    Float,
-    Index,
-    UniqueConstraint,
-    ForeignKey,
-    Text,
-    Table,
-)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Enum, Float,
+                        ForeignKey, Index, Integer, String, Table, Text,
+                        UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 

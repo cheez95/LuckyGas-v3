@@ -5,18 +5,15 @@ This demonstrates how to handle multiple API versions
 with proper deprecation and feature flags.
 """
 
-from fastapi import APIRouter, Request, Depends, HTTPException
-from typing import Dict, Any
+from typing import Any, Dict
 
-from app.core.versioning import (
-    get_requested_version,
-    version_deprecated,
-    requires_version,
-    get_version_features,
-    APIVersion,
-)
-from app.core.decorators import rate_limit, cache_response
+from fastapi import APIRouter, Depends, HTTPException, Request
+
+from app.core.decorators import cache_response, rate_limit
 from app.core.logging import get_logger
+from app.core.versioning import (APIVersion, get_requested_version,
+                                 get_version_features, requires_version,
+                                 version_deprecated)
 
 logger = get_logger(__name__)
 

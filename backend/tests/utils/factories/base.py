@@ -2,10 +2,11 @@
 Base factory classes for test data generation
 """
 
-from typing import Any, Dict, List, Optional, Type, TypeVar
-from datetime import datetime, timedelta
 import random
 import string
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Type, TypeVar
+
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta

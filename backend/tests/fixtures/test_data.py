@@ -3,7 +3,7 @@ Test Data Fixtures for Lucky Gas v3
 Provides sample data for testing including customer migration scenarios
 """
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class TestDataFixtures:

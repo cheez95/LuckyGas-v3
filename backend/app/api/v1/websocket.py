@@ -1,14 +1,15 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
-from fastapi.security import OAuth2PasswordBearer
-from typing import Optional
-import jwt
-import uuid
 import logging
+import uuid
+from typing import Optional
 
+import jwt
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db
 from app.core.config import settings
 from app.services.websocket_service import websocket_manager
-from app.api.deps import get_db
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

@@ -2,10 +2,11 @@
 Analytics schemas for route performance metrics.
 """
 
-from pydantic import BaseModel
 from datetime import date, datetime
-from typing import List, Dict, Optional
 from enum import Enum
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel
 
 
 class MetricPeriod(str, Enum):

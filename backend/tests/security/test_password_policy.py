@@ -3,6 +3,7 @@ Tests for password policy enforcement
 """
 
 import pytest
+
 from app.core.security import PasswordValidator
 from app.core.security_config import get_password_policy
 

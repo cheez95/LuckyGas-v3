@@ -2,17 +2,18 @@
 Simple health check endpoints for monitoring simplified services
 """
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from typing import Dict, Any
-import redis.asyncio as redis
 from datetime import datetime
+from typing import Any, Dict
+
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.services.simple_websocket import websocket_manager
-from app.services.simple_notifications import notification_service
 from app.core.config import settings
+from app.services.simple_notifications import notification_service
+from app.services.simple_websocket import websocket_manager
 
 router = APIRouter()
 

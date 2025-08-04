@@ -2,12 +2,13 @@
 Structured logging configuration for Lucky Gas
 """
 
+import json
 import logging
 import sys
-import json
+from contextvars import ContextVar
 from datetime import datetime
 from typing import Any, Dict, Optional
-from contextvars import ContextVar
+
 from pythonjsonlogger import jsonlogger
 
 from app.core.config import settings

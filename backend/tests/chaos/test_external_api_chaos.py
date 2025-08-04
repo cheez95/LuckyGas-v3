@@ -3,12 +3,13 @@ Chaos Engineering Tests - External API Failures
 Tests system resilience when external services fail
 """
 import asyncio
-import pytest
-import time
-from httpx import AsyncClient, ConnectError, ReadTimeout
-from unittest.mock import patch, MagicMock, AsyncMock
-from datetime import datetime, timedelta
 import json
+import time
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from httpx import AsyncClient, ConnectError, ReadTimeout
 
 
 class TestExternalAPIChaos:

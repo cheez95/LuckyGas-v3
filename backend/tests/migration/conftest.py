@@ -3,13 +3,14 @@ Shared fixtures for migration tests
 Author: Sam (QA Specialist)
 """
 
-import pytest
 import asyncio
 import os
 import sys
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+
+import pytest
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Add parent directory to path
 sys.path.append(
@@ -183,6 +184,7 @@ async def clean_database(test_database):
 def performance_monitor():
     """Monitor test performance"""
     import time
+
     import psutil
 
     class PerformanceMonitor:

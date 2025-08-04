@@ -3,10 +3,10 @@
 Test Infrastructure Validation Script
 Validates that all test infrastructure is properly configured
 """
-import os
-import sys
-import subprocess
 import json
+import os
+import subprocess
+import sys
 from datetime import datetime
 from typing import Dict, List, Tuple
 
@@ -93,6 +93,7 @@ class TestInfrastructureValidator:
 
         try:
             import asyncio
+
             from sqlalchemy.ext.asyncio import create_async_engine
 
             async def test_connection():
@@ -130,6 +131,7 @@ class TestInfrastructureValidator:
 
         try:
             import asyncio
+
             import redis.asyncio as redis
 
             async def test_redis():

@@ -1,15 +1,13 @@
 """
 Test cases for data validation framework
 """
-import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
-from app.utils.data_validator import (
-    DataValidator,
-    validate_migration_data
-)
+import numpy as np
+import pandas as pd
+import pytest
+
+from app.utils.data_validator import DataValidator, validate_migration_data
 
 
 class TestTaiwanFormatValidators:

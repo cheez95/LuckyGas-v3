@@ -2,17 +2,18 @@
 Performance monitoring and metrics endpoints.
 """
 
-from typing import Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-from starlette.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import Response
 
-from app.api.deps import get_db, get_current_active_superuser
+from app.api.deps import get_current_active_superuser, get_db
+from app.middleware.performance import (get_performance_stats,
+                                        run_performance_baseline)
 from app.models.user import User
-from app.middleware.performance import get_performance_stats, run_performance_baseline
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 

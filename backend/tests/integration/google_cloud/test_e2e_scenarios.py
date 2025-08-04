@@ -1,25 +1,29 @@
 """
 End-to-end integration tests for Google API scenarios
 """
-import pytest
-import pytest_asyncio
-from unittest.mock import Mock, patch, AsyncMock
+import asyncio
 import os
 from datetime import datetime, timedelta
 from decimal import Decimal
-import asyncio
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
-from app.main import app
 from app.core.database import get_async_session
+from app.main import app
 from app.models.customer import Customer
 from app.models.order import Order
-from app.services.google_cloud.routes_service_enhanced import get_enhanced_routes_service
+from app.services.google_cloud.routes_service_enhanced import \
+    get_enhanced_routes_service
+
 enhanced_routes_service = get_enhanced_routes_service()
-from app.services.google_cloud.vertex_ai_service_enhanced import enhanced_vertex_ai_service
+from app.services.google_cloud.vertex_ai_service_enhanced import \
+    enhanced_vertex_ai_service
 
 
 @pytest.mark.e2e

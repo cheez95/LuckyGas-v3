@@ -2,16 +2,17 @@
 Route analytics API endpoints - MVP version.
 """
 
+import logging
+from datetime import date, timedelta
+from typing import Dict, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, Dict
-from datetime import date, timedelta
-import logging
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_current_user, get_db
+from app.core.decorators import rate_limit
 from app.models.user import User
 from app.services.route_analytics_service import route_analytics_service
-from app.core.decorators import rate_limit
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

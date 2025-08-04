@@ -3,15 +3,16 @@ Tests for API enhancement features including CORS, rate limiting,
 versioning, and WebSocket functionality.
 """
 
+import asyncio
+import json
+from datetime import datetime
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from datetime import datetime
-import asyncio
-import json
 
-from app.main import app
 from app.core.config import settings
+from app.main import app
 
 
 class TestCORSConfiguration:
@@ -71,15 +72,16 @@ class TestRateLimiting:
     @pytest_asyncio.fixture
     async def rate_limited_client(self, db_session, monkeypatch):
         """Create a client with a low rate limit for testing."""
-        from httpx import AsyncClient, ASGITransport
-        from app.main import app
-        from app.core.database import get_async_session
-        from app.middleware.rate_limiting import RateLimitMiddleware
-        from app.core import cache as cache_module
         from unittest.mock import AsyncMock
-        
+
+        from httpx import ASGITransport, AsyncClient
+
         # Enable rate limiting
+        from app.core import cache as cache_module
         from app.core import config
+        from app.core.database import get_async_session
+        from app.main import app
+        from app.middleware.rate_limiting import RateLimitMiddleware
         monkeypatch.setattr(config.settings, "RATE_LIMIT_ENABLED", True)
         
         # Mock the cache methods used by rate limiting
@@ -269,8 +271,8 @@ class TestWebSocketEnhancements:
     @pytest.mark.asyncio
     async def test_socketio_cors_configuration(self):
         """Test that Socket.IO has proper CORS configuration."""
-        from app.api.v1.socketio_handler import sio, cors_origins
-        
+        from app.api.v1.socketio_handler import cors_origins, sio
+
         # Check that CORS is configured by verifying the cors_origins list exists
         assert cors_origins is not None
         assert len(cors_origins) > 0

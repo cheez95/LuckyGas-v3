@@ -1,22 +1,25 @@
 """
 Integration tests for Google API components working together
 """
-import pytest
-import pytest_asyncio
-from unittest.mock import Mock, patch, AsyncMock
+import asyncio
+import json
 import os
 from datetime import datetime, timedelta
 from decimal import Decimal
-import json
-import asyncio
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+import pytest_asyncio
 import redis.asyncio as redis
 
-from app.services.google_cloud.routes_service_enhanced import EnhancedGoogleRoutesService
-from app.services.google_cloud.vertex_ai_service_enhanced import EnhancedVertexAIService
-from app.services.google_cloud.monitoring.circuit_breaker import CircuitState
 from app.core.api_key_manager import LocalEncryptedKeyManager
 from app.services.google_cloud.development_mode import DevelopmentMode
+from app.services.google_cloud.monitoring.circuit_breaker import CircuitState
 from app.services.google_cloud.monitoring.error_handler import GoogleAPIError
+from app.services.google_cloud.routes_service_enhanced import \
+    EnhancedGoogleRoutesService
+from app.services.google_cloud.vertex_ai_service_enhanced import \
+    EnhancedVertexAIService
 
 
 @pytest.mark.integration
@@ -359,8 +362,8 @@ class TestGoogleAPIIntegration:
     async def test_api_key_management_integration(self):
         """Test API key management with services"""
         # Create temporary directory for keys
-        import tempfile
         import shutil
+        import tempfile
         
         with tempfile.TemporaryDirectory() as tmpdir:
             master_key_path = os.path.join(tmpdir, "master.key")

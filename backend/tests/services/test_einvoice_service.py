@@ -11,21 +11,19 @@ Tests cover:
 - Mock mode behavior
 - Validation functions
 """
-import pytest
-import httpx
-from unittest.mock import AsyncMock, MagicMock, patch, call
-from datetime import datetime, date
 import json
 import time
+from datetime import date, datetime
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from app.services.einvoice_service import (
-    EInvoiceService,
-    CircuitBreaker,
-    CircuitState,
-    get_einvoice_service
-)
-from app.models.invoice import Invoice, InvoiceItem, InvoiceType, InvoiceStatus
+import httpx
+import pytest
+
 from app.core.einvoice_config import EINVOICE_ERROR_CODES
+from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
+from app.services.einvoice_service import (CircuitBreaker, CircuitState,
+                                           EInvoiceService,
+                                           get_einvoice_service)
 
 
 # Test fixtures

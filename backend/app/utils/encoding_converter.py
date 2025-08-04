@@ -5,11 +5,12 @@ Handles Traditional Chinese character conversion with proper error handling
 
 import codecs
 import logging
-from typing import Any, Dict, List, Optional, Union
-import chardet
 import sqlite3
-import pandas as pd
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import chardet
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 

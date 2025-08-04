@@ -2,7 +2,8 @@
 Test OR-Tools VRP optimizer
 """
 import pytest
-from app.services.optimization import ortools_optimizer, VRPStop, VRPVehicle
+
+from app.services.optimization import VRPStop, VRPVehicle, ortools_optimizer
 
 
 def test_ortools_basic_optimization():

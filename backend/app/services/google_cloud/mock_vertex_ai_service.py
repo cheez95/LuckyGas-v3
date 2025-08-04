@@ -4,31 +4,21 @@ Mock Vertex AI Service for Development
 Provides realistic mock predictions for development and testing.
 """
 
-import random
-import asyncio
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta, date
-import logging
-import numpy as np
-from math import sin, cos, pi
-
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta, date
-import logging
-import random
 import asyncio
 import json
+import logging
+import random
+from datetime import date, datetime, timedelta
+from math import cos, pi, sin
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
-from math import sin, cos, pi
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.order import Order
+from app.core.config import settings
 from app.models.customer import Customer
 from app.models.delivery import DeliveryPrediction
-from app.core.config import settings
 from app.models.order import Order
-from app.models.customer import Customer
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

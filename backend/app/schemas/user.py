@@ -1,6 +1,7 @@
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.models.user import UserRole
 

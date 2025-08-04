@@ -2,14 +2,15 @@
 Credit limit management and validation service
 """
 
-from typing import Optional, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.logging import get_logger
 from app.models.customer import Customer
 from app.models.order import Order, OrderStatus
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 

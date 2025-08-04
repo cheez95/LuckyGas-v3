@@ -1,6 +1,10 @@
-import pytest
 from datetime import datetime, timedelta
-from app.schemas.order_template import OrderTemplateCreate, OrderTemplateUpdate, CreateOrderFromTemplate
+
+import pytest
+
+from app.schemas.order_template import (CreateOrderFromTemplate,
+                                        OrderTemplateCreate,
+                                        OrderTemplateUpdate)
 
 
 @pytest.mark.asyncio

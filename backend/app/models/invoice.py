@@ -2,23 +2,14 @@
 Invoice models for financial management
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    Boolean,
-    DateTime,
-    Date,
-    ForeignKey,
-    JSON,
-    Enum as SQLEnum,
-    Index,
-)
+import enum
+from datetime import datetime
+
+from sqlalchemy import JSON, Boolean, Column, Date, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Float, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
-import enum
 
 from app.core.database import Base
 

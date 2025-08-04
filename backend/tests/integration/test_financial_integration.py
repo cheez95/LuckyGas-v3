@@ -2,20 +2,22 @@
 Integration tests for financial modules
 Tests invoice generation, payment processing, and financial reporting
 """
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from unittest.mock import patch, AsyncMock, MagicMock
 
-from app.models.user import User, UserRole
-from app.models.customer import Customer, CustomerType
-from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.invoice import Invoice, InvoiceStatus, InvoiceType, PaymentMethod, InvoicePaymentStatus
-from app.models.gas_product import GasProduct
 from app.core.security import get_password_hash
+from app.models.customer import Customer, CustomerType
+from app.models.gas_product import GasProduct
+from app.models.invoice import (Invoice, InvoicePaymentStatus, InvoiceStatus,
+                                InvoiceType, PaymentMethod)
+from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.user import User, UserRole
 
 
 class TestFinancialIntegration:

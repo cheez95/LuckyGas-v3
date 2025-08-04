@@ -5,16 +5,17 @@ This module implements rate limiting using a sliding window algorithm
 with Redis as the backend storage for distributed rate limiting.
 """
 
+import hashlib
+import json
+from datetime import datetime, timedelta
+from typing import Dict, Optional, Tuple
+
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
-import hashlib
-import json
 
-from app.core.config import settings
 from app.core.cache import cache
+from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)

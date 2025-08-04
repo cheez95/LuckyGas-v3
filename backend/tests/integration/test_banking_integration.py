@@ -1,20 +1,20 @@
 """Integration tests for banking service with mocked SFTP."""
 
-import pytest
+import io
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, patch, MagicMock
-import io
+from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from sqlalchemy.orm import Session
-from app.services.banking_service import BankingService
-from app.models.banking import (
-    PaymentBatch, PaymentTransaction, BankConfiguration,
-    PaymentBatchStatus, TransactionStatus
-)
-from app.models.invoice import Invoice, InvoicePaymentStatus
+
+from app.models.banking import (BankConfiguration, PaymentBatch,
+                                PaymentBatchStatus, PaymentTransaction,
+                                TransactionStatus)
 from app.models.customer import Customer
+from app.models.invoice import Invoice, InvoicePaymentStatus
 from app.models.user import User
+from app.services.banking_service import BankingService
 
 
 @pytest.fixture

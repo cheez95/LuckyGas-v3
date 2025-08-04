@@ -1,20 +1,13 @@
 """Optimization data models for route optimization system."""
 
 from datetime import datetime, time
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    DateTime,
-    ForeignKey,
-    Boolean,
-    Time,
-    JSON,
-)
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, ForeignKey,
+                        Integer, String, Time)
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
 
 

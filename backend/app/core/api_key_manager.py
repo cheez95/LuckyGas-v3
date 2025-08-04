@@ -2,14 +2,15 @@
 Secure API Key Management System
 """
 
-from cryptography.fernet import Fernet
-from abc import ABC, abstractmethod
-import os
 import json
-from typing import Optional, Dict, List
 import logging
-from pathlib import Path
+import os
+from abc import ABC, abstractmethod
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional
+
+from cryptography.fernet import Fernet
 
 try:
     from google.cloud import secretmanager
@@ -471,6 +472,7 @@ def _get_api_key_manager_impl(
 async def get_api_key_manager() -> APIKeyManager:
     """Get the appropriate API key manager based on current environment"""
     import os
+
     from app.core.config import settings
 
     environment = os.getenv("ENVIRONMENT", "development")

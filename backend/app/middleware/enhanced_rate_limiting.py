@@ -9,26 +9,26 @@ This module implements:
 - Configurable rate limits per endpoint and user role
 """
 
-from typing import Callable, Optional, Dict, Any, List
-from datetime import datetime, timedelta
 import hashlib
-import secrets
 import json
+import secrets
+from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
 
-from fastapi import Request, Response, HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-
-from app.core.config import settings
-from app.core.cache import cache
-from app.core.logging import get_logger
-from app.core.database import async_session_maker
-from app.models.user import User
+from slowapi.util import get_remote_address
 from sqlalchemy import select
+
+from app.core.cache import cache
+from app.core.config import settings
+from app.core.database import async_session_maker
+from app.core.logging import get_logger
+from app.models.user import User
 
 logger = get_logger(__name__)
 

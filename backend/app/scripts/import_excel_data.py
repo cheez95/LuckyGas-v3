@@ -2,21 +2,22 @@
 """
 Import client list and delivery history from Excel files into PostgreSQL database
 """
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from datetime import datetime, date
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import logging
-
 # Add project root to Python path
 import sys
+from datetime import date, datetime
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.database import engine, async_session_maker
+from app.core.database import async_session_maker, engine
 from app.models.customer import Customer
 from app.models.delivery_history import DeliveryHistory
 

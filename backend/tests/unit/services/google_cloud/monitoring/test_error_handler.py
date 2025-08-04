@@ -1,18 +1,16 @@
 """
 Unit tests for Google API Error Handler
 """
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime
 import asyncio
 import random
+from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
 import aiohttp
+import pytest
 
 from app.services.google_cloud.monitoring.error_handler import (
-    GoogleAPIErrorHandler,
-    GoogleAPIError,
-    APIErrorType
-)
+    APIErrorType, GoogleAPIError, GoogleAPIErrorHandler)
 
 
 class TestGoogleAPIErrorHandler:

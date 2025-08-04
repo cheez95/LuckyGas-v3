@@ -2,13 +2,14 @@
 Route factory for test data generation
 """
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime, date, timedelta
 import random
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.route import Route, RouteStop
 from app.models.order import Order, OrderStatus
+from app.models.route import Route, RouteStop
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from tests.utils.factories.base import BaseFactory

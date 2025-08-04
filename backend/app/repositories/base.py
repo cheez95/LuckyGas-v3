@@ -3,13 +3,14 @@ Base repository pattern for data access layer
 Provides common CRUD operations with SQLAlchemy async support
 """
 
-from typing import TypeVar, Generic, Type, Optional, List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, func, and_, or_
-from sqlalchemy.orm import DeclarativeMeta, selectinload, joinedload
-from sqlalchemy.sql import Select
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+
+from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import DeclarativeMeta, joinedload, selectinload
+from sqlalchemy.sql import Select
 
 from app.core.database import Base
 
@@ -302,7 +303,7 @@ class CachedRepository(BaseRepository[ModelType]):
             Model instance or None
         """
         # Import here to avoid circular dependency
-        from app.core.cache import cache_result, CacheKeys
+        from app.core.cache import CacheKeys, cache_result
 
         cache_key = f"{self.cache_prefix}:{id}"
 

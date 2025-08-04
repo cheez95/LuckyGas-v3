@@ -1,20 +1,23 @@
 """
 Integration tests for database transactions and data integrity
 """
-import pytest
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+
+import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.models.user import User, UserRole
 from app.models.customer import Customer, CustomerType
+from app.models.invoice import (Invoice, InvoiceStatus, InvoiceType, Payment,
+                                PaymentMethod)
+from app.models.invoice import PaymentStatus as InvoicePaymentStatus
 from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.invoice import Invoice, InvoiceStatus, InvoiceType, Payment, PaymentMethod, PaymentStatus as InvoicePaymentStatus
 from app.models.route import Route, RouteStatus
 from app.models.route_plan import RoutePlan, RoutePlanStop
-from app.services.order_service import OrderService
+from app.models.user import User, UserRole
 from app.services.invoice_service import InvoiceService
+from app.services.order_service import OrderService
 from app.services.payment_service import PaymentService
 
 

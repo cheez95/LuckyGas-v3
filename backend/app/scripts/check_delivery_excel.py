@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Check delivery history Excel file structure"""
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 # File path
 DELIVERY_FILE = Path(__file__).resolve().parent.parent.parent.parent / 'raw' / '2025-05 deliver history.xlsx'

@@ -2,11 +2,12 @@
 Vehicle factory for test data generation
 """
 
-from typing import Dict, Any
-from datetime import datetime, date, timedelta
 import random
-from tests.utils.factories.base import BaseFactory
+from datetime import date, datetime, timedelta
+from typing import Any, Dict
+
 from app.models.vehicle import Vehicle
+from tests.utils.factories.base import BaseFactory
 
 
 class VehicleFactory(BaseFactory):

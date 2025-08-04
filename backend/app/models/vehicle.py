@@ -2,21 +2,14 @@
 Vehicle model for dispatch operations
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    Boolean,
-    DateTime,
-    ForeignKey,
-    JSON,
-    Enum as SQLEnum,
-)
+import enum
+from datetime import datetime
+
+from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
-import enum
 
 from app.core.database import Base
 

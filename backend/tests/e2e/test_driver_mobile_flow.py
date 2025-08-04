@@ -1,11 +1,12 @@
 """
 End-to-end tests for driver mobile app flow using Playwright
 """
-import pytest
-from playwright.async_api import Page, expect, BrowserContext
-from typing import Dict
-from datetime import datetime
 import os
+from datetime import datetime
+from typing import Dict
+
+import pytest
+from playwright.async_api import BrowserContext, Page, expect
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")
 

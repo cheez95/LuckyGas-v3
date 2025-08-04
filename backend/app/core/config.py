@@ -1,11 +1,12 @@
-from typing import List, Union, Optional, Dict
-from pydantic import field_validator, Field, model_validator, BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
-import secrets
-import re
 import os
+import re
+import secrets
 from enum import Enum
+from typing import Dict, List, Optional, Union
+
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load .env file
 load_dotenv()

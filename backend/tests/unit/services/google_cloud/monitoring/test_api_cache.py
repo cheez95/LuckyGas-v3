@@ -1,10 +1,11 @@
 """
 Unit tests for Google API Cache
 """
-import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 import redis.asyncio as redis
 
 from app.services.google_cloud.monitoring.api_cache import GoogleAPICache
@@ -247,7 +248,7 @@ class TestGoogleAPICache:
     async def test_concurrent_operations(self, api_cache, mock_redis):
         """Test concurrent cache operations"""
         import asyncio
-        
+
         # Mock Redis operations
         mock_redis.setex = AsyncMock(return_value=True)
         mock_redis.get = AsyncMock(return_value=json.dumps({"result": "test"}).encode())

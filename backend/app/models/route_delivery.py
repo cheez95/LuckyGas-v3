@@ -2,21 +2,13 @@
 Route delivery model - links routes to deliveries/orders
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Enum as SQLEnum,
-    Text,
-    Date,
-)
+from enum import Enum
+
+from sqlalchemy import Boolean, Column, Date, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from enum import Enum
 
 from app.core.database import Base
 

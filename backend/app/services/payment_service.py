@@ -2,20 +2,17 @@
 Payment service for business logic
 """
 
-from typing import List, Optional, Dict, Any
 from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.orm import selectinload
 
-from app.models import Payment, Invoice, InvoicePaymentStatus, Customer, PaymentMethod
-from app.schemas.payment import (
-    PaymentCreate,
-    PaymentUpdate,
-    PaymentStats,
-    DailyPaymentSummary,
-    CustomerBalance,
-)
+from app.models import (Customer, Invoice, InvoicePaymentStatus, Payment,
+                        PaymentMethod)
+from app.schemas.payment import (CustomerBalance, DailyPaymentSummary,
+                                 PaymentCreate, PaymentStats, PaymentUpdate)
 
 
 class PaymentService:

@@ -1,21 +1,20 @@
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Dict
-from datetime import datetime, timedelta
-import logging
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
-from app.schemas.prediction import (
-    DemandPredictionRequest,
-    DemandPredictionResponse,
-    ChurnPredictionResponse,
-    BatchPredictionRequest,
-    BatchPredictionResponse,
-    PredictionMetrics,
-)
-from app.services.vertex_ai_service import get_vertex_ai_service
+from app.api.deps import get_current_user, get_db
 from app.core.decorators import rate_limit
+from app.models.user import User
+from app.schemas.prediction import (BatchPredictionRequest,
+                                    BatchPredictionResponse,
+                                    ChurnPredictionResponse,
+                                    DemandPredictionRequest,
+                                    DemandPredictionResponse,
+                                    PredictionMetrics)
+from app.services.vertex_ai_service import get_vertex_ai_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

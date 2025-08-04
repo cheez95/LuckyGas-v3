@@ -2,10 +2,11 @@
 Seed script to create all gas product combinations
 """
 import asyncio
-from sqlalchemy import select
-from app.core.database import async_session_maker
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 
+from sqlalchemy import select
+
+from app.core.database import async_session_maker
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 
 # Product pricing configuration
 PRICING = {

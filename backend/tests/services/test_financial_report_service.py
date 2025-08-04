@@ -1,15 +1,16 @@
 """
 Unit tests for financial report service
 """
-import pytest
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
 from io import BytesIO
+from unittest.mock import AsyncMock, Mock, patch
 
-from app.services.financial_report_service import FinancialReportService
-from app.models.invoice import Invoice, InvoiceStatus, InvoiceType
+import pytest
+
 from app.models.customer import Customer, CustomerType
+from app.models.invoice import Invoice, InvoiceStatus, InvoiceType
+from app.services.financial_report_service import FinancialReportService
 
 
 @pytest.fixture

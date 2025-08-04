@@ -6,24 +6,25 @@ hiding API keys from the frontend and implementing rate limiting,
 authentication, and usage monitoring.
 """
 
+import asyncio
+import hashlib
+import json
 import logging
 import time
-import hashlib
-import asyncio
-from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Depends, Request, Query
-from fastapi.responses import JSONResponse
-import httpx
-from sqlalchemy.orm import Session
-from redis import Redis
-import json
+from typing import Any, Dict, Optional
 
-from app.api.deps import get_db, get_current_user
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
+from redis import Redis
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_user, get_db
 from app.core.config import settings
+from app.core.monitoring import track_api_usage
 from app.core.secrets_manager import get_secret
 from app.models.user import User
-from app.core.monitoring import track_api_usage
 
 logger = logging.getLogger(__name__)
 

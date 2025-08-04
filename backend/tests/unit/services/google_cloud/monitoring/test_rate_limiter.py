@@ -1,12 +1,14 @@
 """
 Unit tests for Google API Rate Limiter
 """
-import pytest
-from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 import redis.asyncio as redis
 
-from app.services.google_cloud.monitoring.rate_limiter import GoogleAPIRateLimiter
+from app.services.google_cloud.monitoring.rate_limiter import \
+    GoogleAPIRateLimiter
 
 
 class TestGoogleAPIRateLimiter:
@@ -206,7 +208,7 @@ class TestGoogleAPIRateLimiter:
     async def test_concurrent_requests(self, rate_limiter, mock_redis):
         """Test handling concurrent requests"""
         import asyncio
-        
+
         # Mock Redis responses
         call_count = 0
         

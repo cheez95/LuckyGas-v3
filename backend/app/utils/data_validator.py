@@ -3,17 +3,18 @@ Data validation framework for Lucky Gas migration
 Validates data integrity, business rules, and Taiwan-specific formats
 """
 
-import re
 import logging
-from datetime import datetime, date
-from typing import Dict, List, Optional, Any, Tuple, Set
-import pandas as pd
-import numpy as np
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+import re
 from collections import defaultdict
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from app.models import Customer, Order, User, Vehicle, GasProduct
+import numpy as np
+import pandas as pd
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Customer, GasProduct, Order, User, Vehicle
 from app.models.order import OrderStatus
 from app.models.user import UserRole
 
@@ -656,8 +657,8 @@ def validate_migration_data(
 
 if __name__ == "__main__":
     # Example usage
-    import sys
     import sqlite3
+    import sys
 
     if len(sys.argv) < 2:
         print("Usage: python data_validator.py <legacy_db_path> [output_dir]")

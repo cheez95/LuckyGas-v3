@@ -4,10 +4,11 @@ Test credit limit functionality
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
 from app.models.customer import Customer
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.services.credit_service import CreditService
-from app.core.config import settings
 from tests.utils.auth import get_test_token
 from tests.utils.customer import create_test_customer
 from tests.utils.order import create_test_order

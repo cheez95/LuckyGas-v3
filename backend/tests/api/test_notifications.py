@@ -1,12 +1,12 @@
 """Tests for notification API endpoints."""
-import pytest
-from unittest.mock import patch, AsyncMock
-from uuid import uuid4
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
 
-from app.models.notification import (
-    SMSProvider, NotificationStatus, NotificationChannel
-)
+import pytest
+
+from app.models.notification import (NotificationChannel, NotificationStatus,
+                                     SMSProvider)
 
 
 class TestSMSEndpoints:

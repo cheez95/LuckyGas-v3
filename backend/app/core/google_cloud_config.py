@@ -1,8 +1,9 @@
-from typing import Optional
-from functools import lru_cache
-from app.core.config import settings
 import asyncio
 import logging
+from functools import lru_cache
+from typing import Optional
+
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

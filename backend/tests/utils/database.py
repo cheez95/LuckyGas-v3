@@ -3,10 +3,12 @@ Database utilities for testing
 """
 
 import asyncio
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
 from sqlalchemy.pool import NullPool
 
 from app.core.database import Base
@@ -77,9 +79,9 @@ class TestDatabase:
 
     async def seed_basic_data(self, session: AsyncSession):
         """Seed basic data required for most tests"""
+        from app.core.security import get_password_hash
         from app.models.gas_product import GasProduct
         from app.models.user import User, UserRole
-        from app.core.security import get_password_hash
 
         # Create gas products
         products = [

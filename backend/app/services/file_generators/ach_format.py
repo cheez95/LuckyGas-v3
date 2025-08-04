@@ -1,11 +1,11 @@
 """Taiwan ACH (Automated Clearing House) format generator for banking transactions."""
 
+import logging
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Dict, Optional, Union
-from dataclasses import dataclass
-import logging
+from typing import Dict, List, Optional, Union
 
 from app.models.banking import PaymentBatch, PaymentTransaction
 from app.models.customer import Customer

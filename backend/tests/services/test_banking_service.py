@@ -1,22 +1,22 @@
 """Unit tests for banking service."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+import io
 from datetime import datetime, timedelta
 from decimal import Decimal
-import io
-import paramiko
+from unittest.mock import MagicMock, Mock, patch
 
+import paramiko
+import pytest
 from sqlalchemy.orm import Session
-from app.services.banking_service import (
-    BankingService, BankingFormatError, SFTPConnectionError
-)
-from app.models.banking import (
-    PaymentBatch, PaymentTransaction, ReconciliationLog, BankConfiguration,
-    PaymentBatchStatus, ReconciliationStatus, TransactionStatus
-)
-from app.models.invoice import Invoice, InvoicePaymentStatus
+
+from app.models.banking import (BankConfiguration, PaymentBatch,
+                                PaymentBatchStatus, PaymentTransaction,
+                                ReconciliationLog, ReconciliationStatus,
+                                TransactionStatus)
 from app.models.customer import Customer
+from app.models.invoice import Invoice, InvoicePaymentStatus
+from app.services.banking_service import (BankingFormatError, BankingService,
+                                          SFTPConnectionError)
 
 
 @pytest.fixture

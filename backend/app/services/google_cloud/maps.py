@@ -3,17 +3,19 @@ Placeholder Google Maps Route Optimization Service
 This will be replaced with actual Google Maps Route Optimization API
 """
 
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta, time
-import random
+import logging
 import math
-from app.models.route import Route
-from app.models.order import Order
-from app.models.vehicle import Vehicle
-from app.core.database import get_async_session
+import random
+from datetime import datetime, time, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-import logging
+
+from app.core.database import get_async_session
+from app.models.order import Order
+from app.models.route import Route
+from app.models.vehicle import Vehicle
 
 logger = logging.getLogger(__name__)
 

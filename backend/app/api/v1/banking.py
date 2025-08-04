@@ -1,33 +1,27 @@
 """Banking API endpoints for payment processing and reconciliation."""
 
 import logging
+from datetime import date, datetime
 from typing import List, Optional
-from datetime import datetime, date
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
-from sqlalchemy.orm import Session
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
-from app.models.banking import PaymentBatch, BankConfiguration
-from app.schemas.banking import (
-    BankConfigCreate,
-    BankConfigUpdate,
-    BankConfigResponse,
-    PaymentBatchCreate,
-    PaymentBatchResponse,
-    PaymentBatchListResponse,
-    GeneratePaymentFileRequest,
-    GeneratePaymentFileResponse,
-    UploadFileRequest,
-    UploadFileResponse,
-    CheckReconciliationResponse,
-    ProcessReconciliationRequest,
-    PaymentStatusReport,
-    ReconciliationLogResponse,
-)
-from app.services.banking_service import BankingService
 from app.core.security import get_password_hash
+from app.models.banking import BankConfiguration, PaymentBatch
+from app.models.user import User
+from app.schemas.banking import (BankConfigCreate, BankConfigResponse,
+                                 BankConfigUpdate, CheckReconciliationResponse,
+                                 GeneratePaymentFileRequest,
+                                 GeneratePaymentFileResponse,
+                                 PaymentBatchCreate, PaymentBatchListResponse,
+                                 PaymentBatchResponse, PaymentStatusReport,
+                                 ProcessReconciliationRequest,
+                                 ReconciliationLogResponse, UploadFileRequest,
+                                 UploadFileResponse)
+from app.services.banking_service import BankingService
 
 logger = logging.getLogger(__name__)
 

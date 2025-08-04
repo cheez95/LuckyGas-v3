@@ -10,20 +10,21 @@ This module implements multiple security layers:
 - Suspicious activity detection
 """
 
-from fastapi import Request, Response, HTTPException, status
-from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.datastructures import Headers, MutableHeaders
-from datetime import datetime, timedelta
-from typing import Dict, Optional, List, Set, Tuple
-import re
 import hashlib
 import json
+import re
 import secrets
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse
 
-from app.core.config import settings
+from fastapi import HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
+from starlette.datastructures import Headers, MutableHeaders
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.core.cache import cache
+from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)

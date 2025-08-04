@@ -2,9 +2,10 @@
 """
 Script to examine the structure of Excel files in the raw directory
 """
-import pandas as pd
 import os
 from pathlib import Path
+
+import pandas as pd
 
 # Get the project root directory
 project_root = Path(__file__).resolve().parent.parent.parent.parent

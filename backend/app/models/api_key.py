@@ -2,7 +2,7 @@
 API Key model for B2B partner authentication
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, JSON
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String
 from sqlalchemy.sql import func
 
 from app.core.database import Base

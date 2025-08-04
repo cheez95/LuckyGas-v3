@@ -3,18 +3,19 @@ Customer repository for data access operations
 Implements customer-specific queries and operations
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, text
-from sqlalchemy.orm import selectinload
-from datetime import datetime, date
-
-from app.repositories.base import BaseRepository, CachedRepository
-from app.models.customer import Customer
-from app.models.order import Order
-from app.models.customer_inventory import CustomerInventory
-from app.core.metrics import cache_operations_counter
 import logging
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.metrics import cache_operations_counter
+from app.models.customer import Customer
+from app.models.customer_inventory import CustomerInventory
+from app.models.order import Order
+from app.repositories.base import BaseRepository, CachedRepository
 
 logger = logging.getLogger(__name__)
 

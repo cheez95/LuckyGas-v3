@@ -1,19 +1,20 @@
-from typing import Optional, List
 from datetime import date
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
 from sqlalchemy.orm import joinedload
 
-from app.api.deps import get_db, get_current_user
-from app.models import User, DeliveryHistory as DeliveryHistoryModel, Customer
-from app.schemas.delivery_history import (
-    DeliveryHistory,
-    DeliveryHistoryCreate,
-    DeliveryHistoryUpdate,
-    DeliveryHistoryList,
-    DeliveryHistoryStats,
-)
+from app.api.deps import get_current_user, get_db
+from app.models import Customer
+from app.models import DeliveryHistory as DeliveryHistoryModel
+from app.models import User
+from app.schemas.delivery_history import (DeliveryHistory,
+                                          DeliveryHistoryCreate,
+                                          DeliveryHistoryList,
+                                          DeliveryHistoryStats,
+                                          DeliveryHistoryUpdate)
 
 router = APIRouter()
 

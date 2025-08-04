@@ -2,19 +2,20 @@
 Integration tests for dispatch operations
 Tests route planning, optimization, and driver assignment workflows
 """
+from datetime import date, timedelta
+from unittest.mock import AsyncMock, patch
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import date, timedelta
-from unittest.mock import patch, AsyncMock
 
-from app.models.user import User, UserRole
+from app.core.security import get_password_hash
 from app.models.customer import Customer, CustomerType
 from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus
+from app.models.user import User, UserRole
 from app.models.vehicle import Vehicle
-from app.core.security import get_password_hash
 
 
 class TestDispatchIntegration:

@@ -6,10 +6,10 @@ This script handles both consumer and provider contract testing,
 including publishing to Pact Broker if configured.
 """
 
-import os
-import sys
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 

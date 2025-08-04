@@ -1,9 +1,10 @@
 """
 E2E tests for order templates functionality (Sprint 3)
 """
+from datetime import datetime, timedelta
+
 import pytest
 from httpx import AsyncClient
-from datetime import datetime, timedelta
 
 from app.models.customer import Customer
 from app.models.order import Order, OrderStatus

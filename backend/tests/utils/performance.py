@@ -2,15 +2,16 @@
 Performance testing utilities
 """
 
-import time
 import asyncio
-import psutil
 import gc
-from typing import Callable, Any, Dict, List, Optional, Union
+import statistics
+import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-import statistics
+from typing import Any, Callable, Dict, List, Optional, Union
+
+import psutil
 
 
 @dataclass

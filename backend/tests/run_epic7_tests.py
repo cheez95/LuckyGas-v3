@@ -2,10 +2,10 @@
 """
 Run Epic 7 Integration Tests for Lucky Gas v3
 """
-import subprocess
 import json
-import time
 import os
+import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 

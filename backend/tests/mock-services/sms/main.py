@@ -3,13 +3,14 @@ Mock SMS Gateway Service for Testing
 Simulates SMS sending functionality
 """
 
-from fastapi import FastAPI, HTTPException, Header
-from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime
-import uuid
 import logging
 import random
+import uuid
+from datetime import datetime
+from typing import List, Optional
+
+from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

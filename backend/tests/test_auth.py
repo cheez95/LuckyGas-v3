@@ -5,8 +5,8 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User, UserRole
 from app.core.security import verify_password
+from app.models.user import User, UserRole
 
 
 class TestAuth:

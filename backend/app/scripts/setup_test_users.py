@@ -9,9 +9,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from sqlalchemy import select
+
 from app.core.database import async_session_maker
-from app.models.user import User
 from app.core.security import get_password_hash
+from app.models.user import User
 
 
 async def create_test_users():

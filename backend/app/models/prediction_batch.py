@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.sql import func
+
 from app.core.database import Base
 
 

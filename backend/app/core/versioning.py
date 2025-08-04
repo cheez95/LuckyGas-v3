@@ -7,12 +7,13 @@ This module provides utilities for API versioning including:
 - Version deprecation notices
 """
 
-from fastapi import Request, HTTPException, Header
-from fastapi.responses import JSONResponse
-from typing import Optional, List, Dict, Callable
-from functools import wraps
-from datetime import datetime
 import re
+from datetime import datetime
+from functools import wraps
+from typing import Callable, Dict, List, Optional
+
+from fastapi import Header, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from app.core.logging import get_logger
 

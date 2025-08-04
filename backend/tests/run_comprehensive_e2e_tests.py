@@ -3,9 +3,9 @@
 Comprehensive E2E test runner for Sprint 1-3 features
 This script runs all end-to-end tests to validate the complete functionality
 """
+import json
 import subprocess
 import sys
-import json
 from datetime import datetime
 from pathlib import Path
 

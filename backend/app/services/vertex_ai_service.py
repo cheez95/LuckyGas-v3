@@ -1,14 +1,14 @@
 import asyncio
-import logging
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
-from google.cloud import aiplatform
-from google.cloud.aiplatform import AutoMLTabularTrainingJob, Model, Endpoint
-from google.cloud import storage
-import joblib
 import json
+import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import joblib
+import numpy as np
+import pandas as pd
+from google.cloud import aiplatform, storage
+from google.cloud.aiplatform import AutoMLTabularTrainingJob, Endpoint, Model
 
 from app.core.config import settings
 
@@ -341,7 +341,8 @@ class VertexAIService:
     ) -> Dict[str, Any]:
         """Optimize routes using OR-Tools."""
         # This will be implemented in the routes service
-        from app.services.route_optimization_service import RouteOptimizationService
+        from app.services.route_optimization_service import \
+            RouteOptimizationService
 
         optimizer = RouteOptimizationService()
         return await optimizer.optimize_routes(orders, drivers, constraints)
@@ -456,9 +457,8 @@ def get_vertex_ai_service():
             or os.getenv("TESTING", "false").lower() == "true"
         ):
             # Return a mock service in development mode
-            from app.services.google_cloud.mock_vertex_ai_service import (
-                MockVertexAIDemandPredictionService,
-            )
+            from app.services.google_cloud.mock_vertex_ai_service import \
+                MockVertexAIDemandPredictionService
 
             return MockVertexAIDemandPredictionService()
         else:
@@ -468,9 +468,8 @@ def get_vertex_ai_service():
                 logger.warning(
                     f"Failed to initialize Vertex AI service: {e}. Using mock service."
                 )
-                from app.services.google_cloud.mock_vertex_ai_service import (
-                    MockVertexAIDemandPredictionService,
-                )
+                from app.services.google_cloud.mock_vertex_ai_service import \
+                    MockVertexAIDemandPredictionService
 
                 _vertex_ai_service = MockVertexAIDemandPredictionService()
     return _vertex_ai_service

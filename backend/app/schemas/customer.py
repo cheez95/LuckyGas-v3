@@ -1,16 +1,12 @@
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, field_validator, Field
 from datetime import datetime
+from typing import List, Optional
 
-from app.core.validators import (
-    TaiwanValidators,
-    phone_validator,
-    tax_id_validator,
-    address_validator,
-    TaiwanPhoneField,
-    TaiwanTaxIdField,
-    TaiwanAddressField,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.core.validators import (TaiwanAddressField, TaiwanPhoneField,
+                                 TaiwanTaxIdField, TaiwanValidators,
+                                 address_validator, phone_validator,
+                                 tax_id_validator)
 
 
 class CustomerBase(BaseModel):

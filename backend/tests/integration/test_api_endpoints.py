@@ -1,16 +1,17 @@
 """
 Integration tests for API endpoints
 """
+import json
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+
 import pytest
 import pytest_asyncio
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-import json
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.order import OrderStatus
 from app.models.invoice import InvoiceStatus, InvoiceType
+from app.models.order import OrderStatus
 from app.models.user import User
 
 

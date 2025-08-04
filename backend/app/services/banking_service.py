@@ -1,36 +1,32 @@
 """Banking service for payment processing and reconciliation with production SFTP support."""
 
+import csv
+import hashlib
 import io
+import json
+import logging
 import os
 import re
-import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple, Any
-from decimal import Decimal
-import paramiko
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-import csv
-from contextlib import contextmanager
-import time
-import hashlib
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
-import json
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.banking import (
-    PaymentBatch,
-    PaymentTransaction,
-    ReconciliationLog,
-    BankConfiguration,
-    PaymentBatchStatus,
-    ReconciliationStatus,
-    TransactionStatus,
-)
-from app.models.invoice import Invoice, InvoicePaymentStatus
-from app.models.customer import Customer
+import paramiko
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
 from app.core.secrets_manager import get_secrets_manager
+from app.models.banking import (BankConfiguration, PaymentBatch,
+                                PaymentBatchStatus, PaymentTransaction,
+                                ReconciliationLog, ReconciliationStatus,
+                                TransactionStatus)
+from app.models.customer import Customer
+from app.models.invoice import Invoice, InvoicePaymentStatus
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +59,7 @@ class BankingService:
     def _init_metrics(self):
         """Initialize Prometheus metrics for monitoring"""
         try:
-            from prometheus_client import Counter, Histogram, Gauge
+            from prometheus_client import Counter, Gauge, Histogram
 
             self.metrics = {
                 "sftp_connections": Gauge(

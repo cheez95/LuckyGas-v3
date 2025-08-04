@@ -4,11 +4,12 @@ Migrate existing delivery history records to use the new DeliveryHistoryItem str
 This script creates DeliveryHistoryItem records from the existing column data
 """
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import logging
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Add project root to Python path
 project_root = Path(__file__).resolve().parent.parent.parent
@@ -17,7 +18,7 @@ sys.path.insert(0, str(project_root))
 from app.core.database import async_session_maker
 from app.models.delivery_history import DeliveryHistory
 from app.models.delivery_history_item import DeliveryHistoryItem
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -2,13 +2,15 @@
 Configuration and fixtures for E2E tests using Playwright
 """
 
-import pytest
-import pytest_asyncio
 import asyncio
-from typing import Dict, Generator
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 import os
 from datetime import datetime
+from typing import Dict, Generator
+
+import pytest
+import pytest_asyncio
+from playwright.async_api import (Browser, BrowserContext, Page,
+                                  async_playwright)
 
 # Test configuration
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")

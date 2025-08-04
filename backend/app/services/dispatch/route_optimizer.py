@@ -3,29 +3,27 @@ Route optimization service for intelligent delivery planning
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta, time
 import logging
-from dataclasses import dataclass
-from collections import defaultdict
 import math
+from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import selectinload
 
-from app.models.order import Order, OrderStatus
 from app.models.customer import Customer
-from app.models.user import User, UserRole
 from app.models.gas_product import GasProduct
-from app.services.dispatch.google_routes_service import (
-    get_routes_service,
-    Location,
-    RouteStop,
-    RouteRequest,
-    TravelMode,
-    RoutingPreference,
-)
+from app.models.order import Order, OrderStatus
+from app.models.user import User, UserRole
+from app.services.dispatch.google_routes_service import (Location,
+                                                         RouteRequest,
+                                                         RouteStop,
+                                                         RoutingPreference,
+                                                         TravelMode,
+                                                         get_routes_service)
 
 logger = logging.getLogger(__name__)
 

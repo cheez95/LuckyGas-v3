@@ -3,11 +3,12 @@ Chaos Engineering Tests - Network Latency and Failures
 Tests system behavior under various network conditions
 """
 import asyncio
-import pytest
 import time
-from httpx import AsyncClient, ReadTimeout, ConnectError
-from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
+from httpx import AsyncClient, ConnectError, ReadTimeout
 
 
 class TestNetworkChaos:

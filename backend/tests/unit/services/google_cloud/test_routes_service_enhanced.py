@@ -1,14 +1,16 @@
 """
 Unit tests for Enhanced Google Routes Service
 """
-import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+import json
 from datetime import datetime
 from decimal import Decimal
-import json
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from app.services.google_cloud.routes_service_enhanced import EnhancedGoogleRoutesService
+import pytest
+
 from app.services.google_cloud.monitoring.circuit_breaker import CircuitState
+from app.services.google_cloud.routes_service_enhanced import \
+    EnhancedGoogleRoutesService
 
 
 class TestEnhancedGoogleRoutesService:
@@ -309,9 +311,10 @@ class TestEnhancedGoogleRoutesService:
             return_value=mock_optimizer_result
         ):
             # Create mock Order objects
-            from app.models.order import Order
-            from app.models.customer import Customer
             from datetime import datetime
+
+            from app.models.customer import Customer
+            from app.models.order import Order
             
             orders = []
             for i in range(5):
@@ -416,7 +419,7 @@ class TestEnhancedGoogleRoutesService:
     async def test_concurrent_requests(self, service, mock_dependencies):
         """Test handling concurrent requests"""
         import asyncio
-        
+
         # Setup mocks for concurrent access
         service._cache.get = AsyncMock(return_value=None)
         service._rate_limiter.check_rate_limit = AsyncMock(return_value=(True, None))

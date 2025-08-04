@@ -2,9 +2,11 @@
 Customer factory for test data generation
 """
 
-from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
 from app.models.customer import Customer
+
 from .base import BaseFactory
 
 

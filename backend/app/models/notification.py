@@ -1,22 +1,13 @@
 """Notification and SMS log models."""
 
-from sqlalchemy import (
-    Column,
-    String,
-    Integer,
-    Boolean,
-    DateTime,
-    Text,
-    Float,
-    JSON,
-    Enum,
-    Index,
-)
+import enum
+import uuid
+from datetime import datetime
+
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Enum, Float, Index,
+                        Integer, String, Text)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from datetime import datetime
-import uuid
-import enum
 
 from app.core.database import Base
 

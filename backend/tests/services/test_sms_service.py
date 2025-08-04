@@ -1,18 +1,16 @@
 """Tests for enhanced SMS service."""
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
-import aiohttp
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
-from app.services.sms_service import (
-    EnhancedSMSService, TwilioProvider, Every8dProvider, 
-    MitakeProvider, SMSProviderBase
-)
-from app.models.notification import (
-    SMSLog, SMSTemplate, ProviderConfig, 
-    NotificationStatus, SMSProvider
-)
+import aiohttp
+import pytest
+
+from app.models.notification import (NotificationStatus, ProviderConfig,
+                                     SMSLog, SMSProvider, SMSTemplate)
+from app.services.sms_service import (EnhancedSMSService, Every8dProvider,
+                                      MitakeProvider, SMSProviderBase,
+                                      TwilioProvider)
 
 
 class TestSMSProviderBase:
@@ -562,7 +560,7 @@ class TestEnhancedSMSService:
 async def test_taiwanese_phone_validation():
     """Test Taiwan phone number validation in schema"""
     from app.schemas.notification import SMSSendRequest
-    
+
     # Valid mobile numbers
     valid_mobiles = [
         "0912345678",

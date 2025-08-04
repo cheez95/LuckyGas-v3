@@ -1,13 +1,14 @@
 """Email service for sending reports and notifications."""
 
 import os
-from typing import List, Optional
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-import aiosmtplib
 from email.message import EmailMessage
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import List, Optional
+
+import aiosmtplib
 
 from app.core.config import settings
 from app.core.logging import get_logger

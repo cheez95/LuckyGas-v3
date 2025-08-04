@@ -189,7 +189,7 @@ class TestCreditLimitFlow:
     ):
         """Test tracking of overdue amounts"""
         from datetime import datetime, timedelta
-        
+
         # Create an old unpaid order (35 days ago)
         old_date = datetime.now() - timedelta(days=35)
         old_order = await order_factory(

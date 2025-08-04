@@ -1,25 +1,24 @@
-from typing import Optional, Dict, Any
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-import json
 import base64
+import json
 import logging
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-from app.api.deps import get_db, get_current_user
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
+                     status)
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
+from app.models.delivery_photo import DeliveryPhoto
 from app.models.order import Order, OrderStatus
 from app.models.user import User
-from app.models.delivery_photo import DeliveryPhoto
-from app.schemas.delivery import (
-    DeliveryConfirmation,
-    DeliveryStatusUpdate,
-    DeliveryLocationUpdate,
-    DeliveryResponse,
-)
-from app.services.websocket_service import websocket_manager
-from app.services.notification_service import notification_service, NotificationType
+from app.schemas.delivery import (DeliveryConfirmation, DeliveryLocationUpdate,
+                                  DeliveryResponse, DeliveryStatusUpdate)
 from app.services.file_storage import upload_delivery_photo, upload_signature
+from app.services.notification_service import (NotificationType,
+                                               notification_service)
+from app.services.websocket_service import websocket_manager
 
 logger = logging.getLogger(__name__)
 

@@ -1,17 +1,10 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Enum as SQLEnum,
-    Date,
-)
+from enum import Enum
+
+from sqlalchemy import Boolean, Column, Date, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from enum import Enum
 
 from app.core.database import Base
 

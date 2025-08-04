@@ -3,12 +3,13 @@ Simple WebSocket endpoint for real-time communication
 """
 
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
 from typing import Optional
 
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+
 from app.api import deps
-from app.services.simple_websocket import websocket_manager
 from app.core.auth import decode_token
+from app.services.simple_websocket import websocket_manager
 
 logger = logging.getLogger(__name__)
 

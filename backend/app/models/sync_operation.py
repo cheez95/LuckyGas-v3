@@ -6,22 +6,11 @@ with full audit trail and transaction support.
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any
 from enum import Enum as PyEnum
+from typing import Any, Dict, Optional
 
-from sqlalchemy import (
-    Column,
-    String,
-    DateTime,
-    Integer,
-    JSON,
-    Enum,
-    Boolean,
-    Index,
-    UniqueConstraint,
-    ForeignKey,
-    Text,
-)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Enum, ForeignKey,
+                        Index, Integer, String, Text, UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 

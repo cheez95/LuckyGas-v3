@@ -2,10 +2,11 @@
 Webhook log model for tracking and auditing webhook events.
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, Index
-from sqlalchemy.dialects.postgresql import JSONB
-from datetime import datetime
 import enum
+from datetime import datetime
+
+from sqlalchemy import Column, DateTime, Enum, Index, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.core.database import Base
 

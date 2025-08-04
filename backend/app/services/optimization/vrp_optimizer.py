@@ -1,33 +1,24 @@
 """VRP Optimizer wrapper that integrates clustering with OR-Tools."""
 
 import asyncio
-from typing import List, Dict, Optional, Any, Tuple
-from datetime import datetime, time, timedelta
 import logging
 import time as time_module
 import uuid
+from datetime import datetime, time, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.services.optimization.ortools_optimizer import (
-    ORToolsOptimizer,
-    VRPStop,
-    VRPVehicle,
-)
+from app.core.metrics import (route_optimization_histogram,
+                              vrp_constraint_violations_counter,
+                              vrp_optimization_summary,
+                              vrp_solution_quality_gauge)
+from app.models.optimization import (ClusterInfo, OptimizationConstraints,
+                                     OptimizationRequest, OptimizationResponse,
+                                     OptimizedRoute, OptimizedStop)
+from app.services.google_cloud.monitoring.intelligent_cache import \
+    IntelligentCache
 from app.services.optimization.clustering import GeographicClusterer
-from app.models.optimization import (
-    OptimizationRequest,
-    OptimizationResponse,
-    OptimizationConstraints,
-    OptimizedRoute,
-    OptimizedStop,
-    ClusterInfo,
-)
-from app.services.google_cloud.monitoring.intelligent_cache import IntelligentCache
-from app.core.metrics import (
-    route_optimization_histogram,
-    vrp_optimization_summary,
-    vrp_solution_quality_gauge,
-    vrp_constraint_violations_counter,
-)
+from app.services.optimization.ortools_optimizer import (ORToolsOptimizer,
+                                                         VRPStop, VRPVehicle)
 
 logger = logging.getLogger(__name__)
 
@@ -393,7 +384,7 @@ class VRPOptimizer:
         self, lat1: float, lng1: float, lat2: float, lng2: float
     ) -> float:
         """Calculate distance between two points in kilometers."""
-        from math import radians, sin, cos, sqrt, atan2
+        from math import atan2, cos, radians, sin, sqrt
 
         R = 6371  # Earth's radius in kilometers
         lat1, lng1, lat2, lng2 = map(radians, [lat1, lng1, lat2, lng2])

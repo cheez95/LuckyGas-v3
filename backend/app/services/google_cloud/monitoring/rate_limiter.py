@@ -3,11 +3,13 @@ Google API Rate Limiter
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from collections import deque
-from typing import Dict, Optional, Tuple
-import redis.asyncio as redis
 import logging
+from collections import deque
+from datetime import datetime, timedelta
+from typing import Dict, Optional, Tuple
+
+import redis.asyncio as redis
+
 from app.core.cache import get_redis_client
 from app.core.metrics import google_api_calls_counter
 

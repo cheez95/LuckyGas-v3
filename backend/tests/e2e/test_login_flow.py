@@ -1,10 +1,11 @@
 """
 End-to-end tests for login flow using Playwright
 """
+import os
+from typing import Dict
+
 import pytest
 from playwright.async_api import Page, expect
-from typing import Dict
-import os
 
 # Base URL for tests
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")

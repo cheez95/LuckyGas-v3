@@ -1,13 +1,14 @@
-import logging
 import asyncio
-from typing import Dict, Any, Optional, List
-from datetime import datetime
-import aiohttp
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+import logging
 import os
+import smtplib
+from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Any, Dict, List, Optional
+
+import aiohttp
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.core.config import settings
 

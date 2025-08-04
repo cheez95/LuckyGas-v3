@@ -2,17 +2,19 @@
 Integration test configuration and fixtures
 """
 
-import os
 import asyncio
-import pytest
-import pytest_asyncio
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import NullPool
-from httpx import AsyncClient, ASGITransport
-import redis.asyncio as redis
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import AsyncGenerator
+
+import pytest
+import pytest_asyncio
+import redis.asyncio as redis
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
+from sqlalchemy.pool import NullPool
 
 # Set test environment before importing app
 os.environ["ENVIRONMENT"] = "test"
@@ -25,15 +27,15 @@ if test_env_path.exists():
 
     load_dotenv(test_env_path)
 
-from app.main import app
-from app.core.database import Base, get_async_session
 from app.core.cache import get_redis_client
 from app.core.config import settings
-from app.models.user import User, UserRole
+from app.core.database import Base, get_async_session
+from app.core.security import create_access_token, get_password_hash
+from app.main import app
 from app.models.customer import Customer, CustomerType
-from app.models.order import Order, OrderStatus
 from app.models.invoice import Invoice, InvoiceStatus
-from app.core.security import get_password_hash, create_access_token
+from app.models.order import Order, OrderStatus
+from app.models.user import User, UserRole
 
 # Test database URL - use PostgreSQL test database from docker-compose
 TEST_DATABASE_URL = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"

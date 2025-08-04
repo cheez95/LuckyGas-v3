@@ -3,15 +3,17 @@ Chaos Engineering Tests - Database Connection Pool and Failures
 Tests system behavior under database stress and failures
 """
 import asyncio
-import pytest
+import os
 import time
+from unittest.mock import MagicMock, patch
+
+import psutil
+import pytest
 from httpx import AsyncClient
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as SQLTimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool, QueuePool
-from sqlalchemy.exc import OperationalError, TimeoutError as SQLTimeoutError
-from unittest.mock import patch, MagicMock
-import psutil
-import os
 
 
 class TestDatabaseChaos:
@@ -154,7 +156,7 @@ class TestDatabaseChaos:
         """Test system behavior with slow database queries"""
         # Create many test records to slow down queries
         from app.models.customer import Customer
-        
+
         # Insert test customers
         customers = []
         for i in range(100):

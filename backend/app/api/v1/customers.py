@@ -1,23 +1,25 @@
-from typing import List, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
-from sqlalchemy.orm import selectinload
 from datetime import timedelta
+from typing import Any, List, Optional
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User as UserModel, UserRole
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.api.deps import get_current_user, get_db
+from app.core.cache import cache, cache_result
 from app.models.customer import Customer as CustomerModel
-from app.models.customer_inventory import CustomerInventory as CustomerInventoryModel
+from app.models.customer_inventory import \
+    CustomerInventory as CustomerInventoryModel
 from app.models.gas_product import GasProduct as GasProductModel
-from app.schemas.customer import Customer, CustomerCreate, CustomerUpdate, CustomerList
-from app.schemas.customer_inventory import (
-    CustomerInventory,
-    CustomerInventoryUpdate,
-    CustomerInventoryList,
-)
+from app.models.user import User as UserModel
+from app.models.user import UserRole
+from app.schemas.customer import (Customer, CustomerCreate, CustomerList,
+                                  CustomerUpdate)
+from app.schemas.customer_inventory import (CustomerInventory,
+                                            CustomerInventoryList,
+                                            CustomerInventoryUpdate)
 from app.services.customer_service import CustomerService
-from app.core.cache import cache_result, cache
 
 router = APIRouter()
 

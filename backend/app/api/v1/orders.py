@@ -1,29 +1,30 @@
-from typing import List, Optional
-from datetime import datetime, timedelta
 import time
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, text
 from sqlalchemy.orm import selectinload
 
 from app.api import deps
-from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.order_item import OrderItem
-from app.models.customer import Customer
-from app.models.user import User
-from app.models.gas_product import GasProduct
-from app.schemas.order import Order as OrderSchema, OrderCreate, OrderUpdate
-from app.schemas.order import OrderCreateV2, OrderUpdateV2, OrderV2
-from app.schemas.order_item import OrderItemCreate
-from app.schemas.credit import CreditSummary, CreditCheckResult
-from app.schemas.order_search import OrderSearchCriteria, OrderSearchResult
 from app.api.deps import get_db
-
 # Removed during compaction
 # from app.api.v1.socketio_handler import notify_order_update
-from app.core.cache import cache_result, invalidate_cache, CacheKeys, cache
-from app.services.order_service import OrderService
+from app.core.cache import CacheKeys, cache, cache_result, invalidate_cache
+from app.models.customer import Customer
+from app.models.gas_product import GasProduct
+from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.order_item import OrderItem
+from app.models.user import User
+from app.schemas.credit import CreditCheckResult, CreditSummary
+from app.schemas.order import Order as OrderSchema
+from app.schemas.order import (OrderCreate, OrderCreateV2, OrderUpdate,
+                               OrderUpdateV2, OrderV2)
+from app.schemas.order_item import OrderItemCreate
+from app.schemas.order_search import OrderSearchCriteria, OrderSearchResult
 from app.services.credit_service import CreditService
+from app.services.order_service import OrderService
 
 router = APIRouter()
 

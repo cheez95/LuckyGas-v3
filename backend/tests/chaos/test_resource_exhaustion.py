@@ -3,16 +3,17 @@ Chaos Engineering Tests - Resource Exhaustion
 Tests system behavior under resource constraints (memory, CPU, disk)
 """
 import asyncio
-import pytest
-import psutil
-import os
-import time
 import gc
-import tempfile
-from httpx import AsyncClient
-from concurrent.futures import ThreadPoolExecutor
-import threading
 import multiprocessing
+import os
+import tempfile
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+import psutil
+import pytest
+from httpx import AsyncClient
 
 
 class TestResourceExhaustion:

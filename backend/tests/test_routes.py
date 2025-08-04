@@ -1,16 +1,17 @@
 """
 Tests for route endpoints
 """
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer import Customer
 from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus, RouteStop
-from app.models.vehicle import Vehicle, VehicleType
 from app.models.user import User
+from app.models.vehicle import Vehicle, VehicleType
 
 
 class TestRoutes:

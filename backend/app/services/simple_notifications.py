@@ -3,11 +3,12 @@ Simple notification service for SMS and email
 Replaces complex notification_service.py with direct sending
 """
 
-import re
 import logging
-import httpx
+import re
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings

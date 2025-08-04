@@ -1,21 +1,17 @@
-from typing import List, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
+from typing import Any, List, Optional
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User as UserModel, UserRole
-from app.models.gas_product import (
-    GasProduct as GasProductModel,
-    DeliveryMethod,
-    ProductAttribute,
-)
-from app.schemas.gas_product import (
-    GasProduct,
-    GasProductCreate,
-    GasProductUpdate,
-    GasProductList,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
+from app.models.gas_product import DeliveryMethod
+from app.models.gas_product import GasProduct as GasProductModel
+from app.models.gas_product import ProductAttribute
+from app.models.user import User as UserModel
+from app.models.user import UserRole
+from app.schemas.gas_product import (GasProduct, GasProductCreate,
+                                     GasProductList, GasProductUpdate)
 
 router = APIRouter()
 

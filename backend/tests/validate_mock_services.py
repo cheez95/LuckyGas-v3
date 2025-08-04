@@ -4,12 +4,13 @@ Validate Mock Services Health Check Script
 Checks all mock services are healthy and responding correctly
 """
 
-import requests
+import json
 import sys
 import time
-from typing import Dict, Tuple, List
-import json
 from datetime import datetime
+from typing import Dict, List, Tuple
+
+import requests
 
 # Service configuration
 SERVICES = {

@@ -4,21 +4,22 @@ Handles real-time synchronization between legacy and new systems
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-import redis.asyncio as redis
-import sqlite3
-import pandas as pd
 import json
+import logging
+import sqlite3
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.utils.encoding_converter import Big5ToUTF8Converter
+import pandas as pd
+import redis.asyncio as redis
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_async_session
-from app.models import Customer, User, Order, OrderItem, GasProduct, Vehicle
+from app.models import Customer, GasProduct, Order, OrderItem, User, Vehicle
 from app.models.order import OrderStatus, PaymentStatus
 from app.models.user import UserRole
+from app.utils.encoding_converter import Big5ToUTF8Converter
 
 logger = logging.getLogger(__name__)
 

@@ -4,16 +4,17 @@ Integration tests for Taiwan Government E-Invoice API
 These tests simulate the full lifecycle of e-invoice operations with
 mocked government API responses to ensure proper integration behavior.
 """
-import pytest
-import httpx
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime, date, timedelta
-import json
 import asyncio
+import json
+from datetime import date, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.einvoice_service import EInvoiceService, get_einvoice_service
-from app.models.invoice import Invoice, InvoiceItem, InvoiceType, InvoiceStatus
+import httpx
+import pytest
+
 from app.core.einvoice_config import EINVOICE_ERROR_CODES
+from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
+from app.services.einvoice_service import EInvoiceService, get_einvoice_service
 
 
 class TestEInvoiceIntegration:

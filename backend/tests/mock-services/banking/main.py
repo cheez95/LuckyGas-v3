@@ -3,14 +3,15 @@ Mock Banking API Service for Testing
 Simulates banking operations and payment processing
 """
 
-from fastapi import FastAPI, HTTPException, Header
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-import uuid
-import random
 import logging
+import random
+import uuid
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

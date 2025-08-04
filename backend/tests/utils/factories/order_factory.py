@@ -2,9 +2,11 @@
 Order factory for test data generation
 """
 
-from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 from app.models.order import Order, OrderStatus, PaymentStatus
+
 from .base import BaseFactory
 
 

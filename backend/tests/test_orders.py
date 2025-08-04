@@ -1,14 +1,15 @@
 """
 Tests for order endpoints
 """
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer import Customer
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 from app.models.order_item import OrderItem
 
 

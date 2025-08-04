@@ -4,12 +4,13 @@ Comprehensive Mock Services Validation Script
 Tests health checks and actual API functionality for all mock services
 """
 
-import requests
+import json
 import sys
 import time
-import json
-from typing import Dict, Tuple, List, Any
 from datetime import datetime
+from typing import Any, Dict, List, Tuple
+
+import requests
 
 # Service test configurations
 SERVICE_TESTS = {

@@ -1,16 +1,18 @@
 """
 Integration tests for external API mocking
 """
-import pytest
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from unittest.mock import AsyncMock, patch, MagicMock
 import json
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.dispatch.google_routes_service import GoogleRoutesService, Location, RouteStop
-from app.services.einvoice_service import EInvoiceService
-from app.models.invoice import Invoice, InvoiceType, InvoiceStatus
+import pytest
+
+from app.models.invoice import Invoice, InvoiceStatus, InvoiceType
 from app.models.order import Order, OrderStatus
+from app.services.dispatch.google_routes_service import (GoogleRoutesService,
+                                                         Location, RouteStop)
+from app.services.einvoice_service import EInvoiceService
 
 
 class TestGoogleRoutesAPIMocking:
@@ -299,7 +301,8 @@ class TestVertexAIMocking:
             mock_predict.return_value = mock_predictions
             
             # Test the prediction
-            from app.services.google_cloud.mock_vertex_ai_service import MockVertexAIService
+            from app.services.google_cloud.mock_vertex_ai_service import \
+                MockVertexAIService
             service = MockVertexAIService()
             
             customer_data = [

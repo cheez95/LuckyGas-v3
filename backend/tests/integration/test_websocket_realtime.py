@@ -1,15 +1,16 @@
 """
 Integration tests for WebSocket real-time updates
 """
-import pytest
 import asyncio
 import json
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
-from app.services.websocket_service import websocket_manager
+import pytest
+
 from app.models.order import OrderStatus
 from app.models.user import UserRole
+from app.services.websocket_service import websocket_manager
 
 
 class TestWebSocketRealTimeUpdates:

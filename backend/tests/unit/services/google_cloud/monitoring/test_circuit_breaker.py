@@ -1,12 +1,14 @@
 """
 Unit tests for Circuit Breaker pattern implementation
 """
-import pytest
-from unittest.mock import Mock, patch
-from datetime import datetime, timedelta
 import asyncio
+from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 
-from app.services.google_cloud.monitoring.circuit_breaker import CircuitBreaker, CircuitState
+import pytest
+
+from app.services.google_cloud.monitoring.circuit_breaker import (
+    CircuitBreaker, CircuitState)
 
 
 class TestCircuitBreaker:

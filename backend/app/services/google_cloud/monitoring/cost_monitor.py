@@ -2,14 +2,16 @@
 Google API Cost Monitoring and Control
 """
 
-from typing import Dict, Optional, List
-from datetime import datetime, timedelta
-from decimal import Decimal
 import asyncio
 import logging
-from app.core.metrics import google_api_calls_counter
-from app.core.cache import get_redis_client
+from datetime import datetime, timedelta
+from decimal import Decimal
+from typing import Dict, List, Optional
+
 import redis.asyncio as redis
+
+from app.core.cache import get_redis_client
+from app.core.metrics import google_api_calls_counter
 
 logger = logging.getLogger(__name__)
 

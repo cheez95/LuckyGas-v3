@@ -1,5 +1,7 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict
+
 from app.models.gas_product import DeliveryMethod, ProductAttribute
 
 

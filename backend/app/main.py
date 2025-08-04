@@ -1,60 +1,40 @@
+import time
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from contextlib import asynccontextmanager
-import time
 
-# from prometheus_fastapi_instrumentator import Instrumentator  # Removed during compaction
-
-from app.api.v1 import (
-    auth,
-    customers,
-    orders,
-    routes,
-    predictions,
-    websocket,
-    delivery_history,
-    products,
-    driver,
-    communications,
-    order_templates,
-    invoices,
-    payments,
-    financial_reports,
-    banking,
-    notifications,
-    health,
-    monitoring,
-    sms,
-    analytics,
-    api_keys,
-    maps_proxy,
-)
+from app.api.v1 import (analytics, api_keys, auth, banking, communications,
+                        customers, delivery_history, driver, financial_reports,
+                        health, invoices, maps_proxy, monitoring,
+                        notifications, order_templates, orders, payments,
+                        predictions, products, routes, sms, websocket)
 from app.api.v1.admin import migration
-
 # Socket.IO handler removed during compaction
 from app.core.config import settings
 from app.core.database import create_db_and_tables, engine
-from app.core.logging import setup_logging, get_logger
-from app.middleware.logging import LoggingMiddleware, CorrelationIdMiddleware
-from app.middleware.metrics import MetricsMiddleware
-from app.middleware.enhanced_rate_limiting import (
-    limiter,
-    RateLimitExceeded,
-    _rate_limit_exceeded_handler,
-)
-from app.middleware.security import SecurityMiddleware
-
-# from app.core.api_security import APISecurityMiddleware, api_validator, rate_limiter  # TODO: Fix missing dependencies
-from app.middleware.performance import PerformanceMiddleware
-
 # from app.core.db_metrics import DatabaseMetricsCollector  # Removed during compaction
 from app.core.env_validation import validate_environment
+from app.core.logging import get_logger, setup_logging
+from app.middleware.enhanced_rate_limiting import (
+    RateLimitExceeded, _rate_limit_exceeded_handler, limiter)
+from app.middleware.logging import CorrelationIdMiddleware, LoggingMiddleware
+from app.middleware.metrics import MetricsMiddleware
+# from app.core.api_security import APISecurityMiddleware, api_validator, rate_limiter  # TODO: Fix missing dependencies
+from app.middleware.performance import PerformanceMiddleware
+from app.middleware.security import SecurityMiddleware
 from app.services.websocket_service import websocket_manager
+
+# from prometheus_fastapi_instrumentator import Instrumentator  # Removed during compaction
+
+
+
+
 
 # Setup structured logging
 setup_logging()

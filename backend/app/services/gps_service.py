@@ -2,12 +2,12 @@
 GPS tracking service for driver location management
 """
 
-from typing import Dict, Optional, List, Tuple
-from datetime import datetime, timedelta
-import math
-from dataclasses import dataclass
 import asyncio
+import math
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
 
 from app.core.logging import get_logger
 

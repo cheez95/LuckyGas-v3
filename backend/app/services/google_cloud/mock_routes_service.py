@@ -2,17 +2,17 @@
 Mock Google Routes Service for Development
 """
 
-import json
-import random
 import asyncio
-from typing import List, Dict, Tuple, Any, Optional
-from datetime import datetime, timedelta
+import json
 import logging
-from math import radians, sin, cos, sqrt, atan2
+import random
+from datetime import datetime, timedelta
+from math import atan2, cos, radians, sin, sqrt
+from typing import Any, Dict, List, Optional, Tuple
 
+from app.core.config import settings
 from app.services.google_cloud.routes_service import GoogleRoutesService
 from app.services.optimization.ortools_optimizer import VRPStop
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

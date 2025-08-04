@@ -9,17 +9,18 @@ Tests cover:
 - Concurrent request handling
 - Memory usage patterns
 """
-import pytest
 import asyncio
-import time
-import psutil
 import os
+import time
 from datetime import datetime
-from unittest.mock import MagicMock, patch, AsyncMock
-import httpx
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.einvoice_service import EInvoiceService, get_einvoice_service
+import httpx
+import psutil
+import pytest
+
 from app.models.invoice import Invoice, InvoiceItem, InvoiceType
+from app.services.einvoice_service import EInvoiceService, get_einvoice_service
 
 
 class TestEInvoicePerformance:

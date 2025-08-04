@@ -1,38 +1,27 @@
 """Notification and SMS API endpoints."""
 
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from app.api.deps import get_db, get_current_user
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
+from app.models.notification import (NotificationChannel, NotificationLog,
+                                     NotificationStatus, ProviderConfig,
+                                     SMSLog, SMSProvider, SMSTemplate)
 from app.models.user import User, UserRole
-from app.models.notification import (
-    SMSLog,
-    SMSTemplate,
-    NotificationLog,
-    ProviderConfig,
-    NotificationStatus,
-    SMSProvider,
-    NotificationChannel,
-)
-from app.schemas.notification import (
-    SMSSendRequest,
-    SMSSendResponse,
-    SMSBulkSendRequest,
-    SMSStatusResponse,
-    SMSTemplateCreate,
-    SMSTemplateUpdate,
-    SMSTemplateResponse,
-    NotificationLogResponse,
-    ProviderConfigCreate,
-    ProviderConfigUpdate,
-    ProviderConfigResponse,
-    SMSLogResponse,
-    NotificationStatsResponse,
-)
+from app.schemas.notification import (NotificationLogResponse,
+                                      NotificationStatsResponse,
+                                      ProviderConfigCreate,
+                                      ProviderConfigResponse,
+                                      ProviderConfigUpdate, SMSBulkSendRequest,
+                                      SMSLogResponse, SMSSendRequest,
+                                      SMSSendResponse, SMSStatusResponse,
+                                      SMSTemplateCreate, SMSTemplateResponse,
+                                      SMSTemplateUpdate)
 from app.services.notification_service import notification_service
 from app.services.sms_service import enhanced_sms_service
 

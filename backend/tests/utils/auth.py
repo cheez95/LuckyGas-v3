@@ -3,6 +3,7 @@ Authentication test utilities
 """
 
 from httpx import AsyncClient
+
 from app.core.config import settings
 
 

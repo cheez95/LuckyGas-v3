@@ -2,25 +2,21 @@
 Payment management API endpoints
 """
 
-from typing import List, Optional
 from datetime import date, datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, desc, func
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_db
+from app.models.invoice import (Invoice, InvoicePaymentStatus, Payment,
+                                PaymentMethod)
 from app.models.user import User
-from app.models.invoice import Invoice, InvoicePaymentStatus, Payment, PaymentMethod
-from app.schemas.payment import (
-    PaymentCreate,
-    PaymentUpdate,
-    PaymentResponse,
-    PaymentSearchParams,
-    PaymentStats,
-    PaymentVerification,
-)
+from app.schemas.payment import (PaymentCreate, PaymentResponse,
+                                 PaymentSearchParams, PaymentStats,
+                                 PaymentUpdate, PaymentVerification)
 from app.services.payment_service import PaymentService
 
 router = APIRouter(prefix="/payments", tags=["payments"])

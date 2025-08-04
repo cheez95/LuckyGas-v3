@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Simple load test for production readiness validation."""
 import asyncio
-import aiohttp
-import time
 import statistics
-from typing import List
 import sys
+import time
+from typing import List
+
+import aiohttp
 
 
 async def make_request(session: aiohttp.ClientSession, url: str) -> tuple[float, int]:

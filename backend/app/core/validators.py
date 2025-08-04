@@ -3,9 +3,10 @@ Taiwan-specific validators for Pydantic models
 """
 
 import re
-from typing import Optional
-from pydantic import field_validator, Field
 from datetime import datetime
+from typing import Optional
+
+from pydantic import Field, field_validator
 
 
 class TaiwanValidators:

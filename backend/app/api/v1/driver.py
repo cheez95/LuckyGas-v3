@@ -2,42 +2,36 @@
 Driver API endpoints for mobile app functionality
 """
 
-from typing import List, Optional, Dict, Any
-from datetime import datetime, date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+import base64
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import aiofiles
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
+                     status)
+from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, update
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from app.api.deps import get_current_user, get_db
+from app.core.security import verify_user_role
+from app.models.customer import Customer
 from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
-from app.models.customer import Customer
 from app.models.route import Route, RouteStatus
-from app.models.route_delivery import (
-    RouteDelivery,
-    DeliveryStatus,
-    DeliveryStatusHistory,
-)
-from app.schemas.driver import (
-    RouteListResponse,
-    RouteDetailResponse,
-    DeliveryStatsResponse,
-    LocationUpdateRequest,
-    DeliveryStatusUpdateRequest,
-    DeliveryConfirmRequest,
-    DeliveryConfirmResponse,
-    DriverSyncRequest,
-    DriverSyncResponse,
-)
-from app.core.security import verify_user_role
-from app.services.websocket_service import websocket_manager as ws_manager
-from app.services.notification_service import NotificationService, NotificationType
+from app.models.route_delivery import (DeliveryStatus, DeliveryStatusHistory,
+                                       RouteDelivery)
+from app.models.user import User
+from app.schemas.driver import (DeliveryConfirmRequest,
+                                DeliveryConfirmResponse, DeliveryStatsResponse,
+                                DeliveryStatusUpdateRequest, DriverSyncRequest,
+                                DriverSyncResponse, LocationUpdateRequest,
+                                RouteDetailResponse, RouteListResponse)
 from app.services.gps_service import GPSService
-import base64
-import aiofiles
-from pathlib import Path
+from app.services.notification_service import (NotificationService,
+                                               NotificationType)
+from app.services.websocket_service import websocket_manager as ws_manager
 
 router = APIRouter()
 notification_service = NotificationService()

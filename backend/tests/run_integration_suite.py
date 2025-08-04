@@ -4,10 +4,10 @@ Run Integration Test Suite for Lucky Gas v3
 
 This script sets up the proper test environment and runs all integration tests.
 """
-import os
-import sys
-import subprocess
 import json
+import os
+import subprocess
+import sys
 import time
 from datetime import datetime
 from pathlib import Path

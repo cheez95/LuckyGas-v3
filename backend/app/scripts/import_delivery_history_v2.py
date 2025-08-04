@@ -3,25 +3,26 @@
 Import delivery history from Excel files using the new flexible gas product system
 This version creates DeliveryHistoryItem records for each product delivered
 """
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from datetime import datetime, date
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import logging
-
 # Add project root to Python path
 import sys
+from datetime import date, datetime
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.database import engine, async_session_maker
+from app.core.database import async_session_maker, engine
 from app.models.customer import Customer
 from app.models.delivery_history import DeliveryHistory
 from app.models.delivery_history_item import DeliveryHistoryItem
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

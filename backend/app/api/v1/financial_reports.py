@@ -2,15 +2,15 @@
 Financial reporting API endpoints
 """
 
-from typing import Optional
+import io
 from datetime import date, datetime
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-import io
 
-from app.api.deps import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.services.financial_report_service import FinancialReportService
 

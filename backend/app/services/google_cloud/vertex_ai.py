@@ -3,17 +3,19 @@ Placeholder Vertex AI Service for demand prediction
 This will be replaced with actual Google Cloud Vertex AI implementation
 """
 
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
-import random
 import asyncio
 import json
+import logging
+import random
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import select
+
+from app.core.config import settings
+from app.core.database import get_async_session
 from app.models.customer import Customer
 from app.models.delivery import DeliveryPrediction
-from app.core.database import get_async_session
-from sqlalchemy import select
-from app.core.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 

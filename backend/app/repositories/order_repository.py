@@ -3,19 +3,20 @@ Order repository for data access operations
 Implements order-specific queries and operations
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, text, update
-from sqlalchemy.orm import selectinload, joinedload
-from datetime import datetime, date, timedelta
+import logging
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.repositories.base import BaseRepository
+from sqlalchemy import and_, func, or_, select, text, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
+
+from app.core.metrics import cache_operations_counter, orders_created_counter
+from app.models.customer import Customer
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.order_item import OrderItem
-from app.models.customer import Customer
 from app.models.route import Route
-from app.core.metrics import orders_created_counter, cache_operations_counter
-import logging
+from app.repositories.base import BaseRepository
 
 logger = logging.getLogger(__name__)
 

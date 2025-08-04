@@ -3,14 +3,15 @@ Mock Google Cloud Services for Testing
 Provides mock implementations of Google Maps, Routes API, and Vertex AI
 """
 
-from fastapi import FastAPI, HTTPException, Query, Body
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
+import logging
 import random
 import uuid
-import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -9,15 +9,17 @@ This script checks:
 4. Potential conflicts
 """
 
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from sqlalchemy import text
+
 from app.core.database import async_session_maker as SessionLocal
 from app.models.customer import Customer
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 from app.models.customer_inventory import CustomerInventory
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 
 
 def main():

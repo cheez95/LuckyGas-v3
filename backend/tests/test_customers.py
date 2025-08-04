@@ -6,8 +6,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer import Customer
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 from app.models.customer_inventory import CustomerInventory
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 
 
 class TestCustomers:

@@ -2,11 +2,13 @@
 Custom Prometheus metrics for Lucky Gas monitoring with Google Cloud Monitoring integration
 """
 
-from prometheus_client import Counter, Histogram, Gauge, Info, Summary
-from app.core.config import settings
-import os
 import logging
+import os
 from typing import Optional
+
+from prometheus_client import Counter, Gauge, Histogram, Info, Summary
+
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +227,8 @@ def get_cloud_metrics():
             from pathlib import Path
 
             sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-            from infrastructure.monitoring.metrics_config import get_metrics_collector
+            from infrastructure.monitoring.metrics_config import \
+                get_metrics_collector
 
             _cloud_metrics = get_metrics_collector()
             logger.info("Initialized Google Cloud Monitoring")

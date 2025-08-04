@@ -5,22 +5,23 @@ Handles urgent orders, traffic updates, and route rebalancing.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.route import Route, RouteStop
+from app.core.metrics import route_adjustment_counter, route_adjustment_summary
 from app.models.order import Order
+from app.models.route import Route, RouteStop
+from app.services.google_cloud.monitoring.intelligent_cache import \
+    get_intelligent_cache
+from app.services.google_cloud.routes_service import GoogleRoutesService
 from app.services.optimization.vrp_optimizer import VRPOptimizer
 from app.services.websocket_service import websocket_manager
-from app.services.google_cloud.routes_service import GoogleRoutesService
-from app.services.google_cloud.monitoring.intelligent_cache import get_intelligent_cache
-from app.core.metrics import route_adjustment_counter, route_adjustment_summary
 
 logger = logging.getLogger(__name__)
 

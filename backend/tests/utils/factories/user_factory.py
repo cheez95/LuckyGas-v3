@@ -2,9 +2,11 @@
 User factory for test data generation
 """
 
-from typing import Dict, Any, Optional
-from app.models.user import User, UserRole
+from typing import Any, Dict, Optional
+
 from app.core.security import get_password_hash
+from app.models.user import User, UserRole
+
 from .base import BaseFactory
 
 

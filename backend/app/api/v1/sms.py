@@ -1,35 +1,23 @@
 """SMS management API endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
 import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from app.api.deps import get_db
-from app.api.deps import get_current_user, get_current_active_superuser
-from app.models.user import User
-from app.models.notification import (
-    SMSLog,
-    SMSTemplate,
-    ProviderConfig,
-    NotificationStatus,
-    SMSProvider,
-)
-from app.schemas.sms import (
-    SMSLogResponse,
-    SMSStatsResponse,
-    SMSTemplateResponse,
-    ProviderConfigResponse,
-    SMSSendRequest,
-    SMSResendRequest,
-    SMSTemplateCreate,
-    SMSTemplateUpdate,
-    ProviderConfigUpdate,
-)
-from app.services.sms_service import enhanced_sms_service
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_active_superuser, get_current_user, get_db
 from app.core.config import settings
+from app.models.notification import (NotificationStatus, ProviderConfig,
+                                     SMSLog, SMSProvider, SMSTemplate)
+from app.models.user import User
+from app.schemas.sms import (ProviderConfigResponse, ProviderConfigUpdate,
+                             SMSLogResponse, SMSResendRequest, SMSSendRequest,
+                             SMSStatsResponse, SMSTemplateCreate,
+                             SMSTemplateResponse, SMSTemplateUpdate)
+from app.services.sms_service import enhanced_sms_service
 
 router = APIRouter()
 

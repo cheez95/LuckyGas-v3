@@ -2,8 +2,8 @@
 Date and time utilities for Taiwan localization.
 """
 
-from datetime import datetime, date
-from typing import Union, Optional
+from datetime import date, datetime
+from typing import Optional, Union
 
 
 def format_taiwan_date(dt: Union[datetime, date, None]) -> str:

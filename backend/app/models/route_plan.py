@@ -2,24 +2,15 @@
 Route plan models for dispatch operations
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    DateTime,
-    Date,
-    Boolean,
-    ForeignKey,
-    JSON,
-    Enum as SQLEnum,
-    UniqueConstraint,
-    Index,
-)
+import enum
+from datetime import datetime
+
+from sqlalchemy import JSON, Boolean, Column, Date, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import (Float, ForeignKey, Index, Integer, String,
+                        UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from datetime import datetime
-import enum
 
 from app.core.database import Base
 

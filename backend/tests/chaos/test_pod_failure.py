@@ -3,12 +3,13 @@ Chaos Engineering Tests - Pod Termination Recovery
 Tests system resilience when backend pods are terminated
 """
 import asyncio
-import pytest
 import os
 import subprocess
 import time
-from httpx import AsyncClient, ConnectError, ReadTimeout
 from datetime import datetime, timedelta
+
+import pytest
+from httpx import AsyncClient, ConnectError, ReadTimeout
 
 
 class TestPodFailureRecovery:

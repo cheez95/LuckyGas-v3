@@ -1,11 +1,12 @@
 """
 End-to-end tests for order management flow using Playwright
 """
+import os
+from datetime import datetime, timedelta
+from typing import Dict
+
 import pytest
 from playwright.async_api import Page, expect
-from typing import Dict
-from datetime import datetime, timedelta
-import os
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")
 

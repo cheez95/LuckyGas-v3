@@ -3,11 +3,12 @@ Simple WebSocket manager for real-time updates
 Replaces complex websocket_service.py with message queuing
 """
 
-import json
 import asyncio
+import json
 import logging
-from typing import Dict, Optional
 from datetime import datetime
+from typing import Dict, Optional
+
 import redis.asyncio as redis
 from fastapi import WebSocket, WebSocketDisconnect
 

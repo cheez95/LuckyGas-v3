@@ -1,20 +1,17 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.api.deps import get_db
-from app.models.user import User
-from app.schemas.order_template import (
-    OrderTemplate,
-    OrderTemplateCreate,
-    OrderTemplateUpdate,
-    OrderTemplateList,
-    CreateOrderFromTemplate,
-)
-from app.schemas.order import OrderV2
-from app.services.order_template_service import OrderTemplateService
 from app.core.security import verify_user_role
+from app.models.user import User
+from app.schemas.order import OrderV2
+from app.schemas.order_template import (CreateOrderFromTemplate, OrderTemplate,
+                                        OrderTemplateCreate, OrderTemplateList,
+                                        OrderTemplateUpdate)
+from app.services.order_template_service import OrderTemplateService
 
 router = APIRouter()
 

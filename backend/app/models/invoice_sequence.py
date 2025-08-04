@@ -2,15 +2,8 @@
 Invoice sequence model for Taiwan e-invoice number management
 """
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Boolean,
-    DateTime,
-    CheckConstraint,
-    Index,
-)
+from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, Index,
+                        Integer, String)
 from sqlalchemy.sql import func
 
 from app.core.database import Base

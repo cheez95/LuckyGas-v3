@@ -3,15 +3,16 @@ Example of OrderService updated with simple WebSocket and notification integrati
 This shows how to integrate the simplified services
 """
 
-from typing import Optional
-from datetime import datetime
-
-from app.services.order_service import OrderService as BaseOrderService
-from app.services.simple_websocket import websocket_manager, notify_order_updated
-from app.services.simple_notifications import notification_service, send_order_sms
-from app.models.order import OrderStatus
-
 import logging
+from datetime import datetime
+from typing import Optional
+
+from app.models.order import OrderStatus
+from app.services.order_service import OrderService as BaseOrderService
+from app.services.simple_notifications import (notification_service,
+                                               send_order_sms)
+from app.services.simple_websocket import (notify_order_updated,
+                                           websocket_manager)
 
 logger = logging.getLogger(__name__)
 

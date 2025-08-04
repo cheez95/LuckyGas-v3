@@ -2,11 +2,11 @@
 Mock utilities for testing
 """
 
-from typing import Any, Dict, List, Optional, Callable
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock
 import random
 import string
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 
 class MockService:
@@ -335,8 +335,9 @@ def create_mock_file_upload(
     content_type: str = "image/jpeg",
 ):
     """Create a mock file upload"""
-    from fastapi import UploadFile
     from io import BytesIO
+
+    from fastapi import UploadFile
 
     file = MagicMock(spec=UploadFile)
     file.filename = filename

@@ -1,48 +1,32 @@
-from datetime import timedelta, datetime
-from typing import Any, List, Optional, Dict
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from app.api.deps import get_db, get_current_user
-from app.api.auth_deps.security import (
-    check_account_lockout,
-    require_secure_auth,
-    require_admin_auth,
-    rate_limit_by_user,
-)
-from app.core.config import settings
-from app.core.security import (
-    create_access_token,
-    create_refresh_token,
-    verify_password,
-    get_password_hash,
-    decode_refresh_token,
-    PasswordValidator,
-    AccountLockout,
-    TwoFactorAuth,
-    SessionManager,
-)
-from app.middleware.security import CSRFProtection
-from app.core.security_config import get_session_config
-from app.models.user import User as UserModel, UserRole
-from app.schemas.user import (
-    User,
-    Token,
-    UserCreate,
-    RefreshTokenRequest,
-    ChangePasswordRequest,
-    TwoFactorSetup,
-    TwoFactorVerify,
-    PasswordResetRequest,
-)
-from app.utils.security_utils import (
-    SecurityAudit,
-    RequestValidator,
-    SecureTokenGenerator,
-)
+from fastapi import (APIRouter, Depends, HTTPException, Request, Response,
+                     status)
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth_deps.security import (check_account_lockout,
+                                        rate_limit_by_user, require_admin_auth,
+                                        require_secure_auth)
+from app.api.deps import get_current_user, get_db
 from app.core.cache import cache
+from app.core.config import settings
+from app.core.security import (AccountLockout, PasswordValidator,
+                               SessionManager, TwoFactorAuth,
+                               create_access_token, create_refresh_token,
+                               decode_refresh_token, get_password_hash,
+                               verify_password)
+from app.core.security_config import get_session_config
+from app.middleware.security import CSRFProtection
+from app.models.user import User as UserModel
+from app.models.user import UserRole
+from app.schemas.user import (ChangePasswordRequest, PasswordResetRequest,
+                              RefreshTokenRequest, Token, TwoFactorSetup,
+                              TwoFactorVerify, User, UserCreate)
+from app.utils.security_utils import (RequestValidator, SecureTokenGenerator,
+                                      SecurityAudit)
 
 router = APIRouter()
 

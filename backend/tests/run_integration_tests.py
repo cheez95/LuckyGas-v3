@@ -3,8 +3,8 @@
 Run integration tests with proper test environment setup
 """
 import os
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -93,9 +93,9 @@ def setup_test_database():
 
     # Run migrations
     print("Running database migrations...")
-    from app.core.database import engine
-    from app.core.database import Base
     import asyncio
+
+    from app.core.database import Base, engine
 
     async def create_tables():
         async with engine.begin() as conn:

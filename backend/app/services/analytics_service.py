@@ -1,34 +1,25 @@
 """Analytics service for generating dashboard metrics and reports."""
 
+import json
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from sqlalchemy import select, func, and_, or_, case, text
+from io import BytesIO
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+from sqlalchemy import and_, case, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-import pandas as pd
-import numpy as np
-from io import BytesIO
-import json
 
-from app.models import (
-    Order,
-    Customer,
-    User,
-    Route,
-    DeliveryHistory,
-    Payment,
-    Invoice,
-    GasProduct,
-    Vehicle,
-    OrderItem,
-    CustomerInventory,
-)
+from app.core.config import settings
+from app.core.storage import StorageService
+from app.models import (Customer, CustomerInventory, DeliveryHistory,
+                        GasProduct, Invoice, Order, OrderItem, Payment, Route,
+                        User, Vehicle)
 from app.models.order import OrderStatus
 from app.models.route import RouteStatus
 from app.models.route_delivery import DeliveryStatus
-from app.core.config import settings
 from app.services.email_service import EmailService
-from app.core.storage import StorageService
 
 
 class AnalyticsService:

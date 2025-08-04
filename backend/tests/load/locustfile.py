@@ -5,10 +5,11 @@ Run with:
     locust -f tests/load/locustfile.py --host http://localhost:8000
 """
 
-import random
 import json
+import random
 from datetime import datetime, timedelta
-from locust import HttpUser, task, between, SequentialTaskSet, TaskSet
+
+from locust import HttpUser, SequentialTaskSet, TaskSet, between, task
 from locust.exception import RescueTaskSet
 
 

@@ -5,34 +5,23 @@ This script seeds the test database with comprehensive sample data
 
 import asyncio
 import random
-from datetime import datetime, timedelta, date
-from typing import List, Dict, Any
 import sys
+from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import Any, Dict, List
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db, engine, Base
+
+from app.core.database import Base, engine, get_db
 from app.core.security import get_password_hash
-from app.models import (
-    User,
-    Customer,
-    GasProduct,
-    Order,
-    OrderItem,
-    Route,
-    RouteDelivery,
-    Vehicle,
-    DeliveryHistory,
-    DeliveryHistoryItem,
-    Invoice,
-    Notification,
-    OrderTemplate,
-    CustomerInventory,
-)
+from app.models import (Customer, CustomerInventory, DeliveryHistory,
+                        DeliveryHistoryItem, GasProduct, Invoice, Notification,
+                        Order, OrderItem, OrderTemplate, Route, RouteDelivery,
+                        User, Vehicle)
 from app.schemas.user import UserRole
 
 # Taiwan-specific test data

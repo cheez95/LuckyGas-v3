@@ -1,13 +1,9 @@
 from enum import Enum
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Float,
-    Boolean,
-    Enum as SQLEnum,
-    UniqueConstraint,
-)
+
+from sqlalchemy import Boolean, Column
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Float, Integer, String, UniqueConstraint
+
 from app.core.database import Base
 
 

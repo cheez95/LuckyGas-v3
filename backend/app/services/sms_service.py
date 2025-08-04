@@ -1,27 +1,23 @@
 """Enhanced SMS service with Taiwan provider support."""
 
-import logging
 import asyncio
-import aiohttp
-import random
 import hashlib
+import logging
+import random
 import time
-from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime, timedelta
-from urllib.parse import urlencode
 import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlencode
 
+import aiohttp
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from app.core.config import settings
+
 from app.api.deps import get_db
-from app.models.notification import (
-    SMSLog,
-    SMSTemplate,
-    ProviderConfig,
-    NotificationStatus,
-    SMSProvider,
-)
+from app.core.config import settings
+from app.models.notification import (NotificationStatus, ProviderConfig,
+                                     SMSLog, SMSProvider, SMSTemplate)
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +312,7 @@ class EnhancedSMSService:
     def _init_metrics(self):
         """Initialize Prometheus metrics for monitoring"""
         try:
-            from prometheus_client import Counter, Histogram, Gauge, Summary
+            from prometheus_client import Counter, Gauge, Histogram, Summary
 
             self.metrics = {
                 "sms_sent": Counter(

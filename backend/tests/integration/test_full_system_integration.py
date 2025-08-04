@@ -2,23 +2,26 @@
 Full system integration tests using mock services
 Tests the complete flow from API endpoints through services to database
 """
+import json
+from datetime import date, datetime, timedelta
+from unittest.mock import AsyncMock, patch
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, date, timedelta
-import json
-from unittest.mock import patch, AsyncMock
 
+from app.core.security import get_password_hash
 from app.main import app
-from app.models.user import User, UserRole
 from app.models.customer import Customer, CustomerType
+from app.models.delivery import Delivery
 from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus
-from app.models.delivery import Delivery
-from app.services.google_cloud.mock_routes_service import MockGoogleRoutesService
-from app.services.google_cloud.mock_vertex_ai_service import MockVertexAIDemandPredictionService
-from app.core.security import get_password_hash
+from app.models.user import User, UserRole
+from app.services.google_cloud.mock_routes_service import \
+    MockGoogleRoutesService
+from app.services.google_cloud.mock_vertex_ai_service import \
+    MockVertexAIDemandPredictionService
 
 
 class TestFullSystemIntegration:

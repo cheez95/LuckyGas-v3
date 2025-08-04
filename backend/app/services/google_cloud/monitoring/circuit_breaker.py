@@ -2,11 +2,12 @@
 Circuit Breaker Pattern for API Resilience
 """
 
-from enum import Enum
-from datetime import datetime, timedelta
-from typing import Optional, Callable, Any, Dict, TypeVar
 import asyncio
 import logging
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, Optional, TypeVar
+
 from app.core.metrics import Counter, Gauge
 
 logger = logging.getLogger(__name__)

@@ -11,24 +11,26 @@ This script:
 6. Supports dry-run mode to preview changes
 """
 
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import logging
-from typing import Dict, List, Tuple, Optional
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 import argparse
-from tqdm import tqdm
+import logging
 from datetime import datetime
+from typing import Dict, List, Optional, Tuple
+
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+from tqdm import tqdm
 
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.models.customer import Customer
-from app.models.gas_product import GasProduct, DeliveryMethod, ProductAttribute
 from app.models.customer_inventory import CustomerInventory
+from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
 
 # Configure logging
 logging.basicConfig(

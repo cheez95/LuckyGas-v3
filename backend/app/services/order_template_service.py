@@ -1,21 +1,20 @@
-from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func
 from sqlalchemy.orm import selectinload
 
-from app.models.order_template import OrderTemplate
+from app.core.logging import get_logger
 from app.models.customer import Customer
 from app.models.gas_product import GasProduct
+from app.models.order_template import OrderTemplate
 from app.models.user import User
-from app.schemas.order_template import (
-    OrderTemplateCreate,
-    OrderTemplateUpdate,
-    CreateOrderFromTemplate,
-)
-from app.services.order_service import OrderService
 from app.schemas.order import OrderCreateV2
-from app.core.logging import get_logger
+from app.schemas.order_template import (CreateOrderFromTemplate,
+                                        OrderTemplateCreate,
+                                        OrderTemplateUpdate)
+from app.services.order_service import OrderService
 
 logger = get_logger(__name__)
 

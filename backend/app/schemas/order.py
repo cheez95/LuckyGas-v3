@@ -1,11 +1,14 @@
-from typing import Optional, List, Literal
-from pydantic import BaseModel, ConfigDict, field_validator, Field, model_validator
-from datetime import datetime, date
 import re
+from datetime import date, datetime
+from typing import List, Literal, Optional
 
+from pydantic import (BaseModel, ConfigDict, Field, field_validator,
+                      model_validator)
+
+from app.core.validators import (TaiwanValidators, address_validator,
+                                 phone_validator)
 from app.models.order import OrderStatus, PaymentStatus
 from app.schemas.order_item import OrderItem, OrderItemCreate, OrderItemSummary
-from app.core.validators import TaiwanValidators, address_validator, phone_validator
 
 
 class OrderBase(BaseModel):

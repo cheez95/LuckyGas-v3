@@ -1,12 +1,12 @@
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta
-import numpy as np
-from ortools.constraint_solver import routing_enums_pb2
-from ortools.constraint_solver import pywrapcp
+from typing import Any, Dict, List, Optional, Tuple
+
 import googlemaps
+import numpy as np
 from geopy import distance
+from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 from app.core.config import settings
 

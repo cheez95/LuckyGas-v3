@@ -5,13 +5,14 @@ This module provides a centralized way to manage secrets using Google Secret Man
 with fallback to environment variables for local development.
 """
 
-import os
 import json
 import logging
-from typing import Dict, Optional, Any, Union
+import os
 from functools import lru_cache
-from google.cloud import secretmanager
+from typing import Any, Dict, Optional, Union
+
 from google.api_core import exceptions as gcp_exceptions
+from google.cloud import secretmanager
 
 logger = logging.getLogger(__name__)
 

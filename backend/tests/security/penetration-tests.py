@@ -5,17 +5,18 @@ Tests for OWASP Top 10 vulnerabilities and security best practices
 
 import asyncio
 import base64
+import hashlib
 import json
+import random
+import re
+import string
 import time
-from typing import Dict, List, Any
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from urllib.parse import quote
+
 import httpx
 import jwt
-from datetime import datetime, timedelta
-import hashlib
-import random
-import string
-import re
-from urllib.parse import quote
 
 
 class SecurityPenetrationTest:

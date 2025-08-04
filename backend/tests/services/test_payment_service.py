@@ -1,15 +1,17 @@
 """
 Unit tests for payment service
 """
-import pytest
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from app.services.payment_service import PaymentService
-from app.models.invoice import Invoice, InvoiceStatus, Payment, PaymentMethod, InvoicePaymentStatus
+import pytest
+
 from app.models.customer import Customer, CustomerType
+from app.models.invoice import (Invoice, InvoicePaymentStatus, InvoiceStatus,
+                                Payment, PaymentMethod)
 from app.schemas.payment import PaymentCreate
+from app.services.payment_service import PaymentService
 
 
 @pytest.fixture

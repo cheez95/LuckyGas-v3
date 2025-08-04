@@ -2,25 +2,24 @@
 Google Routes API Service for route optimization
 """
 
-from typing import List, Dict, Tuple, Optional, Any
-from datetime import datetime, timedelta
 import asyncio
-import aiohttp
 import json
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
+import aiohttp
+
+from app.core.config import settings
 from app.core.google_cloud_config import get_gcp_config
 from app.core.metrics import route_optimization_histogram
-from app.models.route import Route as DeliveryRoute, RouteStop
-from app.models.order import Order
 from app.models.customer import Customer
-from app.core.config import settings
-from app.services.optimization.ortools_optimizer import (
-    ortools_optimizer,
-    VRPStop,
-    VRPVehicle,
-)
+from app.models.order import Order
+from app.models.route import Route as DeliveryRoute
+from app.models.route import RouteStop
+from app.services.optimization.ortools_optimizer import (VRPStop, VRPVehicle,
+                                                         ortools_optimizer)
 
 logger = logging.getLogger(__name__)
 
@@ -297,7 +296,7 @@ class GoogleRoutesService:
         self, lat1: float, lon1: float, lat2: float, lon2: float
     ) -> float:
         """Calculate approximate distance between two points (Haversine formula)"""
-        from math import radians, sin, cos, sqrt, atan2
+        from math import atan2, cos, radians, sin, sqrt
 
         R = 6371  # Earth's radius in kilometers
 
@@ -589,8 +588,8 @@ class GoogleRoutesService:
             ]
 
         try:
-            from sklearn.cluster import KMeans
             import numpy as np
+            from sklearn.cluster import KMeans
 
             # Extract coordinates
             coords = []

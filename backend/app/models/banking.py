@@ -1,21 +1,13 @@
 """Banking integration models for payment processing."""
 
+import enum
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import (
-    Column,
-    String,
-    DateTime,
-    Integer,
-    Boolean,
-    ForeignKey,
-    Text,
-    Numeric,
-    Enum as SQLEnum,
-    Index,
-)
+
+from sqlalchemy import Boolean, Column, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
-import enum
 
 from app.core.database import Base
 

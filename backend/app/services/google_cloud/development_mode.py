@@ -5,18 +5,20 @@ Provides seamless switching between production and mock services
 with automatic detection of API key availability.
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional, Type
+import os
 from enum import Enum
+from typing import Any, Dict, Optional, Type
+
 from app.core.config import settings
-from app.services.google_cloud.routes_service import GoogleRoutesService
-from app.services.google_cloud.mock_routes_service import MockGoogleRoutesService
-from app.services.google_cloud.vertex_ai_service import VertexAIDemandPredictionService
-from app.services.google_cloud.mock_vertex_ai_service import (
-    MockVertexAIDemandPredictionService,
-)
+from app.services.google_cloud.mock_routes_service import \
+    MockGoogleRoutesService
+from app.services.google_cloud.mock_vertex_ai_service import \
+    MockVertexAIDemandPredictionService
 from app.services.google_cloud.monitoring.error_handler import GoogleAPIError
+from app.services.google_cloud.routes_service import GoogleRoutesService
+from app.services.google_cloud.vertex_ai_service import \
+    VertexAIDemandPredictionService
 
 logger = logging.getLogger(__name__)
 

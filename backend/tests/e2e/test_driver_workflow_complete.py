@@ -1,12 +1,13 @@
 """
 Comprehensive E2E test for driver daily workflow
 """
-import pytest
-from playwright.async_api import Page, expect, BrowserContext
-from datetime import datetime, timedelta
 import asyncio
 import json
 import os
+from datetime import datetime, timedelta
+
+import pytest
+from playwright.async_api import BrowserContext, Page, expect
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")
 
