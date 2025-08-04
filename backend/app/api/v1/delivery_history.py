@@ -10,11 +10,13 @@ from app.api.deps import get_current_user, get_db
 from app.models import Customer
 from app.models import DeliveryHistory as DeliveryHistoryModel
 from app.models import User
-from app.schemas.delivery_history import (DeliveryHistory,
-                                          DeliveryHistoryCreate,
-                                          DeliveryHistoryList,
-                                          DeliveryHistoryStats,
-                                          DeliveryHistoryUpdate)
+from app.schemas.delivery_history import (
+    DeliveryHistory,
+    DeliveryHistoryCreate,
+    DeliveryHistoryList,
+    DeliveryHistoryStats,
+    DeliveryHistoryUpdate,
+)
 
 router = APIRouter()
 

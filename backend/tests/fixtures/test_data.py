@@ -2,13 +2,14 @@
 Test Data Fixtures for Lucky Gas v3
 Provides sample data for testing including customer migration scenarios
 """
+
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 
 class TestDataFixtures:
     """Centralized test data fixtures"""
-    
+
     @staticmethod
     def get_sample_customers() -> List[Dict[str, Any]]:
         """Get sample customer data for testing"""
@@ -29,10 +30,10 @@ class TestDataFixtures:
                 "credit_limit": 50000.0,
                 "current_credit": 15000.0,
                 "payment_terms": 30,
-                "notes": "老客戶，信用良好"
+                "notes": "老客戶，信用良好",
             },
             {
-                "customer_code": "C002", 
+                "customer_code": "C002",
                 "short_name": "陳太太",
                 "invoice_title": "陳美惠",
                 "tax_id": "",
@@ -46,7 +47,7 @@ class TestDataFixtures:
                 "credit_limit": 0.0,
                 "current_credit": 0.0,
                 "payment_terms": 0,
-                "notes": "週二、週四不在家"
+                "notes": "週二、週四不在家",
             },
             {
                 "customer_code": "C003",
@@ -64,7 +65,7 @@ class TestDataFixtures:
                 "credit_limit": 100000.0,
                 "current_credit": 35000.0,
                 "payment_terms": 45,
-                "notes": "大型餐廳，每週需求量大，需優先配送"
+                "notes": "大型餐廳，每週需求量大，需優先配送",
             },
             {
                 "customer_code": "C004",
@@ -81,7 +82,7 @@ class TestDataFixtures:
                 "credit_limit": 0.0,
                 "current_credit": 0.0,
                 "payment_terms": 0,
-                "notes": "新客戶，需要門鈴通知"
+                "notes": "新客戶，需要門鈴通知",
             },
             {
                 "customer_code": "C005",
@@ -99,10 +100,10 @@ class TestDataFixtures:
                 "credit_limit": 200000.0,
                 "current_credit": 85000.0,
                 "payment_terms": 60,
-                "notes": "工廠客戶，需要大量供應，月結60天"
-            }
+                "notes": "工廠客戶，需要大量供應，月結60天",
+            },
         ]
-    
+
     @staticmethod
     def get_sample_orders() -> List[Dict[str, Any]]:
         """Get sample order data for testing"""
@@ -123,7 +124,7 @@ class TestDataFixtures:
                 "delivery_notes": "請放置於後門",
                 "is_urgent": False,
                 "payment_method": "monthly_billing",
-                "payment_status": "unpaid"
+                "payment_status": "unpaid",
             },
             {
                 "customer_id": 2,
@@ -140,7 +141,7 @@ class TestDataFixtures:
                 "delivery_notes": "週二、週四不在家，請週一或週三送",
                 "is_urgent": False,
                 "payment_method": "cash",
-                "payment_status": "unpaid"
+                "payment_status": "unpaid",
             },
             {
                 "customer_id": 3,
@@ -157,10 +158,10 @@ class TestDataFixtures:
                 "delivery_notes": "請從後門進入，找李經理",
                 "is_urgent": True,
                 "payment_method": "monthly_billing",
-                "payment_status": "unpaid"
-            }
+                "payment_status": "unpaid",
+            },
         ]
-    
+
     @staticmethod
     def get_sample_payment_records() -> List[Dict[str, Any]]:
         """Get sample payment records for testing"""
@@ -171,7 +172,7 @@ class TestDataFixtures:
                 "payment_date": (datetime.now() - timedelta(days=5)).isoformat(),
                 "payment_method": "bank_transfer",
                 "reference_number": "TRF202312150001",
-                "notes": "上月帳款"
+                "notes": "上月帳款",
             },
             {
                 "customer_id": 3,
@@ -179,18 +180,18 @@ class TestDataFixtures:
                 "payment_date": (datetime.now() - timedelta(days=10)).isoformat(),
                 "payment_method": "check",
                 "reference_number": "CHK202312100001",
-                "notes": "11月份貨款"
+                "notes": "11月份貨款",
             },
             {
                 "customer_id": 5,
                 "amount": 50000.0,
                 "payment_date": (datetime.now() - timedelta(days=15)).isoformat(),
-                "payment_method": "bank_transfer", 
+                "payment_method": "bank_transfer",
                 "reference_number": "TRF202312050002",
-                "notes": "部分付款"
-            }
+                "notes": "部分付款",
+            },
         ]
-    
+
     @staticmethod
     def get_sample_invoices() -> List[Dict[str, Any]]:
         """Get sample invoice records for testing"""
@@ -204,7 +205,7 @@ class TestDataFixtures:
                 "total_amount": 7875.0,
                 "buyer_tax_id": "53212539",
                 "buyer_name": "王小明瓦斯行有限公司",
-                "status": "issued"
+                "status": "issued",
             },
             {
                 "order_id": 3,
@@ -215,10 +216,10 @@ class TestDataFixtures:
                 "total_amount": 16170.0,
                 "buyer_tax_id": "28457693",
                 "buyer_name": "幸福餐飲股份有限公司",
-                "status": "issued"
-            }
+                "status": "issued",
+            },
         ]
-    
+
     @staticmethod
     def get_migration_test_scenarios() -> List[Dict[str, Any]]:
         """Get customer migration test scenarios"""
@@ -232,8 +233,8 @@ class TestDataFixtures:
                     "all_fields_migrated",
                     "phone_format_correct",
                     "address_valid",
-                    "credit_limit_preserved"
-                ]
+                    "credit_limit_preserved",
+                ],
             },
             {
                 "scenario": "bulk_migration",
@@ -243,8 +244,8 @@ class TestDataFixtures:
                 "validation_rules": [
                     "no_duplicates",
                     "all_records_processed",
-                    "error_rate_below_1_percent"
-                ]
+                    "error_rate_below_1_percent",
+                ],
             },
             {
                 "scenario": "migration_with_orders",
@@ -255,8 +256,8 @@ class TestDataFixtures:
                 "validation_rules": [
                     "customer_order_relationship_preserved",
                     "order_totals_accurate",
-                    "payment_history_linked"
-                ]
+                    "payment_history_linked",
+                ],
             },
             {
                 "scenario": "migration_rollback",
@@ -267,8 +268,8 @@ class TestDataFixtures:
                 "validation_rules": [
                     "no_partial_data",
                     "original_state_restored",
-                    "error_logged"
-                ]
+                    "error_logged",
+                ],
             },
             {
                 "scenario": "encoding_issues",
@@ -276,16 +277,13 @@ class TestDataFixtures:
                 "test_data": [
                     {"name": "測試客戶", "encoding": "utf-8"},
                     {"name": "测试客户", "encoding": "gb2312"},
-                    {"name": "テスト顧客", "encoding": "shift-jis"}
+                    {"name": "テスト顧客", "encoding": "shift-jis"},
                 ],
                 "expected_behavior": "convert_to_utf8",
-                "validation_rules": [
-                    "all_characters_readable",
-                    "no_data_corruption"
-                ]
-            }
+                "validation_rules": ["all_characters_readable", "no_data_corruption"],
+            },
         ]
-    
+
     @staticmethod
     def get_chaos_test_data() -> Dict[str, Any]:
         """Get data specifically for chaos engineering tests"""
@@ -296,16 +294,18 @@ class TestDataFixtures:
                     "short_name": f"負載測試客戶{i}",
                     "address": f"測試地址{i}號",
                     "phone1": f"0900{i:06d}",
-                    "area": "測試區"
+                    "area": "測試區",
                 }
                 for i in range(1000)  # 1000 customers for load testing
             ],
             "concurrent_orders": [
                 {
                     "customer_id": (i % 100) + 1,  # Distribute among 100 customers
-                    "scheduled_date": (datetime.now() + timedelta(days=i % 7)).isoformat(),
+                    "scheduled_date": (
+                        datetime.now() + timedelta(days=i % 7)
+                    ).isoformat(),
                     "qty_50kg": (i % 5) + 1,
-                    "payment_method": "cash" if i % 2 == 0 else "monthly_billing"
+                    "payment_method": "cash" if i % 2 == 0 else "monthly_billing",
                 }
                 for i in range(500)  # 500 concurrent orders
             ],
@@ -314,14 +314,14 @@ class TestDataFixtures:
                 "/api/v1/customers",
                 "/api/v1/orders",
                 "/api/v1/routes/optimize",
-                "/api/v1/predictions/daily"
+                "/api/v1/predictions/daily",
             ],
             "resource_limits": {
                 "max_memory_mb": 512,
                 "max_cpu_percent": 80,
                 "max_connections": 100,
-                "max_file_descriptors": 1024
-            }
+                "max_file_descriptors": 1024,
+            },
         }
 
 
@@ -330,14 +330,14 @@ def generate_customers(count: int) -> List[Dict[str, Any]]:
     """Generate specified number of test customers"""
     base_customers = TestDataFixtures.get_sample_customers()
     customers = []
-    
+
     for i in range(count):
         base_index = i % len(base_customers)
         customer = base_customers[base_index].copy()
         customer["customer_code"] = f"TEST{i:04d}"
         customer["short_name"] = f"{customer['short_name']}_{i}"
         customers.append(customer)
-    
+
     return customers
 
 
@@ -345,12 +345,14 @@ def generate_orders(count: int, customer_ids: List[int]) -> List[Dict[str, Any]]
     """Generate specified number of test orders"""
     base_orders = TestDataFixtures.get_sample_orders()
     orders = []
-    
+
     for i in range(count):
         base_index = i % len(base_orders)
         order = base_orders[base_index].copy()
         order["customer_id"] = customer_ids[i % len(customer_ids)]
-        order["scheduled_date"] = (datetime.now() + timedelta(days=(i % 30))).isoformat()
+        order["scheduled_date"] = (
+            datetime.now() + timedelta(days=(i % 30))
+        ).isoformat()
         orders.append(order)
-    
+
     return orders

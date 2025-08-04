@@ -13,9 +13,13 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.logging import setup_logging
-from app.models.banking import (BankConfiguration, PaymentBatch,
-                                PaymentBatchStatus, ReconciliationLog,
-                                ReconciliationStatus)
+from app.models.banking import (
+    BankConfiguration,
+    PaymentBatch,
+    PaymentBatchStatus,
+    ReconciliationLog,
+    ReconciliationStatus,
+)
 from app.services.banking_service import BankingService
 from app.services.banking_sftp import BankingSFTPService
 from app.services.file_generators.ach_format import TaiwanACHGenerator

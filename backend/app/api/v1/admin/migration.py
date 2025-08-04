@@ -14,12 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_active_superuser, get_db
 from app.models.customer import Customer
 from app.models.user import User
-from app.services.feature_flags import (FeatureFlagConfig,
-                                        get_feature_flag_service)
+from app.services.feature_flags import FeatureFlagConfig, get_feature_flag_service
 from app.services.sync_service import ConflictResolution
 from app.services.sync_service import SyncMetrics as ServiceSyncMetrics
-from app.services.sync_service import (SyncOperation, SyncStatus,
-                                       get_sync_service)
+from app.services.sync_service import SyncOperation, SyncStatus, get_sync_service
 
 logger = logging.getLogger(__name__)
 

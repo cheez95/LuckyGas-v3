@@ -11,8 +11,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 from google.cloud import aiplatform, storage
-from google.cloud.aiplatform import (AutoMLTabularTrainingJob, Model,
-                                     TabularDataset)
+from google.cloud.aiplatform import AutoMLTabularTrainingJob, Model, TabularDataset
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -213,8 +212,7 @@ class VertexAIDemandPredictionService:
         """
         if not self.gcp_config.is_vertex_ai_configured():
             # Fall back to placeholder predictions
-            from app.services.google_cloud.vertex_ai import \
-                demand_prediction_service
+            from app.services.google_cloud.vertex_ai import demand_prediction_service
 
             return await demand_prediction_service.predict_demand_batch()
 
@@ -331,8 +329,7 @@ class VertexAIDemandPredictionService:
         except Exception as e:
             logger.error(f"Batch prediction failed: {e}")
             # Fall back to placeholder predictions
-            from app.services.google_cloud.vertex_ai import \
-                demand_prediction_service
+            from app.services.google_cloud.vertex_ai import demand_prediction_service
 
             return await demand_prediction_service.predict_demand_batch()
 
@@ -447,8 +444,7 @@ class VertexAIDemandPredictionService:
     ) -> Optional[Dict[str, Any]]:
         """Get the latest prediction for a specific customer"""
         # Use the existing placeholder implementation
-        from app.services.google_cloud.vertex_ai import \
-            demand_prediction_service
+        from app.services.google_cloud.vertex_ai import demand_prediction_service
 
         return await demand_prediction_service.get_customer_prediction(customer_id)
 
@@ -475,8 +471,7 @@ class VertexAIDemandPredictionService:
                 logger.error(f"Failed to get model metrics: {e}")
 
         # Fall back to placeholder metrics
-        from app.services.google_cloud.vertex_ai import \
-            demand_prediction_service
+        from app.services.google_cloud.vertex_ai import demand_prediction_service
 
         return await demand_prediction_service.get_prediction_metrics()
 

@@ -18,8 +18,11 @@ from app.models.customer import Customer
 from app.models.order import Order
 from app.models.route import Route as DeliveryRoute
 from app.models.route import RouteStop
-from app.services.optimization.ortools_optimizer import (VRPStop, VRPVehicle,
-                                                         ortools_optimizer)
+from app.services.optimization.ortools_optimizer import (
+    VRPStop,
+    VRPVehicle,
+    ortools_optimizer,
+)
 
 logger = logging.getLogger(__name__)
 

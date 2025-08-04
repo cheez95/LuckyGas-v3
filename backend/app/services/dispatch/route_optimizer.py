@@ -18,12 +18,14 @@ from app.models.customer import Customer
 from app.models.gas_product import GasProduct
 from app.models.order import Order, OrderStatus
 from app.models.user import User, UserRole
-from app.services.dispatch.google_routes_service import (Location,
-                                                         RouteRequest,
-                                                         RouteStop,
-                                                         RoutingPreference,
-                                                         TravelMode,
-                                                         get_routes_service)
+from app.services.dispatch.google_routes_service import (
+    Location,
+    RouteRequest,
+    RouteStop,
+    RoutingPreference,
+    TravelMode,
+    get_routes_service,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import aiofiles
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
-                     status)
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -20,17 +19,25 @@ from app.models.customer import Customer
 from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
 from app.models.route import Route, RouteStatus
-from app.models.route_delivery import (DeliveryStatus, DeliveryStatusHistory,
-                                       RouteDelivery)
+from app.models.route_delivery import (
+    DeliveryStatus,
+    DeliveryStatusHistory,
+    RouteDelivery,
+)
 from app.models.user import User
-from app.schemas.driver import (DeliveryConfirmRequest,
-                                DeliveryConfirmResponse, DeliveryStatsResponse,
-                                DeliveryStatusUpdateRequest, DriverSyncRequest,
-                                DriverSyncResponse, LocationUpdateRequest,
-                                RouteDetailResponse, RouteListResponse)
+from app.schemas.driver import (
+    DeliveryConfirmRequest,
+    DeliveryConfirmResponse,
+    DeliveryStatsResponse,
+    DeliveryStatusUpdateRequest,
+    DriverSyncRequest,
+    DriverSyncResponse,
+    LocationUpdateRequest,
+    RouteDetailResponse,
+    RouteListResponse,
+)
 from app.services.gps_service import GPSService
-from app.services.notification_service import (NotificationService,
-                                               NotificationType)
+from app.services.notification_service import NotificationService, NotificationType
 from app.services.websocket_service import websocket_manager as ws_manager
 
 router = APIRouter()

@@ -13,9 +13,19 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.storage import StorageService
-from app.models import (Customer, CustomerInventory, DeliveryHistory,
-                        GasProduct, Invoice, Order, OrderItem, Payment, Route,
-                        User, Vehicle)
+from app.models import (
+    Customer,
+    CustomerInventory,
+    DeliveryHistory,
+    GasProduct,
+    Invoice,
+    Order,
+    OrderItem,
+    Payment,
+    Route,
+    User,
+    Vehicle,
+)
 from app.models.order import OrderStatus
 from app.models.route import RouteStatus
 from app.models.route_delivery import DeliveryStatus

@@ -18,11 +18,14 @@ from app.models.driver import Driver
 from app.models.optimization import OptimizationHistory
 from app.models.order import Order
 from app.models.route import Route, RouteStop
-from app.schemas.analytics import (DailyAnalyticsSummary,
-                                   DriverPerformanceMetrics, FuelSavingsReport,
-                                   RoutePerformanceMetrics, WeeklyTrendReport)
-from app.services.google_cloud.monitoring.intelligent_cache import \
-    get_intelligent_cache
+from app.schemas.analytics import (
+    DailyAnalyticsSummary,
+    DriverPerformanceMetrics,
+    FuelSavingsReport,
+    RoutePerformanceMetrics,
+    WeeklyTrendReport,
+)
+from app.services.google_cloud.monitoring.intelligent_cache import get_intelligent_cache
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,7 @@ Audit log model for tracking all system actions.
 import enum
 from datetime import datetime
 
-from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Index, Integer,
-                        String, Text)
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 

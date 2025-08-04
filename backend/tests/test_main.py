@@ -12,7 +12,7 @@ async def test_root():
         assert response.status_code == 200
         assert response.json() == {
             "message": "Lucky Gas Delivery Management System API",
-            "status": "運行中"
+            "status": "運行中",
         }
 
 

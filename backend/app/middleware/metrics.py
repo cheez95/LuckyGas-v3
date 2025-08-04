@@ -9,8 +9,11 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from app.core.metrics import (api_request_counter,
-                              api_request_duration_histogram, error_counter)
+from app.core.metrics import (
+    api_request_counter,
+    api_request_duration_histogram,
+    error_counter,
+)
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):

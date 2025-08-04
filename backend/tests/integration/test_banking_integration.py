@@ -8,9 +8,13 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.banking import (BankConfiguration, PaymentBatch,
-                                PaymentBatchStatus, PaymentTransaction,
-                                TransactionStatus)
+from app.models.banking import (
+    BankConfiguration,
+    PaymentBatch,
+    PaymentBatchStatus,
+    PaymentTransaction,
+    TransactionStatus,
+)
 from app.models.customer import Customer
 from app.models.invoice import Invoice, InvoicePaymentStatus
 from app.models.user import User
@@ -26,7 +30,7 @@ def test_user(db: Session):
         full_name="Test Admin",
         role="admin",
         is_active=True,
-        is_superuser=True
+        is_superuser=True,
     )
     user.set_password("testpass123")
     db.add(user)
@@ -55,7 +59,7 @@ def test_bank_config(db: Session):
         is_active=True,
         cutoff_time="15:00",
         retry_attempts=3,
-        retry_delay_minutes=30
+        retry_delay_minutes=30,
     )
     db.add(config)
     db.commit()
@@ -67,7 +71,7 @@ def test_bank_config(db: Session):
 def test_customers(db: Session):
     """Create test customers with banking info."""
     customers = []
-    
+
     for i in range(3):
         customer = Customer(
             customer_code=f"CUST00{i+1}",
@@ -77,11 +81,11 @@ def test_customers(db: Session):
             payment_method="bank_transfer",
             bank_code="TEST",
             bank_account_number=f"123456789012{i:02d}",
-            bank_account_holder=f"Customer {i+1}"
+            bank_account_holder=f"Customer {i+1}",
         )
         db.add(customer)
         customers.append(customer)
-    
+
     db.commit()
     return customers
 
@@ -90,7 +94,7 @@ def test_customers(db: Session):
 def test_invoices(db: Session, test_customers):
     """Create test invoices for payment processing."""
     invoices = []
-    
+
     for i, customer in enumerate(test_customers):
         invoice = Invoice(
             invoice_number=f"INV2024010{i+1}",
@@ -100,20 +104,20 @@ def test_invoices(db: Session, test_customers):
             subtotal=Decimal("1000.00"),
             tax_amount=Decimal("50.00"),
             total_amount=Decimal("1050.00"),
-            payment_status=InvoicePaymentStatus.PENDING
+            payment_status=InvoicePaymentStatus.PENDING,
         )
         db.add(invoice)
         invoices.append(invoice)
-    
+
     db.commit()
     return invoices
 
 
 class TestBankingIntegration:
     """Integration tests for banking workflows."""
-    
-    @patch('paramiko.Transport')
-    @patch('paramiko.SFTPClient.from_transport')
+
+    @patch("paramiko.Transport")
+    @patch("paramiko.SFTPClient.from_transport")
     def test_complete_payment_workflow(
         self,
         mock_sftp_class,
@@ -121,108 +125,108 @@ class TestBankingIntegration:
         db: Session,
         test_bank_config,
         test_invoices,
-        test_user
+        test_user,
     ):
         """Test complete payment processing workflow."""
         # Setup mocked SFTP
         mock_transport = Mock()
         mock_transport_class.return_value = mock_transport
-        
+
         mock_sftp = Mock()
         mock_sftp_class.return_value = mock_sftp
-        
+
         banking_service = BankingService(db)
-        
+
         # Step 1: Create payment batch
         batch = banking_service.create_payment_batch(
             bank_code="TEST",
             processing_date=datetime.now(),
-            invoice_ids=[inv.id for inv in test_invoices]
+            invoice_ids=[inv.id for inv in test_invoices],
         )
-        
+
         assert batch.total_transactions == 3
         assert batch.total_amount == Decimal("3150.00")
         assert batch.status == PaymentBatchStatus.DRAFT
-        
+
         # Step 2: Generate payment file
         content = banking_service.generate_payment_file(batch.id)
-        
+
         assert content.startswith("H")  # Header
         assert content.count("\r\nD") == 3  # 3 detail records
         assert content.endswith("\r\n")  # Proper line ending
-        
+
         # Step 3: Upload payment file
         mock_sftp.putfo = Mock()
-        
+
         success = banking_service.upload_payment_file(batch.id)
-        
+
         assert success is True
         assert mock_sftp.putfo.called
-        
+
         # Refresh batch
         db.refresh(batch)
         assert batch.status == PaymentBatchStatus.UPLOADED
         assert batch.file_name is not None
-        
+
         # Step 4: Simulate bank processing and reconciliation
         reconciliation_content = self._generate_reconciliation_file(batch)
-        
+
         # Mock downloading reconciliation file
         mock_sftp.listdir.return_value = ["REC_20240120.txt"]
-        mock_sftp.getfo = Mock(side_effect=lambda remote, local: local.write(
-            reconciliation_content.encode('UTF-8')
-        ))
-        
+        mock_sftp.getfo = Mock(
+            side_effect=lambda remote, local: local.write(
+                reconciliation_content.encode("UTF-8")
+            )
+        )
+
         # Check for new files
         new_files = banking_service.check_reconciliation_files("TEST")
         assert len(new_files) == 1
-        
+
         # Process reconciliation
         mock_sftp.rename = Mock()  # Mock archive operation
         log = banking_service.process_reconciliation_file("TEST", new_files[0])
-        
+
         assert log.status == "MATCHED"
         assert log.matched_records == 2
         assert log.failed_records == 1
-        
+
         # Verify transaction updates
         transactions = db.query(PaymentTransaction).filter_by(batch_id=batch.id).all()
-        
-        success_count = sum(1 for t in transactions if t.status == TransactionStatus.SUCCESS)
-        failed_count = sum(1 for t in transactions if t.status == TransactionStatus.FAILED)
-        
+
+        success_count = sum(
+            1 for t in transactions if t.status == TransactionStatus.SUCCESS
+        )
+        failed_count = sum(
+            1 for t in transactions if t.status == TransactionStatus.FAILED
+        )
+
         assert success_count == 2
         assert failed_count == 1
-        
+
         # Verify invoice updates
-        paid_invoices = db.query(Invoice).filter_by(
-            payment_status=InvoicePaymentStatus.PAID
-        ).all()
-        
+        paid_invoices = (
+            db.query(Invoice).filter_by(payment_status=InvoicePaymentStatus.PAID).all()
+        )
+
         assert len(paid_invoices) == 2
-    
-    def test_payment_batch_report(
-        self,
-        db: Session,
-        test_bank_config,
-        test_invoices
-    ):
+
+    def test_payment_batch_report(self, db: Session, test_bank_config, test_invoices):
         """Test payment status reporting."""
         banking_service = BankingService(db)
-        
+
         # Create and process a batch
         batch = banking_service.create_payment_batch(
-            bank_code="TEST",
-            processing_date=datetime.now()
+            bank_code="TEST", processing_date=datetime.now()
         )
-        
+
         # Get initial report
         report = banking_service.get_payment_status_report(batch.id)
-        
-        assert report['batch_number'] == batch.batch_number
-        assert report['total_transactions'] == batch.total_transactions
-        assert 'pending' in report['status_summary']
-        
+
+        assert report["batch_number"] == batch.batch_number
+        assert report["total_transactions"] == batch.total_transactions
+        assert "pending" in report["status_summary"]
+
         # Update some transactions to different statuses
         transactions = db.query(PaymentTransaction).filter_by(batch_id=batch.id).all()
         if len(transactions) >= 2:
@@ -231,43 +235,35 @@ class TestBankingIntegration:
             transactions[1].bank_response_code = "001"
             transactions[1].bank_response_message = "Insufficient funds"
             db.commit()
-        
+
         # Get updated report
         report = banking_service.get_payment_status_report(batch.id)
-        
+
         if len(transactions) >= 2:
-            assert 'success' in report['status_summary']
-            assert 'failed' in report['status_summary']
-            assert len(report['failed_transactions']) > 0
-            assert report['failed_transactions'][0]['error_code'] == "001"
-    
-    def test_circuit_breaker_recovery(
-        self,
-        db: Session,
-        test_bank_config
-    ):
+            assert "success" in report["status_summary"]
+            assert "failed" in report["status_summary"]
+            assert len(report["failed_transactions"]) > 0
+            assert report["failed_transactions"][0]["error_code"] == "001"
+
+    def test_circuit_breaker_recovery(self, db: Session, test_bank_config):
         """Test circuit breaker recovery after cooldown."""
         banking_service = BankingService(db)
-        
+
         # Simulate failures to open circuit
         for _ in range(3):
             banking_service._record_circuit_failure("TEST")
-        
+
         assert banking_service._is_circuit_open("TEST") is True
-        
+
         # Manually adjust last failure time to simulate cooldown
-        banking_service._circuit_breaker_states["TEST"]['last_failure'] = \
-            datetime.utcnow() - timedelta(minutes=6)
-        
+        banking_service._circuit_breaker_states["TEST"][
+            "last_failure"
+        ] = datetime.utcnow() - timedelta(minutes=6)
+
         # Circuit should be closed after cooldown
         assert banking_service._is_circuit_open("TEST") is False
-    
-    def test_csv_format_processing(
-        self,
-        db: Session,
-        test_customers,
-        test_invoices
-    ):
+
+    def test_csv_format_processing(self, db: Session, test_customers, test_invoices):
         """Test CSV format payment file generation."""
         # Create CSV format bank config
         csv_config = BankConfiguration(
@@ -283,44 +279,43 @@ class TestBankingIntegration:
             encoding="UTF-8",
             delimiter=",",
             payment_file_pattern="PAY_{YYYYMMDD}.csv",
-            is_active=True
+            is_active=True,
         )
         db.add(csv_config)
-        
+
         # Update customers to use CSV bank
         for customer in test_customers:
             customer.bank_code = "CSV_TEST"
-        
+
         db.commit()
-        
+
         banking_service = BankingService(db)
-        
+
         # Create batch
         batch = banking_service.create_payment_batch(
-            bank_code="CSV_TEST",
-            processing_date=datetime.now()
+            bank_code="CSV_TEST", processing_date=datetime.now()
         )
-        
+
         # Generate CSV file
         content = banking_service.generate_payment_file(batch.id)
-        
+
         # Verify CSV format
-        lines = content.strip().split('\n')
+        lines = content.strip().split("\n")
         assert "交易序號" in lines[0]  # Header row
         assert len(lines) == batch.total_transactions + 1  # Header + data rows
-        
+
         # Verify data format
         for i in range(1, len(lines)):
-            fields = lines[i].split(',')
+            fields = lines[i].split(",")
             assert len(fields) >= 6  # At least 6 fields per row
-    
+
     def _generate_reconciliation_file(self, batch: PaymentBatch) -> str:
         """Generate a mock reconciliation file."""
         lines = []
-        
+
         # Header
         lines.append(f"H{datetime.now().strftime('%Y%m%d')}TEST001")
-        
+
         # Detail records
         transactions = batch.transactions
         for i, trans in enumerate(transactions):
@@ -331,7 +326,7 @@ class TestBankingIntegration:
             else:
                 response_code = "001"
                 response_msg = "Insufficient funds"
-            
+
             detail = (
                 f"D{str(i+1).zfill(6)}"
                 f"{trans.transaction_id:20}"
@@ -341,8 +336,8 @@ class TestBankingIntegration:
                 f"{datetime.now().strftime('%Y%m%d')}"
             )
             lines.append(detail)
-        
+
         # Trailer
         lines.append(f"T{str(len(transactions)).zfill(6)}")
-        
-        return '\r\n'.join(lines)
+
+        return "\r\n".join(lines)

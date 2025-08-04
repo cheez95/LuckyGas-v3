@@ -19,8 +19,7 @@ from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus, RouteStop
 from app.models.user import User
 from app.services.dispatch.google_routes_service import Location, RouteRequest
-from app.services.dispatch.google_routes_service import \
-    RouteStop as GoogleRouteStop
+from app.services.dispatch.google_routes_service import RouteStop as GoogleRouteStop
 from app.services.dispatch.google_routes_service import get_routes_service
 from app.services.optimization.ortools_optimizer import VRPStop, VRPVehicle
 

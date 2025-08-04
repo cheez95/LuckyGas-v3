@@ -9,16 +9,16 @@ from sqlalchemy.orm import selectinload
 from app.api.deps import get_current_user, get_db
 from app.core.cache import cache, cache_result
 from app.models.customer import Customer as CustomerModel
-from app.models.customer_inventory import \
-    CustomerInventory as CustomerInventoryModel
+from app.models.customer_inventory import CustomerInventory as CustomerInventoryModel
 from app.models.gas_product import GasProduct as GasProductModel
 from app.models.user import User as UserModel
 from app.models.user import UserRole
-from app.schemas.customer import (Customer, CustomerCreate, CustomerList,
-                                  CustomerUpdate)
-from app.schemas.customer_inventory import (CustomerInventory,
-                                            CustomerInventoryList,
-                                            CustomerInventoryUpdate)
+from app.schemas.customer import Customer, CustomerCreate, CustomerList, CustomerUpdate
+from app.schemas.customer_inventory import (
+    CustomerInventory,
+    CustomerInventoryList,
+    CustomerInventoryUpdate,
+)
 from app.services.customer_service import CustomerService
 
 router = APIRouter()

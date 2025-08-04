@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api import deps
 from app.api.deps import get_db
+
 # Removed during compaction
 # from app.api.v1.socketio_handler import notify_order_update
 from app.core.cache import CacheKeys, cache, cache_result, invalidate_cache
@@ -19,8 +20,13 @@ from app.models.order_item import OrderItem
 from app.models.user import User
 from app.schemas.credit import CreditCheckResult, CreditSummary
 from app.schemas.order import Order as OrderSchema
-from app.schemas.order import (OrderCreate, OrderCreateV2, OrderUpdate,
-                               OrderUpdateV2, OrderV2)
+from app.schemas.order import (
+    OrderCreate,
+    OrderCreateV2,
+    OrderUpdate,
+    OrderUpdateV2,
+    OrderV2,
+)
 from app.schemas.order_item import OrderItemCreate
 from app.schemas.order_search import OrderSearchCriteria, OrderSearchResult
 from app.services.credit_service import CreditService

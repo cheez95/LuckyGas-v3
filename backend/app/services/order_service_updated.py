@@ -9,10 +9,8 @@ from typing import Optional
 
 from app.models.order import OrderStatus
 from app.services.order_service import OrderService as BaseOrderService
-from app.services.simple_notifications import (notification_service,
-                                               send_order_sms)
-from app.services.simple_websocket import (notify_order_updated,
-                                           websocket_manager)
+from app.services.simple_notifications import notification_service, send_order_sms
+from app.services.simple_websocket import notify_order_updated, websocket_manager
 
 logger = logging.getLogger(__name__)
 

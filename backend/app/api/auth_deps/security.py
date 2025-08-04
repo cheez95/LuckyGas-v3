@@ -5,15 +5,18 @@ Security-related dependencies for FastAPI routes.
 from typing import Annotated, Optional
 
 from fastapi import Depends, Header, HTTPException, Request, status
-from fastapi.security import (APIKeyHeader, HTTPAuthorizationCredentials,
-                              HTTPBearer)
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.core.cache import cache
-from app.core.security import (AccountLockout, APIKeyManager, SessionManager,
-                               decode_access_token)
+from app.core.security import (
+    AccountLockout,
+    APIKeyManager,
+    SessionManager,
+    decode_access_token,
+)
 from app.core.security_config import get_2fa_config
 from app.middleware.security import CSRFProtection, SecurityValidation
 from app.models.user import User

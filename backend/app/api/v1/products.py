@@ -10,8 +10,12 @@ from app.models.gas_product import GasProduct as GasProductModel
 from app.models.gas_product import ProductAttribute
 from app.models.user import User as UserModel
 from app.models.user import UserRole
-from app.schemas.gas_product import (GasProduct, GasProductCreate,
-                                     GasProductList, GasProductUpdate)
+from app.schemas.gas_product import (
+    GasProduct,
+    GasProductCreate,
+    GasProductList,
+    GasProductUpdate,
+)
 
 router = APIRouter()
 

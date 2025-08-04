@@ -7,18 +7,27 @@ import uuid
 from datetime import datetime, time, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.metrics import (route_optimization_histogram,
-                              vrp_constraint_violations_counter,
-                              vrp_optimization_summary,
-                              vrp_solution_quality_gauge)
-from app.models.optimization import (ClusterInfo, OptimizationConstraints,
-                                     OptimizationRequest, OptimizationResponse,
-                                     OptimizedRoute, OptimizedStop)
-from app.services.google_cloud.monitoring.intelligent_cache import \
-    IntelligentCache
+from app.core.metrics import (
+    route_optimization_histogram,
+    vrp_constraint_violations_counter,
+    vrp_optimization_summary,
+    vrp_solution_quality_gauge,
+)
+from app.models.optimization import (
+    ClusterInfo,
+    OptimizationConstraints,
+    OptimizationRequest,
+    OptimizationResponse,
+    OptimizedRoute,
+    OptimizedStop,
+)
+from app.services.google_cloud.monitoring.intelligent_cache import IntelligentCache
 from app.services.optimization.clustering import GeographicClusterer
-from app.services.optimization.ortools_optimizer import (ORToolsOptimizer,
-                                                         VRPStop, VRPVehicle)
+from app.services.optimization.ortools_optimizer import (
+    ORToolsOptimizer,
+    VRPStop,
+    VRPVehicle,
+)
 
 logger = logging.getLogger(__name__)
 

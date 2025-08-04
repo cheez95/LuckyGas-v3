@@ -8,8 +8,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.invoice import (InvoicePaymentStatus, InvoiceStatus,
-                                InvoiceType, PaymentMethod)
+from app.models.invoice import (
+    InvoicePaymentStatus,
+    InvoiceStatus,
+    InvoiceType,
+    PaymentMethod,
+)
 
 
 class InvoiceItemBase(BaseModel):

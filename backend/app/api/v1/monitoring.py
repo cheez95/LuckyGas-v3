@@ -11,8 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 
 from app.api.deps import get_current_active_superuser, get_db
-from app.middleware.performance import (get_performance_stats,
-                                        run_performance_baseline)
+from app.middleware.performance import get_performance_stats, run_performance_baseline
 from app.models.user import User
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])

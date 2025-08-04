@@ -17,8 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.metrics import route_adjustment_counter, route_adjustment_summary
 from app.models.order import Order
 from app.models.route import Route, RouteStop
-from app.services.google_cloud.monitoring.intelligent_cache import \
-    get_intelligent_cache
+from app.services.google_cloud.monitoring.intelligent_cache import get_intelligent_cache
 from app.services.google_cloud.routes_service import GoogleRoutesService
 from app.services.optimization.vrp_optimizer import VRPOptimizer
 from app.services.websocket_service import websocket_manager

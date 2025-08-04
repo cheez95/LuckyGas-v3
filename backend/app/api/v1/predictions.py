@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.core.decorators import rate_limit
 from app.models.user import User
-from app.schemas.prediction import (BatchPredictionRequest,
-                                    BatchPredictionResponse,
-                                    ChurnPredictionResponse,
-                                    DemandPredictionRequest,
-                                    DemandPredictionResponse,
-                                    PredictionMetrics)
+from app.schemas.prediction import (
+    BatchPredictionRequest,
+    BatchPredictionResponse,
+    ChurnPredictionResponse,
+    DemandPredictionRequest,
+    DemandPredictionResponse,
+    PredictionMetrics,
+)
 from app.services.vertex_ai_service import get_vertex_ai_service
 
 router = APIRouter()

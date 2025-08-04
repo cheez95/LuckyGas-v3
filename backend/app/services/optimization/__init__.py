@@ -1,6 +1,5 @@
 from .clustering import GeographicClusterer
-from .ortools_optimizer import (ORToolsOptimizer, VRPStop, VRPVehicle,
-                                ortools_optimizer)
+from .ortools_optimizer import ORToolsOptimizer, VRPStop, VRPVehicle, ortools_optimizer
 from .vrp_optimizer import VRPOptimizer
 
 __all__ = [

@@ -21,10 +21,15 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.secrets_manager import get_secrets_manager
-from app.models.banking import (BankConfiguration, PaymentBatch,
-                                PaymentBatchStatus, PaymentTransaction,
-                                ReconciliationLog, ReconciliationStatus,
-                                TransactionStatus)
+from app.models.banking import (
+    BankConfiguration,
+    PaymentBatch,
+    PaymentBatchStatus,
+    PaymentTransaction,
+    ReconciliationLog,
+    ReconciliationStatus,
+    TransactionStatus,
+)
 from app.models.customer import Customer
 from app.models.invoice import Invoice, InvoicePaymentStatus
 

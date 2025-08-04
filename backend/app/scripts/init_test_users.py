@@ -25,7 +25,7 @@ TEST_USERS = [
         "full_name": "系統管理員",
         "password": "Admin123!@#",
         "role": "super_admin",
-        "is_active": True
+        "is_active": True,
     },
     {
         "email": "manager@luckygas.com.tw",
@@ -33,7 +33,7 @@ TEST_USERS = [
         "full_name": "經理",
         "password": "Manager123!",
         "role": "manager",
-        "is_active": True
+        "is_active": True,
     },
     {
         "email": "staff@luckygas.com.tw",
@@ -41,7 +41,7 @@ TEST_USERS = [
         "full_name": "辦公室員工",
         "password": "Staff123!",
         "role": "office_staff",
-        "is_active": True
+        "is_active": True,
     },
     {
         "email": "driver@luckygas.com.tw",
@@ -49,7 +49,7 @@ TEST_USERS = [
         "full_name": "司機",
         "password": "Driver123!",
         "role": "driver",
-        "is_active": True
+        "is_active": True,
     },
     {
         "email": "customer@example.com",
@@ -57,24 +57,23 @@ TEST_USERS = [
         "full_name": "測試客戶",
         "password": "Customer123!",
         "role": "customer",
-        "is_active": True
-    }
+        "is_active": True,
+    },
 ]
+
 
 async def init_test_users():
     """Create test users in the database"""
     # Create engine
     engine = create_async_engine(settings.DATABASE_URL)
-    
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     # Create session
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
     async with async_session() as session:
         for user_data in TEST_USERS:
             # Check if user already exists
@@ -82,7 +81,7 @@ async def init_test_users():
                 select(User).where(User.email == user_data["email"])
             )
             existing_user = result.scalar_one_or_none()
-            
+
             if not existing_user:
                 # Create new user
                 user = User(
@@ -91,17 +90,20 @@ async def init_test_users():
                     full_name=user_data["full_name"],
                     hashed_password=get_password_hash(user_data["password"]),
                     role=user_data["role"],
-                    is_active=user_data["is_active"]
+                    is_active=user_data["is_active"],
                 )
                 session.add(user)
-                print(f"Created user: {user_data['email']} with role {user_data['role']}")
+                print(
+                    f"Created user: {user_data['email']} with role {user_data['role']}"
+                )
             else:
                 print(f"User already exists: {user_data['email']}")
-        
+
         await session.commit()
-    
+
     await engine.dispose()
     print("\nTest users initialization completed!")
+
 
 if __name__ == "__main__":
     asyncio.run(init_test_users())

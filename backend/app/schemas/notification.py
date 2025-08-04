@@ -6,8 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models.notification import (NotificationChannel, NotificationStatus,
-                                     SMSProvider)
+from app.models.notification import NotificationChannel, NotificationStatus, SMSProvider
 
 
 # SMS Send Schemas

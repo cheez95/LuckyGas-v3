@@ -29,11 +29,11 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.api.deps import get_db
+
 # Import after environment setup
 from app.core.database import Base
 from app.main import app

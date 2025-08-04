@@ -15,9 +15,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.cache import cache
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security_config import (get_2fa_config, get_api_key_config,
-                                      get_lockout_policy, get_password_policy,
-                                      get_session_config)
+from app.core.security_config import (
+    get_2fa_config,
+    get_api_key_config,
+    get_lockout_policy,
+    get_password_policy,
+    get_session_config,
+)
 
 logger = get_logger(__name__)
 

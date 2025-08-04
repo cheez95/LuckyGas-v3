@@ -11,8 +11,7 @@ from app.api.deps import get_current_user
 from app.core.logging import get_logger
 from app.core.security import verify_user_role
 from app.models.user import User
-from app.services.notification_service import (NotificationService,
-                                               NotificationType)
+from app.services.notification_service import NotificationService, NotificationType
 
 logger = get_logger(__name__)
 router = APIRouter()

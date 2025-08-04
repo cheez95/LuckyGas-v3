@@ -12,15 +12,22 @@ from app.api import deps
 from app.core.security import get_password_hash
 from app.models.banking import BankConfiguration, PaymentBatch
 from app.models.user import User
-from app.schemas.banking import (BankConfigCreate, BankConfigResponse,
-                                 BankConfigUpdate, CheckReconciliationResponse,
-                                 GeneratePaymentFileRequest,
-                                 GeneratePaymentFileResponse,
-                                 PaymentBatchCreate, PaymentBatchListResponse,
-                                 PaymentBatchResponse, PaymentStatusReport,
-                                 ProcessReconciliationRequest,
-                                 ReconciliationLogResponse, UploadFileRequest,
-                                 UploadFileResponse)
+from app.schemas.banking import (
+    BankConfigCreate,
+    BankConfigResponse,
+    BankConfigUpdate,
+    CheckReconciliationResponse,
+    GeneratePaymentFileRequest,
+    GeneratePaymentFileResponse,
+    PaymentBatchCreate,
+    PaymentBatchListResponse,
+    PaymentBatchResponse,
+    PaymentStatusReport,
+    ProcessReconciliationRequest,
+    ReconciliationLogResponse,
+    UploadFileRequest,
+    UploadFileResponse,
+)
 from app.services.banking_service import BankingService
 
 logger = logging.getLogger(__name__)

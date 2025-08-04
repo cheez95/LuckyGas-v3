@@ -11,8 +11,12 @@ from app.api.deps import get_current_active_superuser, get_current_user, get_db
 from app.core.logging import get_logger
 from app.middleware.enhanced_rate_limiting import APIKeyManager
 from app.models.user import User
-from app.schemas.api_key import (APIKeyCreate, APIKeyListResponse,
-                                 APIKeyResponse, APIKeyRevoke)
+from app.schemas.api_key import (
+    APIKeyCreate,
+    APIKeyListResponse,
+    APIKeyResponse,
+    APIKeyRevoke,
+)
 
 logger = get_logger(__name__)
 

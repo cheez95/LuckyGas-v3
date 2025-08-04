@@ -8,9 +8,13 @@ from app.api.deps import get_db
 from app.core.security import verify_user_role
 from app.models.user import User
 from app.schemas.order import OrderV2
-from app.schemas.order_template import (CreateOrderFromTemplate, OrderTemplate,
-                                        OrderTemplateCreate, OrderTemplateList,
-                                        OrderTemplateUpdate)
+from app.schemas.order_template import (
+    CreateOrderFromTemplate,
+    OrderTemplate,
+    OrderTemplateCreate,
+    OrderTemplateList,
+    OrderTemplateUpdate,
+)
 from app.services.order_template_service import OrderTemplateService
 
 router = APIRouter()

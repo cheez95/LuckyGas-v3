@@ -11,9 +11,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.core.decorators import cache_response, rate_limit
 from app.core.logging import get_logger
-from app.core.versioning import (APIVersion, get_requested_version,
-                                 get_version_features, requires_version,
-                                 version_deprecated)
+from app.core.versioning import (
+    APIVersion,
+    get_requested_version,
+    get_version_features,
+    requires_version,
+    version_deprecated,
+)
 
 logger = get_logger(__name__)
 

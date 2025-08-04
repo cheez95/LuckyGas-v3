@@ -11,9 +11,11 @@ from app.models.gas_product import GasProduct
 from app.models.order_template import OrderTemplate
 from app.models.user import User
 from app.schemas.order import OrderCreateV2
-from app.schemas.order_template import (CreateOrderFromTemplate,
-                                        OrderTemplateCreate,
-                                        OrderTemplateUpdate)
+from app.schemas.order_template import (
+    CreateOrderFromTemplate,
+    OrderTemplateCreate,
+    OrderTemplateUpdate,
+)
 from app.services.order_service import OrderService
 
 logger = get_logger(__name__)

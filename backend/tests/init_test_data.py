@@ -18,10 +18,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import Base, engine, get_db
 from app.core.security import get_password_hash
-from app.models import (Customer, CustomerInventory, DeliveryHistory,
-                        DeliveryHistoryItem, GasProduct, Invoice, Notification,
-                        Order, OrderItem, OrderTemplate, Route, RouteDelivery,
-                        User, Vehicle)
+from app.models import (
+    Customer,
+    CustomerInventory,
+    DeliveryHistory,
+    DeliveryHistoryItem,
+    GasProduct,
+    Invoice,
+    Notification,
+    Order,
+    OrderItem,
+    OrderTemplate,
+    Route,
+    RouteDelivery,
+    User,
+    Vehicle,
+)
 from app.schemas.user import UserRole
 
 # Taiwan-specific test data

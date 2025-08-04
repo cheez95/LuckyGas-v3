@@ -16,8 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.core.config import settings
-from app.models.notification import (NotificationStatus, ProviderConfig,
-                                     SMSLog, SMSProvider, SMSTemplate)
+from app.models.notification import (
+    NotificationStatus,
+    ProviderConfig,
+    SMSLog,
+    SMSProvider,
+    SMSTemplate,
+)
 
 logger = logging.getLogger(__name__)
 

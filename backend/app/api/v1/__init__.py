@@ -2,8 +2,17 @@
 
 from fastapi import APIRouter
 
-from . import (analytics, auth, customers, health_simple, orders, predictions,
-               routes, websocket, websocket_simple)
+from . import (
+    analytics,
+    auth,
+    customers,
+    health_simple,
+    orders,
+    predictions,
+    routes,
+    websocket,
+    websocket_simple,
+)
 
 api_router = APIRouter()
 

@@ -9,8 +9,7 @@ from typing import Dict, Generator
 
 import pytest
 import pytest_asyncio
-from playwright.async_api import (Browser, BrowserContext, Page,
-                                  async_playwright)
+from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 # Test configuration
 BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:3000")

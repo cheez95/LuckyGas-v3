@@ -11,8 +11,15 @@ import pandas as pd
 from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import (Customer, Invoice, InvoiceItem, InvoicePaymentStatus,
-                        InvoiceStatus, Order, Payment)
+from app.models import (
+    Customer,
+    Invoice,
+    InvoiceItem,
+    InvoicePaymentStatus,
+    InvoiceStatus,
+    Order,
+    Payment,
+)
 
 
 class FinancialReportService:

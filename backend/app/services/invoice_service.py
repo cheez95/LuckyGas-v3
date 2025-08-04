@@ -11,8 +11,16 @@ from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import (CreditNote, Customer, Invoice, InvoiceItem,
-                        InvoicePaymentStatus, InvoiceStatus, Order, Payment)
+from app.models import (
+    CreditNote,
+    Customer,
+    Invoice,
+    InvoiceItem,
+    InvoicePaymentStatus,
+    InvoiceStatus,
+    Order,
+    Payment,
+)
 from app.schemas.invoice import InvoiceCreate, InvoiceStats, InvoiceUpdate
 
 

@@ -9,10 +9,14 @@ from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import (Customer, Invoice, InvoicePaymentStatus, Payment,
-                        PaymentMethod)
-from app.schemas.payment import (CustomerBalance, DailyPaymentSummary,
-                                 PaymentCreate, PaymentStats, PaymentUpdate)
+from app.models import Customer, Invoice, InvoicePaymentStatus, Payment, PaymentMethod
+from app.schemas.payment import (
+    CustomerBalance,
+    DailyPaymentSummary,
+    PaymentCreate,
+    PaymentStats,
+    PaymentUpdate,
+)
 
 
 class PaymentService:
