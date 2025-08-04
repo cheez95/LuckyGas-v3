@@ -16,7 +16,6 @@ import redis.asyncio as redis
 from app.core.api_key_manager import LocalEncryptedKeyManager
 from app.services.google_cloud.development_mode import DevelopmentMode
 from app.services.google_cloud.monitoring.circuit_breaker import CircuitState
-from app.services.google_cloud.monitoring.error_handler import GoogleAPIError
 from app.services.google_cloud.routes_service_enhanced import (
     EnhancedGoogleRoutesService,
 )

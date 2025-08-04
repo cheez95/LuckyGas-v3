@@ -154,7 +154,7 @@ class GoogleAPIErrorHandler:
             if isinstance(error_body, str):
                 try:
                     error_body = json.loads(error_body)
-                except:
+                except Exception:
                     pass
 
             error_message = ""
@@ -272,7 +272,7 @@ class GoogleAPIErrorHandler:
                 try:
                     if hasattr(e, "message"):
                         error_body = e.message
-                except:
+                except Exception:
                     pass
 
                 error_type = cls.classify_error(
@@ -302,7 +302,7 @@ class GoogleAPIErrorHandler:
                     if retry_after:
                         try:
                             retry_after = int(retry_after)
-                        except:
+                        except Exception:
                             retry_after = None
 
                 # Calculate delay

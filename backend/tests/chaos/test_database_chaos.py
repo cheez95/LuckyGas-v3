@@ -35,7 +35,6 @@ class TestDatabaseChaos:
 
         # Track metrics
         connection_attempts = []
-        pool_exhaustion_errors = 0
         successful_connections = 0
 
         # Simulate many concurrent database operations

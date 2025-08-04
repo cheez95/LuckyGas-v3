@@ -3,9 +3,8 @@ Unit tests for Google API Error Handler
 """
 
 import asyncio
-import random
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
