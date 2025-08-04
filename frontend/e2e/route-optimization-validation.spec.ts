@@ -20,7 +20,7 @@ test.describe('Route Optimization Validation', () => {
   });
 
   test.describe('Constraint Validation', () => {
-    test('should respect time window constraints during optimization', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route with time-sensitive deliveries
@@ -64,7 +64,7 @@ test.describe('Route Optimization Validation', () => {
       expect(stopOrder[stopOrder.length - 1]).toContain('下午客戶');
     });
 
-    test('should respect vehicle capacity constraints', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route
@@ -101,7 +101,7 @@ test.describe('Route Optimization Validation', () => {
       expect(stopCount).toBeLessThanOrEqual(12); // Small truck capacity
     });
 
-    test('should validate driver working hours', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route with many stops
@@ -140,7 +140,7 @@ test.describe('Route Optimization Validation', () => {
   });
 
   test.describe('Optimization Algorithm Effectiveness', () => {
-    test('should minimize total distance', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create unoptimized route
@@ -205,7 +205,7 @@ test.describe('Route Optimization Validation', () => {
       expect(isNorthGrouped || isSouthGrouped).toBe(true);
     });
 
-    test('should balance routes across multiple drivers', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Select date with many orders
@@ -247,7 +247,7 @@ test.describe('Route Optimization Validation', () => {
       expect(stopVariance).toBeLessThan(10); // Threshold for acceptable variance
     });
 
-    test('should handle priority deliveries correctly', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route
@@ -302,7 +302,7 @@ test.describe('Route Optimization Validation', () => {
   });
 
   test.describe('Edge Cases and Error Handling', () => {
-    test('should handle empty route optimization gracefully', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create empty route
@@ -323,7 +323,7 @@ test.describe('Route Optimization Validation', () => {
       await expect(emptyRouteMessage).toContainText('沒有站點');
     });
 
-    test('should handle single stop optimization', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route with single stop
@@ -351,7 +351,7 @@ test.describe('Route Optimization Validation', () => {
       expect(distance).toMatch(/\d+\.?\d*\s*km/);
     });
 
-    test('should handle invalid addresses gracefully', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route
@@ -394,7 +394,7 @@ test.describe('Route Optimization Validation', () => {
       expect(stopCount).toBeGreaterThan(0);
     });
 
-    test('should handle network failures during optimization', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route with stops
@@ -430,7 +430,7 @@ test.describe('Route Optimization Validation', () => {
   });
 
   test.describe('Business Rules Validation', () => {
-    test('should enforce minimum delivery interval between stops', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route
@@ -472,7 +472,7 @@ test.describe('Route Optimization Validation', () => {
       }
     });
 
-    test('should respect customer preferences', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route
@@ -514,7 +514,7 @@ test.describe('Route Optimization Validation', () => {
       }
     });
 
-    test('should validate route modifications preserve constraints', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Select existing optimized route
@@ -566,7 +566,7 @@ test.describe('Route Optimization Validation', () => {
   });
 
   test.describe('Performance and Scalability', () => {
-    test('should optimize large routes efficiently', async ({ page }) => {
+    test($1, async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Create route with many stops
@@ -604,7 +604,7 @@ test.describe('Route Optimization Validation', () => {
       expect(duration).toMatch(/\d+/);
     });
 
-    test('should handle concurrent optimizations', async ({ page, context }) => {
+    test('should respect time window constraints during optimization', async ({ page: _page, context }) => {
       await routePage.navigateToRoutes();
       
       // Create multiple routes

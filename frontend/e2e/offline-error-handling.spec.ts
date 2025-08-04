@@ -13,7 +13,7 @@ test.describe('Offline Functionality', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test('should show offline indicator when network is disconnected', async ({ page, context }) => {
+  test($1, async ({ page, context }) => {
     // Navigate to any page
     await page.goto('/customers');
     
@@ -31,7 +31,7 @@ test.describe('Offline Functionality', () => {
     await expect(offlineIndicator).toBeHidden({ timeout: 5000 });
   });
 
-  test('should queue customer creation when offline', async ({ page, context }) => {
+  test($1, async ({ page, context }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -66,7 +66,7 @@ test.describe('Offline Functionality', () => {
     expect(customerCount).toBeGreaterThan(0);
   });
 
-  test('should persist offline queue across page reloads', async ({ page, context }) => {
+  test($1, async ({ page, context }) => {
     const orderPage = new OrderPage(page);
     await orderPage.navigateToOrders();
     
@@ -94,7 +94,7 @@ test.describe('Offline Functionality', () => {
     expect(queueCountAfterReload).toBe('1');
   });
 
-  test('should handle offline photo upload for drivers', async ({ page, context }) => {
+  test($1, async ({ page, context }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
     
@@ -152,7 +152,7 @@ test.describe('Offline Functionality', () => {
     expect(syncCount).toBeGreaterThan(0);
   });
 
-  test('should retry failed requests automatically', async ({ page, context }) => {
+  test($1, async ({ page, context }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -199,7 +199,7 @@ test.describe('Error Handling', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test('should handle 404 errors gracefully', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to non-existent page
     await page.goto('/non-existent-page');
     
@@ -211,7 +211,7 @@ test.describe('Error Handling', () => {
     await expect(backLink).toBeVisible();
   });
 
-  test('should handle API 500 errors with user-friendly message', async ({ page }) => {
+  test($1, async ({ page }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -233,7 +233,7 @@ test.describe('Error Handling', () => {
     await expect(errorMessage).toContainText(/伺服器錯誤|系統錯誤/);
   });
 
-  test('should handle validation errors clearly', async ({ page }) => {
+  test($1, async ({ page }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -260,7 +260,7 @@ test.describe('Error Handling', () => {
     await expect(phoneError).toContainText(/[\u4e00-\u9fa5]/);
   });
 
-  test('should handle session timeout gracefully', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to protected page
     await page.goto('/customers');
     
@@ -281,7 +281,7 @@ test.describe('Error Handling', () => {
     await expect(sessionMessage).toBeVisible();
   });
 
-  test('should handle network timeouts', async ({ page }) => {
+  test($1, async ({ page }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -301,7 +301,7 @@ test.describe('Error Handling', () => {
     await expect(timeoutError).toContainText(/請求超時|連線逾時/);
   });
 
-  test('should recover from temporary API failures', async ({ page }) => {
+  test($1, async ({ page }) => {
     const orderPage = new OrderPage(page);
     await orderPage.navigateToOrders();
     
@@ -325,7 +325,7 @@ test.describe('Error Handling', () => {
     expect(orderCount).toBeGreaterThanOrEqual(0);
   });
 
-  test('should handle concurrent request conflicts', async ({ page, context }) => {
+  test($1, async ({ page, context }) => {
     const customerPage = new CustomerPage(page);
     
     // Open two tabs
@@ -370,7 +370,7 @@ test.describe('Error Handling', () => {
     await page2.close();
   });
 
-  test('should gracefully degrade when features are unavailable', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Mock Google APIs being unavailable
     await page.route('**/predictions/generate', route => {
       route.fulfill({
@@ -390,7 +390,7 @@ test.describe('Error Handling', () => {
     await expect(manualPredictionButton).toBeVisible();
   });
 
-  test('should handle file upload errors', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
     
@@ -433,7 +433,7 @@ test.describe('Error Handling', () => {
 });
 
 test.describe('Error Boundaries', () => {
-  test('should catch and display React errors gracefully', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to any page
     await page.goto('/dashboard');
     
@@ -456,7 +456,7 @@ test.describe('Error Boundaries', () => {
     await expect(reloadButton).toBeVisible();
   });
 
-  test('should log errors for debugging', async ({ page }) => {
+  test($1, async ({ page }) => {
     const errors: string[] = [];
     
     // Capture console errors

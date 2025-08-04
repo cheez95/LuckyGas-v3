@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 // Test configuration
 const BASE_URL = 'http://localhost:5173';
-const API_URL = 'http://localhost:8000';
+// const _API_URL removed - unused
 
 // Test credentials
 const TEST_USER = {
@@ -18,7 +18,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
   });
 
   test.describe('1. Authentication Flow', () => {
-    test('1.1 Login page loads correctly', async ({ page }) => {
+    test($1, async ({ page }) => {
       await expect(page).toHaveURL(/login/);
       // Use more specific selector to avoid multiple matches
       await expect(page.getByRole('heading', { name: '幸福氣瓦斯配送管理系統' })).toBeVisible();
@@ -29,7 +29,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(page.getByText('忘記密碼？')).toBeVisible();
     });
 
-    test('1.2 Login with valid credentials', async ({ page }) => {
+    test($1, async ({ page }) => {
       await page.getByPlaceholder(/用戶名|電子郵件|Email/).fill(TEST_USER.username);
       await page.getByPlaceholder(/密碼|Password/).fill(TEST_USER.password);
       await page.getByRole('button', { name: /登\s*入|Login/ }).click();
@@ -41,7 +41,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(page.getByText('Test User')).toBeVisible();
     });
 
-    test('1.3 Login with invalid credentials', async ({ page }) => {
+    test($1, async ({ page }) => {
       await page.getByPlaceholder(/用戶名|電子郵件|Email/).fill('wrong@example.com');
       await page.getByPlaceholder(/密碼|Password/).fill('wrongpassword');
       await page.getByRole('button', { name: /登\s*入|Login/ }).click();
@@ -50,7 +50,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(page.getByText(/用戶名或密碼錯誤/)).toBeVisible();
     });
 
-    test('1.4 Logout functionality', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Login first
       await page.getByPlaceholder(/用戶名|電子郵件|Email/).fill(TEST_USER.username);
       await page.getByPlaceholder(/密碼|Password/).fill(TEST_USER.password);
@@ -75,7 +75,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await page.waitForURL(/dashboard/);
     });
 
-    test('2.1 Dashboard loads with all widgets', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Check main stats cards
       await expect(page.getByText('今日訂單')).toBeVisible();
       await expect(page.getByText('活躍客戶')).toBeVisible();
@@ -89,7 +89,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(page.getByText('系統功能概覽')).toBeVisible();
     });
 
-    test('2.2 WebSocket connection status', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Check WebSocket status indicator
       const wsStatus = page.locator('[data-testid="websocket-status"]');
       await expect(wsStatus).toBeVisible();
@@ -109,7 +109,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await page.waitForURL(/dashboard/);
     });
 
-    test('3.1 All menu items are visible', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Desktop view
       if (await page.getByTestId('desktop-nav').isVisible()) {
         await expect(page.getByTestId('menu-dashboard')).toBeVisible();
@@ -126,19 +126,19 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       }
     });
 
-    test('3.2 Navigate to Customer Management', async ({ page }) => {
+    test($1, async ({ page }) => {
       await page.getByTestId('menu-customers').click();
       await expect(page).toHaveURL(/customers/);
       await expect(page.getByTestId('page-title')).toHaveText('客戶管理');
     });
 
-    test('3.3 Navigate to Order Management', async ({ page }) => {
+    test($1, async ({ page }) => {
       await page.getByTestId('menu-orders').click();
       await expect(page).toHaveURL(/orders/);
       await expect(page.getByTestId('page-title')).toHaveText('訂單管理');
     });
 
-    test('3.4 Navigate to Route Planning', async ({ page }) => {
+    test($1, async ({ page }) => {
       await page.getByTestId('menu-routes').click();
       await expect(page).toHaveURL(/routes/);
       await expect(page.getByTestId('page-title')).toHaveText('路線規劃');
@@ -155,7 +155,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await page.getByTestId('menu-customers').click();
     });
 
-    test('4.1 Customer list displays', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Wait for customer table
       await expect(page.getByTestId('customer-table')).toBeVisible();
       
@@ -175,7 +175,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       }
     });
 
-    test('4.2 Search functionality', async ({ page }) => {
+    test($1, async ({ page }) => {
       const searchInput = page.getByPlaceholder('搜尋客戶');
       if (await searchInput.isVisible()) {
         await searchInput.fill('測試');
@@ -185,7 +185,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       }
     });
 
-    test('4.3 Add customer button', async ({ page }) => {
+    test($1, async ({ page }) => {
       const addButton = page.getByTestId('add-customer-button');
       if (await addButton.isVisible()) {
         await addButton.click();
@@ -205,7 +205,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await page.getByTestId('menu-orders').click();
     });
 
-    test('5.1 Order list page loads', async ({ page }) => {
+    test($1, async ({ page }) => {
       await expect(page.getByTestId('page-title')).toHaveText('訂單管理');
       
       // Check for filters
@@ -216,7 +216,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(content.first()).toBeVisible();
     });
 
-    test('5.2 Order filters', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Date range picker
       const dateRangePicker = page.locator('.ant-picker-range');
       if (await dateRangePicker.isVisible()) {
@@ -236,7 +236,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
   });
 
   test.describe('6. Responsive Design', () => {
-    test('6.1 Mobile view navigation', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto(BASE_URL);
@@ -253,7 +253,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(page.getByTestId('mobile-nav-menu')).toBeVisible();
     });
 
-    test('6.2 Tablet view', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Set tablet viewport
       await page.setViewportSize({ width: 768, height: 1024 });
       await page.goto(BASE_URL);
@@ -265,13 +265,13 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
   });
 
   test.describe('7. Error Handling', () => {
-    test('7.1 404 page', async ({ page }) => {
+    test($1, async ({ page }) => {
       await page.goto(`${BASE_URL}/non-existent-page`);
       // Should show 404 or redirect to login
       await expect(page).toHaveURL(/login|404/);
     });
 
-    test('7.2 Network error handling', async ({ page, context }) => {
+    test($1, async ({ page, context }) => {
       // Login first
       await page.getByTestId('username-input').fill(TEST_USER.username);
       await page.getByTestId('password-input').fill(TEST_USER.password);
@@ -290,7 +290,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
   });
 
   test.describe('8. Accessibility', () => {
-    test('8.1 Keyboard navigation', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Tab through login form
       await page.keyboard.press('Tab');
       await expect(page.getByTestId('username-input')).toBeFocused();
@@ -302,7 +302,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       await expect(page.getByTestId('login-button')).toBeFocused();
     });
 
-    test('8.2 ARIA labels', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Check for ARIA labels on interactive elements
       const usernameInput = page.getByTestId('username-input');
       const ariaLabel = await usernameInput.getAttribute('aria-label');
@@ -311,7 +311,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
   });
 
   test.describe('9. Localization', () => {
-    test('9.1 Traditional Chinese UI', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Check all text is in Traditional Chinese
       await expect(page.getByText('幸福氣瓦斯配送管理系統')).toBeVisible();
       await expect(page.getByText('用戶名')).toBeVisible();
@@ -321,7 +321,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
   });
 
   test.describe('10. Performance', () => {
-    test('10.1 Page load time', async ({ page }) => {
+    test($1, async ({ page }) => {
       const startTime = Date.now();
       await page.goto(BASE_URL);
       await page.waitForLoadState('networkidle');
@@ -331,7 +331,7 @@ test.describe('Lucky Gas Frontend - Comprehensive Functionality Test', () => {
       expect(loadTime).toBeLessThan(3000);
     });
 
-    test('10.2 API response time', async ({ page }) => {
+    test($1, async ({ page }) => {
       // Monitor API calls
       const apiTimes: number[] = [];
       

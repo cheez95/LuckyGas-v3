@@ -5,7 +5,7 @@ import { mockData } from '../mock-data';
 const router = Router();
 const SECRET_KEY = 'test-secret-key-for-e2e-testing';
 
-function generateToken(user: any) {
+function generateToken(user: unknown) {
   return jwt.sign(
     { 
       user_id: user.id, 
@@ -18,7 +18,7 @@ function generateToken(user: any) {
   );
 }
 
-function verifyToken(req: any, res: any, next: any) {
+function verifyToken(req: unknown, res: unknown, next: unknown) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     return res.status(401).json({ detail: '未授權' });
@@ -29,7 +29,7 @@ function verifyToken(req: any, res: any, next: any) {
     const decoded = jwt.verify(token, SECRET_KEY);
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch (_error) {
     return res.status(401).json({ detail: '無效的令牌' });
   }
 }

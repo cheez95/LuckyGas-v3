@@ -328,7 +328,7 @@ export const mockApiResponses = {
 };
 
 // Test environment setup
-export async function setupTestData(page: any) {
+export async function setupTestData(page: unknown) {
   // Set up localStorage with test data if needed
   await page.evaluate(() => {
     // Set feature flags
@@ -343,7 +343,7 @@ export async function setupTestData(page: any) {
   });
 }
 
-export async function cleanupTestData(page: any) {
+export async function cleanupTestData(page: unknown) {
   await page.evaluate(() => {
     // Clear test data
     localStorage.removeItem('feature_flags');

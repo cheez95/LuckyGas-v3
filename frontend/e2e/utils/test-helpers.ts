@@ -38,7 +38,7 @@ export async function waitForLoadingComplete(page: Page) {
 }
 
 // Network helpers
-export async function mockApiEndpoint(page: Page, endpoint: string, response: any, status: number = 200) {
+export async function mockApiEndpoint(page: Page, endpoint: string, response: unknown, status: number = 200) {
   await page.route(`**/api/v1/${endpoint}`, route => {
     route.fulfill({
       status,
@@ -262,7 +262,7 @@ export async function retryOperation<T>(
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
-    } catch (error) {
+    } catch (_error) {
       lastError = error;
       if (i < maxRetries - 1) {
         await new Promise(resolve => setTimeout(resolve, delay));

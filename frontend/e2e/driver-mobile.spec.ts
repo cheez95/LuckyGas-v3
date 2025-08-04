@@ -16,7 +16,7 @@ test.describe('Driver Mobile Interface', () => {
     if (browserName === 'chromium') {
       try {
         await context.grantPermissions(['camera'], { origin: 'http://localhost:5173' });
-      } catch (error) {
+      } catch (_error) {
         console.log('Camera permission not supported in this browser');
       }
     }
@@ -165,7 +165,7 @@ test.describe('Driver Mobile Interface', () => {
     await completionModal.waitForModal();
     
     // Create test photos
-    const testPhotos = await page.evaluateHandle(() => {
+    const _testPhotos = await page.evaluateHandle(() => {
       const photos = [];
       for (let i = 0; i < 3; i++) {
         const canvas = document.createElement('canvas');

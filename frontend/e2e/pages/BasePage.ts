@@ -91,7 +91,7 @@ export class BasePage {
 
         await element.click();
         return; // Success
-      } catch (error) {
+      } catch (_error) {
         lastError = error as Error;
         if (i < retries - 1) {
           await this.page.waitForTimeout(delay);

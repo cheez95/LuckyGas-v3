@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 
 export class WebSocketTestHelper {
   private page: Page;
-  private messages: any[] = [];
+  private messages: unknown[] = [];
   private connected: boolean = false;
 
   constructor(page: Page) {
@@ -83,7 +83,7 @@ export class WebSocketTestHelper {
     while (Date.now() - startTime < timeout) {
       const connections = await this.page.evaluate(() => (window as any).__wsConnections || []);
       
-      if (connections.some((conn: any) => conn.readyState === 1)) {
+      if (connections.some((conn: unknown) => conn.readyState === 1)) {
         this.connected = true;
         return true;
       }
@@ -95,7 +95,7 @@ export class WebSocketTestHelper {
   }
 
   async waitForMessage(
-    predicate: (message: any) => boolean,
+    predicate: (message: unknown) => boolean,
     timeout: number = 5000
   ): Promise<any> {
     const startTime = Date.now();
@@ -114,10 +114,10 @@ export class WebSocketTestHelper {
     throw new Error('Timeout waiting for WebSocket message');
   }
 
-  async sendMessage(data: any) {
+  async sendMessage(data: unknown) {
     await this.page.evaluate((messageData) => {
       const connections = (window as any).__wsConnections || [];
-      const activeConnection = connections.find((conn: any) => conn.readyState === 1);
+      const activeConnection = connections.find((conn: unknown) => conn.readyState === 1);
       
       if (activeConnection && activeConnection.ws) {
         activeConnection.ws.send(
@@ -129,7 +129,7 @@ export class WebSocketTestHelper {
 
   async getMessages(): Promise<any[]> {
     return await this.page.evaluate(() => {
-      return ((window as any).__wsMessages || []).map((msg: any) => {
+      return ((window as any).__wsMessages || []).map((msg: unknown) => {
         try {
           return {
             ...msg,
@@ -155,7 +155,7 @@ export class WebSocketTestHelper {
   async simulateDisconnect() {
     await this.page.evaluate(() => {
       const connections = (window as any).__wsConnections || [];
-      connections.forEach((conn: any) => {
+      connections.forEach((conn: unknown) => {
         if (conn.ws && conn.readyState === 1) {
           conn.ws.close();
         }
@@ -171,7 +171,7 @@ export class WebSocketTestHelper {
   }
 
   // Mock specific WebSocket events
-  async mockNotification(notification: any) {
+  async mockNotification(notification: unknown) {
     await this.page.evaluate((notif) => {
       window.dispatchEvent(new CustomEvent('ws-notification', {
         detail: notif
@@ -179,7 +179,7 @@ export class WebSocketTestHelper {
     }, notification);
   }
 
-  async mockLocationUpdate(locationData: any) {
+  async mockLocationUpdate(locationData: unknown) {
     await this.page.evaluate((data) => {
       window.dispatchEvent(new CustomEvent('ws-location-update', {
         detail: data
@@ -187,7 +187,7 @@ export class WebSocketTestHelper {
     }, locationData);
   }
 
-  async mockOrderUpdate(orderData: any) {
+  async mockOrderUpdate(orderData: unknown) {
     await this.page.evaluate((data) => {
       window.dispatchEvent(new CustomEvent('ws-order-update', {
         detail: data
@@ -239,11 +239,11 @@ export class WebSocketTestHelper {
   // Wait for multiple messages
   async waitForMessages(
     count: number,
-    predicate: (message: any) => boolean,
+    predicate: (message: unknown) => boolean,
     timeout: number = 5000
   ): Promise<any[]> {
     const startTime = Date.now();
-    const collectedMessages: any[] = [];
+    const collectedMessages: unknown[] = [];
     
     while (Date.now() - startTime < timeout && collectedMessages.length < count) {
       const messages = await this.getMessages();

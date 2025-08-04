@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
       
       // Send initial notifications
       wsManager.sendUserNotifications(socket, decoded.user_id);
-    } catch (error) {
+    } catch (_error) {
       socket.emit('authenticated', { 
         success: false, 
         error: 'Invalid token' 
@@ -130,7 +130,7 @@ app.use((req, res) => {
 });
 
 // Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);
   res.status(err.status || 500).json({
     detail: err.message || 'Internal server error',

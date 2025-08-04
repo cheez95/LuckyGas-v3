@@ -1,0 +1,17 @@
+{
+  "overrides": [
+    {
+      "files": ["e2e/**/*.ts", "e2e/**/*.tsx"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "destructuredArrayIgnorePattern": "^_"
+          }
+        ]
+      }
+    }
+  ]
+}

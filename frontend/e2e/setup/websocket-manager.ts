@@ -81,7 +81,7 @@ export class WebSocketManager {
     this.io.to('role:admin').to('role:manager').emit('notification', fullNotification);
   }
 
-  broadcastLocationUpdate(driverId: number, locationData: any) {
+  broadcastLocationUpdate(driverId: number, locationData: unknown) {
     const driver = mockData.users.find(u => u.id === driverId);
     if (!driver) return;
 
@@ -155,7 +155,7 @@ export class WebSocketManager {
     this.io.emit('delivery-complete', update);
   }
 
-  sendRouteUpdate(routeId: number, update: any) {
+  sendRouteUpdate(routeId: number, update: unknown) {
     this.io.to(`route:${routeId}`).emit('route-update', {
       route_id: routeId,
       ...update,
@@ -163,7 +163,7 @@ export class WebSocketManager {
     });
   }
 
-  sendSystemAlert(alert: any) {
+  sendSystemAlert(alert: unknown) {
     this.io.emit('system-alert', {
       id: Date.now(),
       ...alert,

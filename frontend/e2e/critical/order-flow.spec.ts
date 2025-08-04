@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsTestUser, loginAsOfficeStaff, waitForApiResponse } from '../helpers/auth.helper';
+import { loginAsTestUser} from '../helpers/auth.helper';
 
 test.describe('Critical: Order Creation Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe('Critical: Order Creation Flow', () => {
     await loginAsTestUser(page);
   });
 
-  test('Complete order journey from login to confirmation', async ({ page }) => {
+  test($1, async ({ page }) => {
     // 1. Verify dashboard loaded
     await expect(page.locator('h2:has-text("儀表板")')).toBeVisible();
     
@@ -81,7 +81,7 @@ test.describe('Critical: Order Creation Flow', () => {
     }
   });
 
-  test('View and filter existing orders', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to orders
     await page.click('text=訂單管理');
     await page.waitForURL(/orders/);
@@ -111,7 +111,7 @@ test.describe('Critical: Order Creation Flow', () => {
     }
   });
 
-  test('Order status workflow', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to orders
     await page.click('text=訂單管理');
     await page.waitForURL(/orders/);
@@ -157,7 +157,7 @@ test.describe('Critical: Order Creation Flow', () => {
 });
 
 test.describe('Critical: Order Management Permissions', () => {
-  test('Different roles see appropriate order views', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Test with test user (basic permissions)
     await loginAsTestUser(page);
     await page.click('text=訂單管理');
@@ -168,7 +168,7 @@ test.describe('Critical: Order Management Permissions', () => {
     
     // Check if create button is visible (may be role-restricted)
     const createButton = page.locator('button:has-text("新增訂單"), button:has-text("建立訂單")');
-    const canCreateOrders = await createButton.isVisible();
+    const _canCreateOrders = await createButton.isVisible();
     
     // Log out
     await page.click('text=Test User');

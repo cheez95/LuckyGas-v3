@@ -45,7 +45,7 @@ export { expect };
 
 // Custom matchers
 export const customExpect = {
-  async toHaveChineseText(locator: any, expectedText: string) {
+  async toHaveChineseText(locator: unknown, expectedText: string) {
     const actualText = await locator.textContent();
     return {
       pass: actualText?.includes(expectedText) || false,
@@ -115,7 +115,7 @@ export const testData = {
 
 // Common test helpers
 export const helpers = {
-  async waitForToast(page: any, message?: string, timeout: number = 5000) {
+  async waitForToast(page: unknown, message?: string, timeout: number = 5000) {
     const toastLocator = message 
       ? page.locator('.ant-message-notice').filter({ hasText: message })
       : page.locator('.ant-message-notice');
@@ -124,7 +124,7 @@ export const helpers = {
     await toastLocator.waitFor({ state: 'hidden', timeout: timeout + 5000 });
   },
 
-  async waitForTableLoad(page: any) {
+  async waitForTableLoad(page: unknown) {
     // Wait for loading spinner to appear and disappear
     const spinner = page.locator('.ant-spin-spinning');
     if (await spinner.isVisible()) {
@@ -138,7 +138,7 @@ export const helpers = {
     });
   },
 
-  async selectFromDropdown(page: any, triggerLocator: any, optionText: string) {
+  async selectFromDropdown(page: unknown, triggerLocator: unknown, optionText: string) {
     await triggerLocator.click();
     await page.waitForSelector('.ant-select-dropdown', { state: 'visible' });
     await page.waitForTimeout(200); // Wait for animation
@@ -150,7 +150,7 @@ export const helpers = {
     await page.waitForSelector('.ant-select-dropdown', { state: 'hidden' });
   },
 
-  async fillDatePicker(page: any, inputLocator: any, date: Date) {
+  async fillDatePicker(page: unknown, inputLocator: unknown, date: Date) {
     await inputLocator.click();
     await page.waitForSelector('.ant-picker-dropdown', { state: 'visible' });
     
@@ -164,7 +164,7 @@ export const helpers = {
     await page.waitForSelector('.ant-picker-dropdown', { state: 'hidden' });
   },
 
-  async fillTimeRangePicker(page: any, inputLocator: any, startTime: string, endTime: string) {
+  async fillTimeRangePicker(page: unknown, inputLocator: unknown, startTime: string, endTime: string) {
     await inputLocator.first().click();
     await page.waitForSelector('.ant-picker-dropdown', { state: 'visible' });
     
@@ -184,7 +184,7 @@ export const helpers = {
 
 // API interceptors
 export const apiInterceptors = {
-  async mockApiResponse(page: any, pattern: string | RegExp, response: any) {
+  async mockApiResponse(page: unknown, pattern: string | RegExp, response: unknown) {
     await page.route(pattern, async (route) => {
       await route.fulfill({
         status: 200,
@@ -194,7 +194,7 @@ export const apiInterceptors = {
     });
   },
 
-  async waitForApiCall(page: any, urlPattern: string, method: string = 'GET', timeout: number = 10000) {
+  async waitForApiCall(page: unknown, urlPattern: string, method: string = 'GET', timeout: number = 10000) {
     return await page.waitForResponse(
       (response) => {
         const url = response.url();
@@ -205,7 +205,7 @@ export const apiInterceptors = {
     );
   },
 
-  async interceptApiCalls(page: any, patterns: { url: string | RegExp; handler: (route: any) => void }[]) {
+  async interceptApiCalls(page: unknown, patterns: { url: string | RegExp; handler: (route: unknown) => void }[]) {
     for (const { url, handler } of patterns) {
       await page.route(url, handler);
     }

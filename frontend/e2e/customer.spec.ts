@@ -35,7 +35,7 @@ test.describe('Customer Management', () => {
     await expect(customerPage.customerTable).toBeVisible();
   });
 
-  test('should create a new customer', async ({ page }) => {
+  test('should create a new customer', async ({ page: _page }) => {
     // Generate unique customer data
     const customerData = TestDataFactory.createCustomer();
     
@@ -92,7 +92,7 @@ test.describe('Customer Management', () => {
     // Check updated data (would need to open detail view to verify)
   });
 
-  test('should delete a customer', async ({ page }) => {
+  test('should delete a customer', async ({ page: _page }) => {
     // Get initial count
     const initialCount = await customerPage.getTotalCustomerCount();
     
@@ -107,7 +107,7 @@ test.describe('Customer Management', () => {
     expect(newCount).toBe(initialCount - 1);
   });
 
-  test('should search customers by name', async ({ page }) => {
+  test('should search customers by name', async ({ page: _page }) => {
     // Search by partial name
     await customerPage.searchCustomer('測試');
     

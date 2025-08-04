@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 
 export class WebSocketMockHelper {
   private page: Page;
-  private messageQueue: any[] = [];
+  private messageQueue: unknown[] = [];
 
   constructor(page: Page) {
     this.page = page;
@@ -133,7 +133,7 @@ export class WebSocketMockHelper {
   /**
    * Send a message from server to client
    */
-  async sendMessage(message: any) {
+  async sendMessage(message: unknown) {
     await this.page.evaluate((msg) => {
       const ws = (window as any).__mockWebSocket;
       if (ws && ws.readyState === 1 && ws.onmessage) {
@@ -224,14 +224,14 @@ export class WebSocketMockHelper {
     });
   }
 
-  async simulateNewOrder(order: any) {
+  async simulateNewOrder(order: unknown) {
     await this.sendMessage({
       type: 'newOrder',
       data: order
     });
   }
 
-  async simulateRouteUpdate(routeId: string, updates: any) {
+  async simulateRouteUpdate(routeId: string, updates: unknown) {
     await this.sendMessage({
       type: 'routeUpdate',
       data: {

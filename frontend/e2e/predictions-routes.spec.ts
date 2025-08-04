@@ -20,7 +20,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test('should generate predictions using placeholder service', async ({ page }) => {
+  test('should generate predictions using placeholder service', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     
     // Verify placeholder service is active (no Google API configured)
@@ -35,7 +35,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(predictionCount).toBeGreaterThan(0);
   });
 
-  test('should display prediction details with reasonable confidence', async ({ page }) => {
+  test('should display prediction details with reasonable confidence', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();
     
@@ -54,7 +54,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(confidence).toBeLessThanOrEqual(80);
   });
 
-  test('should color-code confidence levels correctly', async ({ page }) => {
+  test('should color-code confidence levels correctly', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();
     
@@ -63,7 +63,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(colorsCorrect).toBe(true);
   });
 
-  test('should filter predictions by date', async ({ page }) => {
+  test('should filter predictions by date', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();
     
@@ -82,7 +82,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(filteredCount).toBeGreaterThanOrEqual(0);
   });
 
-  test('should filter predictions by customer', async ({ page }) => {
+  test('should filter predictions by customer', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();
     
@@ -121,7 +121,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(download.suggestedFilename()).toMatch(/predictions.*\.(csv|xlsx|json)/);
   });
 
-  test('should display demand visualization chart', async ({ page }) => {
+  test('should display demand visualization chart', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();
     
@@ -134,7 +134,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(isInteractive).toBe(true);
   });
 
-  test('should handle prediction generation errors gracefully', async ({ page }) => {
+  test('should handle prediction generation errors gracefully', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     
     // Test error handling
@@ -142,7 +142,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(errorHandled).toBe(true);
   });
 
-  test('should display UI in Traditional Chinese', async ({ page }) => {
+  test('should display UI in Traditional Chinese', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     
     // Check localization
@@ -150,7 +150,7 @@ test.describe('Predictions without Google Vertex AI', () => {
     expect(isLocalized).toBe(true);
   });
 
-  test('should refresh predictions', async ({ page }) => {
+  test('should refresh predictions', async ({ page: _page }) => {
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();
     
@@ -192,7 +192,7 @@ test.describe('Route Planning without Google Routes API', () => {
     expect(routeCount).toBeGreaterThan(0);
   });
 
-  test('should show route details with basic optimization', async ({ page }) => {
+  test('should show route details with basic optimization', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Get first route details
@@ -206,7 +206,7 @@ test.describe('Route Planning without Google Routes API', () => {
     expect(routeDetails.estimatedTime).toMatch(/\d+/);
   });
 
-  test('should display routes on map', async ({ page }) => {
+  test('should display routes on map', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Check if map is visible
@@ -218,7 +218,7 @@ test.describe('Route Planning without Google Routes API', () => {
     expect(markerCount).toBeGreaterThan(0);
   });
 
-  test('should allow drag-and-drop route adjustment', async ({ page }) => {
+  test('should allow drag-and-drop route adjustment', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Select a route
@@ -255,7 +255,7 @@ test.describe('Route Planning without Google Routes API', () => {
     expect(optimizedMetrics.totalDistance).toBeLessThanOrEqual(initialMetrics.totalDistance);
   });
 
-  test('should assign driver to route', async ({ page }) => {
+  test('should assign driver to route', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Find unassigned route
@@ -287,7 +287,7 @@ test.describe('Route Planning without Google Routes API', () => {
     expect(download.suggestedFilename()).toMatch(/routes.*\.pdf/);
   });
 
-  test('should filter routes by date', async ({ page }) => {
+  test('should filter routes by date', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Get initial count
@@ -301,7 +301,7 @@ test.describe('Route Planning without Google Routes API', () => {
     expect(filteredCount).toBeGreaterThanOrEqual(0);
   });
 
-  test('should show route statistics on dashboard', async ({ page }) => {
+  test('should show route statistics on dashboard', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Check statistics panel
@@ -386,7 +386,7 @@ test.describe('Integration: Predictions to Routes', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test('should use predictions to create optimized routes', async ({ page }) => {
+  test('should use predictions to create optimized routes', async ({ page: _page }) => {
     // Generate predictions first
     await predictionsPage.navigateToPredictions();
     await predictionsPage.generatePredictions();

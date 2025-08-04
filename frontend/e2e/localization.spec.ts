@@ -78,7 +78,7 @@ test.describe('Traditional Chinese Localization', () => {
     await expect(page.getByText('客戶滿意度統計')).toBeVisible();
   });
 
-  test('should display navigation menu in Chinese', async ({ page }) => {
+  test('should display navigation menu in Chinese', async ({ page: _page }) => {
     await loginPage.navigateToLogin();
     await loginPage.login('admin', 'admin123');
     await loginPage.waitForLoginSuccess();
@@ -177,12 +177,7 @@ test.describe('Traditional Chinese Localization', () => {
     } else {
       // Fallback: look for any cell that matches date pattern
       const dateCells = await page.locator('.ant-table-cell').allTextContents();
-      const dateFound = dateCells.some(text => /^\d{4}\/\d{2}\/\d{2}$/.test(text?.trim() || ''));
-      expect(dateFound).toBe(true);
-    }
-  });
-
-  test('should display currency in TWD', async ({ page }) => {
+      const dateFound = dateCells.some(text => /^\d{4}\/\d{2}\/\d{2}$/.test('should display currency in TWD', async ({ page }) => {
     await loginPage.navigateToLogin();
     await loginPage.login('admin', 'admin123');
     await loginPage.waitForLoginSuccess();

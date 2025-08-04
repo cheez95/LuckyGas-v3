@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getAuthToken } from '../helpers/auth.helper';
+import { } from '../helpers/auth.helper';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
@@ -87,7 +87,7 @@ test.describe('API Contract Tests', () => {
       
       // Optional fields
       if (customers[0].phone) {
-        expect(customers[0].phone).toMatch(/^[\d\-\s\+]+$/);
+        expect(customers[0].phone).toMatch(/^[\d\-\s++]+$/);
       }
       
       if (customers[0].created_at) {

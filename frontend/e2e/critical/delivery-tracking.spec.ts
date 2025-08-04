@@ -6,7 +6,7 @@ test.describe('Critical: Delivery Tracking', () => {
     await loginAsTestUser(page);
   });
 
-  test('View delivery status from dashboard', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Check dashboard for delivery status widgets
     await expect(page.locator('h2:has-text("儀表板")')).toBeVisible();
     
@@ -33,7 +33,7 @@ test.describe('Critical: Delivery Tracking', () => {
     expect(hasDeliveryInfo || hasRealtimeStatus).toBeTruthy();
   });
 
-  test('Navigate to delivery history', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Look for delivery history menu item
     const deliveryHistoryMenu = page.locator('text=配送歷史');
     
@@ -64,7 +64,7 @@ test.describe('Critical: Delivery Tracking', () => {
     }
   });
 
-  test('Track active delivery on map', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to dispatch board if available
     const dispatchMenu = page.locator('text=派遣看板');
     
@@ -100,7 +100,7 @@ test.describe('Critical: Delivery Tracking', () => {
     }
   });
 
-  test('View delivery details and timeline', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Try to find an order or delivery to track
     const ordersMenu = page.locator('text=訂單管理');
     await ordersMenu.click();
@@ -161,7 +161,7 @@ test.describe('Critical: Delivery Tracking', () => {
     }
   });
 
-  test('Check WebSocket connection for real-time updates', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to dashboard where WebSocket should connect
     await page.goto('http://localhost:5173/dashboard');
     
@@ -175,7 +175,7 @@ test.describe('Critical: Delivery Tracking', () => {
       expect(statusText).toMatch(/已連線|連線中|離線|線上|即時/);
     } else {
       // Check if WebSocket is connected via console
-      const isConnected = await page.evaluate(() => {
+      const _isConnected = await page.evaluate(() => {
         // Check if any WebSocket exists and is open
         const hasOpenWebSocket = typeof WebSocket !== 'undefined' && 
           performance.getEntriesByType('resource').some(entry => 

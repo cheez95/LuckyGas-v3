@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Quick Smoke Test', () => {
-  test('should load login page', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to the app
     await page.goto('/');
     
@@ -18,7 +18,7 @@ test.describe('Quick Smoke Test', () => {
     await page.screenshot({ path: 'screenshots/login-page.png' });
   });
   
-  test('should show error with invalid login', async ({ page }) => {
+  test($1, async ({ page }) => {
     await page.goto('/login');
     
     // Try to login with invalid credentials

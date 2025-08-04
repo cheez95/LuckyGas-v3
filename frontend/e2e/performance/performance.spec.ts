@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { loginAsTestUser } from '../helpers/auth.helper';
 
 test.describe('Performance Benchmarks', () => {
-  test('Initial page load performance', async ({ page }) => {
+  test($1, async ({ page }) => {
     const startTime = Date.now();
     
     // Navigate to the app
@@ -32,7 +32,7 @@ test.describe('Performance Benchmarks', () => {
     expect(performanceMetrics.firstContentfulPaint).toBeLessThan(1500); // FCP < 1.5s
   });
 
-  test('Dashboard load performance after login', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Measure login to dashboard time
     await page.goto('http://localhost:5173');
     
@@ -147,7 +147,7 @@ test.describe('Performance Benchmarks', () => {
     }
   });
 
-  test('Memory usage and leaks', async ({ page }) => {
+  test($1, async ({ page }) => {
     await loginAsTestUser(page);
     
     // Get initial memory usage
@@ -199,7 +199,7 @@ test.describe('Performance Benchmarks', () => {
     }
   });
 
-  test('Bundle size check', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to the app
     await page.goto('http://localhost:5173');
     
@@ -269,7 +269,7 @@ test.describe('Performance Benchmarks', () => {
     await Promise.all(contexts.map(context => context.close()));
   });
 
-  test('Long session performance', async ({ page }) => {
+  test($1, async ({ page }) => {
     await loginAsTestUser(page);
     
     // Simulate a long session with periodic actions

@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { loginAsTestUser, waitForApiResponse } from '../helpers/auth.helper';
+import { loginAsTestUser} from '../helpers/auth.helper';
 
 test.describe('Critical: Route Optimization', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsTestUser(page);
   });
 
-  test('Navigate to route planning and view routes', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to routes
     await page.click('text=路線規劃');
     await page.waitForURL(/routes/);
@@ -78,7 +78,7 @@ test.describe('Critical: Route Optimization', () => {
     }
   });
 
-  test('Assign driver to route', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to routes
     await page.click('text=路線規劃');
     await page.waitForURL(/routes/);
@@ -129,7 +129,7 @@ test.describe('Critical: Route Optimization', () => {
     }
   });
 
-  test('View route details and progress', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Navigate to routes
     await page.click('text=路線規劃');
     await page.waitForURL(/routes/);
@@ -184,7 +184,7 @@ test.describe('Critical: Route Optimization', () => {
     }
   });
 
-  test('Emergency route adjustment', async ({ page }) => {
+  test($1, async ({ page }) => {
     // Check if emergency dispatch is available
     const emergencyMenu = page.locator('text=緊急派遣');
     if (await emergencyMenu.isVisible()) {

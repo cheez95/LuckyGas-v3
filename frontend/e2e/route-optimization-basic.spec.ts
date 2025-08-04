@@ -38,7 +38,7 @@ test.describe('Route Optimization Basic Validation', () => {
     }
   });
 
-  test('should show route optimization button', async ({ page }) => {
+  test('should show route optimization button', async ({ page: _page }) => {
     await routePage.navigateToRoutes();
     
     // Check if optimize button exists
