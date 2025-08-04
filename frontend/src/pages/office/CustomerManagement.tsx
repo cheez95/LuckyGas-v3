@@ -80,7 +80,7 @@ const CustomerManagement: React.FC = () => {
     try {
       const response = await api.get('/customers');
       // Handle both array and object response formats
-      let backendCustomers = Array.isArray(response.data) 
+      const backendCustomers = Array.isArray(response.data) 
         ? response.data 
         : (response.data?.data || response.data?.customers || response.data?.items || []);
       

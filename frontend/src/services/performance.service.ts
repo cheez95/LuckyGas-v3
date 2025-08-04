@@ -158,7 +158,7 @@ class PerformanceMonitoringService {
 
   private observeCLS() {
     let clsValue = 0;
-    let clsEntries: PerformanceEntry[] = [];
+    const clsEntries: PerformanceEntry[] = [];
 
     try {
       const observer = new PerformanceObserver((list) => {
