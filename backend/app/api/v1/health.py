@@ -1,18 +1,15 @@
 """Health check and monitoring endpoints for production APIs."""
 
-import asyncio
 from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
-from redis import asyncio as aioredis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_db
 from app.core.api_monitoring import api_monitor
 from app.core.cache import cache
-from app.core.config import settings
 from app.models.user import User
 from app.services.banking_service import BankingService
 from app.services.einvoice_service import get_einvoice_service

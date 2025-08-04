@@ -2,16 +2,17 @@
 API key management endpoints for rate limiting and access control.
 """
 
-from typing import List, Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.deps import get_current_active_superuser, get_current_user, get_db
 from app.core.logging import get_logger
 from app.middleware.enhanced_rate_limiting import APIKeyManager
 from app.models.user import User
 from app.schemas.api_key import (
+
+from app.api.auth_deps.security import get_current_user
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from typing import List
+
     APIKeyCreate,
     APIKeyListResponse,
     APIKeyResponse,
@@ -21,7 +22,6 @@ from app.schemas.api_key import (
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api-keys")
-
 
 @router.post("/", response_model=APIKeyResponse)
 async def create_api_key(
@@ -83,7 +83,6 @@ async def create_api_key(
             detail="建立 API 金鑰失敗",
         )
 
-
 @router.get("/", response_model=List[APIKeyListResponse])
 async def list_api_keys(
     current_user: User = Depends(get_current_user),
@@ -115,7 +114,6 @@ async def list_api_keys(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="獲取 API 金鑰列表失敗",
         )
-
 
 @router.delete("/{key_hash}")
 async def revoke_api_key(
@@ -151,7 +149,6 @@ async def revoke_api_key(
             detail="撤銷 API 金鑰失敗",
         )
 
-
 @router.get("/tiers")
 async def get_api_key_tiers(current_user: User = Depends(get_current_user)) -> dict:
     """
@@ -184,7 +181,6 @@ async def get_api_key_tiers(current_user: User = Depends(get_current_user)) -> d
             ),
         },
     }
-
 
 @router.get("/usage/{key_hash}")
 async def get_api_key_usage(

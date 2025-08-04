@@ -3,7 +3,6 @@ Financial reporting API endpoints
 """
 
 import io
-from datetime import date, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.services.financial_report_service import FinancialReportService
+
+from datetime import date
 
 router = APIRouter(prefix="/financial-reports", tags=["financial-reports"])
 

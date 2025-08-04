@@ -14,18 +14,17 @@ import hashlib
 import json
 import re
 import secrets
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple
-from urllib.parse import urlparse
 
-from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
-from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.cache import cache
 from app.core.config import settings
 from app.core.logging import get_logger
+
+from datetime import datetime
+from typing import Dict
+from typing import Optional
 
 logger = get_logger(__name__)
 
@@ -57,22 +56,22 @@ class SecurityHeaders:
 
             # Content Security Policy - stricter in production
             headers["Content-Security-Policy"] = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'self' https://fonts.gstatic.com; "
-                "img-src 'self' data: https: blob:; "
-                "connect-src 'self' wss: https://api.luckygas.tw https://*.googleapis.com; "
+                "default-src 'sel'; "
+                "script-src 'sel' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
+                "style-src 'sel' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'sel' https://fonts.gstatic.com; "
+                "img-src 'sel' data: https: blob:; "
+                "connect-src 'sel' wss: https://api.luckygas.tw https://*.googleapis.com; "
                 "frame-ancestors 'none';"
             )
         else:
             # More lenient CSP for development
             headers["Content-Security-Policy"] = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' localhost:* 127.0.0.1:*; "
-                "style-src 'self' 'unsafe-inline'; "
-                "img-src 'self' data: https: http: blob:; "
-                "connect-src 'self' ws: wss: http: https:;"
+                "default-src 'sel'; "
+                "script-src 'sel' 'unsafe-inline' 'unsafe-eval' localhost:* 127.0.0.1:*; "
+                "style-src 'sel' 'unsafe-inline'; "
+                "img-src 'sel' data: https: http: blob:; "
+                "connect-src 'sel' ws: wss: http: https:;"
             )
 
         return headers

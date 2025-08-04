@@ -10,7 +10,6 @@ import qrcode
 from cryptography.fernet import Fernet
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import cache
 from app.core.config import settings

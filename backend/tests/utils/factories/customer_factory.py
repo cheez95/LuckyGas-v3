@@ -1,9 +1,16 @@
 """
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 Customer factory for test data generation
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
 
 from app.models.customer import Customer
 

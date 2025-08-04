@@ -9,17 +9,18 @@ from typing import Any, Dict, List, Optional
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_user, get_db
 from app.core.security import verify_user_role
-from app.models.customer import Customer
 from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
-from app.models.route import Route, RouteStatus
 from app.models.route_delivery import (
+
+from sqlalchemy import and_
+from sqlalchemy import select
+
     DeliveryStatus,
     DeliveryStatusHistory,
     RouteDelivery,
@@ -63,7 +64,7 @@ async def get_today_routes(
                 Route.driver_id == current_user.id,
                 Route.scheduled_date >= today,
                 Route.scheduled_date < tomorrow,
-                Route.is_active == True,
+                Route.is_active,
             )
         )
         .options(
@@ -129,7 +130,7 @@ async def get_today_stats(
                 Route.driver_id == current_user.id,
                 Route.scheduled_date >= today,
                 Route.scheduled_date < tomorrow,
-                Route.is_active == True,
+                Route.is_active,
             )
         )
     )
@@ -164,7 +165,7 @@ async def get_route_details(
             and_(
                 Route.id == route_id,
                 Route.driver_id == current_user.id,
-                Route.is_active == True,
+                Route.is_active,
             )
         )
         .options(

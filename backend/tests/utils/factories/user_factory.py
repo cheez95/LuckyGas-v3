@@ -1,8 +1,15 @@
 """
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 User factory for test data generation
 """
 
-from typing import Any, Dict, Optional
 
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole

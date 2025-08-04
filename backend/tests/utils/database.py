@@ -1,10 +1,17 @@
 """
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 Database utilities for testing
 """
 
 import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -52,7 +59,7 @@ class TestDatabase:
             result = await session.execute(
                 text(
                     """
-                    SELECT tablename FROM pg_tables 
+                    SELECT tablename FROM pg_tables
                     WHERE schemaname = 'public'
                 """
                 )

@@ -1,0 +1,23 @@
+[run]
+source = app
+omit = 
+    */tests/*
+    */test_*.py
+    */__pycache__/*
+    */migrations/*
+    */venv/*
+    */.venv/*
+    */alembic/*
+    app/main.py
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+sort = Cover
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

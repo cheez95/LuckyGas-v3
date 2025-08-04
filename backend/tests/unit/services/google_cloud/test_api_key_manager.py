@@ -2,12 +2,9 @@
 Unit tests for API Key Manager
 """
 
-import base64
 import os
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from cryptography.fernet import Fernet
 
 from app.core.api_key_manager import (
     APIKeyManager,
@@ -295,7 +292,6 @@ class TestGetAPIKeyManager:
     @pytest.fixture(autouse=True)
     def reset_singleton(self):
         """Reset the singleton instance before each test"""
-        import app.core.api_key_manager
 
         app.core.api_key_manager._api_key_manager_instance = None
         yield

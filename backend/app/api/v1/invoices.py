@@ -2,20 +2,27 @@
 Invoice management API endpoints
 """
 
-from datetime import date, datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
-from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_user, get_db
 from app.models.customer import Customer
-from app.models.invoice import Invoice, InvoiceItem, InvoicePaymentStatus, InvoiceStatus
 from app.models.order import Order
 from app.models.user import User
 from app.schemas.invoice import (
+
+from datetime import date
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Path
+from fastapi import Query
+from sqlalchemy import and_
+from sqlalchemy import or_
+from sqlalchemy import select
+
     InvoiceBulkAction,
     InvoiceCreate,
     InvoiceItemCreate,

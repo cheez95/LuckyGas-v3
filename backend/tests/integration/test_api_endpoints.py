@@ -1,19 +1,26 @@
 """
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+from datetime import date
+from datetime import timedelta
+
 Integration tests for API endpoints
 """
 
-import json
-from datetime import date, datetime, timedelta
-from decimal import Decimal
 
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.invoice import InvoiceStatus, InvoiceType
 from app.models.order import OrderStatus
-from app.models.user import User
 
 
 class TestCustomerAPIIntegration:

@@ -4,12 +4,19 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
 from app.models.notification import (
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from sqlalchemy import and_
+from sqlalchemy import func
+from sqlalchemy import select
+
     NotificationChannel,
     NotificationLog,
     NotificationStatus,
@@ -34,7 +41,6 @@ from app.schemas.notification import (
     SMSTemplateResponse,
     SMSTemplateUpdate,
 )
-from app.services.notification_service import notification_service
 from app.services.sms_service import enhanced_sms_service
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])

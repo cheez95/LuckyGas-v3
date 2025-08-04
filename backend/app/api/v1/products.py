@@ -1,4 +1,3 @@
-from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
@@ -11,6 +10,10 @@ from app.models.gas_product import ProductAttribute
 from app.models.user import User as UserModel
 from app.models.user import UserRole
 from app.schemas.gas_product import (
+
+from typing import Any
+from typing import Optional
+
     GasProduct,
     GasProductCreate,
     GasProductList,
@@ -118,7 +121,7 @@ async def get_available_products(
     """
     # Build query for available and active products
     base_query = select(GasProductModel).where(
-        GasProductModel.is_available == True, GasProductModel.is_active == True
+        GasProductModel.is_available, GasProductModel.is_active
     )
 
     # Apply filters
@@ -137,7 +140,7 @@ async def get_available_products(
     count_query = (
         select(func.count())
         .select_from(GasProductModel)
-        .where(GasProductModel.is_available == True, GasProductModel.is_active == True)
+        .where(GasProductModel.is_available, GasProductModel.is_active)
     )
     if delivery_method:
         count_query = count_query.where(

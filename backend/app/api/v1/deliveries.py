@@ -1,11 +1,8 @@
-import base64
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -13,6 +10,11 @@ from app.models.delivery_photo import DeliveryPhoto
 from app.models.order import Order, OrderStatus
 from app.models.user import User
 from app.schemas.delivery import (
+
+from sqlalchemy import select
+from typing import Dict
+from typing import Optional
+
     DeliveryConfirmation,
     DeliveryLocationUpdate,
     DeliveryResponse,
@@ -199,7 +201,7 @@ async def confirm_delivery(
     if cylinder_data:
         try:
             cylinder_info = json.loads(cylinder_data)
-        except:
+        except Exception:
             pass
 
     # Update order
@@ -260,7 +262,7 @@ async def cancel_delivery(
     db: AsyncSession = Depends(get_db),
 ) -> DeliveryResponse:
     """Cancel delivery with reason"""
-    if current_user.role not in ["driver", "office_staff", "manager", "super_admin"]:
+    if current_user.role not in ["driver", "office_staf", "manager", "super_admin"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="權限不足")
 
     # Get order

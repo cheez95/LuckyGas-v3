@@ -4,7 +4,6 @@ API testing utilities
 
 import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
 
 import jwt
 from httpx import AsyncClient, Response
@@ -17,7 +16,7 @@ from app.models.user import UserRole
 class APITestClient:
     """Enhanced test client for API testing"""
 
-    def __init__(self, client: AsyncClient, base_url: str = ""):
+    def __init__(self, client: AsyncClient, base_url: str = "", timedelta):
         self.client = client
         self.base_url = base_url
         self.auth_headers = {}

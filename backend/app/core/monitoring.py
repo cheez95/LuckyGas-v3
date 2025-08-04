@@ -10,12 +10,9 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import async_session_maker
 from app.models.audit import AuditAction, AuditLog
-from app.models.webhook import WebhookLog, WebhookStatus
 
 logger = logging.getLogger(__name__)
 

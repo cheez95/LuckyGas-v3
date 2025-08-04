@@ -1,10 +1,10 @@
 """
+from typing import Dict
 Route analytics API endpoints - MVP version.
 """
 
 import logging
 from datetime import date, timedelta
-from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession

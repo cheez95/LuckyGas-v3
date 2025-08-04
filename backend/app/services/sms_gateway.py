@@ -1,15 +1,11 @@
 """SMS Gateway abstraction layer for production SMS services."""
 
-import asyncio
 import logging
-from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.notification import NotificationStatus, SMSProvider
 
 logger = logging.getLogger(__name__)
 

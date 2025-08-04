@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,9 +23,7 @@ from app.core.security import (
     decode_refresh_token,
     get_password_hash,
     verify_password,
-)
-from app.core.security_config import get_session_config
-from app.middleware.security import CSRFProtection
+, decode_access_token)
 from app.models.user import User as UserModel
 from app.models.user import UserRole
 from app.schemas.user import (
@@ -673,7 +669,7 @@ async def logout(
 
         if session_id:
             await SessionManager.revoke_session(session_id)
-    except:
+    except Exception:
         pass
 
     # Log logout

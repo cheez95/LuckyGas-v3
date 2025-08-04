@@ -2,7 +2,6 @@
 Unit tests for Google API Rate Limiter
 """
 
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

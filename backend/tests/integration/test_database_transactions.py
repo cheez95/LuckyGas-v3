@@ -1,4 +1,12 @@
 """
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 Integration tests for database transactions and data integrity
 """
 
@@ -9,7 +17,6 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.models.customer import Customer, CustomerType
 from app.models.invoice import (
     Invoice,
     InvoiceStatus,
@@ -20,8 +27,6 @@ from app.models.invoice import (
 from app.models.invoice import PaymentStatus as InvoicePaymentStatus
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.route import Route, RouteStatus
-from app.models.route_plan import RoutePlan, RoutePlanStop
-from app.models.user import User, UserRole
 from app.services.invoice_service import InvoiceService
 from app.services.order_service import OrderService
 from app.services.payment_service import PaymentService

@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -12,22 +11,25 @@ from app.api.deps import get_db
 
 # Removed during compaction
 # from app.api.v1.socketio_handler import notify_order_update
-from app.core.cache import CacheKeys, cache, cache_result, invalidate_cache
 from app.models.customer import Customer
 from app.models.gas_product import GasProduct
-from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.order_item import OrderItem
 from app.models.user import User
 from app.schemas.credit import CreditCheckResult, CreditSummary
 from app.schemas.order import Order as OrderSchema
 from app.schemas.order import (
+
+from sqlalchemy import and_
+from sqlalchemy import func
+from sqlalchemy import or_
+from sqlalchemy import select
+
     OrderCreate,
     OrderCreateV2,
     OrderUpdate,
     OrderUpdateV2,
     OrderV2,
 )
-from app.schemas.order_item import OrderItemCreate
 from app.schemas.order_search import OrderSearchCriteria, OrderSearchResult
 from app.services.credit_service import CreditService
 from app.services.order_service import OrderService
@@ -115,7 +117,7 @@ async def get_order(
 ):
     """獲取特定訂單詳情"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff", "driver"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf", "driver"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
@@ -392,7 +394,7 @@ async def get_order_v2(
 ):
     """獲取特定訂單詳情（包含彈性產品）"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff", "driver"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf", "driver"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Get order with items and products
@@ -539,7 +541,7 @@ async def get_order_stats(
         and_(
             Order.scheduled_date >= date_from.date(),
             Order.scheduled_date <= date_to.date(),
-            Order.is_urgent == True,
+            Order.is_urgent,
         )
     )
     urgent_result = await db.execute(urgent_query)
@@ -617,7 +619,7 @@ async def search_orders(
         priority_conditions = []
         for priority in criteria.priority:
             if priority == "urgent":
-                priority_conditions.append(Order.is_urgent == True)
+                priority_conditions.append(Order.is_urgent)
             elif priority == "scheduled":
                 priority_conditions.append(Order.scheduled_date.isnot(None))
             elif priority == "normal":

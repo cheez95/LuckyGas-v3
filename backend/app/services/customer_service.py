@@ -9,8 +9,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.cache import invalidate_cache
-from app.core.metrics import cache_operations_counter, orders_created_counter
 from app.models.customer import Customer
 from app.repositories.customer_repository import CustomerRepository
 from app.repositories.order_repository import OrderRepository

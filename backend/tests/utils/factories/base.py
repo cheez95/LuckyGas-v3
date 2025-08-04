@@ -1,11 +1,21 @@
 """
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+from typing import Type
+
 Base factory classes for test data generation
 """
 
 import random
 import string
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession

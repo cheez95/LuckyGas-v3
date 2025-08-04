@@ -1,4 +1,13 @@
 """
+from app.models.sync_operation import SyncStatus
+from app.services.feature_flags import get_feature_flag_service
+from app.services.sync_service import get_sync_service
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from sqlalchemy import func
+from sqlalchemy import select
 Admin API endpoints for migration monitoring and control.
 """
 
@@ -6,18 +15,13 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_db
 from app.models.customer import Customer
 from app.models.user import User
-from app.services.feature_flags import FeatureFlagConfig, get_feature_flag_service
 from app.services.sync_service import ConflictResolution
-from app.services.sync_service import SyncMetrics as ServiceSyncMetrics
-from app.services.sync_service import SyncOperation, SyncStatus, get_sync_service
 
 logger = logging.getLogger(__name__)
 
@@ -89,12 +93,12 @@ async def get_migration_metrics(
 
         # Get migrated customers (in pilot program)
         migrated_result = await db.execute(
-            select(func.count(Customer.id)).where(Customer.in_pilot_program == True)
+            select(func.count(Customer.id)).where(Customer.in_pilot_program)
         )
         migrated_customers = migrated_result.scalar() or 0
 
         # Get sync service metrics
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
         sync_metrics = await sync_service.get_metrics()
 
         # Calculate aggregate metrics
@@ -154,7 +158,7 @@ async def get_sync_operations(
 ) -> List[Dict[str, Any]]:
     """Get recent sync operations."""
     try:
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
 
         # In production, this would query from database
         # For now, return mock data
@@ -205,7 +209,7 @@ async def get_conflicts(
 ) -> List[Dict[str, Any]]:
     """Get unresolved conflicts."""
     try:
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
         conflicts = await sync_service.get_conflicts(limit)
 
         # Enhance with customer names (in production)
@@ -233,7 +237,7 @@ async def select_customers(
     """Select customers for pilot program based on criteria."""
     try:
         # Build query
-        query = select(Customer).where(Customer.is_active == True)
+        query = select(Customer).where(Customer.is_active)
 
         # Apply filters
         if request.region:
@@ -282,7 +286,7 @@ async def start_migration(
 ):
     """Start migration for selected customers."""
     try:
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
         feature_service = await get_feature_flag_service()
 
         # Process customers in batches
@@ -317,7 +321,7 @@ async def start_migration(
 async def pause_sync(current_user: User = Depends(get_current_active_superuser)):
     """Pause synchronization service."""
     try:
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
         await sync_service.pause_sync()
         return {"status": "paused"}
     except Exception as e:
@@ -329,7 +333,7 @@ async def pause_sync(current_user: User = Depends(get_current_active_superuser))
 async def resume_sync(current_user: User = Depends(get_current_active_superuser)):
     """Resume synchronization service."""
     try:
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
         await sync_service.resume_sync()
         return {"status": "resumed"}
     except Exception as e:
@@ -356,7 +360,7 @@ async def rollback_migration(
         # Update database
         await db.execute(
             Customer.__table__.update()
-            .where(Customer.in_pilot_program == True)
+            .where(Customer.in_pilot_program)
             .values(in_pilot_program=False, pilot_enrolled_at=None)
         )
         await db.commit()
@@ -377,7 +381,7 @@ async def resolve_conflict(
 ):
     """Resolve a sync conflict."""
     try:
-        sync_service = await get_sync_service()
+    # sync_service = await get_sync_service()
         success = await sync_service.resolve_conflict(
             conflict_id, request.resolution, request.resolvedData
         )

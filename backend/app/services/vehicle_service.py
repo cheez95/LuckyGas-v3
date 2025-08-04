@@ -3,10 +3,8 @@
 import logging
 from typing import List, Optional
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.vehicle import Vehicle
 
 logger = logging.getLogger(__name__)
 

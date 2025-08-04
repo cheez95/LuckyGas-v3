@@ -8,9 +8,11 @@ import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from cryptography.fernet import Fernet
+
+from typing import List
+from typing import Optional
 
 try:
     from google.cloud import secretmanager
@@ -90,7 +92,7 @@ class LocalEncryptedKeyManager(APIKeyManager):
             logger.info(
                 f"API_KEY_ACCESS: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"key_exists=False, reason=no_keys_file"
+                "key_exists=False, reason=no_keys_file"
             )
             return None
 
@@ -107,7 +109,7 @@ class LocalEncryptedKeyManager(APIKeyManager):
                     f"API_KEY_ACCESS: key_name={key_name}, "
                     f"access_time={datetime.now().isoformat()}, "
                     f"key_exists=True, key_length={len(decrypted)}, "
-                    f"operation=get_key, status=success"
+                    "operation=get_key, status=success"
                 )
 
                 return decrypted
@@ -116,7 +118,7 @@ class LocalEncryptedKeyManager(APIKeyManager):
                 logger.info(
                     f"API_KEY_ACCESS: key_name={key_name}, "
                     f"access_time={datetime.now().isoformat()}, "
-                    f"key_exists=False, operation=get_key, status=not_found"
+                    "key_exists=False, operation=get_key, status=not_found"
                 )
                 return None
         except Exception as e:
@@ -155,7 +157,7 @@ class LocalEncryptedKeyManager(APIKeyManager):
             logger.info(
                 f"API_KEY_MODIFY: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=set_key, status=success, "
+                "operation=set_key, status=success, "
                 f"key_existed={key_existed}, key_length={len(value)}"
             )
 
@@ -182,14 +184,14 @@ class LocalEncryptedKeyManager(APIKeyManager):
             logger.info(
                 f"API_KEY_ROTATE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=rotate_key, status=success, "
+                "operation=rotate_key, status=success, "
                 f"key_existed={key_existed}, new_key_length={len(new_value)}"
             )
         else:
             logger.info(
                 f"API_KEY_ROTATE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=rotate_key, status=failed"
+                "operation=rotate_key, status=failed"
             )
 
         return result
@@ -200,7 +202,7 @@ class LocalEncryptedKeyManager(APIKeyManager):
             logger.info(
                 f"API_KEY_DELETE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=delete_key, status=success, key_existed=False"
+                "operation=delete_key, status=success, key_existed=False"
             )
             return True
 
@@ -220,14 +222,14 @@ class LocalEncryptedKeyManager(APIKeyManager):
                 logger.info(
                     f"API_KEY_DELETE: key_name={key_name}, "
                     f"access_time={datetime.now().isoformat()}, "
-                    f"operation=delete_key, status=success, key_existed=True"
+                    "operation=delete_key, status=success, key_existed=True"
                 )
             else:
                 # Audit log when key didn't exist
                 logger.info(
                     f"API_KEY_DELETE: key_name={key_name}, "
                     f"access_time={datetime.now().isoformat()}, "
-                    f"operation=delete_key, status=success, key_existed=False"
+                    "operation=delete_key, status=success, key_existed=False"
                 )
 
             return True
@@ -254,13 +256,13 @@ class LocalEncryptedKeyManager(APIKeyManager):
             logger.info(
                 f"API_KEY_LIST: count={len(keys)}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=list_keys, status=success"
+                "operation=list_keys, status=success"
             )
             return keys
         except Exception as e:
             logger.error(f"Error listing keys: {e}")
             logger.info(
-                f"API_KEY_LIST: "
+                "API_KEY_LIST: "
                 f"access_time={datetime.now().isoformat()}, "
                 f"operation=list_keys, status=error, error_type={type(e).__name__}"
             )
@@ -297,7 +299,7 @@ class GCPSecretManager(APIKeyManager):
                 f"API_KEY_ACCESS: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
                 f"key_exists=True, key_length={len(secret_value)}, "
-                f"operation=get_key, status=success, provider=gcp_secret_manager"
+                "operation=get_key, status=success, provider=gcp_secret_manager"
             )
 
             return secret_value
@@ -306,7 +308,7 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_ACCESS: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=get_key, status=error, provider=gcp_secret_manager, "
+                "operation=get_key, status=error, provider=gcp_secret_manager, "
                 f"error_type={type(e).__name__}"
             )
             return None
@@ -343,7 +345,7 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_MODIFY: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=set_key, status=success, provider=gcp_secret_manager, "
+                "operation=set_key, status=success, provider=gcp_secret_manager, "
                 f"secret_created={secret_created}, key_length={len(value)}"
             )
 
@@ -353,7 +355,7 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_MODIFY: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=set_key, status=error, provider=gcp_secret_manager, "
+                "operation=set_key, status=error, provider=gcp_secret_manager, "
                 f"error_type={type(e).__name__}"
             )
             return False
@@ -373,7 +375,7 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_ROTATE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=rotate_key, status=success, provider=gcp_secret_manager, "
+                "operation=rotate_key, status=success, provider=gcp_secret_manager, "
                 f"new_key_length={len(new_value)}"
             )
 
@@ -383,7 +385,7 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_ROTATE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=rotate_key, status=error, provider=gcp_secret_manager, "
+                "operation=rotate_key, status=error, provider=gcp_secret_manager, "
                 f"error_type={type(e).__name__}"
             )
             return False
@@ -401,8 +403,8 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_DELETE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=delete_key, status=success, provider=gcp_secret_manager, "
-                f"action=disabled_latest_version"
+                "operation=delete_key, status=success, provider=gcp_secret_manager, "
+                "action=disabled_latest_version"
             )
 
             return True
@@ -411,7 +413,7 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_DELETE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=delete_key, status=error, provider=gcp_secret_manager, "
+                "operation=delete_key, status=error, provider=gcp_secret_manager, "
                 f"error_type={type(e).__name__}"
             )
             return False
@@ -437,15 +439,15 @@ class GCPSecretManager(APIKeyManager):
             logger.info(
                 f"API_KEY_LIST: count={len(secrets)}, "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=list_keys, status=success, provider=gcp_secret_manager"
+                "operation=list_keys, status=success, provider=gcp_secret_manager"
             )
             return secrets
         except Exception as e:
             logger.error(f"Failed to list secrets: {e}")
             logger.info(
-                f"API_KEY_LIST: "
+                "API_KEY_LIST: "
                 f"access_time={datetime.now().isoformat()}, "
-                f"operation=list_keys, status=error, provider=gcp_secret_manager, "
+                "operation=list_keys, status=error, provider=gcp_secret_manager, "
                 f"error_type={type(e).__name__}"
             )
             return []

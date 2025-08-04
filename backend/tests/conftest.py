@@ -4,9 +4,16 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Generator, List
 
 # Add backend to Python path
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
@@ -23,7 +30,6 @@ os.environ["REDIS_URL"] = "redis://localhost:6379/1"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/dev/null"
 os.environ["GOOGLE_CLOUD_PROJECT"] = "test-project"
 
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest

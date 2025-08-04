@@ -1,16 +1,17 @@
 import asyncio
 import logging
-import os
 import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Dict, List, Optional
 
-import aiohttp
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.core.config import settings
+
+from typing import Any
+from typing import Dict
+from typing import List
 
 # from app.services.message_queue_service import message_queue, QueuePriority  # Removed during compaction
 
@@ -198,7 +199,7 @@ class NotificationService:
                 f"Email template not found for {notification_type}, using default"
             )
             # Use default template
-            html_content = f"""
+            html_content = """
             <html>
                 <body style="font-family: Arial, sans-serif;">
                     <h2>{subject}</h2>

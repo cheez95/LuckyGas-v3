@@ -1,8 +1,6 @@
 from datetime import timedelta
-from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,6 +13,12 @@ from app.models.user import User as UserModel
 from app.models.user import UserRole
 from app.schemas.customer import Customer, CustomerCreate, CustomerList, CustomerUpdate
 from app.schemas.customer_inventory import (
+
+from sqlalchemy import func
+from sqlalchemy import select
+from typing import Any
+from typing import Optional
+
     CustomerInventory,
     CustomerInventoryList,
     CustomerInventoryUpdate,

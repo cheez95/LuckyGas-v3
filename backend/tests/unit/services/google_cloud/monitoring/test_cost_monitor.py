@@ -2,10 +2,7 @@
 Unit tests for Google API Cost Monitor
 """
 
-import json
 from datetime import datetime, timedelta
-from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import redis.asyncio as redis

@@ -17,6 +17,8 @@ from app.models.customer_inventory import CustomerInventory
 from app.models.order import Order
 from app.repositories.base import BaseRepository, CachedRepository
 
+from datetime import timedelta
+
 logger = logging.getLogger(__name__)
 
 

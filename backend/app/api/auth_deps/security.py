@@ -1,12 +1,12 @@
 """
+from fastapi.security import APIKeyHeader
+from fastapi.security import HTTPBearer
 Security-related dependencies for FastAPI routes.
 """
 
 from typing import Annotated, Optional
 
 from fastapi import Depends, Header, HTTPException, Request, status
-from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db

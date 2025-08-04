@@ -11,13 +11,11 @@ from app.core.decorators import rate_limit
 from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus, RouteStop
 from app.models.user import User, UserRole
-from app.models.vehicle import Vehicle
 from app.schemas.prediction import (
     OptimizedRoute,
     RouteOptimizationRequest,
     RouteOptimizationResponse,
 )
-from app.schemas.route import AdjustmentRequest, AdjustmentResult
 from app.services.realtime_route_adjustment import realtime_route_adjustment_service
 from app.services.route_optimization_service import route_optimization_service
 

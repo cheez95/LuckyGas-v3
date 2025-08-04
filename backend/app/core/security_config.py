@@ -9,11 +9,12 @@ import hashlib
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Set
 
 from app.core.config import settings
+
+from typing import Dict
+from typing import List
 
 
 class SecurityLevel(str, Enum):
@@ -411,12 +412,12 @@ class SecurityConfig:
 
         if self.security_level == SecurityLevel.HIGH:
             headers["Content-Security-Policy"] = (
-                "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'self' https://fonts.gstatic.com; "
-                "img-src 'self' data: https:; "
-                "connect-src 'self' wss: https://api.luckygas.tw https://*.googleapis.com;"
+                "default-src 'sel'; "
+                "script-src 'sel' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+                "style-src 'sel' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'sel' https://fonts.gstatic.com; "
+                "img-src 'sel' data: https:; "
+                "connect-src 'sel' wss: https://api.luckygas.tw https://*.googleapis.com;"
             )
 
         return headers

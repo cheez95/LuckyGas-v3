@@ -1,0 +1,50 @@
+{
+  "environments": [
+    {
+      "name": "staging",
+      "url": "https://staging.luckygas.com.tw",
+      "protection_rules": {
+        "required_reviewers": 0,
+        "wait_timer": 0,
+        "prevent_self_review": false,
+        "reviewers": []
+      },
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true,
+        "branches": ["main", "develop"]
+      }
+    },
+    {
+      "name": "production-approval",
+      "url": null,
+      "protection_rules": {
+        "required_reviewers": 2,
+        "wait_timer": 0,
+        "prevent_self_review": true,
+        "reviewers": [
+          {"type": "Team", "id": "engineering-leads"},
+          {"type": "User", "id": "cto"}
+        ]
+      },
+      "deployment_branch_policy": {
+        "protected_branches": true,
+        "custom_branch_policies": false
+      }
+    },
+    {
+      "name": "production",
+      "url": "https://luckygas.com.tw",
+      "protection_rules": {
+        "required_reviewers": 0,
+        "wait_timer": 30,
+        "prevent_self_review": true,
+        "reviewers": []
+      },
+      "deployment_branch_policy": {
+        "protected_branches": true,
+        "custom_branch_policies": false
+      }
+    }
+  ]
+}
