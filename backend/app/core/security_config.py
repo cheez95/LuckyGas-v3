@@ -10,11 +10,9 @@ import re
 import secrets
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, List
 
 from app.core.config import settings
-
-from typing import Dict
-from typing import List
 
 
 class SecurityLevel(str, Enum):
@@ -23,7 +21,7 @@ class SecurityLevel(str, Enum):
     LOW = "low"  # Development
     MEDIUM = "medium"  # Staging
     HIGH = "high"  # Production
-    CRITICAL = "critical"  # High-security production
+    CRITICAL = "critical"  # High - security production
 
 
 @dataclass
@@ -36,7 +34,7 @@ class PasswordPolicy:
     require_lowercase: bool = True
     require_digit: bool = True
     require_special: bool = True
-    special_chars: str = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    special_chars: str = "!@#$%^&*()_+-=[]{}|;:, .<>?"
 
     # Password history
     history_count: int = 5  # Remember last 5 passwords
@@ -155,7 +153,7 @@ class AccountLockoutPolicy:
     lockout_multiplier: float = 2.0  # Double lockout time after each lockout
     max_lockout_hours: int = 24
 
-    # IP-based lockout
+    # IP - based lockout
     ip_lockout_enabled: bool = True
     ip_max_attempts: int = 10
     ip_lockout_duration_hours: int = 1
@@ -216,7 +214,7 @@ class APIKeyConfig:
 
 @dataclass
 class TwoFactorConfig:
-    """Two-factor authentication configuration."""
+    """Two - factor authentication configuration."""
 
     enabled: bool = True
     issuer_name: str = "Lucky Gas"
@@ -224,7 +222,7 @@ class TwoFactorConfig:
     # TOTP settings
     totp_digits: int = 6
     totp_interval: int = 30  # seconds
-    totp_window: int = 1  # Allow 1 interval before/after
+    totp_window: int = 1  # Allow 1 interval before / after
 
     # Backup codes
     backup_codes_count: int = 10
@@ -244,7 +242,7 @@ class TwoFactorConfig:
 class EncryptionConfig:
     """Data encryption configuration."""
 
-    # Field-level encryption for PII
+    # Field - level encryption for PII
     encrypt_pii: bool = True
     pii_fields: List[str] = None
 
@@ -408,16 +406,18 @@ class SecurityConfig:
         }
 
         if self.security_level >= SecurityLevel.MEDIUM:
-            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
 
         if self.security_level == SecurityLevel.HIGH:
             headers["Content-Security-Policy"] = (
-                "default-src 'sel'; "
-                "script-src 'sel' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
-                "style-src 'sel' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'sel' https://fonts.gstatic.com; "
-                "img-src 'sel' data: https:; "
-                "connect-src 'sel' wss: https://api.luckygas.tw https://*.googleapis.com;"
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https:; "
+                "connect-src 'self' wss: https://api.luckygas.tw https://*.googleapis.com;"
             )
 
         return headers
@@ -432,7 +432,7 @@ class SecurityConfig:
                 "max_age": 3600,
             }
         else:
-            # Development/staging - more permissive
+            # Development / staging - more permissive
             return {
                 "allow_origins": settings.get_all_cors_origins(),
                 "allow_credentials": True,
@@ -470,6 +470,8 @@ security_config = SecurityConfig()
 
 
 # Utility functions
+
+
 def get_password_policy() -> PasswordPolicy:
     """Get current password policy."""
     return security_config.password_policy

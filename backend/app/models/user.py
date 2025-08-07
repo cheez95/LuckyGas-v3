@@ -12,7 +12,7 @@ from app.core.database import Base
 class UserRole(str, Enum):
     SUPER_ADMIN = "super_admin"
     MANAGER = "manager"
-    OFFICE_STAFF = "office_staff"
+    OFFICE_STAFF = "office_staf"
     DRIVER = "driver"
     CUSTOMER = "customer"
 
@@ -51,4 +51,4 @@ class User(Base):
         uselist=False,
     )
     driver_profile = relationship("Driver", back_populates="user", uselist=False)
-    # audit_logs = relationship("AuditLog", back_populates="user")  # Removed during compaction
+    audit_logs = relationship("AuditLog", back_populates="user")

@@ -3,7 +3,6 @@ Mock Google Routes Service for Development
 """
 
 import asyncio
-import json
 import logging
 import random
 from datetime import datetime, timedelta
@@ -37,16 +36,16 @@ class MockGoogleRoutesService(GoogleRoutesService):
             "ypkcFnichV~MnBfC`DpBbCxArBdCfDvDjF|FvH",
         ]
 
-        # Taiwan-specific traffic patterns
+        # Taiwan - specific traffic patterns
         self.traffic_multipliers = {
-            "morning_rush": 1.5,  # 7-9 AM
-            "evening_rush": 1.6,  # 5-7 PM
-            "lunch": 1.2,  # 12-1 PM
+            "morning_rush": 1.5,  # 7 - 9 AM
+            "evening_rush": 1.6,  # 5 - 7 PM
+            "lunch": 1.2,  # 12 - 1 PM
             "night": 0.8,  # 10 PM - 6 AM
             "normal": 1.0,
         }
 
-        # Area-specific characteristics
+        # Area - specific characteristics
         self.area_factors = {
             "信義區": {"speed": 25, "congestion": 1.3},
             "大安區": {"speed": 30, "congestion": 1.2},
@@ -287,9 +286,9 @@ class MockGoogleRoutesService(GoogleRoutesService):
 
             # Build route data
             route_data = {
-                "route_number": f"R{date.strftime('%Y%m%d')}-{i+1:02d}",
+                "route_number": f"R{date.strftime('%Y % m % d')}-{i + 1:02d}",
                 "driver_id": driver["id"],
-                "driver_name": driver.get("name", f"Driver {i+1}"),
+                "driver_name": driver.get("name", f"Driver {i + 1}"),
                 "vehicle_id": driver.get("vehicle_id", i + 1),
                 "date": date.isoformat(),
                 "status": "optimized",

@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
-Comprehensive E2E test runner for Sprint 1-3 features
-This script runs all end-to-end tests to validate the complete functionality
+Comprehensive E2E test runner for Sprint 1 - 3 features
+This script runs all end - to - end tests to validate the complete functionality
 """
 import json
 import subprocess
@@ -18,7 +18,7 @@ class E2ETestRunner:
             "timestamp": datetime.now().isoformat(),
             "sprints": {
                 "sprint1": {"name": "Driver Functionality", "tests": []},
-                "sprint2": {"name": "WebSocket & Real-time", "tests": []},
+                "sprint2": {"name": "WebSocket & Real - time", "tests": []},
                 "sprint3": {"name": "Order Management", "tests": []},
             },
             "summary": {"total": 0, "passed": 0, "failed": 0, "skipped": 0},
@@ -27,17 +27,17 @@ class E2ETestRunner:
         # Map test files to sprints
         self.test_mapping = {
             "sprint1": [
-                "tests/e2e/test_driver_mobile_flow.py",
-                "tests/e2e/test_login_flow.py::TestLoginFlow::test_driver_login",
+                "tests / e2e / test_driver_mobile_flow.py",
+                "tests / e2e / test_login_flow.py::TestLoginFlow::test_driver_login",
             ],
-            "sprint2": ["tests/e2e/test_websocket_realtime.py"],
+            "sprint2": ["tests / e2e / test_websocket_realtime.py"],
             "sprint3": [
-                "tests/e2e/test_order_flow.py",
-                "tests/e2e/test_customer_management.py",
-                "tests/e2e/test_credit_limit_flow.py",
-                "tests/e2e/test_order_templates_flow.py",
-                "tests/test_order_search.py",
-                "tests/test_order_templates.py",
+                "tests / e2e / test_order_flow.py",
+                "tests / e2e / test_customer_management.py",
+                "tests / e2e / test_credit_limit_flow.py",
+                "tests / e2e / test_order_templates_flow.py",
+                "tests / test_order_search.py",
+                "tests / test_order_templates.py",
             ],
         }
 
@@ -60,8 +60,8 @@ class E2ETestRunner:
                 test_file,
                 "-v",
                 "--tb=short",
-                "--json-report",
-                "--json-report-file=test_output.json",
+                "--json - report",
+                "--json - report - file=test_output.json",
                 "-x",  # Stop on first failure for faster feedback
             ]
 
@@ -82,7 +82,7 @@ class E2ETestRunner:
                     sprint_results["passed"] += json_data["summary"].get("passed", 0)
                     sprint_results["failed"] += json_data["summary"].get("failed", 0)
                     sprint_results["skipped"] += json_data["summary"].get("skipped", 0)
-            except:
+            except Exception:
                 # Fallback if JSON report fails
                 if result.returncode == 0:
                     sprint_results["passed"] += 1
@@ -94,19 +94,19 @@ class E2ETestRunner:
 
             # Print immediate feedback
             if result.returncode == 0:
-                print(f"  ✅ PASSED")
+                print("  ✅ PASSED")
             else:
-                print(f"  ❌ FAILED")
+                print("  ❌ FAILED")
                 if result.stderr:
                     print(f"  Error: {result.stderr[:200]}...")
 
         return sprint_results
 
     def run_all_tests(self):
-        """Run all E2E tests for Sprint 1-3"""
+        """Run all E2E tests for Sprint 1 - 3"""
         print("\n" + "=" * 80)
         print("Lucky Gas V3 - Comprehensive E2E Test Suite")
-        print("Testing Sprint 1-3 Features")
+        print("Testing Sprint 1 - 3 Features")
         print("=" * 80)
 
         # Ensure we're in test mode
@@ -152,22 +152,22 @@ class E2ETestRunner:
                     t for t in sprint_data["tests"] if not t.get("passed", False)
                 ]
                 if failed_tests:
-                    print(f"  Failed Tests:")
+                    print("  Failed Tests:")
                     for test in failed_tests:
                         print(f"    - {test['file']}")
 
         # Overall summary
         summary = self.test_results["summary"]
-        print(f"\nOVERALL RESULTS:")
+        print("\nOVERALL RESULTS:")
         print(f"  Total Tests: {summary['total']}")
         print(
-            f"  Passed: {summary['passed']} ({summary['passed']/max(summary['total'],1)*100:.1f}%)"
+            f"  Passed: {summary['passed']} ({summary['passed']/max(summary['total'], 1)*100:.1f}%)"
         )
         print(f"  Failed: {summary['failed']}")
         print(f"  Skipped: {summary['skipped']}")
 
         # Save detailed report
-        report_path = Path("tests/e2e_test_report.json")
+        report_path = Path("tests / e2e_test_report.json")
         with open(report_path, "w") as f:
             json.dump(self.test_results, f, indent=2)
         print(f"\nDetailed report saved to: {report_path}")
@@ -179,8 +179,8 @@ class E2ETestRunner:
         """Create a markdown report for documentation"""
         report_lines = [
             "# E2E Test Execution Report",
-            f"\n**Date**: {self.test_results['timestamp']}",
-            f"\n**Overall Status**: {'✅ PASSED' if self.test_results['summary']['failed'] == 0 else '❌ FAILED'}",
+            f"\n ** Date**: {self.test_results['timestamp']}",
+            f"\n ** Overall Status**: {'✅ PASSED' if self.test_results['summary']['failed'] == 0 else '❌ FAILED'}",
             "\n## Test Results by Sprint\n",
         ]
 
@@ -193,7 +193,7 @@ class E2ETestRunner:
                 report_lines.append(f"- **Skipped**: {sprint_data['skipped']}")
 
                 # List all tests
-                report_lines.append("\n**Test Files:**")
+                report_lines.append("\n ** Test Files:**")
                 for test in sprint_data["tests"]:
                     status_icon = "✅" if test.get("passed", False) else "❌"
                     report_lines.append(f"- {status_icon} `{test['file']}`")
@@ -205,7 +205,7 @@ class E2ETestRunner:
             [
                 "\n## Summary Statistics\n",
                 f"- **Total Tests Run**: {summary['total']}",
-                f"- **Success Rate**: {summary['passed']/max(summary['total'],1)*100:.1f}%",
+                f"- **Success Rate**: {summary['passed']/max(summary['total'], 1)*100:.1f}%",
                 f"- **Failed Tests**: {summary['failed']}",
                 f"- **Skipped Tests**: {summary['skipped']}",
             ]
@@ -224,12 +224,12 @@ class E2ETestRunner:
                 "- Photo proof capture",
                 "- Offline mode support",
                 "",
-                "### Sprint 2: WebSocket & Real-time ✅",
+                "### Sprint 2: WebSocket & Real - time ✅",
                 "- WebSocket connection management",
-                "- Real-time order status updates",
+                "- Real - time order status updates",
                 "- Driver location broadcasting",
                 "- Notification system",
-                "- Auto-reconnection logic",
+                "- Auto - reconnection logic",
                 "- Message queuing",
                 "",
                 "### Sprint 3: Order Management ✅",
@@ -243,7 +243,7 @@ class E2ETestRunner:
         )
 
         # Save markdown report
-        report_path = Path("tests/E2E_TEST_REPORT.md")
+        report_path = Path("tests / E2E_TEST_REPORT.md")
         with open(report_path, "w") as f:
             f.write("\n".join(report_lines))
         print(f"Markdown report saved to: {report_path}")

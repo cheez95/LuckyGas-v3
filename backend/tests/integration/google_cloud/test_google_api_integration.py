@@ -3,10 +3,7 @@ Integration tests for Google API components working together
 """
 
 import asyncio
-import json
 import os
-from datetime import datetime, timedelta
-from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -14,7 +11,6 @@ import pytest_asyncio
 import redis.asyncio as redis
 
 from app.core.api_key_manager import LocalEncryptedKeyManager
-from app.services.google_cloud.development_mode import DevelopmentMode
 from app.services.google_cloud.monitoring.circuit_breaker import CircuitState
 from app.services.google_cloud.routes_service_enhanced import (
     EnhancedGoogleRoutesService,
@@ -67,7 +63,7 @@ class TestGoogleAPIIntegration:
         with patch.dict(os.environ, {"DEVELOPMENT_MODE": "development"}):
             # Should use mock service without API calls
             result = await routes_service.calculate_route(
-                origin="25.033,121.565", destination="25.047,121.517"
+                origin="25.033, 121.565", destination="25.047, 121.517"
             )
 
             # Verify mock response structure
@@ -297,24 +293,24 @@ class TestGoogleAPIIntegration:
         routes_rate_ok, _ = await routes_service._rate_limiter.check_rate_limit(
             "routes"
         )
-        assert routes_rate_ok == True
+        assert routes_rate_ok
 
         routes_budget_ok = await routes_service._cost_monitor.enforce_budget_limit(
             "routes"
         )
-        assert routes_budget_ok == True
+        assert routes_budget_ok
 
         # Vertex service should be unhealthy
         vertex_rate_ok, wait_time = await vertex_service.rate_limiter.check_rate_limit(
             "vertex_ai"
         )
-        assert vertex_rate_ok == False
+        assert not vertex_rate_ok
         assert wait_time == 60
 
         vertex_budget_ok = await vertex_service.cost_monitor.enforce_budget_limit(
             "vertex_ai"
         )
-        assert vertex_budget_ok == False
+        assert not vertex_budget_ok
 
     @pytest.mark.asyncio
     async def test_concurrent_service_requests(self, routes_service, vertex_service):
@@ -348,7 +344,8 @@ class TestGoogleAPIIntegration:
             for i in range(5):
                 tasks.append(
                     routes_service.calculate_route(
-                        origin=f"25.{i:03d},121.565", destination=f"25.{i:03d},121.517"
+                        origin=f"25.{i:03d}, 121.565",
+                        destination=f"25.{i:03d}, 121.517",
                     )
                 )
 
@@ -376,7 +373,6 @@ class TestGoogleAPIIntegration:
     async def test_api_key_management_integration(self):
         """Test API key management with services"""
         # Create temporary directory for keys
-        import shutil
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -488,7 +484,7 @@ class TestGoogleAPIIntegration:
         # Service should still work with mocks
         with patch.dict(os.environ, {"DEVELOPMENT_MODE": "development"}):
             result = await routes_service.calculate_route(
-                origin="25.033,121.565", destination="25.047,121.517"
+                origin="25.033, 121.565", destination="25.047, 121.517"
             )
 
             # Should get mock response

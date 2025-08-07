@@ -1,12 +1,13 @@
 """
 from fastapi.security import APIKeyHeader
 from fastapi.security import HTTPBearer
-Security-related dependencies for FastAPI routes.
+Security - related dependencies for FastAPI routes.
 """
 
 from typing import Annotated, Optional
 
 from fastapi import Depends, Header, HTTPException, Request, status
+from fastapi.security import APIKeyHeader, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -14,18 +15,15 @@ from app.core.cache import cache
 from app.core.security import (
     AccountLockout,
     APIKeyManager,
-    SessionManager,
-    decode_access_token,
 )
 from app.core.security_config import get_2fa_config
 from app.middleware.security import CSRFProtection, SecurityValidation
 from app.models.user import User
 from app.utils.security_utils import RequestValidator, SecurityAudit
-from fastapi.security import HTTPBearer, APIKeyHeader
 
 # Security schemes
 bearer_scheme = HTTPBearer()
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+api_key_header = APIKeyHeader(name="X - API - Key", auto_error=False)
 
 
 async def verify_api_key(
@@ -82,8 +80,8 @@ def require_scopes(*required_scopes: str):
 async def verify_2fa(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
-    totp_code: Optional[str] = Header(None, alias="X-TOTP-Code"),
-    backup_code: Optional[str] = Header(None, alias="X-Backup-Code"),
+    totp_code: Optional[str] = Header(None, alias="X - TOTP - Code"),
+    backup_code: Optional[str] = Header(None, alias="X - Backup - Code"),
 ):
     """Verify 2FA for sensitive operations."""
     config = get_2fa_config()
@@ -108,7 +106,7 @@ async def verify_2fa(
 
         if TwoFactorAuth.verify_totp(current_user.two_factor_secret, totp_code):
             # Mark device as trusted if requested
-            if request.headers.get("X-Trust-Device") == "true":
+            if request.headers.get("X - Trust - Device") == "true":
                 await cache.set(
                     trusted_key, "1", expire=config.trusted_device_days * 86400
                 )
@@ -122,16 +120,16 @@ async def verify_2fa(
     raise HTTPException(
         status_code=status.HTTP_428_PRECONDITION_REQUIRED,
         detail="需要雙因素認證",
-        headers={"X-2FA-Required": "true"},
+        headers={"X - 2FA - Required": "true"},
     )
 
 
 async def verify_csrf_token(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
-    csrf_token: str = Header(None, alias="X-CSRF-Token"),
+    csrf_token: str = Header(None, alias="X - CSRF - Token"),
 ):
-    """Verify CSRF token for state-changing operations."""
+    """Verify CSRF token for state - changing operations."""
     if request.method in ["GET", "HEAD", "OPTIONS"]:
         return current_user
 
@@ -205,7 +203,7 @@ async def rate_limit_by_user(
     user_id = current_user.id
 
     # Example: Limit password changes
-    if endpoint.endswith("/change-password"):
+    if endpoint.endswith("/change - password"):
         key = f"rate_limit:password_change:{user_id}"
         count = await cache.get(key)
 

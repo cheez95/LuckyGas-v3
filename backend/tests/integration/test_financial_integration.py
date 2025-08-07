@@ -4,8 +4,7 @@ Tests invoice generation, payment processing, and financial reporting
 """
 
 from datetime import date, datetime, timedelta
-from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
@@ -25,7 +24,11 @@ from app.models.invoice import (
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.user import User, UserRole
 
+# Import financial test marker
+from tests.conftest_payment import requires_financial
 
+
+@requires_financial
 class TestFinancialIntegration:
     """Test financial operations with integrated components"""
 
@@ -45,7 +48,7 @@ class TestFinancialIntegration:
         office = User(
             email="office@test.com",
             hashed_password=get_password_hash("password"),
-            full_name="Office Staff",
+            full_name="Office Staf",
             role=UserRole.OFFICE_STAFF,
             is_active=True,
         )
@@ -141,7 +144,7 @@ class TestFinancialIntegration:
 
         # Login as office staff
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "office@test.com", "password": "password"},
         )
         token = response.json()["access_token"]
@@ -160,17 +163,19 @@ class TestFinancialIntegration:
             "delivery_notes": "月結客戶訂單",
         }
 
-        response = await client.post("/api/v1/orders", json=order_data)
+        response = await client.post("/api / v1 / orders", json=order_data)
         assert response.status_code == 200
         order = response.json()
 
         # Calculate expected total
-        expected_total = (2 * 1200.0) + (3 * 600.0)  # 2*50kg + 3*20kg
+        expected_total = (2 * 1200.0) + (3 * 600.0)  # 2 * 50kg + 3 * 20kg
         assert order["total_amount"] == expected_total
 
         # Mark order as delivered
         order_update = {"status": OrderStatus.DELIVERED.value}
-        response = await client.put(f"/api/v1/orders/{order['id']}", json=order_update)
+        response = await client.put(
+            f"/api / v1 / orders/{order['id']}", json=order_update
+        )
         assert response.status_code == 200
 
         # Generate invoice
@@ -180,7 +185,7 @@ class TestFinancialIntegration:
             "buyer_tax_id": customer.business_tax_id,
         }
 
-        response = await client.post("/api/v1/invoices", json=invoice_data)
+        response = await client.post("/api / v1 / invoices", json=invoice_data)
         assert response.status_code == 200
         invoice = response.json()
 
@@ -207,7 +212,7 @@ class TestFinancialIntegration:
 
         # Login as admin
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "admin@test.com", "password": "password"},
         )
         token = response.json()["access_token"]
@@ -217,11 +222,11 @@ class TestFinancialIntegration:
         customer = data["customers"][1]
         order = Order(
             customer_id=customer.id,
-            order_number=f"ORD{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            order_number=f"ORD{datetime.now().strftime('%Y % m % d % H % M % S')}",
             scheduled_date=date.today(),
             qty_50kg=1,
             qty_20kg=2,
-            total_amount=2400.0,  # 1*1200 + 2*600
+            total_amount=2400.0,  # 1 * 1200 + 2 * 600
             final_amount=2400.0,
             status=OrderStatus.DELIVERED,
             payment_status=PaymentStatus.UNPAID,
@@ -238,7 +243,7 @@ class TestFinancialIntegration:
             order_id=order.id,
             invoice_type=InvoiceType.B2B,
             invoice_date=date.today(),
-            period=date.today().strftime("%Y%m"),
+            period=date.today().strftime("%Y % m"),
             buyer_tax_id=customer.business_tax_id,
             buyer_name=customer.name,
             sales_amount=2400.0,
@@ -257,10 +262,10 @@ class TestFinancialIntegration:
             "payment_method": PaymentMethod.TRANSFER.value,
             "amount": 2520.0,
             "reference_number": "TRF20240120001",
-            "bank_account": "123-456789-0",
+            "bank_account": "123 - 456789 - 0",
         }
 
-        response = await client.post("/api/v1/payments", json=payment_data)
+        response = await client.post("/api / v1 / payments", json=payment_data)
         assert response.status_code == 200
         payment = response.json()
 
@@ -269,13 +274,13 @@ class TestFinancialIntegration:
         assert payment["payment_method"] == PaymentMethod.TRANSFER.value
 
         # Verify invoice payment status updated
-        response = await client.get(f"/api/v1/invoices/{invoice.id}")
+        response = await client.get(f"/api / v1 / invoices/{invoice.id}")
         updated_invoice = response.json()
         assert updated_invoice["payment_status"] == InvoicePaymentStatus.PAID.value
         assert updated_invoice["paid_amount"] == 2520.0
 
         # Verify customer balance updated
-        response = await client.get(f"/api/v1/customers/{customer.id}")
+        response = await client.get(f"/api / v1 / customers/{customer.id}")
         updated_customer = response.json()
         assert (
             updated_customer["current_balance"] == 25000 - 2520
@@ -291,7 +296,7 @@ class TestFinancialIntegration:
 
         # Login as office staff
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "office@test.com", "password": "password"},
         )
         token = response.json()["access_token"]
@@ -309,13 +314,13 @@ class TestFinancialIntegration:
         }
 
         # Should fail due to credit limit
-        response = await client.post("/api/v1/orders", json=order_data)
+        response = await client.post("/api / v1 / orders", json=order_data)
         assert response.status_code == 400
         assert "credit limit" in response.json()["detail"].lower()
 
         # Login as admin (can override credit limit)
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "admin@test.com", "password": "password"},
         )
         admin_token = response.json()["access_token"]
@@ -323,7 +328,7 @@ class TestFinancialIntegration:
 
         # Admin should be able to create order with override
         order_data["override_credit_limit"] = True
-        response = await client.post("/api/v1/orders", json=order_data)
+        response = await client.post("/api / v1 / orders", json=order_data)
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -353,7 +358,7 @@ class TestFinancialIntegration:
 
         # Login as admin
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "admin@test.com", "password": "password"},
         )
         token = response.json()["access_token"]
@@ -361,7 +366,7 @@ class TestFinancialIntegration:
 
         # Get revenue summary
         response = await client.get(
-            "/api/v1/financial-reports/revenue-summary",
+            "/api / v1 / financial - reports / revenue - summary",
             params={
                 "start_date": (date.today() - timedelta(days=30)).isoformat(),
                 "end_date": date.today().isoformat(),
@@ -375,7 +380,7 @@ class TestFinancialIntegration:
         assert revenue_report["order_count"] == 10
 
         # Get accounts receivable aging
-        response = await client.get("/api/v1/financial-reports/ar-aging")
+        response = await client.get("/api / v1 / financial - reports / ar - aging")
         assert response.status_code == 200
         ar_report = response.json()
 
@@ -387,7 +392,7 @@ class TestFinancialIntegration:
         # Get customer statement
         customer = data["customers"][1]
         response = await client.get(
-            f"/api/v1/financial-reports/customer-statement/{customer.id}",
+            f"/api / v1 / financial - reports / customer - statement/{customer.id}",
             params={
                 "start_date": (date.today() - timedelta(days=30)).isoformat(),
                 "end_date": date.today().isoformat(),
@@ -406,10 +411,10 @@ class TestFinancialIntegration:
     async def test_einvoice_submission(
         self, client: AsyncClient, financial_test_data, db_session: AsyncSession
     ):
-        """Test e-invoice submission to government API"""
+        """Test e - invoice submission to government API"""
         data = financial_test_data
 
-        # Mock e-invoice API
+        # Mock e - invoice API
         with patch(
             "app.services.einvoice_service.EInvoiceService.submit_invoice"
         ) as mock_submit:
@@ -421,7 +426,7 @@ class TestFinancialIntegration:
 
             # Login and create invoice
             response = await client.post(
-                "/api/v1/auth/login",
+                "/api / v1 / auth / login",
                 data={"username": "admin@test.com", "password": "password"},
             )
             token = response.json()["access_token"]
@@ -435,7 +440,7 @@ class TestFinancialIntegration:
                 customer_id=data["customers"][1].id,
                 invoice_type=InvoiceType.B2B,
                 invoice_date=date.today(),
-                period=date.today().strftime("%Y%m"),
+                period=date.today().strftime("%Y % m"),
                 buyer_tax_id="12345678",
                 buyer_name=data["customers"][1].name,
                 sales_amount=1000.0,
@@ -448,7 +453,7 @@ class TestFinancialIntegration:
 
             # Submit to government
             response = await client.post(
-                f"/api/v1/invoices/{invoice.id}/submit-einvoice"
+                f"/api / v1 / invoices/{invoice.id}/submit - einvoice"
             )
             assert response.status_code == 200
             result = response.json()

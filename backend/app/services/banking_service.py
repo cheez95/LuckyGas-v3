@@ -3,7 +3,6 @@
 import csv
 import hashlib
 import io
-import json
 import logging
 import os
 import re
@@ -39,13 +38,9 @@ logger = logging.getLogger(__name__)
 class BankingFormatError(Exception):
     """Raised when there's an error in banking file format."""
 
-    pass
-
 
 class SFTPConnectionError(Exception):
     """Raised when SFTP connection fails."""
-
-    pass
 
 
 class BankingService:
@@ -103,7 +98,7 @@ class BankingService:
         try:
             sm = get_secrets_manager()
 
-            # Load bank-specific credentials
+            # Load bank - specific credentials
             banks = ["mega", "ctbc", "esun", "first", "taishin"]
             for bank in banks:
                 credentials = sm.get_secret_json(f"banking-{bank}-credentials")
@@ -178,11 +173,11 @@ class BankingService:
                             with self._pool_lock:
                                 pool.append((transport, sftp))
                             return
-                        except:
+                        except Exception:
                             # Connection dead, close it
                             try:
                                 transport.close()
-                            except:
+                            except Exception:
                                 pass
 
             # Create new connection with production settings
@@ -199,7 +194,7 @@ class BankingService:
 
             # Use password or private key authentication
             if private_key_data:
-                # Key-based authentication (preferred for production)
+                # Key - based authentication (preferred for production)
                 try:
                     # Try different key types
                     key = None
@@ -217,7 +212,7 @@ class BankingService:
                             )
                             logger.info(f"Using {key_type} key for {bank_code}")
                             break
-                        except:
+                        except Exception:
                             continue
 
                     if not key:
@@ -336,7 +331,7 @@ class BankingService:
     def _generate_fixed_width_file(
         self, batch: PaymentBatch, bank_config: BankConfiguration
     ) -> str:
-        """Generate fixed-width format payment file (Taiwan banking standard)."""
+        """Generate fixed - width format payment file (Taiwan banking standard)."""
         lines = []
 
         # Header record
@@ -344,7 +339,7 @@ class BankingService:
             [
                 ("H", 1),  # Record type
                 (batch.batch_number, 20),  # Batch number
-                (datetime.now().strftime("%Y%m%d"), 8),  # File date
+                (datetime.now().strftime("%Y % m % d"), 8),  # File date
                 (bank_config.bank_code, 3),  # Bank code
                 ("001", 3),  # Version
                 ("", 174),  # Filler
@@ -366,7 +361,10 @@ class BankingService:
                         self._format_amount(transaction.amount),
                         13,
                     ),  # Amount (no decimals)
-                    (transaction.scheduled_date.strftime("%Y%m%d"), 8),  # Payment date
+                    (
+                        transaction.scheduled_date.strftime("%Y % m % d"),
+                        8,
+                    ),  # Payment date
                     ("", 108),  # Filler
                 ]
             )
@@ -410,7 +408,7 @@ class BankingService:
         ]
 
         writer = csv.DictWriter(
-            output, fieldnames=headers, delimiter=bank_config.delimiter or ","
+            output, fieldnames=headers, delimiter=bank_config.delimiter or ", "
         )
         writer.writeheader()
 
@@ -439,7 +437,7 @@ class BankingService:
         return content
 
     def _format_fixed_width(self, fields: List[Tuple[str, int]]) -> str:
-        """Format fields into fixed-width string."""
+        """Format fields into fixed - width string."""
         result = ""
         for value, width in fields:
             # Convert to string and handle encoding
@@ -498,7 +496,7 @@ class BankingService:
                 batch.file_content = self.generate_payment_file(batch_id)
 
             # Calculate checksum for verification
-            content_bytes = batch.file_content.encode(bank_config.encoding or "UTF-8")
+            content_bytes = batch.file_content.encode(bank_config.encoding or "UTF - 8")
             checksum = hashlib.sha256(content_bytes).hexdigest()
 
             # Create temporary file for atomic upload
@@ -539,7 +537,7 @@ class BankingService:
                         # Atomic rename to final location
                         sftp.rename(temp_remote_path, remote_path)
 
-                        # Set file permissions (read-only for security)
+                        # Set file permissions (read - only for security)
                         sftp.chmod(remote_path, 0o444)
 
                         logger.info(
@@ -692,7 +690,7 @@ class BankingService:
                 file_obj.seek(0)
 
                 # Decode content
-                content = file_obj.read().decode(bank_config.encoding or "UTF-8")
+                content = file_obj.read().decode(bank_config.encoding or "UTF - 8")
                 log.file_content = content
 
                 # Move to archive if configured
@@ -796,12 +794,12 @@ class BankingService:
     def _process_fixed_width_reconciliation(
         self, content: str, bank_config: BankConfiguration
     ) -> List[Dict]:
-        """Parse fixed-width reconciliation file."""
+        """Parse fixed - width reconciliation file."""
         results = []
         lines = content.strip().split("\n")
 
         for line in lines:
-            if not line or line[0] == "H" or line[0] == "T":  # Skip header/trailer
+            if not line or line[0] == "H" or line[0] == "T":  # Skip header / trailer
                 continue
 
             if line[0] == "D":  # Detail record
@@ -810,7 +808,7 @@ class BankingService:
                     "bank_reference": line[27:47].strip(),
                     "response_code": line[47:50].strip(),
                     "response_message": line[50:150].strip(),
-                    "processed_date": datetime.strptime(line[150:158], "%Y%m%d"),
+                    "processed_date": datetime.strptime(line[150:158], "%Y % m % d"),
                     "success": line[47:50].strip() == "000",  # Success code
                 }
                 results.append(result)
@@ -824,7 +822,7 @@ class BankingService:
         results = []
 
         reader = csv.DictReader(
-            io.StringIO(content), delimiter=bank_config.delimiter or ","
+            io.StringIO(content), delimiter=bank_config.delimiter or ", "
         )
 
         for row in reader:
@@ -850,7 +848,7 @@ class BankingService:
             "{YYYY}": date.strftime("%Y"),
             "{MM}": date.strftime("%m"),
             "{DD}": date.strftime("%d"),
-            "{YYYYMMDD}": date.strftime("%Y%m%d"),
+            "{YYYYMMDD}": date.strftime("%Y % m % d"),
             "{BATCH}": batch_number,
             "{TIMESTAMP}": str(int(time.time())),
         }
@@ -872,7 +870,7 @@ class BankingService:
             r"\{MM\}": r"\d{2}",
             r"\{DD\}": r"\d{2}",
             r"\{YYYYMMDD\}": r"\d{8}",
-            r"\{BATCH\}": r"[A-Z0-9]+",
+            r"\{BATCH\}": r"[A - Z0 - 9]+",
             r"\{TIMESTAMP\}": r"\d+",
         }
 
@@ -908,7 +906,7 @@ class BankingService:
             .scalar()
         )
 
-        batch_number = f"{bank_code}{processing_date.strftime('%Y%m%d')}{str(batch_count + 1).zfill(3)}"
+        batch_number = f"{bank_code}{processing_date.strftime('%Y % m % d')}{str(batch_count + 1).zfill(3)}"
 
         # Create batch
         batch = PaymentBatch(

@@ -1,3 +1,4 @@
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, or_, select
@@ -10,10 +11,6 @@ from app.models.gas_product import ProductAttribute
 from app.models.user import User as UserModel
 from app.models.user import UserRole
 from app.schemas.gas_product import (
-
-from typing import Any
-from typing import Optional
-
     GasProduct,
     GasProductCreate,
     GasProductList,

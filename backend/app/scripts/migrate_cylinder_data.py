@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Migration script to convert existing customer cylinder data to the new flexible product system.
 
@@ -8,7 +8,7 @@ This script:
 3. Handles special cases like haoyun (好運) and ying (營) cylinders
 4. Includes validation and rollback capability
 5. Provides progress tracking and error handling
-6. Supports dry-run mode to preview changes
+6. Supports dry - run mode to preview changes
 """
 
 import os
@@ -23,12 +23,9 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from tqdm import tqdm
 
-from app.core.config import settings
 from app.core.database import SessionLocal
 from app.models.customer import Customer
 from app.models.customer_inventory import CustomerInventory
@@ -40,7 +37,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler(
-            f'migration_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+            f'migration_{datetime.now().strftime("%Y % m % d_ % H % M % S")}.log'
         ),
         logging.StreamHandler(),
     ],
@@ -195,7 +192,7 @@ class CylinderDataMigrator:
                 # Get or create the product
                 product = self.get_or_create_product(product_specs)
                 if not product:
-                    logger.warning(f"Could not get/create product for {column_name}")
+                    logger.warning(f"Could not get / create product for {column_name}")
                     continue
 
                 # Check if inventory record already exists
@@ -299,7 +296,7 @@ class CylinderDataMigrator:
 
         if customers_with_cylinders > customers_with_inventory:
             logger.warning(
-                f"Some customers may not have been migrated: "
+                "Some customers may not have been migrated: "
                 f"{customers_with_cylinders - customers_with_inventory} missing"
             )
 
@@ -398,7 +395,7 @@ def main():
         description="Migrate customer cylinder data to new inventory system"
     )
     parser.add_argument(
-        "--dry-run", action="store_true", help="Preview changes without making them"
+        "--dry - run", action="store_true", help="Preview changes without making them"
     )
     parser.add_argument(
         "--rollback", action="store_true", help="Rollback a previous migration"
@@ -422,7 +419,7 @@ def main():
             logger.warning(
                 "Rollback functionality requires stored rollback data from a previous run"
             )
-            response = input("Are you sure you want to rollback? (yes/no): ")
+            response = input("Are you sure you want to rollback? (yes / no): ")
             if response.lower() == "yes":
                 migrator.rollback()
         else:

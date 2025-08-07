@@ -2,7 +2,7 @@
 Performance monitoring and metrics endpoints.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +12,6 @@ from starlette.responses import Response
 
 from app.api.deps import get_current_active_superuser, get_db
 from app.middleware.performance import get_performance_stats, run_performance_baseline
-from app.models.user import User
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 
@@ -39,7 +38,7 @@ async def get_performance_statistics() -> Dict[str, Any]:
 
 
 @router.post(
-    "/performance/baseline", dependencies=[Depends(get_current_active_superuser)]
+    "/performance / baseline", dependencies=[Depends(get_current_active_superuser)]
 )
 async def run_baseline_test() -> Dict[str, Any]:
     """
@@ -52,7 +51,7 @@ async def run_baseline_test() -> Dict[str, Any]:
     return {"timestamp": datetime.utcnow().isoformat(), "results": results}
 
 
-@router.get("/health/performance")
+@router.get("/health / performance")
 async def get_performance_health() -> Dict[str, Any]:
     """
     Get performance health status.
@@ -100,7 +99,8 @@ async def get_performance_health() -> Dict[str, Any]:
 
 
 @router.get(
-    "/performance/slow-queries", dependencies=[Depends(get_current_active_superuser)]
+    "/performance / slow - queries",
+    dependencies=[Depends(get_current_active_superuser)],
 )
 async def get_slow_queries(
     db: AsyncSession = Depends(get_db),
@@ -121,7 +121,7 @@ async def get_slow_queries(
             # {
             #     "query": "SELECT * FROM customers WHERE ...",
             #     "duration_ms": 1234,
-            #     "timestamp": "2024-01-20T10:30:00Z"
+            #     "timestamp": "2024 - 01 - 20T10:30:00Z"
             # }
         ],
         "message": "Slow query tracking requires database query logging to be enabled",
@@ -129,7 +129,8 @@ async def get_slow_queries(
 
 
 @router.get(
-    "/performance/response-times", dependencies=[Depends(get_current_active_superuser)]
+    "/performance / response - times",
+    dependencies=[Depends(get_current_active_superuser)],
 )
 async def get_response_time_stats(
     minutes: int = Query(60, description="Time window in minutes")
@@ -145,14 +146,14 @@ async def get_response_time_stats(
         "timestamp": datetime.utcnow().isoformat(),
         "time_window_minutes": minutes,
         "endpoints": {
-            "/api/v1/customers": {
+            "/api / v1 / customers": {
                 "p50": 45,
                 "p90": 120,
                 "p95": 180,
                 "p99": 350,
                 "count": 1234,
             },
-            "/api/v1/orders": {
+            "/api / v1 / orders": {
                 "p50": 55,
                 "p90": 150,
                 "p95": 220,
@@ -171,7 +172,7 @@ async def get_response_time_stats(
 
 
 @router.post(
-    "/performance/alert-thresholds",
+    "/performance / alert - thresholds",
     dependencies=[Depends(get_current_active_superuser)],
 )
 async def update_alert_thresholds(thresholds: Dict[str, float]) -> Dict[str, Any]:

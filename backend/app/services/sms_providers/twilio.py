@@ -2,7 +2,6 @@
 
 import base64
 import logging
-from datetime import datetime
 from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
@@ -15,14 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 class TwilioProvider:
-    """Production-ready Twilio SMS provider with connection pooling"""
+    """Production - ready Twilio SMS provider with connection pooling"""
 
     def __init__(self):
         self.account_sid = settings.TWILIO_ACCOUNT_SID
         self.auth_token = settings.TWILIO_AUTH_TOKEN
         self.from_number = settings.TWILIO_FROM_NUMBER
         self.webhook_url = settings.TWILIO_WEBHOOK_URL
-        self.base_url = f"https://api.twilio.com/2010-04-01/Accounts/{self.account_sid}"
+        self.base_url = (
+            f"https://api.twilio.com / 2010 - 04 - 01 / Accounts/{self.account_sid}"
+        )
 
         # Connection pool
         self._session: Optional[aiohttp.ClientSession] = None
@@ -36,7 +37,7 @@ class TwilioProvider:
         """Initialize provider with connection pool"""
         connector = aiohttp.TCPConnector(
             limit=100,  # Total connection pool size
-            limit_per_host=30,  # Per-host connection limit
+            limit_per_host=30,  # Per - host connection limit
             ttl_dns_cache=300,  # DNS cache timeout
         )
 
@@ -49,7 +50,7 @@ class TwilioProvider:
             connector=connector,
             headers={
                 "Authorization": f"Basic {auth_b64}",
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content - Type": "application / x - www - form - urlencoded",
             },
             timeout=aiohttp.ClientTimeout(total=30),
         )
@@ -91,7 +92,7 @@ class TwilioProvider:
 
             # Add status callback if configured
             if self.webhook_url:
-                data["StatusCallback"] = f"{self.webhook_url}/webhooks/sms/twilio"
+                data["StatusCallback"] = f"{self.webhook_url}/webhooks / sms / twilio"
 
             # Add custom parameters for tracking
             if metadata:
@@ -259,13 +260,13 @@ class TwilioProvider:
         is_unicode = any(ord(char) > 127 for char in message)
 
         if is_unicode:
-            # Unicode: 70 chars for single segment, 67 for multi-segment
+            # Unicode: 70 chars for single segment, 67 for multi - segment
             if len(message) <= 70:
                 return 1
             else:
                 return ((len(message) - 1) // 67) + 1
         else:
-            # GSM 7-bit: 160 chars for single segment, 153 for multi-segment
+            # GSM 7 - bit: 160 chars for single segment, 153 for multi - segment
             if len(message) <= 160:
                 return 1
             else:

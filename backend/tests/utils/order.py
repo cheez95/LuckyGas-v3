@@ -30,7 +30,7 @@ async def create_test_order(
     if order_number is None:
         timestamp = datetime.utcnow()
         order_number = (
-            f"TEST-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
+            f"TEST-{timestamp.strftime('%Y % m % d')}-{timestamp.microsecond:06d}"
         )
 
     if scheduled_date is None:

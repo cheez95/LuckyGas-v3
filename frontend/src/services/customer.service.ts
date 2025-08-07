@@ -20,7 +20,7 @@ interface CustomerListResponse {
 export const customerService = {
   async getCustomers(params?: CustomerQueryParams): Promise<CustomerListResponse> {
     try {
-      const response = await api.get<CustomerListResponse>('/customers', { params });
+      const response = await api.get<CustomerListResponse>('/customers/', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -29,7 +29,7 @@ export const customerService = {
   
   async getCustomer(id: number): Promise<Customer> {
     try {
-      const response = await api.get<Customer>(`/customers/${id}`);
+      const response = await api.get<Customer>(`/customers/${id}/`);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -38,7 +38,7 @@ export const customerService = {
   
   async createCustomer(data: Omit<Customer, 'id'>): Promise<Customer> {
     try {
-      const response = await api.post<Customer>('/customers', data);
+      const response = await api.post<Customer>('/customers/', data);
       return response.data;
     } catch (error: any) {
       // For duplicate customer codes, throw with the original error message
@@ -51,7 +51,7 @@ export const customerService = {
   
   async updateCustomer(id: number, data: Partial<Customer>): Promise<Customer> {
     try {
-      const response = await api.put<Customer>(`/customers/${id}`, data);
+      const response = await api.put<Customer>(`/customers/${id}/`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -60,7 +60,7 @@ export const customerService = {
   
   async deleteCustomer(id: number): Promise<void> {
     try {
-      await api.delete(`/customers/${id}`);
+      await api.delete(`/customers/${id}/`);
     } catch (error) {
       throw new Error(handleApiError(error));
     }
@@ -69,7 +69,7 @@ export const customerService = {
   // Customer inventory methods
   async getCustomerInventory(customerId: number): Promise<CustomerInventoryList> {
     try {
-      const response = await api.get<CustomerInventoryList>(`/customers/${customerId}/inventory`);
+      const response = await api.get<CustomerInventoryList>(`/customers/${customerId}/inventory/`);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -78,7 +78,7 @@ export const customerService = {
   
   async updateInventoryItem(customerId: number, productId: number, data: { quantity_owned?: number; quantity_rented?: number }): Promise<CustomerInventory> {
     try {
-      const response = await api.put<CustomerInventory>(`/customers/${customerId}/inventory/${productId}`, data);
+      const response = await api.put<CustomerInventory>(`/customers/${customerId}/inventory/${productId}/`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

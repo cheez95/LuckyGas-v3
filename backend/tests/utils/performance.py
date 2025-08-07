@@ -1,12 +1,4 @@
 """
-from dataclasses import dataclass
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
 Performance testing utilities
 """
 
@@ -15,10 +7,11 @@ import gc
 import statistics
 import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
-from typing import Optional, List, Dict, Any, Callable
 
 
 @dataclass

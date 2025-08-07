@@ -4,10 +4,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from typing import Any, Dict, List
+from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.requests import Request
+
 from app.api.auth_deps.security import (
     check_account_lockout,
     rate_limit_by_user,
-    require_admin_auth,
     require_secure_auth,
 )
 from app.api.deps import get_current_user, get_db
@@ -20,15 +23,15 @@ from app.core.security import (
     TwoFactorAuth,
     create_access_token,
     create_refresh_token,
+    decode_access_token,
     decode_refresh_token,
     get_password_hash,
     verify_password,
-, decode_access_token)
+)
 from app.models.user import User as UserModel
 from app.models.user import UserRole
 from app.schemas.user import (
     ChangePasswordRequest,
-    PasswordResetRequest,
     RefreshTokenRequest,
     Token,
     TwoFactorSetup,
@@ -94,7 +97,7 @@ async def login_access_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="帳號或密碼錯誤",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW - Authenticate": "Bearer"},
         )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="用戶已停用")
@@ -104,7 +107,7 @@ async def login_access_token(
     await AccountLockout.clear_failed_attempts(user.username)
 
     # Create session with proper token data
-    remember_me = form_data.scopes and "remember_me" in form_data.scopes
+    form_data.scopes and "remember_me" in form_data.scopes
 
     # Create tokens directly with correct data
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -355,7 +358,7 @@ async def update_user(
     return user
 
 
-@router.post("/forgot-password")
+@router.post("/forgot - password")
 async def forgot_password(
     request: Request, data: Dict[str, str], db: AsyncSession = Depends(get_db)
 ) -> Any:
@@ -399,7 +402,7 @@ async def forgot_password(
     return {"message": "如果電子郵件存在，密碼重設連結已發送"}
 
 
-@router.post("/reset-password")
+@router.post("/reset - password")
 async def reset_password(
     request: Request, data: Dict[str, str], db: AsyncSession = Depends(get_db)
 ) -> Any:
@@ -455,7 +458,7 @@ async def reset_password(
     return {"message": "密碼已成功重設"}
 
 
-@router.patch("/users/{user_id}/toggle-status", response_model=User)
+@router.patch("/users/{user_id}/toggle - status", response_model=User)
 async def toggle_user_status(
     user_id: int,
     db: AsyncSession = Depends(get_db),
@@ -483,7 +486,7 @@ async def toggle_user_status(
     return user
 
 
-@router.post("/change-password")
+@router.post("/change - password")
 async def change_password(
     request: Request,
     password_data: ChangePasswordRequest,
@@ -545,13 +548,13 @@ async def change_password(
     return {"message": "密碼已成功更改，請重新登入"}
 
 
-@router.post("/2fa/setup", response_model=TwoFactorSetup)
+@router.post("/2fa / setup", response_model=TwoFactorSetup)
 async def setup_two_factor(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(require_secure_auth),
 ) -> Any:
     """
-    Setup two-factor authentication for current user
+    Setup two - factor authentication for current user
     """
     if current_user.two_factor_enabled:
         raise HTTPException(status_code=400, detail="雙因素認證已啟用")
@@ -576,14 +579,14 @@ async def setup_two_factor(
     return {"secret": secret, "qr_code": qr_code, "backup_codes": backup_codes}
 
 
-@router.post("/2fa/verify")
+@router.post("/2fa / verify")
 async def verify_two_factor_setup(
     verify_data: TwoFactorVerify,
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ) -> Any:
     """
-    Verify and enable two-factor authentication
+    Verify and enable two - factor authentication
     """
     # Get setup data
     key = f"2fa:setup:{current_user.id}"
@@ -619,14 +622,14 @@ async def verify_two_factor_setup(
     return {"message": "雙因素認證已成功啟用"}
 
 
-@router.post("/2fa/disable")
+@router.post("/2fa / disable")
 async def disable_two_factor(
     password: str,
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(require_secure_auth),
 ) -> Any:
     """
-    Disable two-factor authentication
+    Disable two - factor authentication
     """
     if not current_user.two_factor_enabled:
         raise HTTPException(status_code=400, detail="雙因素認證未啟用")
@@ -681,7 +684,7 @@ async def logout(
     return {"message": "已成功登出"}
 
 
-@router.post("/logout-all")
+@router.post("/logout - all")
 async def logout_all_sessions(
     current_user: UserModel = Depends(require_secure_auth),
 ) -> Any:

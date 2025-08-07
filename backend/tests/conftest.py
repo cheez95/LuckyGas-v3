@@ -3,32 +3,27 @@
 import asyncio
 import os
 import sys
-from pathlib import Path
 
 # Add backend to Python path
-from dataclasses import dataclass
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from pathlib import Path
+
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 # Set test environment variables
 os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = (
-    "postgresql+asyncpg://test:test@localhost:5432/luckygas_test"
+    "postgresql + asyncpg://test:test@localhost:5432 / luckygas_test"
 )
-os.environ["SECRET_KEY"] = "test-secret-key-for-testing-with-32-chars-minimum"
+os.environ["SECRET_KEY"] = (
+    "test - secret - key - for - testing - with - 32 - chars - minimum"
+)
 os.environ["ENVIRONMENT"] = "test"
-os.environ["REDIS_URL"] = "redis://localhost:6379/1"
+os.environ["REDIS_URL"] = "redis://localhost:6379 / 1"
 
 # Mock Google Cloud credentials for testing
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/dev/null"
-os.environ["GOOGLE_CLOUD_PROJECT"] = "test-project"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/dev / null"
+os.environ["GOOGLE_CLOUD_PROJECT"] = "test - project"
 
 from unittest.mock import AsyncMock, Mock
 
@@ -43,6 +38,10 @@ from app.api.deps import get_db
 # Import after environment setup
 from app.core.database import Base
 from app.main import app
+from typing import AsyncGenerator, Generator
+
+# Import payment test configuration
+from tests.conftest_payment import *
 
 # Create test engine
 test_engine = create_async_engine(
@@ -91,7 +90,9 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides[get_db] = get_test_db
 
     async with AsyncClient(
-        app=app, base_url="http://test", headers={"Content-Type": "application/json"}
+        app=app,
+        base_url="http://test",
+        headers={"Content - Type": "application / json"},
     ) as ac:
         yield ac
 
@@ -99,6 +100,8 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
 
 # Mock models and services for testing
+
+
 @pytest.fixture
 def mock_db():
     """Mock database session."""
@@ -113,8 +116,8 @@ def mock_db():
 def mock_route():
     """Mock route object."""
     route = Mock()
-    route.id = "route-test-1"
-    route.driver_id = "driver-1"
+    route.id = "route - test - 1"
+    route.driver_id = "driver - 1"
     route.status = "in_progress"
     route.stops = []
     route.total_distance_km = 50.0
@@ -128,7 +131,7 @@ def mock_route():
 def mock_order():
     """Mock order object."""
     order = Mock()
-    order.id = "order-test-1"
+    order.id = "order - test - 1"
     order.delivery_latitude = 25.0340
     order.delivery_longitude = 121.5655
     order.total_quantity = 20
@@ -171,7 +174,9 @@ def mock_google_routes_service():
     return service
 
 
-# Auto-use fixture to patch imports
+# Auto - use fixture to patch imports
+
+
 @pytest.fixture(autouse=True)
 def mock_imports(monkeypatch):
     """Mock imports that might not be available in test environment."""

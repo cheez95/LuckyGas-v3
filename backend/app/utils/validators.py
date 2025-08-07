@@ -3,7 +3,6 @@ Validation utilities for Lucky Gas backend.
 """
 
 import re
-from typing import Optional
 
 
 def validate_phone_number(phone: str) -> bool:
@@ -24,8 +23,8 @@ def validate_phone_number(phone: str) -> bool:
 
     # Mobile pattern: 09 followed by 8 digits
     mobile_pattern = r"^09\d{8}$"
-    # Landline pattern: 0 + area code (1-2 digits) + 7-8 digits
-    landline_pattern = r"^0[2-8]\d{7,8}$"
+    # Landline pattern: 0 + area code (1 - 2 digits) + 7 - 8 digits
+    landline_pattern = r"^0[2 - 8]\d{7, 8}$"
 
     return bool(
         re.match(mobile_pattern, phone_clean) or re.match(landline_pattern, phone_clean)
@@ -45,7 +44,7 @@ def validate_email(email: str) -> bool:
     if not email:
         return False
 
-    email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    email_regex = r"^[a - zA - Z0 - 9._%+-]+@[a - zA - Z0 - 9.-]+\.[a - zA - Z]{2, }$"
     return bool(re.match(email_regex, email))
 
 
@@ -66,7 +65,7 @@ def validate_taiwan_address(address: str) -> bool:
     required_patterns = [
         r"(縣|市)",  # County or City
         r"(區|鄉|鎮|市)",  # District
-        r"(路|街|巷)",  # Road/Street
+        r"(路|街|巷)",  # Road / Street
         r"號",  # Number
     ]
 

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_indexes():
-    """Create performance-critical database indexes"""
+    """Create performance - critical database indexes"""
 
     engine = create_engine(settings.DATABASE_URL)
 
@@ -75,7 +75,7 @@ def create_indexes():
         "CREATE INDEX IF NOT EXISTS idx_prediction_customer_id ON demand_predictions(customer_id);",
         "CREATE INDEX IF NOT EXISTS idx_prediction_date ON demand_predictions(prediction_date);",
         "CREATE INDEX IF NOT EXISTS idx_prediction_type ON demand_predictions(prediction_type);",
-        # Full-text search indexes for Traditional Chinese
+        # Full - text search indexes for Traditional Chinese
         "CREATE INDEX IF NOT EXISTS idx_customer_search ON customers USING gin(to_tsvector('simple', short_name || ' ' || invoice_title || ' ' || address));",
         "CREATE INDEX IF NOT EXISTS idx_order_search ON orders USING gin(to_tsvector('simple', order_number || ' ' || delivery_address || ' ' || COALESCE(delivery_notes, '')));",
     ]

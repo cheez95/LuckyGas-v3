@@ -17,7 +17,7 @@ class TestAuth:
     async def test_login_success(self, client: AsyncClient, test_user: User):
         """Test successful login"""
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": test_user.username, "password": "testpassword"},
         )
         assert response.status_code == 200
@@ -32,7 +32,7 @@ class TestAuth:
     ):
         """Test login with invalid credentials"""
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": test_user.username, "password": "wrongpassword"},
         )
         assert response.status_code == 401
@@ -40,9 +40,9 @@ class TestAuth:
 
     @pytest.mark.asyncio
     async def test_login_nonexistent_user(self, client: AsyncClient):
-        """Test login with non-existent user"""
+        """Test login with non - existent user"""
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "nonexistent", "password": "password"},
         )
         assert response.status_code == 401
@@ -68,7 +68,8 @@ class TestAuth:
         await db_session.commit()
 
         response = await client.post(
-            "/api/v1/auth/login", data={"username": "inactive", "password": "password"}
+            "/api / v1 / auth / login",
+            data={"username": "inactive", "password": "password"},
         )
         assert response.status_code == 400
         assert "用戶已停用" in response.json()["detail"]
@@ -78,7 +79,7 @@ class TestAuth:
         self, client: AsyncClient, auth_headers: dict, test_user: User
     ):
         """Test getting current user information"""
-        response = await client.get("/api/v1/auth/me", headers=auth_headers)
+        response = await client.get("/api / v1 / auth / me", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["email"] == test_user.email
@@ -88,7 +89,7 @@ class TestAuth:
     @pytest.mark.asyncio
     async def test_get_current_user_unauthorized(self, client: AsyncClient):
         """Test getting current user without authentication"""
-        response = await client.get("/api/v1/auth/me")
+        response = await client.get("/api / v1 / auth / me")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -96,14 +97,14 @@ class TestAuth:
         """Test token refresh"""
         # First login to get tokens
         login_response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": test_user.username, "password": "testpassword"},
         )
         refresh_token = login_response.json()["refresh_token"]
 
         # Use refresh token
         response = await client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": refresh_token}
+            "/api / v1 / auth / refresh", json={"refresh_token": refresh_token}
         )
         assert response.status_code == 200
         data = response.json()
@@ -115,7 +116,7 @@ class TestAuth:
     async def test_refresh_token_invalid(self, client: AsyncClient):
         """Test token refresh with invalid token"""
         response = await client.post(
-            "/api/v1/auth/refresh", json={"refresh_token": "invalid_token"}
+            "/api / v1 / auth / refresh", json={"refresh_token": "invalid_token"}
         )
         assert response.status_code == 401
 
@@ -132,7 +133,9 @@ class TestUserManagement:
         test_admin: User,
     ):
         """Test listing users (admin only)"""
-        response = await client.get("/api/v1/auth/users", headers=admin_auth_headers)
+        response = await client.get(
+            "/api / v1 / auth / users", headers=admin_auth_headers
+        )
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 2  # At least test_user and test_admin
@@ -145,7 +148,7 @@ class TestUserManagement:
     @pytest.mark.asyncio
     async def test_list_users_forbidden(self, client: AsyncClient, auth_headers: dict):
         """Test listing users without admin permission"""
-        response = await client.get("/api/v1/auth/users", headers=auth_headers)
+        response = await client.get("/api / v1 / auth / users", headers=auth_headers)
         assert response.status_code == 403
         assert "權限不足" in response.json()["detail"]
 
@@ -162,7 +165,7 @@ class TestUserManagement:
         }
 
         response = await client.post(
-            "/api/v1/auth/users", json=new_user_data, headers=admin_auth_headers
+            "/api / v1 / auth / users", json=new_user_data, headers=admin_auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -185,7 +188,9 @@ class TestUserManagement:
         }
 
         response = await client.post(
-            "/api/v1/auth/users", json=duplicate_user_data, headers=admin_auth_headers
+            "/api / v1 / auth / users",
+            json=duplicate_user_data,
+            headers=admin_auth_headers,
         )
         assert response.status_code == 400
         assert "使用者已存在" in response.json()["detail"]
@@ -198,7 +203,7 @@ class TestUserManagement:
         update_data = {"full_name": "Updated Test User", "role": UserRole.MANAGER.value}
 
         response = await client.put(
-            f"/api/v1/auth/users/{test_user.id}",
+            f"/api / v1 / auth / users/{test_user.id}",
             json=update_data,
             headers=admin_auth_headers,
         )
@@ -214,7 +219,7 @@ class TestUserManagement:
         """Test toggling user active status"""
         # Deactivate user
         response = await client.patch(
-            f"/api/v1/auth/users/{test_user.id}/toggle-status",
+            f"/api / v1 / auth / users/{test_user.id}/toggle - status",
             headers=admin_auth_headers,
         )
         assert response.status_code == 200
@@ -223,7 +228,7 @@ class TestUserManagement:
 
         # Reactivate user
         response = await client.patch(
-            f"/api/v1/auth/users/{test_user.id}/toggle-status",
+            f"/api / v1 / auth / users/{test_user.id}/toggle - status",
             headers=admin_auth_headers,
         )
         assert response.status_code == 200
@@ -245,7 +250,9 @@ class TestUserManagement:
         }
 
         response = await client.post(
-            "/api/v1/auth/change-password", json=password_data, headers=auth_headers
+            "/api / v1 / auth / change - password",
+            json=password_data,
+            headers=auth_headers,
         )
         assert response.status_code == 200
 
@@ -264,7 +271,9 @@ class TestUserManagement:
         }
 
         response = await client.post(
-            "/api/v1/auth/change-password", json=password_data, headers=auth_headers
+            "/api / v1 / auth / change - password",
+            json=password_data,
+            headers=auth_headers,
         )
         assert response.status_code == 400
         assert "密碼錯誤" in response.json()["detail"]

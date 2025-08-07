@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, func, select
@@ -10,9 +11,6 @@ from app.models import Customer
 from app.models import DeliveryHistory as DeliveryHistoryModel
 from app.models import User
 from app.schemas.delivery_history import (
-
-from typing import Optional
-
     DeliveryHistory,
     DeliveryHistoryCreate,
     DeliveryHistoryList,

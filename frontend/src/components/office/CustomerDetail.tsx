@@ -35,6 +35,7 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import api from '../../services/api';
 import dayjs from 'dayjs';
+import { features } from '../../config/features';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -230,7 +231,13 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
       key: 'totalAmount',
       render: (amount) => `NT$ ${amount.toLocaleString()}`,
     },
-  ];
+  ].filter(column => {
+    // Filter out payment-related columns if payment features are disabled
+    if (!features.anyPaymentFeature) {
+      return column.key !== 'totalAmount';
+    }
+    return true;
+  });
 
   const inventoryColumns: ColumnsType<InventoryItem> = [
     {

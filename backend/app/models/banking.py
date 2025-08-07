@@ -2,7 +2,6 @@
 
 import enum
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Boolean, Column, DateTime
 from sqlalchemy import Enum as SQLEnum
@@ -202,7 +201,7 @@ class ReconciliationLog(Base):
 
 
 class BankConfiguration(Base):
-    """Stores bank-specific configuration for SFTP and file formats."""
+    """Stores bank - specific configuration for SFTP and file formats."""
 
     __tablename__ = "bank_configurations"
 
@@ -215,7 +214,7 @@ class BankConfiguration(Base):
     sftp_port = Column(Integer, default=22)
     sftp_username = Column(String(100), nullable=False)
     sftp_password = Column(String(255), nullable=False)  # Should be encrypted
-    sftp_private_key = Column(Text)  # Optional: for key-based auth
+    sftp_private_key = Column(Text)  # Optional: for key - based auth
 
     # File paths
     upload_path = Column(String(500), nullable=False)
@@ -224,7 +223,7 @@ class BankConfiguration(Base):
 
     # File format configuration
     file_format = Column(String(20), nullable=False)  # fixed_width, csv
-    encoding = Column(String(20), default="UTF-8")  # UTF-8, Big5
+    encoding = Column(String(20), default="UTF - 8")  # UTF - 8, Big5
     delimiter = Column(String(5))  # For CSV format
 
     # File naming patterns

@@ -1,5 +1,5 @@
 """
-Invoice sequence model for Taiwan e-invoice number management
+Invoice sequence model for Taiwan e - invoice number management
 """
 
 from sqlalchemy import (
@@ -18,9 +18,9 @@ from app.core.database import Base
 
 class InvoiceSequence(Base):
     """
-    Manages invoice number sequences for Taiwan e-invoice system.
+    Manages invoice number sequences for Taiwan e - invoice system.
 
-    Taiwan e-invoices require sequential numbering within allocated ranges.
+    Taiwan e - invoices require sequential numbering within allocated ranges.
     Government allocates ranges of numbers with specific prefixes for each period.
     """
 
@@ -89,7 +89,7 @@ class InvoiceSequence(Base):
 
     def get_next_number(self) -> str:
         """
-        Get the next invoice number in format: PREFIX + 8-digit number
+        Get the next invoice number in format: PREFIX + 8 - digit number
 
         Returns:
             str: Next invoice number (e.g., "AA10000001")
@@ -103,5 +103,5 @@ class InvoiceSequence(Base):
                 f"Range exhausted at {self.range_end}"
             )
 
-        # Format as 8-digit number with prefix
+        # Format as 8 - digit number with prefix
         return f"{self.prefix}{str(self.current_number).zfill(8)}"

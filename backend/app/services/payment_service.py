@@ -3,9 +3,9 @@ Payment service for business logic
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -27,9 +27,9 @@ class PaymentService:
 
     async def generate_payment_number(self) -> str:
         """Generate unique payment number"""
-        # Format: PAY-YYYYMMDD-XXXX
+        # Format: PAY - YYYYMMDD - XXXX
         today = date.today()
-        prefix = f"PAY-{today.strftime('%Y%m%d')}"
+        prefix = f"PAY-{today.strftime('%Y % m % d')}"
 
         # Find the last payment number for today
         query = (

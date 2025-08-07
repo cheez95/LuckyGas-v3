@@ -7,7 +7,7 @@ test.describe('Critical: Order Creation Flow', () => {
     await loginAsTestUser(page);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete order creation flow', async ({ page }) => {
     // 1. Verify dashboard loaded
     await expect(page.locator('h2:has-text("儀表板")')).toBeVisible();
     
@@ -81,7 +81,7 @@ test.describe('Critical: Order Creation Flow', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should complete order creation flow - 2', async ({ page }) => {
     // Navigate to orders
     await page.click('text=訂單管理');
     await page.waitForURL(/orders/);
@@ -111,7 +111,7 @@ test.describe('Critical: Order Creation Flow', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should complete order creation flow - 3', async ({ page }) => {
     // Navigate to orders
     await page.click('text=訂單管理');
     await page.waitForURL(/orders/);
@@ -157,7 +157,7 @@ test.describe('Critical: Order Creation Flow', () => {
 });
 
 test.describe('Critical: Order Management Permissions', () => {
-  test($1, async ({ page }) => {
+  test('should complete order creation flow', async ({ page }) => {
     // Test with test user (basic permissions)
     await loginAsTestUser(page);
     await page.click('text=訂單管理');

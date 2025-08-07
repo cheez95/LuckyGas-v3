@@ -2,7 +2,7 @@ import os
 import re
 import secrets
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -51,7 +51,7 @@ class BusinessConfig(BaseModel):
         default=[50, 20, 16, 10, 4], description="Available gas cylinder sizes"
     )
 
-    # Taiwan-specific
+    # Taiwan - specific
     invoice_tax_rate: float = Field(
         0.05, ge=0, le=1, description="Tax rate for invoices"
     )
@@ -125,13 +125,13 @@ class Settings(BaseSettings):
             if os.getenv("ENVIRONMENT", "development") == "development"
             else f".env.{os.getenv('ENVIRONMENT', 'development')}"
         ),
-        env_file_encoding="utf-8",
+        env_file_encoding="utf - 8",
         case_sensitive=True,
         extra="ignore",
     )
 
     # API Settings
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = "/api / v1"
     PROJECT_NAME: str = "Lucky Gas Delivery Management System"
     ENVIRONMENT: Environment = Environment.DEVELOPMENT
     LOG_LEVEL: str = "INFO"
@@ -167,7 +167,7 @@ class Settings(BaseSettings):
     def assemble_db_connection(cls, v: str, values) -> str:
         if v:
             return v
-        return f"postgresql+asyncpg://{values.data.get('POSTGRES_USER')}:{values.data.get('POSTGRES_PASSWORD')}@{values.data.get('POSTGRES_SERVER')}:{values.data.get('POSTGRES_PORT')}/{values.data.get('POSTGRES_DB')}"
+        return f"postgresql + asyncpg://{values.data.get('POSTGRES_USER')}:{values.data.get('POSTGRES_PASSWORD')}@{values.data.get('POSTGRES_SERVER')}:{values.data.get('POSTGRES_PORT')}/{values.data.get('POSTGRES_DB')}"
 
     @field_validator("DATABASE_URL_SYNC", mode="after")
     def assemble_sync_db_connection(cls, v: str, values) -> str:
@@ -196,13 +196,35 @@ class Settings(BaseSettings):
     CHT_SMS_ACCOUNT_ID: str = Field("", description="CHT SMS Account ID")
     CHT_SMS_PASSWORD: str = Field("", description="CHT SMS Password")
     CHT_SMS_API_URL: str = Field(
-        "https://api.emome.net/SMS/SendSMS", description="CHT SMS API URL"
+        "https://api.emome.net / SMS / SendSMS", description="CHT SMS API URL"
     )
     CHT_SMS_STATUS_URL: str = Field(
-        "https://api.emome.net/SMS/QueryStatus", description="CHT SMS Status URL"
+        "https://api.emome.net / SMS / QueryStatus", description="CHT SMS Status URL"
     )
     CHT_SMS_WEBHOOK_SECRET: str = Field(
         "", description="CHT webhook verification secret"
+    )
+
+    # Feature Flags - Payment and Invoice System
+    ENABLE_PAYMENT_SYSTEM: bool = Field(
+        False, 
+        description="Enable payment processing features",
+        env="ENABLE_PAYMENT_SYSTEM"
+    )
+    ENABLE_INVOICE_SYSTEM: bool = Field(
+        False, 
+        description="Enable invoice generation and management",
+        env="ENABLE_INVOICE_SYSTEM"
+    )
+    ENABLE_BANKING_SYSTEM: bool = Field(
+        False, 
+        description="Enable banking integration and transfers",
+        env="ENABLE_BANKING_SYSTEM"
+    )
+    ENABLE_FINANCIAL_REPORTS: bool = Field(
+        False, 
+        description="Enable financial reporting features",
+        env="ENABLE_FINANCIAL_REPORTS"
     )
 
     # Email Configuration
@@ -227,9 +249,9 @@ class Settings(BaseSettings):
                     import json
 
                     return json.loads(v)
-                except:
+                except Exception:
                     return []
-            return [i.strip() for i in v.split(",") if i.strip()]
+            return [i.strip() for i in v.split(", ") if i.strip()]
         elif isinstance(v, list):
             return v
         return []
@@ -257,18 +279,18 @@ class Settings(BaseSettings):
 
     # Google Cloud
     GCP_PROJECT_ID: str = ""
-    GCP_LOCATION: str = "asia-east1"  # Taiwan region
+    GCP_LOCATION: str = "asia - east1"  # Taiwan region
     VERTEX_MODEL_ID: str = ""
     VERTEX_ENDPOINT_ID: str = ""
     GOOGLE_MAPS_API_KEY: str = Field(
         "",
-        pattern="^$|^AIza[0-9A-Za-z-_]{35}$",
+        pattern="^$|^AIza[0 - 9A - Za - z - _]{35}$",
         description="Google Maps API key (empty or valid format)",
     )
 
     # Storage
-    GCS_BUCKET_NAME: str = "lucky-gas-storage"
-    GCS_MEDIA_PREFIX: str = "delivery-photos"
+    GCS_BUCKET_NAME: str = "lucky - gas - storage"
+    GCS_MEDIA_PREFIX: str = "delivery - photos"
 
     # Service Account (optional)
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
@@ -279,7 +301,7 @@ class Settings(BaseSettings):
     DRIVER_COST_PER_HOUR: float = 500.0  # TWD
 
     # Timezone
-    TIMEZONE: str = "Asia/Taipei"
+    TIMEZONE: str = "Asia / Taipei"
 
     # Admin User
     FIRST_SUPERUSER: str = Field(
@@ -294,11 +316,13 @@ class Settings(BaseSettings):
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
 
-    # Taiwan-specific Validators
+    # Taiwan - specific Validators
     @field_validator("FIRST_SUPERUSER")
     def validate_email(cls, v: str) -> str:
         """Validate email format"""
-        email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        email_regex = (
+            r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        )
         if not re.match(email_regex, v):
             raise ValueError(f"Invalid email format: {v}")
         return v
@@ -307,16 +331,16 @@ class Settings(BaseSettings):
     def validate_taiwan_phone(phone: str) -> bool:
         """
         Validate Taiwan phone number formats:
-        - Mobile: 09XX-XXX-XXX or 09XXXXXXXX
-        - Landline: 0X-XXXX-XXXX or 0XXXXXXXXX
+        - Mobile: 09XX - XXX - XXX or 09XXXXXXXX
+        - Landline: 0X - XXXX - XXXX or 0XXXXXXXXX
         """
         # Remove any spaces or hyphens
         phone_clean = re.sub(r"[\s\-]", "", phone)
 
         # Mobile pattern: 09 followed by 8 digits
         mobile_pattern = r"^09\d{8}$"
-        # Landline pattern: 0 + area code (1-2 digits) + 7-8 digits
-        landline_pattern = r"^0[2-8]\d{7,8}$"
+        # Landline pattern: 0 + area code (1 - 2 digits) + 7 - 8 digits
+        landline_pattern = r"^0[2 - 8]\d{7, 8}$"
 
         return bool(
             re.match(mobile_pattern, phone_clean)
@@ -332,7 +356,7 @@ class Settings(BaseSettings):
         required_patterns = [
             r"(縣|市)",  # County or City
             r"(區|鄉|鎮|市)",  # District
-            r"(路|街|巷)",  # Road/Street
+            r"(路|街|巷)",  # Road / Street
             r"號",  # Number
         ]
 
@@ -360,7 +384,7 @@ class Settings(BaseSettings):
     def validate_config(self) -> "Settings":
         """Validate configuration based on environment"""
         if self.ENVIRONMENT == Environment.PRODUCTION:
-            # Production-specific validations
+            # Production - specific validations
             if self.SECRET_KEY == secrets.token_urlsafe(32):
                 raise ValueError("Must set a custom SECRET_KEY for production")
             if not self.GCP_PROJECT_ID:
@@ -375,8 +399,8 @@ class Settings(BaseSettings):
         return self
 
     def get_database_url(self, async_mode: bool = True) -> str:
-        """Get database URL with option for sync/async"""
-        driver = "postgresql+asyncpg" if async_mode else "postgresql"
+        """Get database URL with option for sync / async"""
+        driver = "postgresql + asyncpg" if async_mode else "postgresql"
         return f"{driver}://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:5433/{self.POSTGRES_DB}"
 
     def is_production(self) -> bool:
@@ -399,6 +423,8 @@ settings = Settings()
 
 
 # Import secrets manager after settings initialization
+
+
 def load_secrets_from_manager():
     """Load secrets from Google Secret Manager if available."""
     try:
@@ -408,10 +434,10 @@ def load_secrets_from_manager():
 
         # List of secrets to potentially load from Secret Manager
         secret_mappings = {
-            "database-password": "POSTGRES_PASSWORD",
-            "jwt-secret-key": "SECRET_KEY",
-            "google-maps-api-key": "GOOGLE_MAPS_API_KEY",
-            "first-superuser-password": "FIRST_SUPERUSER_PASSWORD",
+            "database - password": "POSTGRES_PASSWORD",
+            "jwt - secret - key": "SECRET_KEY",
+            "google - maps - api - key": "GOOGLE_MAPS_API_KEY",
+            "first - superuser - password": "FIRST_SUPERUSER_PASSWORD",
         }
 
         for secret_id, env_var in secret_mappings.items():

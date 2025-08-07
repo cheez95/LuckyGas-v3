@@ -4,15 +4,14 @@ Test cases for data validation framework
 
 from datetime import date, datetime, timedelta
 
-import numpy as np
 import pandas as pd
 import pytest
 
-from app.utils.data_validator import DataValidator, validate_migration_data
+from app.utils.data_validator import DataValidator
 
 
 class TestTaiwanFormatValidators:
-    """Test Taiwan-specific format validators."""
+    """Test Taiwan - specific format validators."""
 
     def test_validate_taiwan_phone_mobile(self):
         """Test mobile phone validation."""
@@ -20,10 +19,10 @@ class TestTaiwanFormatValidators:
 
         # Valid mobile numbers
         test_cases = [
-            ("0912345678", "0912-345-678"),
-            ("0912-345-678", "0912-345-678"),
-            ("0912 345 678", "0912-345-678"),
-            ("0987654321", "0987-654-321"),
+            ("0912345678", "0912 - 345 - 678"),
+            ("0912 - 345 - 678", "0912 - 345 - 678"),
+            ("0912 345 678", "0912 - 345 - 678"),
+            ("0987654321", "0987 - 654 - 321"),
         ]
 
         for input_phone, expected in test_cases:
@@ -43,10 +42,10 @@ class TestTaiwanFormatValidators:
 
         # Valid landline numbers
         test_cases = [
-            ("0223456789", "02-2345-6789"),  # Taipei
-            ("02-2345-6789", "02-2345-6789"),
-            ("0423456789", "04-2345-6789"),  # Taichung
-            ("0712345678", "07-1234-5678"),  # Kaohsiung
+            ("0223456789", "02 - 2345 - 6789"),  # Taipei
+            ("02 - 2345 - 6789", "02 - 2345 - 6789"),
+            ("0423456789", "04 - 2345 - 6789"),  # Taichung
+            ("0712345678", "07 - 1234 - 5678"),  # Kaohsiung
         ]
 
         for input_phone, expected in test_cases:
@@ -221,7 +220,7 @@ class TestCustomerDataValidation:
             in validated_df.iloc[3]["validation_warnings"]
         )
         assert (
-            "Same-day delivery requested but no time slots"
+            "Same - day delivery requested but no time slots"
             in validated_df.iloc[3]["validation_warnings"]
         )
 

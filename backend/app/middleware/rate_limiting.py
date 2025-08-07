@@ -8,9 +8,9 @@ with Redis as the backend storage for distributed rate limiting.
 import hashlib
 import json
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
+from typing import Tuple
 
-from fastapi import Request, Response
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -24,16 +24,14 @@ logger = get_logger(__name__)
 class RateLimitExceeded(Exception):
     """Exception raised when rate limit is exceeded."""
 
-    pass
-
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
     Rate limiting middleware using sliding window algorithm.
 
     Features:
-    - Per-IP rate limiting
-    - Per-user rate limiting (when authenticated)
+    - Per - IP rate limiting
+    - Per - user rate limiting (when authenticated)
     - Different limits for different endpoints
     - Sliding window algorithm for smooth rate limiting
     - Headers indicating rate limit status
@@ -44,14 +42,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.default_limit = default_limit
         self.window_seconds = window_seconds
 
-        # Endpoint-specific rate limits (requests per minute)
+        # Endpoint - specific rate limits (requests per minute)
         self.endpoint_limits = {
-            "/api/v1/auth/login": 5,  # Strict limit for login attempts
-            "/api/v1/auth/register": 3,  # Strict limit for registration
-            "/api/v1/predictions/": 10,  # ML predictions are resource-intensive
-            "/api/v1/routes/optimize": 10,  # Route optimization is CPU-intensive
-            "/api/v1/orders/bulk": 5,  # Bulk operations
-            "/api/v1/google-api/": 30,  # Google API calls have their own limits
+            "/api / v1 / auth / login": 5,  # Strict limit for login attempts
+            "/api / v1 / auth / register": 3,  # Strict limit for registration
+            "/api / v1 / predictions/": 10,  # ML predictions are resource - intensive
+            "/api / v1 / routes / optimize": 10,  # Route optimization is CPU - intensive
+            "/api / v1 / orders / bulk": 5,  # Bulk operations
+            "/api / v1 / google - api/": 30,  # Google API calls have their own limits
             "/health": 1000,  # Health checks need higher limit
             "/metrics": 1000,  # Metrics endpoint
         }
@@ -89,9 +87,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             # Add rate limit headers
-            response.headers["X-RateLimit-Limit"] = str(limit)
-            response.headers["X-RateLimit-Remaining"] = str(remaining)
-            response.headers["X-RateLimit-Reset"] = str(int(reset_time.timestamp()))
+            response.headers["X - RateLimit - Limit"] = str(limit)
+            response.headers["X - RateLimit - Remaining"] = str(remaining)
+            response.headers["X - RateLimit - Reset"] = str(int(reset_time.timestamp()))
 
             return response
 
@@ -105,7 +103,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Get client identifier
         client_id = self._get_client_id(request)
 
-        # Get endpoint-specific limit
+        # Get endpoint - specific limit
         path = request.url.path
         limit = self.default_limit
 
@@ -124,7 +122,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         else:
             key = f"rate_limit:ip:{client_id}:{path}"
 
-        # Environment-based adjustments
+        # Environment - based adjustments
         if settings.is_development():
             limit = limit * 10  # More lenient in development
 
@@ -133,10 +131,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _get_client_id(self, request: Request) -> str:
         """Get client identifier from request."""
         # Try to get real IP from headers (for reverse proxy scenarios)
-        forwarded_for = request.headers.get("X-Forwarded-For")
+        forwarded_for = request.headers.get("X - Forwarded - For")
         if forwarded_for:
             # Take the first IP in the chain
-            client_ip = forwarded_for.split(",")[0].strip()
+            client_ip = forwarded_for.split(", ")[0].strip()
         elif request.client:
             client_ip = request.client.host
         else:
@@ -214,10 +212,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 "retry_after": retry_after,
             },
             headers={
-                "Retry-After": str(retry_after),
-                "X-RateLimit-Limit": "0",
-                "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(int(reset_time.timestamp())),
+                "Retry - After": str(retry_after),
+                "X - RateLimit - Limit": "0",
+                "X - RateLimit - Remaining": "0",
+                "X - RateLimit - Reset": str(int(reset_time.timestamp())),
             },
         )
 

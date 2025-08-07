@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { loginAsTestUser } from '../helpers/auth.helper';
 
 test.describe('Error Recovery Tests', () => {
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     // Navigate to customers page
@@ -53,7 +53,7 @@ test.describe('Error Recovery Tests', () => {
     await expect(page.locator('.ant-table, [data-testid="customer-table"]')).toBeVisible({ timeout: 10000 });
   });
 
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully - 2', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     // Mock API to return errors
@@ -89,7 +89,7 @@ test.describe('Error Recovery Tests', () => {
     expect(hasErrorState || hasEmptyState).toBeTruthy();
   });
 
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully - 3', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     // Mock auth to return 401
@@ -111,7 +111,7 @@ test.describe('Error Recovery Tests', () => {
     });
   });
 
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully - 4', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     // Navigate to orders
@@ -173,7 +173,7 @@ test.describe('Error Recovery Tests', () => {
     }
   });
 
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully - 5', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     // Simulate slow network
@@ -208,7 +208,7 @@ test.describe('Error Recovery Tests', () => {
     await expect(page.locator('.ant-table, .ant-empty')).toBeVisible({ timeout: 10000 });
   });
 
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully - 6', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     let requestCount = 0;
@@ -239,7 +239,7 @@ test.describe('Error Recovery Tests', () => {
     expect(widgetCount).toBeGreaterThan(0);
   });
 
-  test($1, async ({ page }) => {
+  test('should recover from errors gracefully - 7', async ({ page }) => {
     await loginAsTestUser(page);
     
     // Navigate through multiple pages
@@ -271,7 +271,7 @@ test.describe('Error Recovery Tests', () => {
     await expect(pageContent).toBeVisible();
   });
 
-  test($1, async ({ page, context }) => {
+  test('should recover from errors gracefully - 8', async ({ page, context }) => {
     await loginAsTestUser(page);
     
     // Simulate session timeout after some time

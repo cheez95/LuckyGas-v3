@@ -10,12 +10,9 @@ from sqlalchemy import (
     Column,
     DateTime,
     Float,
-    ForeignKey,
     Integer,
     String,
-    Time,
 )
-from sqlalchemy.orm import relationship
 
 from app.core.database import Base
 
@@ -121,7 +118,7 @@ class OptimizedRoute(BaseModel):
     capacity_utilization: Dict[str, int] = Field(
         description="Cylinders by type in route"
     )
-    efficiency_score: float = Field(description="Route efficiency score 0-100")
+    efficiency_score: float = Field(description="Route efficiency score 0 - 100")
 
 
 class OptimizationResponse(BaseModel):

@@ -1,17 +1,14 @@
 """Enhanced SMS service with Taiwan provider support."""
 
 import asyncio
-import hashlib
 import logging
 import random
 import time
-import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlencode
 
 import aiohttp
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -46,12 +43,12 @@ class SMSProviderBase:
         """Calculate number of SMS segments for message"""
         # Unicode (Chinese) messages have different limits
         if any(ord(char) > 127 for char in message):
-            # Unicode: 70 chars for single, 67 for multi-segment
+            # Unicode: 70 chars for single, 67 for multi - segment
             if len(message) <= 70:
                 return 1
             return ((len(message) - 1) // 67) + 1
         else:
-            # GSM 7-bit: 160 chars for single, 153 for multi-segment
+            # GSM 7 - bit: 160 chars for single, 153 for multi - segment
             if len(message) <= 160:
                 return 1
             return ((len(message) - 1) // 153) + 1
@@ -71,7 +68,7 @@ class TwilioProvider(SMSProviderBase):
             if not phone.startswith("+"):
                 phone = "+886" + phone[1:] if phone.startswith("0") else "+886" + phone
 
-            url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+            url = f"https://api.twilio.com / 2010 - 04 - 01 / Accounts/{account_sid}/Messages.json"
 
             data = {"To": phone, "From": from_number, "Body": message}
 
@@ -105,7 +102,7 @@ class TwilioProvider(SMSProviderBase):
             account_sid = self.config.get("account_sid")
             auth_token = self.config.get("auth_token")
 
-            url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages/{message_id}.json"
+            url = f"https://api.twilio.com / 2010 - 04 - 01 / Accounts/{account_sid}/Messages/{message_id}.json"
 
             auth = aiohttp.BasicAuth(account_sid, auth_token)
 
@@ -140,7 +137,7 @@ class Every8dProvider(SMSProviderBase):
         try:
             username = self.config.get("username")
             password = self.config.get("password")
-            api_url = self.config.get("api_url", "https://api.e8d.tw/SMS/BulkSMS")
+            api_url = self.config.get("api_url", "https://api.e8d.tw / SMS / BulkSMS")
 
             # Format phone for Taiwan (remove country code if present)
             if phone.startswith("+886"):
@@ -162,8 +159,8 @@ class Every8dProvider(SMSProviderBase):
                 async with session.get(api_url, params=params) as response:
                     text = await response.text()
 
-                    # Parse response (format: credit,sended,cost,unsend,batch_id)
-                    parts = text.strip().split(",")
+                    # Parse response (format: credit, sended, cost, unsend, batch_id)
+                    parts = text.strip().split(", ")
 
                     if len(parts) >= 5 and float(parts[1]) > 0:
                         return {
@@ -207,7 +204,7 @@ class MitakeProvider(SMSProviderBase):
             username = self.config.get("username")
             password = self.config.get("password")
             api_url = self.config.get(
-                "api_url", "https://api.mitake.com.tw/api/mtk/SmSend"
+                "api_url", "https://api.mitake.com.tw / api / mtk / SmSend"
             )
 
             # Format phone for Taiwan
@@ -217,7 +214,7 @@ class MitakeProvider(SMSProviderBase):
                 phone = "0" + phone
 
             # Mitake uses INI format for requests
-            ini_data = f"""[0]
+            ini_data = """[0]
 dstaddr={phone}
 smbody={message}
 dlvtime=
@@ -226,13 +223,13 @@ response=Y"""
 
             params = {"username": username, "password": password, "encoding": "UTF8"}
 
-            headers = {"Content-Type": "text/plain; charset=UTF-8"}
+            headers = {"Content - Type": "text / plain; charset=UTF - 8"}
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     api_url,
                     params=params,
-                    data=ini_data.encode("utf-8"),
+                    data=ini_data.encode("utf - 8"),
                     headers=headers,
                 ) as response:
                     text = await response.text()
@@ -254,7 +251,7 @@ response=Y"""
                         }
                     else:
                         error_codes = {
-                            "1": "Invalid username/password",
+                            "1": "Invalid username / password",
                             "2": "Insufficient balance",
                             "3": "Invalid recipient",
                             "4": "Invalid message content",
@@ -277,7 +274,7 @@ response=Y"""
         try:
             username = self.config.get("username")
             password = self.config.get("password")
-            api_url = "https://api.mitake.com.tw/api/mtk/SmQuery"
+            api_url = "https://api.mitake.com.tw / api / mtk / SmQuery"
 
             params = {"username": username, "password": password, "msgid": message_id}
 
@@ -404,7 +401,7 @@ class EnhancedSMSService:
                 select(ProviderConfig).where(
                     and_(
                         ProviderConfig.provider == provider,
-                        ProviderConfig.is_active == True,
+                        ProviderConfig.is_active,
                     )
                 )
             )
@@ -492,7 +489,7 @@ class EnhancedSMSService:
         breaker = self._circuit_breakers[provider]
 
         if breaker["state"] == "open":
-            # Check if we should transition to half-open
+            # Check if we should transition to half - open
             if breaker["last_failure"]:
                 time_since_failure = (
                     datetime.utcnow() - breaker["last_failure"]
@@ -503,18 +500,18 @@ class EnhancedSMSService:
                         seconds=30
                     )
                     logger.info(
-                        f"Circuit breaker for {provider.value} transitioning to half-open"
+                        f"Circuit breaker for {provider.value} transitioning to half - open"
                     )
                 else:
                     return True
 
         elif breaker["state"] == "half_open":
-            # Check if half-open period expired
+            # Check if half - open period expired
             if datetime.utcnow() > breaker["half_open_until"]:
                 breaker["state"] = "closed"
                 breaker["failures"] = 0
                 logger.info(
-                    f"Circuit breaker for {provider.value} closed after successful half-open period"
+                    f"Circuit breaker for {provider.value} closed after successful half - open period"
                 )
 
         return False
@@ -546,7 +543,7 @@ class EnhancedSMSService:
         """Get best available provider based on priority and success rate"""
         result = await db.execute(
             select(ProviderConfig)
-            .where(ProviderConfig.is_active == True)
+            .where(ProviderConfig.is_active)
             .order_by(
                 ProviderConfig.priority.desc(), ProviderConfig.success_rate.desc()
             )
@@ -591,11 +588,11 @@ class EnhancedSMSService:
     async def _get_template(
         self, template_code: str, db: AsyncSession
     ) -> Optional[str]:
-        """Get SMS template with A/B testing support"""
+        """Get SMS template with A / B testing support"""
         # Get all active templates for this code
         result = await db.execute(
             select(SMSTemplate).where(
-                and_(SMSTemplate.code == template_code, SMSTemplate.is_active == True)
+                and_(SMSTemplate.code == template_code, SMSTemplate.is_active)
             )
         )
         templates = result.scalars().all()
@@ -603,7 +600,7 @@ class EnhancedSMSService:
         if not templates:
             return None
 
-        # Weighted random selection for A/B testing
+        # Weighted random selection for A / B testing
         if len(templates) > 1:
             weights = [t.weight for t in templates]
             selected = random.choices(templates, weights=weights)[0]
@@ -736,9 +733,7 @@ class EnhancedSMSService:
 
                     # Register delivery callback if provider supports it
                     if hasattr(provider_instance, "register_delivery_callback"):
-                        callback_url = (
-                            f"{settings.API_V1_STR}/webhooks/sms/delivery/{sms_log.id}"
-                        )
+                        callback_url = f"{settings.API_V1_STR}/webhooks / sms / delivery/{sms_log.id}"
                         await provider_instance.register_delivery_callback(
                             sms_log.provider_message_id, callback_url
                         )

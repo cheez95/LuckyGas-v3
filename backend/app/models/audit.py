@@ -75,7 +75,7 @@ class AuditLog(Base):
     resource_id = Column(String(255), nullable=True)  # ID of the affected resource
 
     # Additional details
-    details = Column(JSONB, nullable=True)  # JSON with action-specific details
+    details = Column(JSONB, nullable=True)  # JSON with action - specific details
     old_values = Column(JSONB, nullable=True)  # For update operations
     new_values = Column(JSONB, nullable=True)  # For update operations
 

@@ -1,10 +1,8 @@
 """Tests for enhanced SMS service."""
 
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
-import aiohttp
 import pytest
 
 from app.models.notification import (
@@ -34,20 +32,20 @@ class TestSMSProviderBase:
         assert provider.calculate_segments("測試簡訊" * 10) == 1  # 40 chars
         assert provider.calculate_segments("測" * 70) == 1
 
-        # Multi-segment Unicode (>70 chars, 67 per segment)
+        # Multi - segment Unicode (>70 chars, 67 per segment)
         assert provider.calculate_segments("測" * 71) == 2
         assert provider.calculate_segments("測" * 134) == 2
         assert provider.calculate_segments("測" * 135) == 3
 
     def test_calculate_segments_gsm(self):
-        """Test segment calculation for GSM 7-bit messages"""
+        """Test segment calculation for GSM 7 - bit messages"""
         provider = SMSProviderBase({})
 
         # Single segment GSM (≤160 chars)
         assert provider.calculate_segments("Hello World" * 10) == 1  # 110 chars
         assert provider.calculate_segments("a" * 160) == 1
 
-        # Multi-segment GSM (>160 chars, 153 per segment)
+        # Multi - segment GSM (>160 chars, 153 per segment)
         assert provider.calculate_segments("a" * 161) == 2
         assert provider.calculate_segments("a" * 306) == 2
         assert provider.calculate_segments("a" * 307) == 3
@@ -128,13 +126,13 @@ class TestEvery8dProvider:
         config = {
             "username": "test_user",
             "password": "test_pass",
-            "api_url": "https://api.e8d.tw/SMS/BulkSMS",
+            "api_url": "https://api.e8d.tw / SMS / BulkSMS",
         }
         provider = Every8dProvider(config)
 
-        # Mock response (format: credit,sended,cost,unsend,batch_id)
+        # Mock response (format: credit, sended, cost, unsend, batch_id)
         mock_response = AsyncMock()
-        mock_response.text = AsyncMock(return_value="100.0,1,1.5,0,BATCH123")
+        mock_response.text = AsyncMock(return_value="100.0, 1, 1.5, 0, BATCH123")
 
         with patch("aiohttp.ClientSession.get", return_value=mock_response):
             result = await provider.send_sms("0912345678", "測試訊息")
@@ -175,7 +173,7 @@ class TestEvery8dProvider:
 
         for input_phone, expected in test_cases:
             mock_response = AsyncMock()
-            mock_response.text = AsyncMock(return_value="100,1,1.5,0,BATCH123")
+            mock_response.text = AsyncMock(return_value="100, 1, 1.5, 0, BATCH123")
 
             with patch(
                 "aiohttp.ClientSession.get", return_value=mock_response
@@ -197,7 +195,7 @@ class TestMitakeProvider:
         config = {
             "username": "test_user",
             "password": "test_pass",
-            "api_url": "https://api.mitake.com.tw/api/mtk/SmSend",
+            "api_url": "https://api.mitake.com.tw / api / mtk / SmSend",
         }
         provider = MitakeProvider(config)
 
@@ -361,14 +359,14 @@ class TestEnhancedSMSService:
                 phone="0912345678",
                 message="",  # Empty message
                 template_code="order_confirmation",
-                template_data={"order_id": "ORD-123"},
+                template_data={"order_id": "ORD - 123"},
                 db=mock_db,
             )
 
         # Verify template was used
         mock_send.assert_called_once()
         args = mock_send.call_args[0]
-        assert args[1] == "訂單 ORD-123 已確認"
+        assert args[1] == "訂單 ORD - 123 已確認"
 
         # Verify template count was incremented
         assert mock_template.sent_count == 1
@@ -570,7 +568,7 @@ async def test_taiwanese_phone_validation():
     from app.schemas.notification import SMSSendRequest
 
     # Valid mobile numbers
-    valid_mobiles = ["0912345678", "0912-345-678", "0912 345 678", "+886912345678"]
+    valid_mobiles = ["0912345678", "0912 - 345 - 678", "0912 345 678", "+886912345678"]
 
     for phone in valid_mobiles:
         request = SMSSendRequest(phone=phone, message="test")
@@ -582,7 +580,7 @@ async def test_taiwanese_phone_validation():
     # Valid landline numbers
     valid_landlines = [
         "022345678",  # Taipei
-        "02-2345-6789",
+        "02 - 2345 - 6789",
         "073456789",  # Kaohsiung
         "+886223456789",
     ]

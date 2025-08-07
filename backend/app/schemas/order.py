@@ -1,12 +1,12 @@
 import re
 from datetime import date, datetime
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.core.validators import TaiwanValidators, address_validator, phone_validator
+from app.core.validators import TaiwanValidators
 from app.models.order import OrderStatus, PaymentStatus
-from app.schemas.order_item import OrderItem, OrderItemCreate, OrderItemSummary
+from app.schemas.order_item import OrderItem, OrderItemCreate
 
 
 class OrderBase(BaseModel):
@@ -118,7 +118,7 @@ class OrderBase(BaseModel):
         json_schema_extra={
             "example": {
                 "customer_id": 1,
-                "scheduled_date": "2024-02-01T00:00:00",
+                "scheduled_date": "2024 - 02 - 01T00:00:00",
                 "delivery_time_start": "09:00",
                 "delivery_time_end": "17:00",
                 "qty_20kg": 2,
@@ -218,6 +218,8 @@ class Order(OrderBase):
 
 
 # V2 Schemas for flexible product system
+
+
 class OrderBaseV2(BaseModel):
     """Base order schema using flexible products"""
 

@@ -30,6 +30,7 @@ from app.models.route import Route, RouteStatus
 from app.services.invoice_service import InvoiceService
 from app.services.order_service import OrderService
 from app.services.payment_service import PaymentService
+from app.models.customer import Customer
 
 
 class TestDatabaseTransactions:
@@ -113,7 +114,7 @@ class TestDatabaseTransactions:
         assert invoice.grand_total == Decimal("3780")
 
         # Create payment for invoice
-        payment_service = PaymentService(db_session)
+        PaymentService(db_session)
         payment = Payment(
             payment_number="PAY20240126001",
             invoice_id=invoice.id,
@@ -151,7 +152,7 @@ class TestDatabaseTransactions:
         orders = []
         for i in range(3):
             order = Order(
-                order_number=f"ORD00{i+1}",
+                order_number=f"ORD00{i + 1}",
                 customer_id=test_customer.id,
                 order_date=datetime.now(),
                 scheduled_date=date.today() + timedelta(days=1),
@@ -165,7 +166,7 @@ class TestDatabaseTransactions:
 
         # Create route
         route = Route(
-            route_number=f"R{datetime.now().strftime('%Y%m%d')}001",
+            route_number=f"R{datetime.now().strftime('%Y % m % d')}001",
             route_date=date.today() + timedelta(days=1),
             driver_id=test_driver_user.id,
             status=RouteStatus.PLANNED,
@@ -276,7 +277,7 @@ class TestDatabaseTransactions:
 
         # Simulate concurrent status updates
         # In a real scenario, this would be multiple sessions
-        original_status = order.status
+        order.status
 
         # Update 1: Assign to route
         order.status = OrderStatus.ASSIGNED

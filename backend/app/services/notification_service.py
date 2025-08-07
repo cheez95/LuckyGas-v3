@@ -4,14 +4,11 @@ import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Any, Dict, List
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.core.config import settings
-
-from typing import Any
-from typing import Dict
-from typing import List
 
 # from app.services.message_queue_service import message_queue, QueuePriority  # Removed during compaction
 
@@ -46,9 +43,9 @@ class NotificationService:
     def __init__(self):
         # Use default values for missing settings in development
         self.sms_provider_url = getattr(
-            settings, "SMS_PROVIDER_URL", "http://localhost:8001/mock-sms"
+            settings, "SMS_PROVIDER_URL", "http://localhost:8001 / mock - sms"
         )
-        self.sms_api_key = getattr(settings, "SMS_API_KEY", "dev-sms-key")
+        self.sms_api_key = getattr(settings, "SMS_API_KEY", "dev - sms - key")
         self.sms_sender_id = getattr(settings, "SMS_SENDER_ID", "LuckyGas")
 
         self.smtp_host = settings.SMTP_HOST
@@ -59,7 +56,7 @@ class NotificationService:
 
         # Template engine for email
         self.template_env = Environment(
-            loader=FileSystemLoader("app/templates/email"),
+            loader=FileSystemLoader("app / templates / email"),
             autoescape=select_autoescape(["html", "xml"]),
         )
 
@@ -81,29 +78,10 @@ class NotificationService:
         notification_type: str,
         channel: str,
         data: Dict[str, Any],
-        priority: QueuePriority = QueuePriority.NORMAL,
-        use_queue: bool = True,
     ) -> Dict[str, Any]:
         """Send notification via specified channel"""
 
-        if use_queue:
-            # Queue notification for reliable delivery
-            message_id = await message_queue.enqueue(
-                channel="notifications",
-                event_type=f"notification.{channel}",
-                data={
-                    "recipient": recipient,
-                    "notification_type": notification_type,
-                    "channel": channel,
-                    "data": data,
-                },
-                priority=priority,
-                max_retries=3,
-                ttl_seconds=3600,
-            )
-
-            return {"success": True, "message_id": message_id, "queued": True}
-
+        
         # Direct send
         try:
             if channel == NotificationChannel.SMS:
@@ -124,16 +102,8 @@ class NotificationService:
         except Exception as e:
             logger.error(f"Failed to send notification: {e}")
 
-            # Fallback to queue on direct send failure
-            if not use_queue:
-                return await self.send_notification(
-                    recipient,
-                    notification_type,
-                    channel,
-                    data,
-                    priority=priority,
-                    use_queue=True,
-                )
+            # Direct send failed
+            raise
 
             raise
 
@@ -194,20 +164,20 @@ class NotificationService:
         try:
             template = self.template_env.get_template(f"{notification_type}.html")
             html_content = template.render(**data)
-        except Exception as e:
+        except Exception:
             logger.warning(
                 f"Email template not found for {notification_type}, using default"
             )
             # Use default template
             html_content = """
             <html>
-                <body style="font-family: Arial, sans-serif;">
+                <body style="font - family: Arial, sans - serif;">
                     <h2>{subject}</h2>
                     <p>{data.get('message', '您有一則新通知')}</p>
                     <hr>
-                    <p style="color: #666; font-size: 12px;">
+                    <p style="color: #666; font - size: 12px;">
                         此為系統自動發送的郵件，請勿直接回覆。<br>
-                        如有任何問題，請聯繫客服：0800-123-456
+                        如有任何問題，請聯繫客服：0800 - 123 - 456
                     </p>
                 </body>
             </html>
@@ -220,7 +190,7 @@ class NotificationService:
         msg["To"] = email_address
 
         # Attach HTML content
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
+        msg.attach(MIMEText(html_content, "html", "utf - 8"))
 
         # Send email
         loop = asyncio.get_event_loop()
@@ -250,7 +220,7 @@ class NotificationService:
         self, user_id: str, notification_type: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Send push notification (placeholder for future implementation)"""
-        # TODO: Implement FCM/APNS push notifications
+        # TODO: Implement FCM / APNS push notifications
         logger.info(f"Push notification would be sent to user {user_id}")
         return {
             "success": True,
@@ -261,7 +231,7 @@ class NotificationService:
     async def _send_in_app_notification(
         self, user_id: str, notification_type: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Send in-app notification via WebSocket"""
+        """Send in - app notification via WebSocket"""
         from app.services.websocket_service import websocket_manager
 
         notification_data = {
@@ -300,7 +270,6 @@ class NotificationService:
                 event_type,
                 NotificationChannel.SMS,
                 notification_data,
-                priority=QueuePriority.HIGH,
             )
 
         # Send email if available
@@ -310,31 +279,27 @@ class NotificationService:
                 event_type,
                 NotificationChannel.EMAIL,
                 notification_data,
-                priority=QueuePriority.NORMAL,
             )
 
-        # Send in-app notification
+        # Send in - app notification
         if customer_id:
             await self.send_notification(
                 customer_id,
                 event_type,
                 NotificationChannel.IN_APP,
                 notification_data,
-                priority=QueuePriority.NORMAL,
             )
 
     async def send_driver_notification(
         self, driver_id: str, notification_type: str, data: Dict[str, Any]
     ):
         """Send notification to driver"""
-        # Send in-app notification to driver
+        # Send in - app notification to driver
         await self.send_notification(
             driver_id,
             notification_type,
             NotificationChannel.IN_APP,
-            data,
-            priority=QueuePriority.HIGH,
-            use_queue=False,  # Direct send for real-time
+            data
         )
 
     async def send_bulk_notifications(

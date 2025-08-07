@@ -2,11 +2,11 @@
 Payment management API endpoints
 """
 
-from datetime import date, datetime
+from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,7 +16,6 @@ from app.models.user import User
 from app.schemas.payment import (
     PaymentCreate,
     PaymentResponse,
-    PaymentSearchParams,
     PaymentStats,
     PaymentUpdate,
     PaymentVerification,
@@ -33,7 +32,7 @@ async def create_payment(
     current_user: User = Depends(get_current_user),
 ):
     """Record a payment for an invoice"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限記錄付款")
 
     # Verify invoice exists
@@ -132,7 +131,7 @@ async def get_unverified_payments(
 
     query = (
         select(Payment)
-        .where(Payment.is_verified == False)
+        .where(~Payment.is_verified)
         .options(selectinload(Payment.invoice))
         .order_by(Payment.payment_date)
     )
@@ -182,7 +181,7 @@ async def update_payment(
     current_user: User = Depends(get_current_user),
 ):
     """Update payment details (only unverified payments)"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限更新付款")
 
     payment = await db.get(Payment, payment_id)
@@ -269,14 +268,14 @@ async def reconcile_payments(
     return result
 
 
-@router.get("/reports/daily-summary")
+@router.get("/reports / daily - summary")
 async def get_daily_payment_summary(
     date: date = Query(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get daily payment summary report"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限查看報表")
 
     service = PaymentService(db)
@@ -285,7 +284,7 @@ async def get_daily_payment_summary(
     return summary
 
 
-@router.get("/reports/customer-balance")
+@router.get("/reports / customer - balance")
 async def get_customer_balance_report(
     customer_id: Optional[int] = None,
     as_of_date: date = Query(default=date.today()),
@@ -293,7 +292,7 @@ async def get_customer_balance_report(
     current_user: User = Depends(get_current_user),
 ):
     """Get customer balance report"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限查看報表")
 
     service = PaymentService(db)

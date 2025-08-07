@@ -1,11 +1,11 @@
-"""VRP Optimizer wrapper that integrates clustering with OR-Tools."""
+"""VRP Optimizer wrapper that integrates clustering with OR - Tools."""
 
 import asyncio
 import logging
 import time as time_module
 import uuid
 from datetime import datetime, time, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from app.core.metrics import (
     route_optimization_histogram,
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 class VRPOptimizer:
     """
     Main VRP optimizer that coordinates clustering and route optimization.
-    Integrates with existing OR-Tools implementation and adds Taiwan-specific features.
+    Integrates with existing OR - Tools implementation and adds Taiwan - specific features.
     """
 
     def __init__(
@@ -58,7 +58,7 @@ class VRPOptimizer:
             depot_location=(25.0330, 121.5654)  # Default Taipei depot
         )
 
-        # Taiwan-specific settings
+        # Taiwan - specific settings
         self.taiwan_settings = {
             "peak_hours": [
                 {"start": time(7, 0), "end": time(9, 0)},
@@ -137,7 +137,7 @@ class VRPOptimizer:
             vrp_stops = self._convert_to_vrp_stops(orders, request.constraints)
             vrp_vehicles = self._convert_to_vrp_vehicles(vehicles, request.constraints)
 
-            # Apply Taiwan-specific optimizations
+            # Apply Taiwan - specific optimizations
             vrp_stops = self._apply_taiwan_optimizations(vrp_stops, request.date)
 
             # Run optimization
@@ -339,7 +339,7 @@ class VRPOptimizer:
     def _apply_taiwan_optimizations(
         self, stops: List[VRPStop], optimization_date: datetime
     ) -> List[VRPStop]:
-        """Apply Taiwan-specific optimizations to stops."""
+        """Apply Taiwan - specific optimizations to stops."""
         weekday = optimization_date.weekday()
 
         # Adjust service times for market days
@@ -353,7 +353,7 @@ class VRPOptimizer:
                 if self._is_near_market(stop.latitude, stop.longitude):
                     stop.service_time += 5  # Extra 5 minutes
 
-        # Adjust time windows to avoid school zones during drop-off/pickup
+        # Adjust time windows to avoid school zones during drop - off / pickup
         current_hour = datetime.now().hour
         if 7 <= current_hour <= 9 or 15 <= current_hour <= 17:
             for stop in stops:
@@ -509,7 +509,7 @@ class VRPOptimizer:
             logger.warning(
                 f"Cluster optimization timed out after {timeout_seconds}s, using fallback"
             )
-            # Return simple nearest-neighbor solution
+            # Return simple nearest - neighbor solution
             return self._fallback_optimization(stops, vehicles)
 
     async def _optimize_cluster(
@@ -524,10 +524,10 @@ class VRPOptimizer:
 
         # Apply optimization mode adjustments
         if optimization_mode == "time":
-            # Already optimized for time by OR-Tools
+            # Already optimized for time by OR - Tools
             pass
         elif optimization_mode == "fuel":
-            # Post-process to minimize distance
+            # Post - process to minimize distance
             routes = self._minimize_fuel_consumption(routes)
 
         return routes
@@ -762,7 +762,7 @@ class VRPOptimizer:
         if unassigned_orders:
             warnings.append(f"{len(unassigned_orders)} orders could not be assigned")
         if total_duration > len(vehicles) * 480:
-            warnings.append("Some routes exceed 8-hour shift limit")
+            warnings.append("Some routes exceed 8 - hour shift limit")
 
         return OptimizationResponse(
             optimization_id=optimization_id,
@@ -831,7 +831,7 @@ class VRPOptimizer:
                 stops[-1].latitude, stops[-1].longitude, 25.0330, 121.5654  # Depot
             )
 
-        # Estimate duration (30 km/h average in city)
+        # Estimate duration (30 km / h average in city)
         total_duration = (total_distance / 30) * 60  # Convert to minutes
 
         # Add service times
@@ -844,13 +844,13 @@ class VRPOptimizer:
     ) -> float:
         """Estimate travel time between two points in minutes."""
         distance = self._calculate_distance(lat1, lng1, lat2, lng2)
-        # Assume 30 km/h average speed in city
+        # Assume 30 km / h average speed in city
         return (distance / 30) * 60
 
     def _calculate_efficiency_score(
         self, num_stops: int, distance: float, duration: float
     ) -> float:
-        """Calculate route efficiency score (0-100)."""
+        """Calculate route efficiency score (0 - 100)."""
         if num_stops == 0:
             return 0
 
@@ -865,9 +865,9 @@ class VRPOptimizer:
 
         # Normalize and weight factors
         score = (
-            min(stops_per_km / 0.5, 1) * 30  # Target: 0.5 stops/km
-            + min(stops_per_hour / 8, 1) * 40  # Target: 8 stops/hour
-            + min(2 / km_per_stop, 1) * 30  # Target: 2 km/stop
+            min(stops_per_km / 0.5, 1) * 30  # Target: 0.5 stops / km
+            + min(stops_per_hour / 8, 1) * 40  # Target: 8 stops / hour
+            + min(2 / km_per_stop, 1) * 30  # Target: 2 km / stop
         )
 
         return min(100, max(0, score))
@@ -877,9 +877,9 @@ class VRPOptimizer:
         # Create a deterministic key based on request parameters
         key_parts = [
             "vrp",
-            request.date.strftime("%Y%m%d"),
-            ",".join(map(str, sorted(request.order_ids))),
-            ",".join(map(str, sorted(request.vehicle_ids))),
+            request.date.strftime("%Y % m % d"),
+            ", ".join(map(str, sorted(request.order_ids))),
+            ", ".join(map(str, sorted(request.vehicle_ids))),
             request.optimization_mode,
             str(request.respect_time_windows),
             str(request.cluster_radius_km),
@@ -1003,7 +1003,7 @@ class VRPOptimizer:
 
             # Log summary metrics
             logger.info(
-                f"VRP Optimization completed: "
+                "VRP Optimization completed: "
                 f"duration={duration:.2f}s, "
                 f"routes={response.total_routes}, "
                 f"distance={response.total_distance_km:.1f}km, "

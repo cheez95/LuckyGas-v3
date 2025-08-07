@@ -1,15 +1,14 @@
 """SMS management API endpoints."""
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_active_superuser, get_current_user, get_db
-from app.core.config import settings
 from app.models.notification import (
     NotificationStatus,
     ProviderConfig,
@@ -22,7 +21,6 @@ from app.schemas.sms import (
     ProviderConfigResponse,
     ProviderConfigUpdate,
     SMSLogResponse,
-    SMSResendRequest,
     SMSSendRequest,
     SMSStatsResponse,
     SMSTemplateCreate,
@@ -34,7 +32,7 @@ from app.services.sms_service import enhanced_sms_service
 router = APIRouter()
 
 
-@router.get("/sms/logs", response_model=List[SMSLogResponse])
+@router.get("/sms / logs", response_model=List[SMSLogResponse])
 async def get_sms_logs(
     start_date: datetime = Query(..., description="開始日期"),
     end_date: datetime = Query(..., description="結束日期"),
@@ -76,7 +74,7 @@ async def get_sms_logs(
     return logs
 
 
-@router.get("/sms/stats", response_model=SMSStatsResponse)
+@router.get("/sms / stats", response_model=SMSStatsResponse)
 async def get_sms_stats(
     start_date: datetime = Query(..., description="開始日期"),
     end_date: datetime = Query(..., description="結束日期"),
@@ -104,7 +102,7 @@ async def get_sms_stats(
 
     stats = result.one()
 
-    # Get provider-specific stats
+    # Get provider - specific stats
     provider_result = await db.execute(
         select(
             SMSLog.provider,
@@ -146,7 +144,7 @@ async def get_sms_stats(
     }
 
 
-@router.get("/sms/templates", response_model=List[SMSTemplateResponse])
+@router.get("/sms / templates", response_model=List[SMSTemplateResponse])
 async def get_sms_templates(
     is_active: Optional[bool] = Query(None),
     current_user: User = Depends(get_current_user),
@@ -167,7 +165,7 @@ async def get_sms_templates(
     return templates
 
 
-@router.post("/sms/templates", response_model=SMSTemplateResponse)
+@router.post("/sms / templates", response_model=SMSTemplateResponse)
 async def create_sms_template(
     template: SMSTemplateCreate,
     current_user: User = Depends(get_current_active_superuser),
@@ -200,7 +198,7 @@ async def create_sms_template(
     return db_template
 
 
-@router.put("/sms/templates/{template_id}", response_model=SMSTemplateResponse)
+@router.put("/sms / templates/{template_id}", response_model=SMSTemplateResponse)
 async def update_sms_template(
     template_id: str,
     template_update: SMSTemplateUpdate,
@@ -225,7 +223,7 @@ async def update_sms_template(
     return template
 
 
-@router.get("/sms/providers", response_model=List[ProviderConfigResponse])
+@router.get("/sms / providers", response_model=List[ProviderConfigResponse])
 async def get_sms_providers(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
@@ -236,7 +234,7 @@ async def get_sms_providers(
     )
     providers = result.scalars().all()
 
-    # Add real-time health status
+    # Add real - time health status
     for provider in providers:
         # This would check actual provider health
         provider.health_status = "healthy"  # Placeholder
@@ -244,7 +242,7 @@ async def get_sms_providers(
     return providers
 
 
-@router.put("/sms/providers/{provider}", response_model=ProviderConfigResponse)
+@router.put("/sms / providers/{provider}", response_model=ProviderConfigResponse)
 async def update_provider_config(
     provider: SMSProvider,
     config_update: ProviderConfigUpdate,
@@ -279,7 +277,7 @@ async def update_provider_config(
     return config
 
 
-@router.post("/sms/send")
+@router.post("/sms / send")
 async def send_sms(
     request: SMSSendRequest,
     current_user: User = Depends(get_current_user),
@@ -309,7 +307,7 @@ async def send_sms(
     }
 
 
-@router.post("/sms/resend/{message_id}")
+@router.post("/sms / resend/{message_id}")
 async def resend_sms(
     message_id: str,
     current_user: User = Depends(get_current_user),
@@ -332,7 +330,7 @@ async def resend_sms(
         phone=original.recipient,
         message=original.message,
         message_type=original.message_type,
-        metadata={"resend_of": str(original.id), **original.notification_metadata},
+        metadata={"resend_o": str(original.id), **original.notification_metadata},
         db=db,
     )
 
@@ -346,7 +344,7 @@ async def resend_sms(
     }
 
 
-@router.post("/sms/bulk-send")
+@router.post("/sms / bulk - send")
 async def send_bulk_sms(
     recipients: List[Dict[str, Any]] = Body(...),
     message_type: str = Body(...),

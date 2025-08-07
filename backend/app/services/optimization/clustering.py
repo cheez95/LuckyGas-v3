@@ -1,8 +1,7 @@
 """Geographic clustering for route optimization."""
 
 import logging
-from math import radians
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class GeographicClusterer:
     """
     Geographic clustering for grouping delivery locations.
-    Supports DBSCAN and K-means clustering with Taiwan-specific constraints.
+    Supports DBSCAN and K - means clustering with Taiwan - specific constraints.
     """
 
     def __init__(self):
@@ -42,7 +41,7 @@ class GeographicClusterer:
         consider_time_windows: bool = False,
     ) -> List[ClusterInfo]:
         """
-        Cluster locations using DBSCAN (Density-Based Spatial Clustering).
+        Cluster locations using DBSCAN (Density - Based Spatial Clustering).
 
         Args:
             locations: List of dicts with 'id', 'lat', 'lng', and optional 'time_window'
@@ -81,7 +80,7 @@ class GeographicClusterer:
         self, locations: List[Dict], n_clusters: int, max_iterations: int = 300
     ) -> List[ClusterInfo]:
         """
-        Cluster locations using K-means clustering.
+        Cluster locations using K - means clustering.
 
         Args:
             locations: List of dicts with 'id', 'lat', 'lng'
@@ -100,14 +99,14 @@ class GeographicClusterer:
         # Extract coordinates
         coords = np.array([[loc["lat"], loc["lng"]] for loc in locations])
 
-        # Perform K-means clustering
+        # Perform K - means clustering
         kmeans = KMeans(n_clusters=n_clusters, max_iter=max_iterations, random_state=42)
         labels = kmeans.fit_predict(coords)
 
-        # Build cluster info with K-means centers
+        # Build cluster info with K - means centers
         clusters = self._build_cluster_info(locations, labels, coords)
 
-        # Update cluster centers from K-means
+        # Update cluster centers from K - means
         for i, cluster in enumerate(clusters):
             if i < len(kmeans.cluster_centers_):
                 cluster.center_lat = float(kmeans.cluster_centers_[i][0])
@@ -220,7 +219,7 @@ class GeographicClusterer:
     def _apply_geographic_constraints(
         self, distance_matrix: np.ndarray, coords: np.ndarray
     ) -> np.ndarray:
-        """Apply Taiwan-specific geographic constraints."""
+        """Apply Taiwan - specific geographic constraints."""
         adjusted = distance_matrix.copy()
         n = len(coords)
 
@@ -276,7 +275,7 @@ class GeographicClusterer:
 
         for idx, label in enumerate(labels):
             if label == -1:  # Noise point in DBSCAN
-                # Create single-point cluster for noise
+                # Create single - point cluster for noise
                 label = max(clusters.keys(), default=-1) + 1
 
             if label not in clusters:
@@ -303,7 +302,7 @@ class GeographicClusterer:
                 distances = np.sqrt(np.sum((coords_array - center) ** 2, axis=1))
                 radius_km = np.max(distances) * 111  # Rough conversion to km
             else:
-                radius_km = 0.5  # Default for single-point clusters
+                radius_km = 0.5  # Default for single - point clusters
 
             # Calculate density
             area_km2 = np.pi * radius_km**2 if radius_km > 0 else 1
@@ -345,7 +344,7 @@ class GeographicClusterer:
             if len(cluster.order_ids) <= max_size:
                 new_clusters.append(cluster)
             else:
-                # Split large cluster using K-means
+                # Split large cluster using K - means
                 n_subclusters = (len(cluster.order_ids) + max_size - 1) // max_size
                 cluster_locations = [location_map[oid] for oid in cluster.order_ids]
 
@@ -371,12 +370,12 @@ class GeographicClusterer:
             cluster_locs = [location_map[oid] for oid in cluster.order_ids]
             coords = np.array([[loc["lat"], loc["lng"]] for loc in cluster_locs])
 
-            # Simple check: if cluster spans too much latitude/longitude, split it
+            # Simple check: if cluster spans too much latitude / longitude, split it
             lat_span = coords[:, 0].max() - coords[:, 0].min()
             lng_span = coords[:, 1].max() - coords[:, 1].min()
 
             if lat_span > 0.1 or lng_span > 0.1:  # ~11km span
-                # Split using K-means
+                # Split using K - means
                 subclusters = self.cluster_by_kmeans(cluster_locs, 2)
                 verified_clusters.extend(subclusters)
             else:

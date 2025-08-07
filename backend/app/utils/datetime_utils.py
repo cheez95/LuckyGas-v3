@@ -3,18 +3,18 @@ Date and time utilities for Taiwan localization.
 """
 
 from datetime import date, datetime
-from typing import Optional, Union
+from typing import Union
 
 
 def format_taiwan_date(dt: Union[datetime, date, None]) -> str:
     """
-    Format date/datetime for Taiwan display.
+    Format date / datetime for Taiwan display.
 
     Args:
         dt: datetime, date, or None
 
     Returns:
-        Formatted date string in Taiwan format (YYYY/MM/DD HH:mm)
+        Formatted date string in Taiwan format (YYYY / MM / DD HH:mm)
     """
     if dt is None:
         return ""

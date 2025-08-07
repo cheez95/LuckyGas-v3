@@ -12,6 +12,7 @@ import CreditSummary from '../../components/orders/CreditSummary';
 import OrderSearchPanel, { SearchCriteria } from '../../components/orders/OrderSearchPanel';
 import TemplateQuickSelect from '../../components/orders/TemplateQuickSelect';
 import OrderTemplateManager from '../../components/orders/OrderTemplateManager';
+import { features } from '../../config/features';
 
 interface Order {
   id: string;
@@ -573,7 +574,13 @@ const OrderManagement: React.FC = () => {
         </Space>
       ),
     },
-  ];
+  ].filter(column => {
+    // Filter out payment-related columns if payment features are disabled
+    if (!features.anyPaymentFeature) {
+      return column.key !== 'totalAmount' && column.key !== 'payment';
+    }
+    return true;
+  });
 
   // Use orders directly as they are already filtered by the advanced search
   const filteredOrders = orders;
@@ -626,16 +633,18 @@ const OrderManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title={t('orders.stats.monthlyRevenue')}
-                value={stats.monthlyRevenue}
-                prefix="NT$"
-                valueStyle={{ color: '#3f8600' }}
-              />
-            </Card>
-          </Col>
+          {features.anyPaymentFeature && (
+            <Col span={6}>
+              <Card>
+                <Statistic
+                  title={t('orders.stats.monthlyRevenue')}
+                  value={stats.monthlyRevenue}
+                  prefix="NT$"
+                  valueStyle={{ color: '#3f8600' }}
+                />
+              </Card>
+            </Col>
+          )}
         </Row>
 
         <div style={{ marginBottom: 16 }}>
@@ -757,7 +766,9 @@ const OrderManagement: React.FC = () => {
             </Col>
           </Row>
 
-          <CreditSummary customerId={selectedCustomerId} />
+          {features.anyPaymentFeature && (
+            <CreditSummary customerId={selectedCustomerId} />
+          )}
 
           {selectedCustomerId && (
             <div style={{ marginTop: 16, marginBottom: 16 }}>
@@ -887,34 +898,36 @@ const OrderManagement: React.FC = () => {
             )}
           </Form.List>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="paymentMethod"
-                label={t('orders.paymentMethod')}
-                rules={[{ required: true, message: t('validation.required') }]}
-              >
-                <Select>
-                  <Select.Option value="cash">{t('orders.paymentMethod.cash')}</Select.Option>
-                  <Select.Option value="transfer">{t('orders.paymentMethod.transfer')}</Select.Option>
-                  <Select.Option value="credit">{t('orders.paymentMethod.credit')}</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="paymentStatus"
-                label={t('orders.paymentStatus')}
-                rules={[{ required: true, message: t('validation.required') }]}
-              >
-                <Select>
-                  <Select.Option value="pending">{t('orders.paymentStatus.pending')}</Select.Option>
-                  <Select.Option value="paid">{t('orders.paymentStatus.paid')}</Select.Option>
-                  <Select.Option value="partial">{t('orders.paymentStatus.partial')}</Select.Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+          {features.anyPaymentFeature && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="paymentMethod"
+                  label={t('orders.paymentMethod')}
+                  rules={[{ required: true, message: t('validation.required') }]}
+                >
+                  <Select>
+                    <Select.Option value="cash">{t('orders.paymentMethod.cash')}</Select.Option>
+                    <Select.Option value="transfer">{t('orders.paymentMethod.transfer')}</Select.Option>
+                    <Select.Option value="credit">{t('orders.paymentMethod.credit')}</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="paymentStatus"
+                  label={t('orders.paymentStatus')}
+                  rules={[{ required: true, message: t('validation.required') }]}
+                >
+                  <Select>
+                    <Select.Option value="pending">{t('orders.paymentStatus.pending')}</Select.Option>
+                    <Select.Option value="paid">{t('orders.paymentStatus.paid')}</Select.Option>
+                    <Select.Option value="partial">{t('orders.paymentStatus.partial')}</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
 
           <Form.Item
             name="deliveryNotes"
@@ -968,9 +981,11 @@ const OrderManagement: React.FC = () => {
                 <Col span={12}>
                   <strong>{t('orders.product')}:</strong> {selectedOrder.cylinderType} x {selectedOrder.quantity}
                 </Col>
-                <Col span={12}>
-                  <strong>{t('orders.amount')}:</strong> NT$ {selectedOrder.totalAmount.toLocaleString()}
-                </Col>
+                {features.anyPaymentFeature && (
+                  <Col span={12}>
+                    <strong>{t('orders.amount')}:</strong> NT$ {selectedOrder.totalAmount.toLocaleString()}
+                  </Col>
+                )}
               </Row>
             </Card>
 

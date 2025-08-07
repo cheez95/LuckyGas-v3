@@ -1,6 +1,6 @@
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, List
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -74,7 +74,7 @@ class TestDatabase:
                 if table not in ["alembic_version"]:  # Skip migration table
                     await session.execute(text(f"TRUNCATE TABLE {table} CASCADE"))
 
-            # Re-enable foreign key constraints
+            # Re - enable foreign key constraints
             await session.execute(text("SET session_replication_role = 'origin'"))
 
             await session.commit()

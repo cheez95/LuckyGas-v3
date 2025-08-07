@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, List, Tuple
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -21,15 +21,15 @@ import requests
 
 # Service test configurations
 SERVICE_TESTS = {
-    "mock-sms": {
+    "mock - sms": {
         "url": "http://localhost:8001",
         "health_endpoint": "/health",
         "api_tests": [
             {
                 "name": "Send SMS",
                 "method": "POST",
-                "path": "/api/sms/send",
-                "headers": {"Content-Type": "application/json"},
+                "path": "/api / sms / send",
+                "headers": {"Content - Type": "application / json"},
                 "data": {
                     "to": "0912345678",
                     "message": "Test message from Lucky Gas",
@@ -41,21 +41,21 @@ SERVICE_TESTS = {
             {
                 "name": "Get Sent Messages",
                 "method": "GET",
-                "path": "/api/sms/sent",
+                "path": "/api / sms / sent",
                 "expected_status": 200,
                 "expected_fields": ["total", "messages"],
             },
         ],
     },
-    "mock-einvoice": {
+    "mock - einvoice": {
         "url": "http://localhost:8002",
         "health_endpoint": "/health",
         "api_tests": [
             {
-                "name": "Issue E-Invoice",
+                "name": "Issue E - Invoice",
                 "method": "POST",
-                "path": "/api/einvoice/issue",
-                "headers": {"Content-Type": "application/json"},
+                "path": "/api / einvoice / issue",
+                "headers": {"Content - Type": "application / json"},
                 "data": {
                     "buyer_name": "測試客戶",
                     "buyer_address": "台北市中正區測試路123號",
@@ -82,14 +82,14 @@ SERVICE_TESTS = {
             }
         ],
     },
-    "mock-banking": {
+    "mock - banking": {
         "url": "http://localhost:8003",
         "health_endpoint": "/health",
         "api_tests": [
             {
                 "name": "Check Account Balance",
                 "method": "GET",
-                "path": "/api/banking/account/1234567890/balance",
+                "path": "/api / banking / account / 1234567890 / balance",
                 "expected_status": 200,
                 "expected_fields": [
                     "account_number",
@@ -101,7 +101,7 @@ SERVICE_TESTS = {
             {
                 "name": "Validate Account",
                 "method": "POST",
-                "path": "/api/banking/validate-account",
+                "path": "/api / banking / validate - account",
                 "params": {
                     "account_number": "1234567890",
                     "bank_code": "013",
@@ -112,14 +112,14 @@ SERVICE_TESTS = {
             },
         ],
     },
-    "mock-gcp": {
+    "mock - gcp": {
         "url": "http://localhost:8085",
         "health_endpoint": "/health",
         "api_tests": [
             {
                 "name": "Geocode Address",
                 "method": "GET",
-                "path": "/maps/api/geocode/json",
+                "path": "/maps / api / geocode / json",
                 "params": {
                     "address": "台北市中正區重慶南路一段122號",
                     "key": "test_api_key",
@@ -130,8 +130,8 @@ SERVICE_TESTS = {
             {
                 "name": "Compute Routes",
                 "method": "POST",
-                "path": "/routes/v2:computeRoutes",
-                "headers": {"Content-Type": "application/json"},
+                "path": "/routes / v2:computeRoutes",
+                "headers": {"Content - Type": "application / json"},
                 "data": {
                     "origin": {
                         "location": {
@@ -154,6 +154,8 @@ SERVICE_TESTS = {
 
 
 # Color codes for output
+
+
 class Colors:
     GREEN = "\033[92m"
     RED = "\033[91m"

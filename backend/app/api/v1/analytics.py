@@ -1,10 +1,10 @@
 """
-from typing import Dict
 Route analytics API endpoints - MVP version.
 """
 
 import logging
 from datetime import date, timedelta
+from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +18,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/dashboard/summary")
+@router.get("/dashboard / summary")
 @rate_limit(requests_per_minute=30)
 async def get_dashboard_summary(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
@@ -99,7 +99,7 @@ async def get_dashboard_summary(
         raise HTTPException(status_code=500, detail="獲取儀表板摘要時發生錯誤")
 
 
-@router.get("/fuel-savings/weekly")
+@router.get("/fuel - savings / weekly")
 @rate_limit(requests_per_minute=20)
 async def get_weekly_fuel_savings(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
@@ -144,7 +144,7 @@ async def get_weekly_fuel_savings(
         raise HTTPException(status_code=500, detail="獲取週燃料節省資料時發生錯誤")
 
 
-@router.get("/drivers/top-performers")
+@router.get("/drivers / top - performers")
 @rate_limit(requests_per_minute=20)
 async def get_top_drivers(
     limit: int = Query(5, ge=1, le=20),

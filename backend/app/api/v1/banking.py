@@ -2,18 +2,16 @@
 
 import logging
 from datetime import date, datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.models.banking import BankConfiguration, PaymentBatch
 from app.models.user import User
 from app.schemas.banking import (
-
-from sqlalchemy import and_
-
     BankConfigCreate,
     BankConfigResponse,
     BankConfigUpdate,
@@ -36,7 +34,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/generate-payment-file", response_model=GeneratePaymentFileResponse)
+@router.post("/generate - payment - file", response_model=GeneratePaymentFileResponse)
 async def generate_payment_file(
     *,
     db: Session = Depends(deps.get_db),
@@ -71,7 +69,7 @@ async def generate_payment_file(
         return GeneratePaymentFileResponse(
             success=True,
             file_name=f"{batch.batch_number}.txt",
-            file_size=len(content.encode("utf-8")),
+            file_size=len(content.encode("utf - 8")),
             message="Payment file generated successfully",
         )
 
@@ -80,7 +78,7 @@ async def generate_payment_file(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/upload-file/{bank_code}", response_model=UploadFileResponse)
+@router.post("/upload - file/{bank_code}", response_model=UploadFileResponse)
 async def upload_payment_file(
     *,
     db: Session = Depends(deps.get_db),
@@ -132,7 +130,7 @@ async def upload_payment_file(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/check-reconciliation", response_model=List[CheckReconciliationResponse])
+@router.get("/check - reconciliation", response_model=List[CheckReconciliationResponse])
 async def check_reconciliation_files(
     *,
     db: Session = Depends(deps.get_db),
@@ -181,7 +179,7 @@ async def check_reconciliation_files(
     return results
 
 
-@router.post("/process-reconciliation", response_model=ReconciliationLogResponse)
+@router.post("/process - reconciliation", response_model=ReconciliationLogResponse)
 async def process_reconciliation_file(
     *,
     db: Session = Depends(deps.get_db),
@@ -212,7 +210,7 @@ async def process_reconciliation_file(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/payment-status/{batch_id}", response_model=PaymentStatusReport)
+@router.get("/payment - status/{batch_id}", response_model=PaymentStatusReport)
 async def get_payment_status(
     *,
     db: Session = Depends(deps.get_db),
@@ -237,7 +235,7 @@ async def get_payment_status(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/payment-batches", response_model=PaymentBatchResponse)
+@router.post("/payment - batches", response_model=PaymentBatchResponse)
 async def create_payment_batch(
     *,
     db: Session = Depends(deps.get_db),
@@ -268,7 +266,7 @@ async def create_payment_batch(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/payment-batches", response_model=PaymentBatchListResponse)
+@router.get("/payment - batches", response_model=PaymentBatchListResponse)
 async def list_payment_batches(
     *,
     db: Session = Depends(deps.get_db),
@@ -319,6 +317,8 @@ async def list_payment_batches(
 
 
 # Bank Configuration Endpoints
+
+
 @router.get("/banks", response_model=List[BankConfigResponse])
 async def list_bank_configurations(
     *,

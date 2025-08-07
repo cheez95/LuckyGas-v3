@@ -6,7 +6,7 @@ Ensures all required configuration is present at startup
 import logging
 import os
 import sys
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -37,12 +37,12 @@ class EnvironmentValidator:
         "GOOGLE_API_KEY": "Required for Google Routes API in production",
         "GOOGLE_APPLICATION_CREDENTIALS": "Required for Vertex AI in production",
         "GCP_PROJECT_ID": "Required for Google Cloud services",
-        "DEVELOPMENT_MODE": "Controls mock service usage (auto/production/development/offline)",
+        "DEVELOPMENT_MODE": "Controls mock service usage (auto / production / development / offline)",
         "DAILY_COST_WARNING": "Cost threshold for warnings (default: 50.00)",
         "DAILY_COST_CRITICAL": "Cost threshold for blocking (default: 100.00)",
         "ROUTES_RATE_LIMIT_PER_SECOND": "Override routes API rate limit",
         "SENTRY_DSN": "Error tracking integration",
-        "LOG_LEVEL": "Logging verbosity (DEBUG/INFO/WARNING/ERROR)",
+        "LOG_LEVEL": "Logging verbosity (DEBUG / INFO / WARNING / ERROR)",
     }
 
     # URL validation patterns
@@ -63,7 +63,7 @@ class EnvironmentValidator:
             if not os.getenv(var):
                 errors.append(f"Missing required variable: {var}")
 
-        # Check environment-specific required variables
+        # Check environment - specific required variables
         if environment in cls.REQUIRED_VARS:
             for var in cls.REQUIRED_VARS[environment]:
                 if not os.getenv(var):
@@ -79,7 +79,7 @@ class EnvironmentValidator:
         # Check optional variables and provide warnings
         for var, description in cls.OPTIONAL_VARS.items():
             if not os.getenv(var):
-                # Only warn about production-critical vars in production
+                # Only warn about production - critical vars in production
                 if environment == "production" and var in [
                     "GOOGLE_API_KEY",
                     "GOOGLE_APPLICATION_CREDENTIALS",

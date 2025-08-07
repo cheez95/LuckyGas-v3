@@ -284,7 +284,7 @@ class ClientMigration:
                         customer_data[db_field] = int(float(value))
                     else:
                         customer_data[db_field] = float(value)
-                except:
+                except Exception:
                     pass
         
         # Process delivery time preferences

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { customerService } from '../../services/customer.service';
 import { Customer } from '../../types/order';
 import CustomerInventory from './CustomerInventory';
+import { features } from '../../config/features';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -237,7 +238,13 @@ const CustomerList: React.FC = () => {
         </Space>
       ),
     },
-  ];
+  ].filter(column => {
+    // Filter out payment-related columns if payment features are disabled
+    if (!features.anyPaymentFeature) {
+      return column.key !== 'invoice_title' && column.key !== 'payment_method';
+    }
+    return true;
+  });
 
   const handleSearch = (value: string) => {
     setSearchText(value);
@@ -337,12 +344,14 @@ const CustomerList: React.FC = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="invoice_title" label="發票抬頭">
-                <Input data-testid="customer-invoice-input" id="invoice_title" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
+            {features.anyPaymentFeature && (
+              <Col span={12}>
+                <Form.Item name="invoice_title" label="發票抬頭">
+                  <Input data-testid="customer-invoice-input" id="invoice_title" />
+                </Form.Item>
+              </Col>
+            )}
+            <Col span={features.anyPaymentFeature ? 12 : 24}>
               <Form.Item name="customer_type" label="客戶類型">
                 <Select placeholder="選擇客戶類型">
                   <Option value="學校">學校</Option>
@@ -404,15 +413,17 @@ const CustomerList: React.FC = () => {
                 <TimePicker.RangePicker format="HH:mm" />
               </Form.Item>
             </Col>
-            <Col span={8}>
-              <Form.Item name="payment_method" label="付款方式">
-                <Select placeholder="選擇付款方式">
-                  <Option value="月結">月結</Option>
-                  <Option value="現金">現金</Option>
-                  <Option value="轉帳">轉帳</Option>
-                </Select>
-              </Form.Item>
-            </Col>
+            {features.anyPaymentFeature && (
+              <Col span={8}>
+                <Form.Item name="payment_method" label="付款方式">
+                  <Select placeholder="選擇付款方式">
+                    <Option value="月結">月結</Option>
+                    <Option value="現金">現金</Option>
+                    <Option value="轉帳">轉帳</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            )}
           </Row>
 
           <Row gutter={16}>

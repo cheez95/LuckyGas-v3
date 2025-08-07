@@ -3,30 +3,21 @@ Data import service for Lucky Gas.
 Handles importing data from CSV, Excel files with validation.
 """
 
-import csv
 import io
-import json
 import logging
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, BinaryIO, Dict, List, Optional, Tuple
+from typing import Any, BinaryIO, Dict, List, Optional
 
-import aiofiles
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.models.customer import Customer
-from app.models.driver import Driver
 from app.models.gas_product import GasProduct as Product
 from app.models.order import Order
 from app.models.order_item import OrderItem
-from app.schemas.customer import CustomerCreate
-from app.schemas.gas_product import GasProductCreate as ProductCreate
-from app.schemas.order import OrderCreate
-from app.schemas.order_item import OrderItemCreate
 from app.utils.validators import validate_email, validate_phone_number
 
 logger = logging.getLogger(__name__)
@@ -35,13 +26,9 @@ logger = logging.getLogger(__name__)
 class DataImportError(Exception):
     """Custom exception for data import errors."""
 
-    pass
-
 
 class ValidationError(DataImportError):
     """Validation error during import."""
-
-    pass
 
 
 class DataImportService:
@@ -320,7 +307,7 @@ class DataImportService:
 
         # Read file
         if file_type == "csv":
-            # For orders, we expect two sheets/files
+            # For orders, we expect two sheets / files
             raise ValidationError(
                 "Order import requires Excel file with two sheets: Orders and Order Items"
             )
@@ -338,7 +325,6 @@ class DataImportService:
 
         # Validate order columns
         order_required = ["客戶電話", "配送日期", "配送地址"]
-        order_optional = ["付款方式", "備註", "優先級"]
 
         missing_columns = set(order_required) - set(orders_df.columns)
         if missing_columns:
@@ -348,7 +334,6 @@ class DataImportService:
 
         # Validate item columns
         item_required = ["訂單編號", "產品代碼", "數量"]
-        item_optional = ["單價", "折扣"]
 
         missing_columns = set(item_required) - set(items_df.columns)
         if missing_columns:
@@ -544,7 +529,7 @@ class DataImportService:
         file.seek(0)
 
         # Try different encodings
-        encodings = ["utf-8-sig", "utf-8", "big5", "gb2312"]
+        encodings = ["utf - 8 - sig", "utf - 8", "big5", "gb2312"]
 
         for encoding in encodings:
             try:
@@ -555,7 +540,7 @@ class DataImportService:
                 continue
 
         raise ValidationError(
-            "Unable to decode CSV file. Please ensure it's saved in UTF-8 encoding."
+            "Unable to decode CSV file. Please ensure it's saved in UTF - 8 encoding."
         )
 
     def _read_excel(self, file: BinaryIO, sheet_name=0) -> pd.DataFrame:
@@ -587,8 +572,8 @@ class DataImportService:
         if pd.isna(value) or value == "":
             return Decimal("0")
         try:
-            return Decimal(str(value).replace(",", ""))
-        except:
+            return Decimal(str(value).replace(", ", ""))
+        except Exception:
             return Decimal("0")
 
     def _parse_int(self, value: Any) -> int:
@@ -596,8 +581,8 @@ class DataImportService:
         if pd.isna(value) or value == "":
             return 0
         try:
-            return int(float(str(value).replace(",", "")))
-        except:
+            return int(float(str(value).replace(", ", "")))
+        except Exception:
             return 0
 
     def _parse_date(self, value: Any) -> Optional[date]:
@@ -611,12 +596,12 @@ class DataImportService:
 
         # Try to parse string
         date_str = str(value).strip()
-        formats = ["%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%Y年%m月%d日"]
+        formats = ["%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%Y年 % m月 % d日"]
 
         for fmt in formats:
             try:
                 return datetime.strptime(date_str, fmt).date()
-            except:
+            except Exception:
                 continue
 
         return None

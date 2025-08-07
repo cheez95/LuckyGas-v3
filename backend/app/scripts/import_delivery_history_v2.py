@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Import delivery history from Excel files using the new flexible gas product system
 This version creates DeliveryHistoryItem records for each product delivered
@@ -11,7 +11,6 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 # File paths
 RAW_DIR = project_root.parent / "raw"
-DELIVERY_FILE = RAW_DIR / "2025-05 deliver history.xlsx"
+DELIVERY_FILE = RAW_DIR / "2025 - 05 deliver history.xlsx"
 
 # Mapping of Excel columns to gas product attributes
 PRODUCT_MAPPING = {
@@ -143,7 +142,7 @@ def clean_numeric(value):
     if pd.isna(value):
         return None
     if isinstance(value, str):
-        # Remove any non-numeric characters
+        # Remove any non - numeric characters
         value = "".join(filter(lambda x: x.isdigit() or x == ".", value))
         if not value:
             return None
@@ -151,13 +150,13 @@ def clean_numeric(value):
         if "." in str(value):
             return float(value)
         return int(value)
-    except:
+    except Exception:
         return None
 
 
 async def get_or_create_gas_products(session: AsyncSession):
     """Ensure all gas products exist in the database"""
-    logger.info("Checking/creating gas products...")
+    logger.info("Checking / creating gas products...")
 
     products_cache = {}
 
@@ -257,7 +256,7 @@ async def import_delivery_history_v2(session: AsyncSession):
                                 trans_date = date_val.date()
                             else:
                                 trans_date = pd.to_datetime(date_val).date()
-                        except:
+                        except Exception:
                             logger.warning(f"Could not parse date: {date_val}")
                             continue
 

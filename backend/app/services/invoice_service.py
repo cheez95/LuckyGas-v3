@@ -5,21 +5,17 @@ Invoice service for business logic
 import random
 import string
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import (
-    CreditNote,
-    Customer,
     Invoice,
     InvoiceItem,
     InvoicePaymentStatus,
     InvoiceStatus,
-    Order,
-    Payment,
 )
 from app.schemas.invoice import InvoiceCreate, InvoiceStats, InvoiceUpdate
 
@@ -31,9 +27,9 @@ class InvoiceService:
         self.db = db
 
     async def generate_invoice_number(self, invoice_date: date) -> Dict[str, str]:
-        """Generate unique invoice number for Taiwan e-invoice format"""
+        """Generate unique invoice number for Taiwan e - invoice format"""
         # Get current period
-        period = invoice_date.strftime("%Y%m")
+        period = invoice_date.strftime("%Y % m")
 
         # For production, these would come from government allocation
         # For now, use test prefixes
@@ -150,7 +146,7 @@ class InvoiceService:
         return invoice
 
     async def issue_invoice(self, invoice_id: int, einvoice_service: Any) -> Invoice:
-        """Issue an invoice to government e-invoice platform"""
+        """Issue an invoice to government e - invoice platform"""
         invoice = await self.db.get(
             Invoice,
             invoice_id,
@@ -161,7 +157,7 @@ class InvoiceService:
         qr_left, qr_right = self._generate_qr_codes(invoice)
         barcode = self._generate_barcode(invoice)
 
-        # Submit to e-invoice platform
+        # Submit to e - invoice platform
         result = await einvoice_service.submit_invoice(invoice)
 
         # Update invoice
@@ -184,7 +180,7 @@ class InvoiceService:
         """Void an issued invoice"""
         invoice = await self.db.get(Invoice, invoice_id)
 
-        # Submit void request to e-invoice platform
+        # Submit void request to e - invoice platform
         result = await einvoice_service.void_invoice(
             einvoice_id=invoice.einvoice_id, reason=reason
         )
@@ -304,9 +300,9 @@ class InvoiceService:
         return b"Excel content would be here"
 
     def _generate_qr_codes(self, invoice: Invoice) -> tuple[str, str]:
-        """Generate QR code content for Taiwan e-invoice"""
+        """Generate QR code content for Taiwan e - invoice"""
         # Left QR code contains basic info
-        qr_left = f"{invoice.invoice_number}{invoice.random_code}{invoice.invoice_date.strftime('%Y%m%d')}"
+        qr_left = f"{invoice.invoice_number}{invoice.random_code}{invoice.invoice_date.strftime('%Y % m % d')}"
 
         # Right QR code contains detailed info
         qr_right = f"{invoice.total_amount}:{invoice.sales_amount}:{invoice.buyer_tax_id or '00000000'}"
@@ -314,7 +310,7 @@ class InvoiceService:
         return qr_left, qr_right
 
     def _generate_barcode(self, invoice: Invoice) -> str:
-        """Generate barcode for Taiwan e-invoice"""
+        """Generate barcode for Taiwan e - invoice"""
         # Barcode format: Period(6) + Invoice Number(10) + Random Code(4)
-        period_yymm = invoice.invoice_date.strftime("%y%m")  # YY format for barcode
+        period_yymm = invoice.invoice_date.strftime("%y % m")  # YY format for barcode
         return f"{period_yymm}{invoice.invoice_number}{invoice.random_code}"

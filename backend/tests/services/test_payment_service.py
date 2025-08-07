@@ -8,16 +8,18 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from app.models.customer import Customer, CustomerType
 from app.models.invoice import (
     Invoice,
-    InvoicePaymentStatus,
     InvoiceStatus,
     Payment,
     PaymentMethod,
 )
 from app.schemas.payment import PaymentCreate
 from app.services.payment_service import PaymentService
+from app.models.payment import PaymentStatus
+
+# Import payment test marker
+from tests.conftest_payment import requires_payment
 
 
 @pytest.fixture
@@ -66,6 +68,7 @@ def sample_payment():
     )
 
 
+@requires_payment
 class TestPaymentService:
     """Test cases for payment service"""
 
@@ -106,7 +109,7 @@ class TestPaymentService:
         assert result is not None
         assert result.amount == Decimal("5000")
         assert result.payment_method == PaymentMethod.CASH
-        assert result.status == PaymentStatus.VERIFIED  # Cash is auto-verified
+        assert result.status == PaymentStatus.VERIFIED  # Cash is auto - verified
         assert result.verified_at is not None
         assert result.notes == "現金付款"
 

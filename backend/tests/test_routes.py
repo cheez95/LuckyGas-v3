@@ -29,7 +29,7 @@ class TestRoutes:
         """Test creating a new route"""
         # Create vehicle
         vehicle = Vehicle(
-            plate_number="ABC-123",
+            plate_number="ABC - 123",
             vehicle_type=VehicleType.TRUCK,
             max_cylinders_50kg=10,
             max_cylinders_20kg=20,
@@ -45,7 +45,7 @@ class TestRoutes:
 
         future_date = datetime.now() + timedelta(days=7)
         route_data = {
-            "route_name": f"R{future_date.strftime('%Y%m%d')}-001",
+            "route_name": f"R{future_date.strftime('%Y % m % d')}-001",
             "route_date": future_date.isoformat(),
             "area": "信義區",
             "driver_id": test_driver.id,
@@ -54,7 +54,7 @@ class TestRoutes:
         }
 
         response = await client.post(
-            "/api/v1/routes/", json=route_data, headers=auth_headers
+            "/api / v1 / routes/", json=route_data, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -88,7 +88,7 @@ class TestRoutes:
         orders = []
         for i in range(3):
             order = Order(
-                order_number=f"ORD-TEST-{i:03d}",
+                order_number=f"ORD - TEST-{i:03d}",
                 customer_id=customer.id,
                 scheduled_date=datetime.now().date(),
                 status=OrderStatus.CONFIRMED,
@@ -101,7 +101,7 @@ class TestRoutes:
 
         # Create vehicle
         vehicle = Vehicle(
-            plate_number="ABC-123",
+            plate_number="ABC - 123",
             vehicle_type=VehicleType.TRUCK,
             max_cylinders_50kg=10,
             max_cylinders_20kg=20,
@@ -119,7 +119,7 @@ class TestRoutes:
         # Use a date 7 days in the future
         future_date = datetime.now() + timedelta(days=7)
         route_data = {
-            "route_name": f"R{future_date.strftime('%Y%m%d')}-002",
+            "route_name": f"R{future_date.strftime('%Y % m % d')}-002",
             "route_date": future_date.isoformat(),
             "area": "信義區",
             "driver_id": test_driver.id,
@@ -151,7 +151,7 @@ class TestRoutes:
         }
 
         response = await client.post(
-            "/api/v1/routes/", json=route_data, headers=auth_headers
+            "/api / v1 / routes/", json=route_data, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -178,7 +178,7 @@ class TestRoutes:
         routes = []
         for i in range(5):
             route = Route(
-                route_name=f"R{today.strftime('%Y%m%d')}-{i:03d}",
+                route_name=f"R{today.strftime('%Y % m % d')}-{i:03d}",
                 route_date=today + timedelta(days=i),
                 area="信義區" if i % 2 == 0 else "大安區",
                 driver_id=None,  # Skip driver_id due to foreign key issue
@@ -194,7 +194,7 @@ class TestRoutes:
 
         # Test listing all routes
         response = await client.get(
-            "/api/v1/routes/", headers=auth_headers  # Added trailing slash
+            "/api / v1 / routes/", headers=auth_headers  # Added trailing slash
         )
         assert response.status_code == 200
         data = response.json()
@@ -202,7 +202,7 @@ class TestRoutes:
 
         # Test with area filter
         response = await client.get(
-            "/api/v1/routes/",  # Added trailing slash
+            "/api / v1 / routes/",  # Added trailing slash
             params={"area": "信義區"},
             headers=auth_headers,
         )
@@ -212,7 +212,7 @@ class TestRoutes:
 
         # Test with driver filter
         response = await client.get(
-            "/api/v1/routes/",  # Added trailing slash
+            "/api / v1 / routes/",  # Added trailing slash
             params={"driver_id": test_driver.id},
             headers=auth_headers,
         )
@@ -223,7 +223,7 @@ class TestRoutes:
 
         # Test with status filter
         response = await client.get(
-            "/api/v1/routes/",  # Added trailing slash
+            "/api / v1 / routes/",  # Added trailing slash
             params={"status": RouteStatus.IN_PROGRESS.value},
             headers=auth_headers,
         )
@@ -242,7 +242,7 @@ class TestRoutes:
         """Test getting a specific route"""
         # Create route
         route = Route(
-            route_name="R20241225-001",
+            route_name="R20241225 - 001",
             route_date=datetime.now().date(),
             area="信義區",
             driver_id=None,  # Skip driver_id due to foreign key issue
@@ -256,7 +256,9 @@ class TestRoutes:
         await db_session.commit()
         await db_session.refresh(route)
 
-        response = await client.get(f"/api/v1/routes/{route.id}", headers=auth_headers)
+        response = await client.get(
+            f"/api / v1 / routes/{route.id}", headers=auth_headers
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == route.id
@@ -285,7 +287,7 @@ class TestRoutes:
 
         # Create route
         route = Route(
-            route_name="R20241225-001",
+            route_name="R20241225 - 001",
             route_date=datetime.now().date(),
             area="信義區",
             driver_id=None,  # Skip driver_id due to foreign key issue
@@ -303,7 +305,7 @@ class TestRoutes:
         update_data = {"driver_id": driver2.id, "status": RouteStatus.IN_PROGRESS.value}
 
         response = await client.put(
-            f"/api/v1/routes/{route.id}", json=update_data, headers=auth_headers
+            f"/api / v1 / routes/{route.id}", json=update_data, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -322,7 +324,7 @@ class TestRoutes:
         """Test cancelling a route"""
         # Create route
         route = Route(
-            route_name="R20241225-001",
+            route_name="R20241225 - 001",
             route_date=datetime.now().date(),
             area="信義區",
             driver_id=None,  # Skip driver_id due to foreign key issue
@@ -337,7 +339,7 @@ class TestRoutes:
         await db_session.refresh(route)
 
         response = await client.delete(
-            f"/api/v1/routes/{route.id}", headers=auth_headers
+            f"/api / v1 / routes/{route.id}", headers=auth_headers
         )
         assert response.status_code == 200
         assert "路線已成功取消" in response.json()["message"]
@@ -357,7 +359,7 @@ class TestRoutes:
         """Test route optimization"""
         # Create route with stops
         route = Route(
-            route_number="R20241225-001",
+            route_number="R20241225 - 001",
             date=datetime.now(),  # Required field
             route_date=datetime.now().date(),
             area="信義區",
@@ -377,7 +379,7 @@ class TestRoutes:
                 stop_sequence=i + 1,
                 latitude=25.0330 + (i * 0.01),  # Different latitudes
                 longitude=121.5654,
-                address=f"台北市信義區測試路{i+1}號",
+                address=f"台北市信義區測試路{i + 1}號",
             )
             stops.append(stop)
         db_session.add_all(stops)
@@ -387,7 +389,7 @@ class TestRoutes:
         await db_session.refresh(route)
 
         response = await client.post(
-            f"/api/v1/routes/{route.id}/optimize", json={}, headers=auth_headers
+            f"/api / v1 / routes/{route.id}/optimize", json={}, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -425,7 +427,7 @@ class TestRoutes:
 
         # Create routes for different drivers
         route1 = Route(
-            route_number="R20241225-001",
+            route_number="R20241225 - 001",
             date=datetime.now(),  # Required field
             route_date=datetime.now().date(),
             area="信義區",
@@ -433,7 +435,7 @@ class TestRoutes:
             status=RouteStatus.PLANNED,
         )
         route2 = Route(
-            route_number="R20241225-002",
+            route_number="R20241225 - 002",
             date=datetime.now(),  # Required field
             route_date=datetime.now().date(),
             area="大安區",
@@ -446,7 +448,7 @@ class TestRoutes:
 
         # Driver should only see their own routes
         response = await client.get(
-            "/api/v1/routes/", headers=driver_auth_headers  # Added trailing slash
+            "/api / v1 / routes/", headers=driver_auth_headers  # Added trailing slash
         )
         assert response.status_code == 200
         data = response.json()
@@ -456,7 +458,7 @@ class TestRoutes:
 
         # Driver should not be able to see other driver's route
         response = await client.get(
-            f"/api/v1/routes/{route2.id}", headers=driver_auth_headers
+            f"/api / v1 / routes/{route2.id}", headers=driver_auth_headers
         )
         assert response.status_code == 403
         assert "無權查看此路線" in response.json()["detail"]

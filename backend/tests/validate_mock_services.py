@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Validate Mock Services Health Check Script
 Checks all mock services are healthy and responding correctly
@@ -14,28 +14,28 @@ import requests
 
 # Service configuration
 SERVICES = {
-    "mock-sms": {
+    "mock - sms": {
         "url": "http://localhost:8001",
         "health_endpoint": "/health",
         "test_endpoints": [
             {"method": "GET", "path": "/docs"},
         ],
     },
-    "mock-einvoice": {
+    "mock - einvoice": {
         "url": "http://localhost:8002",
         "health_endpoint": "/health",
         "test_endpoints": [
             {"method": "GET", "path": "/docs"},
         ],
     },
-    "mock-banking": {
+    "mock - banking": {
         "url": "http://localhost:8003",
         "health_endpoint": "/health",
         "test_endpoints": [
             {"method": "GET", "path": "/docs"},
         ],
     },
-    "mock-gcp": {
+    "mock - gcp": {
         "url": "http://localhost:8085",
         "health_endpoint": "/health",
         "test_endpoints": [
@@ -46,6 +46,8 @@ SERVICES = {
 
 
 # Color codes for output
+
+
 class Colors:
     GREEN = "\033[92m"
     RED = "\033[91m"
@@ -88,7 +90,9 @@ def check_health(service_name: str, config: Dict) -> Tuple[bool, str]:
 
 
 def check_endpoints(service_name: str, config: Dict) -> List[Tuple[str, bool, str]]:
-    """Check additional endpoints for the service"""    for endpoint in config.get("test_endpoints", []):
+    """Check additional endpoints for the service"""
+    results = []
+    for endpoint in config.get("test_endpoints", []):
         try:
             url = f"{config['url']}{endpoint['path']}"
             method = endpoint.get("method", "GET").lower()
@@ -162,16 +166,16 @@ def print_summary(results: Dict[str, Tuple[bool, str, List]]):
         )
         print(f"\n{Colors.YELLOW}Troubleshooting Tips:{Colors.ENDC}")
         print(
-            "  1. Check if Docker containers are running: docker-compose -f docker-compose.test.yml ps"
+            "  1. Check if Docker containers are running: docker - compose -f docker - compose.test.yml ps"
         )
         print(
-            "  2. Check container logs: docker-compose -f docker-compose.test.yml logs [service-name]"
+            "  2. Check container logs: docker - compose -f docker - compose.test.yml logs [service - name]"
         )
         print(
-            "  3. Restart services: docker-compose -f docker-compose.test.yml restart"
+            "  3. Restart services: docker - compose -f docker - compose.test.yml restart"
         )
         print(
-            "  4. Rebuild services: docker-compose -f docker-compose.test.yml build --no-cache"
+            "  4. Rebuild services: docker - compose -f docker - compose.test.yml build --no - cache"
         )
         return False
 
@@ -185,7 +189,8 @@ def wait_for_services(max_wait: int = 60, check_interval: int = 5):
     start_time = time.time()
     all_healthy = False
 
-    while time.time() - start_time < max_wait:        all_healthy = True
+    while time.time() - start_time < max_wait:
+        all_healthy = True
 
         for service_name, config in SERVICES.items():
             health_ok, _ = check_health(service_name, config)
@@ -217,8 +222,10 @@ def main():
         if not wait_for_services():
             sys.exit(1)
 
-    # Check all services    for service_name, config in SERVICES.items():
-        health_ok, health_msg = check_health(service_name, config)    endpoint_results = check_endpoints(service_name, config)
+    # Check all services
+    for service_name, config in SERVICES.items():
+        health_ok, health_msg = check_health(service_name, config)
+        endpoint_results = check_endpoints(service_name, config)
         results[service_name] = (health_ok, health_msg, endpoint_results)
         print_service_status(service_name, health_ok, health_msg, endpoint_results)
 

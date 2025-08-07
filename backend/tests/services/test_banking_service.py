@@ -1,11 +1,10 @@
 """Unit tests for banking service."""
 
 import io
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
-import paramiko
 import pytest
 from sqlalchemy.orm import Session
 
@@ -15,16 +14,16 @@ from app.models.banking import (
     PaymentBatchStatus,
     PaymentTransaction,
     ReconciliationLog,
-    ReconciliationStatus,
     TransactionStatus,
 )
-from app.models.customer import Customer
-from app.models.invoice import Invoice, InvoicePaymentStatus
+from app.models.invoice import InvoicePaymentStatus
 from app.services.banking_service import (
-    BankingFormatError,
     BankingService,
     SFTPConnectionError,
 )
+
+# Import banking test marker
+from tests.conftest_payment import requires_banking
 
 
 @pytest.fixture
@@ -54,7 +53,7 @@ def bank_config():
     config.download_path = "/download/"
     config.archive_path = "/archive/"
     config.file_format = "fixed_width"
-    config.encoding = "UTF-8"
+    config.encoding = "UTF - 8"
     config.delimiter = None
     config.payment_file_pattern = "PAY_{YYYYMMDD}_{BATCH}.txt"
     config.reconciliation_file_pattern = "REC_{YYYYMMDD}.txt"
@@ -86,7 +85,7 @@ def payment_transactions():
     # Transaction 1
     t1 = Mock(spec=PaymentTransaction)
     t1.id = 1
-    t1.transaction_id = "CTBC202401201001-000001"
+    t1.transaction_id = "CTBC202401201001 - 000001"
     t1.customer_id = 1
     t1.invoice_id = 1
     t1.account_number = "12345678901234"
@@ -99,7 +98,7 @@ def payment_transactions():
     # Transaction 2
     t2 = Mock(spec=PaymentTransaction)
     t2.id = 2
-    t2.transaction_id = "CTBC202401201001-000002"
+    t2.transaction_id = "CTBC202401201001 - 000002"
     t2.customer_id = 2
     t2.invoice_id = 2
     t2.account_number = "98765432109876"
@@ -112,6 +111,7 @@ def payment_transactions():
     return transactions
 
 
+@requires_banking
 class TestBankingService:
     """Test cases for banking service."""
 
@@ -194,7 +194,7 @@ class TestBankingService:
         bank_config,
         db_session,
     ):
-        """Test generating fixed-width format payment file."""
+        """Test generating fixed - width format payment file."""
         payment_batch.transactions = payment_transactions
 
         db_session.query().filter_by().first.side_effect = [payment_batch, bank_config]
@@ -228,7 +228,7 @@ class TestBankingService:
     ):
         """Test generating CSV format payment file."""
         bank_config.file_format = "csv"
-        bank_config.delimiter = ","
+        bank_config.delimiter = ", "
         payment_batch.transactions = payment_transactions
 
         db_session.query().filter_by().first.side_effect = [payment_batch, bank_config]
@@ -315,22 +315,22 @@ class TestBankingService:
     def test_process_fixed_width_reconciliation(
         self, banking_service, bank_config, db_session
     ):
-        """Test processing fixed-width reconciliation file."""
+        """Test processing fixed - width reconciliation file."""
         # Mock reconciliation file content
         file_content = """H20240120CTBC001
-D000001CTBC202401201001-000001REF001000Payment successful       20240120
-D000002CTBC202401201001-000002REF002001Card declined           20240120
+D000001CTBC202401201001 - 000001REF001000Payment successful       20240120
+D000002CTBC202401201001 - 000002REF002001Card declined           20240120
 T00000200000300000"""
 
         db_session.query().filter_by().first.side_effect = [
             bank_config,
             Mock(
-                transaction_id="CTBC202401201001-000001",
+                transaction_id="CTBC202401201001 - 000001",
                 invoice_id=1,
                 batch=payment_batch,
             ),
             Mock(
-                transaction_id="CTBC202401201001-000002",
+                transaction_id="CTBC202401201001 - 000002",
                 invoice_id=2,
                 batch=payment_batch,
             ),
@@ -343,7 +343,7 @@ T00000200000300000"""
 
         with patch.object(banking_service, "get_sftp_client") as mock_get_sftp:
             mock_sftp = Mock()
-            mock_file = io.BytesIO(file_content.encode("UTF-8"))
+            mock_file = io.BytesIO(file_content.encode("UTF - 8"))
             mock_sftp.getfo = Mock(
                 side_effect=lambda remote, local: local.write(mock_file.read())
             )
@@ -441,7 +441,7 @@ T00000200000300000"""
 
         assert regex.match("REC_20240120.txt")
         assert not regex.match("PAY_20240120.txt")
-        assert not regex.match("REC_2024-01-20.txt")
+        assert not regex.match("REC_2024 - 01 - 20.txt")
 
     def test_format_amount(self, banking_service):
         """Test amount formatting for banking files."""
@@ -450,7 +450,7 @@ T00000200000300000"""
         assert banking_service._format_amount(Decimal("0.01")) == "0000000000001"
 
     def test_format_fixed_width(self, banking_service):
-        """Test fixed-width field formatting."""
+        """Test fixed - width field formatting."""
         fields = [("ABC", 5), ("12345678", 5), ("", 3)]
 
         result = banking_service._format_fixed_width(fields)

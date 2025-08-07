@@ -1,0 +1,260 @@
+{
+  "id": "driver-training-basic",
+  "name": "司機基礎培訓 - 行動APP操作",
+  "description": "學習使用Lucky Gas司機APP完成每日配送任務",
+  "difficulty": "beginner",
+  "estimatedTime": 45,
+  "deviceType": "mobile",
+  "objectives": [
+    "登入司機APP並檢查今日路線",
+    "使用導航功能前往客戶地址",
+    "完成配送並取得電子簽名",
+    "處理配送異常情況",
+    "更新庫存和回報狀態"
+  ],
+  "setup": {
+    "driverAccount": {
+      "username": "driver_training",
+      "name": "培訓司機",
+      "vehicleId": "V001",
+      "initialInventory": {
+        "20kg": 10,
+        "16kg": 5,
+        "10kg": 3
+      }
+    },
+    "preloadedRoute": {
+      "date": "today",
+      "orders": [
+        {
+          "orderId": "TRN001",
+          "customer": "張太太",
+          "address": "台北市中山區民生東路二段141號3樓",
+          "phone": "0922-111-222",
+          "quantity": {"20kg": 1},
+          "timeWindow": "09:00-11:00",
+          "notes": "請按門鈴，狗不會咬人"
+        },
+        {
+          "orderId": "TRN002",
+          "customer": "李先生",
+          "address": "台北市中山區長安東路二段78號",
+          "phone": "0933-222-333",
+          "quantity": {"16kg": 1, "10kg": 1},
+          "timeWindow": "10:00-12:00",
+          "notes": "店面在巷口"
+        },
+        {
+          "orderId": "TRN003",
+          "customer": "新龍餐廳",
+          "address": "台北市中山區建國北路二段88號",
+          "phone": "02-2501-1234",
+          "quantity": {"20kg": 3},
+          "timeWindow": "11:00-13:00",
+          "notes": "後門收貨，找王經理"
+        }
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "登入與檢查路線",
+      "description": "使用司機帳號登入APP並查看今日配送路線",
+      "steps": [
+        "開啟Lucky Gas司機APP",
+        "輸入帳號密碼登入",
+        "點擊「今日路線」",
+        "查看配送清單",
+        "確認車輛庫存"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "logged_in",
+            "user": "driver_training"
+          },
+          {
+            "type": "route_loaded",
+            "orderCount": 3
+          }
+        ]
+      },
+      "hints": [
+        "記得檢查每個訂單的配送時間窗口",
+        "確認庫存是否足夠完成所有訂單"
+      ]
+    },
+    {
+      "id": "task-2",
+      "title": "開始第一個配送",
+      "description": "前往張太太家完成配送",
+      "steps": [
+        "在路線列表中選擇第一個訂單",
+        "點擊「開始導航」",
+        "跟隨導航指示前往目的地",
+        "抵達後點擊「已到達」",
+        "撥打客戶電話確認"
+      ],
+      "simulation": {
+        "gpsMovement": true,
+        "estimatedTime": "15分鐘",
+        "trafficCondition": "normal"
+      },
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "navigation_started",
+            "orderId": "TRN001"
+          },
+          {
+            "type": "location_reached",
+            "accuracy": "within_50m"
+          },
+          {
+            "type": "customer_contacted"
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-3",
+      "title": "完成配送與簽名",
+      "description": "交付瓦斯桶並取得客戶電子簽名",
+      "steps": [
+        "確認客戶身份",
+        "交付瓦斯桶（20kg x1）",
+        "在APP中輸入實際交付數量",
+        "請客戶在螢幕上簽名",
+        "拍照記錄（選擇性）",
+        "點擊「完成配送」"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "delivery_completed",
+            "orderId": "TRN001"
+          },
+          {
+            "type": "signature_captured"
+          },
+          {
+            "type": "inventory_updated",
+            "20kg": -1
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-4",
+      "title": "處理無人在家情況",
+      "description": "第二個客戶不在家，學習如何處理",
+      "steps": [
+        "前往李先生地址",
+        "按門鈴/撥打電話",
+        "等待3分鐘無回應",
+        "在APP中選擇「客戶不在」",
+        "選擇處理方式：改期配送",
+        "拍照記錄現場情況",
+        "新增配送備註"
+      ],
+      "simulation": {
+        "scenario": "customer_not_home",
+        "phoneResponse": "no_answer"
+      },
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "exception_recorded",
+            "reason": "customer_absent"
+          },
+          {
+            "type": "photo_taken"
+          },
+          {
+            "type": "order_rescheduled",
+            "orderId": "TRN002"
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-5",
+      "title": "商業客戶配送",
+      "description": "完成餐廳的大量配送訂單",
+      "steps": [
+        "導航至新龍餐廳",
+        "找到後門卸貨區",
+        "聯繫王經理",
+        "卸下3桶20kg瓦斯",
+        "協助搬運至指定位置",
+        "取得簽名並開立收據"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "bulk_delivery",
+            "quantity": 3
+          },
+          {
+            "type": "receipt_issued"
+          },
+          {
+            "type": "commercial_delivery_complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-6",
+      "title": "每日結算與回報",
+      "description": "完成當日路線後進行結算",
+      "steps": [
+        "返回「今日路線」頁面",
+        "檢查所有訂單狀態",
+        "點擊「每日結算」",
+        "確認剩餘庫存數量",
+        "填寫車輛里程數",
+        "提交每日報告"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "all_orders_processed"
+          },
+          {
+            "type": "inventory_reconciled"
+          },
+          {
+            "type": "daily_report_submitted"
+          }
+        ]
+      }
+    }
+  ],
+  "completion": {
+    "message": "太棒了！您已掌握司機APP的基本操作。",
+    "skills": [
+      "路線導航",
+      "客戶互動",
+      "異常處理",
+      "庫存管理",
+      "電子簽名"
+    ],
+    "certificate": true,
+    "nextScenario": "driver-training-advanced"
+  },
+  "additionalResources": [
+    {
+      "title": "司機安全守則",
+      "url": "/resources/driver-safety-guide.pdf"
+    },
+    {
+      "title": "緊急聯絡電話",
+      "content": {
+        "調度中心": "02-2345-6789",
+        "緊急支援": "0800-123-456"
+      }
+    }
+  ]
+}

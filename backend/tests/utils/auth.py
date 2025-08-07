@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from app.core.config import settings
 
 
-async def get_test_token(client: AsyncClient, role: str = "office_staff") -> str:
+async def get_test_token(client: AsyncClient, role: str = "office_staf") -> str:
     """Get test authentication token for specified role"""
     # Test users with different roles
     test_users = {
@@ -24,7 +24,7 @@ async def get_test_token(client: AsyncClient, role: str = "office_staff") -> str
 
     # Login to get token
     response = await client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/auth / login",
         data={"username": user_data["username"], "password": user_data["password"]},
     )
 

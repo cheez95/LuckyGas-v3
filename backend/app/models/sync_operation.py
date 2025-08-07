@@ -1,13 +1,12 @@
 """
 Database model for sync operations.
 
-Provides persistent storage for dual-write sync operations
+Provides persistent storage for dual - write sync operations
 with full audit trail and transaction support.
 """
 
-from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import (
     JSON,

@@ -1,25 +1,27 @@
 """
-Integration tests for Taiwan Government E-Invoice API
+Integration tests for Taiwan Government E - Invoice API
 
-These tests simulate the full lifecycle of e-invoice operations with
+These tests simulate the full lifecycle of e - invoice operations with
 mocked government API responses to ensure proper integration behavior.
 """
 
 import asyncio
-import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
 
-from app.core.einvoice_config import EINVOICE_ERROR_CODES
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
 from app.services.einvoice_service import EInvoiceService, get_einvoice_service
 
+# Import invoice test marker
+from tests.conftest_payment import requires_invoice
 
+
+@requires_invoice
 class TestEInvoiceIntegration:
-    """Integration tests for e-invoice service with mocked government API"""
+    """Integration tests for e - invoice service with mocked government API"""
 
     @pytest.fixture
     def mock_government_api(self):
@@ -41,7 +43,7 @@ class TestEInvoiceIntegration:
 
     @pytest.fixture
     def production_invoice(self):
-        """Create a production-ready invoice"""
+        """Create a production - ready invoice"""
         invoice = MagicMock(spec=Invoice)
         invoice.id = 1
         invoice.invoice_number = "XY98765432"
@@ -90,8 +92,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -216,8 +218,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -254,7 +256,7 @@ class TestEInvoiceIntegration:
 
                     # Verify B2C endpoint was used
                     call_args = mock_async_client.post.call_args
-                    assert "/INVAPIVAN/invapp" in call_args[0][0]
+                    assert "/INVAPIVAN / invapp" in call_args[0][0]
 
     @pytest.mark.asyncio
     async def test_error_scenarios(self, mock_government_api):
@@ -287,8 +289,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -327,8 +329,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -357,7 +359,7 @@ class TestEInvoiceIntegration:
 
                     items = [
                         {
-                            "description": "退貨-液化石油氣",
+                            "description": "退貨 - 液化石油氣",
                             "quantity": 1,
                             "unit": "桶",
                             "unit_price": 1000,
@@ -382,8 +384,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 0.1,  # Faster for testing
@@ -432,8 +434,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -496,8 +498,8 @@ class TestEInvoiceIntegration:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 1,  # Reduce retries for faster testing
                 "retry_delay": 0.1,
@@ -534,7 +536,7 @@ class TestEInvoiceIntegration:
 
 
 class TestEInvoicePerformance:
-    """Performance tests for e-invoice service"""
+    """Performance tests for e - invoice service"""
 
     @pytest.mark.asyncio
     async def test_batch_submission_performance(self):
@@ -574,7 +576,6 @@ class TestEInvoicePerformance:
     async def test_memory_usage_under_load(self):
         """Test memory usage doesn't grow excessively under load"""
         import gc
-        import sys
 
         service = get_einvoice_service()
 

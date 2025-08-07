@@ -6,7 +6,7 @@ test.describe('Critical: Delivery Tracking', () => {
     await loginAsTestUser(page);
   });
 
-  test($1, async ({ page }) => {
+  test('should track delivery status in real-time', async ({ page }) => {
     // Check dashboard for delivery status widgets
     await expect(page.locator('h2:has-text("儀表板")')).toBeVisible();
     
@@ -33,7 +33,7 @@ test.describe('Critical: Delivery Tracking', () => {
     expect(hasDeliveryInfo || hasRealtimeStatus).toBeTruthy();
   });
 
-  test($1, async ({ page }) => {
+  test('should track delivery status in real-time - 2', async ({ page }) => {
     // Look for delivery history menu item
     const deliveryHistoryMenu = page.locator('text=配送歷史');
     
@@ -64,7 +64,7 @@ test.describe('Critical: Delivery Tracking', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should track delivery status in real-time - 3', async ({ page }) => {
     // Navigate to dispatch board if available
     const dispatchMenu = page.locator('text=派遣看板');
     
@@ -100,7 +100,7 @@ test.describe('Critical: Delivery Tracking', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should track delivery status in real-time - 4', async ({ page }) => {
     // Try to find an order or delivery to track
     const ordersMenu = page.locator('text=訂單管理');
     await ordersMenu.click();
@@ -161,7 +161,7 @@ test.describe('Critical: Delivery Tracking', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should track delivery status in real-time - 5', async ({ page }) => {
     // Navigate to dashboard where WebSocket should connect
     await page.goto('http://localhost:5173/dashboard');
     

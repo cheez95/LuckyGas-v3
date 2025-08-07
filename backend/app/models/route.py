@@ -36,8 +36,8 @@ class Route(Base):
 
     # Assignment
     driver_id = Column(
-        Integer, ForeignKey("users.id")
-    )  # Changed from drivers.id to users.id
+        Integer, ForeignKey("drivers.id")
+    )  # Foreign key to drivers table
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"))
 
     # Route details
@@ -70,7 +70,7 @@ class Route(Base):
     stops = relationship(
         "RouteStop", back_populates="route", order_by="RouteStop.stop_sequence"
     )
-    driver = relationship("User", backref="routes")
+    driver = relationship("Driver", back_populates="routes")
 
 
 class RouteStop(Base):

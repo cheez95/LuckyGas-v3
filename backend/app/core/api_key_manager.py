@@ -8,11 +8,9 @@ import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional
 
 from cryptography.fernet import Fernet
-
-from typing import List
-from typing import Optional
 
 try:
     from google.cloud import secretmanager
@@ -33,35 +31,30 @@ class APIKeyManager(ABC):
     @abstractmethod
     async def get_key(self, key_name: str) -> Optional[str]:
         """Retrieve an API key securely"""
-        pass
 
     @abstractmethod
     async def set_key(self, key_name: str, value: str) -> bool:
         """Set an API key securely"""
-        pass
 
     @abstractmethod
     async def rotate_key(self, key_name: str, new_value: str) -> bool:
         """Rotate an API key"""
-        pass
 
     @abstractmethod
     async def delete_key(self, key_name: str) -> bool:
         """Delete an API key"""
-        pass
 
     @abstractmethod
     async def list_keys(self) -> List[str]:
         """List all API key names"""
-        pass
 
 
 class LocalEncryptedKeyManager(APIKeyManager):
     """Local development key manager with encryption"""
 
-    def __init__(self, master_key_path: str = ".keys/master.key"):
+    def __init__(self, master_key_path: str = ".keys / master.key"):
         self.master_key_path = Path(master_key_path)
-        self.keys_file = Path(".keys/encrypted_keys.json")
+        self.keys_file = Path(".keys / encrypted_keys.json")
         self.master_key = self._load_or_create_master_key()
         self.fernet = Fernet(self.master_key)
 
@@ -275,7 +268,7 @@ class GCPSecretManager(APIKeyManager):
     def __init__(self, project_id: str):
         if not HAS_GCP_SECRET_MANAGER:
             raise ImportError(
-                "google-cloud-secret-manager is required for GCP Secret Manager"
+                "google - cloud - secret - manager is required for GCP Secret Manager"
             )
 
         self.project_id = project_id
@@ -290,9 +283,9 @@ class GCPSecretManager(APIKeyManager):
     async def get_key(self, key_name: str) -> Optional[str]:
         """Retrieve a secret from Google Secret Manager with audit logging"""
         try:
-            name = f"{self._get_secret_name(key_name)}/versions/latest"
+            name = f"{self._get_secret_name(key_name)}/versions / latest"
             response = self.client.access_secret_version(request={"name": name})
-            secret_value = response.payload.data.decode("UTF-8")
+            secret_value = response.payload.data.decode("UTF - 8")
 
             # Audit log - log key access without exposing the actual key
             logger.info(
@@ -338,7 +331,7 @@ class GCPSecretManager(APIKeyManager):
             # Add the secret version
             parent = self._get_secret_name(key_name)
             response = self.client.add_secret_version(
-                request={"parent": parent, "payload": {"data": value.encode("UTF-8")}}
+                request={"parent": parent, "payload": {"data": value.encode("UTF - 8")}}
             )
 
             # Audit log - log key modification without exposing the actual key
@@ -367,7 +360,7 @@ class GCPSecretManager(APIKeyManager):
             response = self.client.add_secret_version(
                 request={
                     "parent": parent,
-                    "payload": {"data": new_value.encode("UTF-8")},
+                    "payload": {"data": new_value.encode("UTF - 8")},
                 }
             )
 
@@ -396,10 +389,10 @@ class GCPSecretManager(APIKeyManager):
             name = self._get_secret_name(key_name)
             # In production, we disable rather than delete for safety
             response = self.client.destroy_secret_version(
-                request={"name": f"{name}/versions/latest"}
+                request={"name": f"{name}/versions / latest"}
             )
 
-            # Audit log for key deletion/disabling
+            # Audit log for key deletion / disabling
             logger.info(
                 f"API_KEY_DELETE: key_name={key_name}, "
                 f"access_time={datetime.now().isoformat()}, "
@@ -431,9 +424,9 @@ class GCPSecretManager(APIKeyManager):
                 secret_name = secret.name.split("/")[-1]
 
                 # Only include API keys (following naming convention)
-                if secret_name.startswith("api-key-"):
+                if secret_name.startswith("api - key-"):
                     # Remove the prefix to get the key name
-                    key_name = secret_name[8:]  # Remove 'api-key-'
+                    key_name = secret_name[8:]  # Remove 'api - key-'
                     secrets.append(key_name)
 
             logger.info(
@@ -454,6 +447,8 @@ class GCPSecretManager(APIKeyManager):
 
 
 # Factory function to get appropriate key manager
+
+
 def _get_api_key_manager_impl(
     environment: str, project_id: Optional[str] = None
 ) -> APIKeyManager:

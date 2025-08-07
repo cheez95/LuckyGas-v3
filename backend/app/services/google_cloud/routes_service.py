@@ -14,10 +14,7 @@ import aiohttp
 from app.core.config import settings
 from app.core.google_cloud_config import get_gcp_config
 from app.core.metrics import route_optimization_histogram
-from app.models.customer import Customer
 from app.models.order import Order
-from app.models.route import Route as DeliveryRoute
-from app.models.route import RouteStop
 from app.services.optimization.ortools_optimizer import (
     VRPStop,
     VRPVehicle,
@@ -52,11 +49,11 @@ class GoogleRoutesService:
     def __init__(self):
         self.gcp_config = get_gcp_config()
         self.api_key = self.gcp_config.maps_api_key
-        self.base_url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+        self.base_url = "https://routes.googleapis.com / directions / v2:computeRoutes"
         self.matrix_url = (
-            "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix"
+            "https://routes.googleapis.com / distanceMatrix / v2:computeRouteMatrix"
         )
-        self.optimization_url = "https://routes.googleapis.com/v1/projects/{}/locations/{}/routeOptimization:optimizeTours"
+        self.optimization_url = "https://routes.googleapis.com / v1 / projects/{}/locations/{}/routeOptimization:optimizeTours"
         self.depot_location = (settings.DEPOT_LAT, settings.DEPOT_LNG)
 
         # Retry configuration
@@ -99,7 +96,7 @@ class GoogleRoutesService:
                 result = await self._execute_api_request(
                     self.base_url,
                     request_body,
-                    "routes.optimizedIntermediateWaypointIndex,routes.duration,routes.distanceMeters,routes.polyline,routes.legs",
+                    "routes.optimizedIntermediateWaypointIndex, routes.duration, routes.distanceMeters, routes.polyline, routes.legs",
                 )
 
                 if result:
@@ -114,7 +111,7 @@ class GoogleRoutesService:
                         self.retry_delay * (self.backoff_multiplier**attempt)
                     )
                 else:
-                    logger.error(f"All retry attempts failed for route optimization")
+                    logger.error("All retry attempts failed for route optimization")
 
             except Exception as e:
                 logger.error(f"Unexpected error in route optimization: {e}")
@@ -150,7 +147,7 @@ class GoogleRoutesService:
 
             waypoints.append(waypoint)
 
-        # Build request with Taiwan-specific optimizations
+        # Build request with Taiwan - specific optimizations
         request = {
             "origin": {
                 "location": {"latLng": {"latitude": depot[0], "longitude": depot[1]}},
@@ -164,7 +161,7 @@ class GoogleRoutesService:
             "travelMode": "DRIVE",
             "routingPreference": "TRAFFIC_AWARE_OPTIMAL",  # Best for urban delivery
             "optimizeWaypointOrder": True,
-            "languageCode": "zh-TW",
+            "languageCode": "zh - TW",
             "regionCode": "TW",
             "units": "METRIC",
             "computeAlternativeRoutes": False,
@@ -177,10 +174,10 @@ class GoogleRoutesService:
             "extraComputations": ["TOLLS", "FUEL_CONSUMPTION"],  # Get additional data
             "requestedReferenceRoutes": [
                 "FUEL_EFFICIENT"
-            ],  # Compare with fuel-efficient route
+            ],  # Compare with fuel - efficient route
         }
 
-        # Add departure time for traffic-aware routing
+        # Add departure time for traffic - aware routing
         if time_windows:
             departure_time = time_windows.get("departure_time")
             if departure_time:
@@ -272,7 +269,7 @@ class GoogleRoutesService:
     ) -> Dict:
         """Create a basic unoptimized route as fallback"""
 
-        # Simple distance-based sorting
+        # Simple distance - based sorting
         sorted_stops = sorted(
             stops,
             key=lambda s: self._calculate_distance(
@@ -290,7 +287,7 @@ class GoogleRoutesService:
             "total_duration": "0s",
             "polyline": "",
             "warnings": [
-                "Route optimization unavailable - using distance-based sorting"
+                "Route optimization unavailable - using distance - based sorting"
             ],
             "optimized": False,
         }
@@ -336,9 +333,9 @@ class GoogleRoutesService:
         """Execute API request with proper error handling"""
         async with aiohttp.ClientSession() as session:
             headers = {
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": self.api_key,
-                "X-Goog-FieldMask": field_mask,
+                "Content - Type": "application / json",
+                "X - Goog - Api - Key": self.api_key,
+                "X - Goog - FieldMask": field_mask,
             }
 
             async with session.post(
@@ -390,7 +387,7 @@ class GoogleRoutesService:
 
         # Check if we have reference routes to compare
         if len(response.get("routes", [])) > 1:
-            # Compare with fuel-efficient route if available
+            # Compare with fuel - efficient route if available
             for route in response["routes"][1:]:
                 if (
                     route.get("routeLabels")
@@ -417,7 +414,7 @@ class GoogleRoutesService:
         self, orders: List[Order], drivers: List[Dict], date: datetime
     ) -> List[Dict]:
         """
-        Optimize routes for multiple drivers using OR-Tools VRP solver
+        Optimize routes for multiple drivers using OR - Tools VRP solver
         """
         # Convert orders to VRPStop format
         stops = []
@@ -450,7 +447,7 @@ class GoogleRoutesService:
             )
             vehicles.append(vehicle)
 
-        # Optimize using OR-Tools
+        # Optimize using OR - Tools
         logger.info(
             f"Optimizing routes for {len(stops)} orders and {len(drivers)} drivers"
         )
@@ -464,12 +461,12 @@ class GoogleRoutesService:
 
         # Record metrics
         route_optimization_histogram.labels(
-            method="OR-Tools VRP", num_stops=str(len(stops))
+            method="OR - Tools VRP", num_stops=str(len(stops))
         ).observe(optimization_time)
 
         logger.info(f"Route optimization completed in {optimization_time:.2f} seconds")
 
-        # Get turn-by-turn directions from Google Routes API for each route
+        # Get turn - by - turn directions from Google Routes API for each route
         route_results = []
         for vehicle_idx, route_stops in optimized_routes.items():
             if not route_stops:
@@ -482,7 +479,7 @@ class GoogleRoutesService:
 
             # Build route data
             route_data = {
-                "route_number": f"R{date.strftime('%Y%m%d')}-{vehicle_idx+1:02d}",
+                "route_number": f"R{date.strftime('%Y % m % d')}-{vehicle_idx + 1:02d}",
                 "driver_id": vehicles[vehicle_idx].driver_id,
                 "vehicle_id": vehicle_idx,
                 "date": date.isoformat(),
@@ -510,7 +507,7 @@ class GoogleRoutesService:
                 "estimated_duration_minutes": google_route.get("duration", 0),
                 "polyline": google_route.get("polyline", ""),
                 "optimized": True,
-                "optimization_method": "OR-Tools VRP",
+                "optimization_method": "OR - Tools VRP",
             }
             route_results.append(route_data)
 
@@ -582,7 +579,7 @@ class GoogleRoutesService:
         self, orders: List[Order], n_clusters: int
     ) -> List[List[Order]]:
         """
-        Cluster orders by geographic location using k-means
+        Cluster orders by geographic location using k - means
         """
         if len(orders) <= n_clusters:
             # If fewer orders than drivers, assign one per driver
@@ -623,7 +620,7 @@ class GoogleRoutesService:
 
             coords_array = np.array(coords)
 
-            # Perform k-means clustering
+            # Perform k - means clustering
             kmeans = KMeans(
                 n_clusters=min(n_clusters, len(valid_orders)), random_state=42
             )
@@ -645,7 +642,7 @@ class GoogleRoutesService:
         except ImportError:
             # sklearn not available, use simple distribution
             logger.warning(
-                "scikit-learn not available, using simple order distribution"
+                "scikit - learn not available, using simple order distribution"
             )
             orders_per_cluster = len(orders) // n_clusters
             clusters = []
@@ -721,7 +718,7 @@ class GoogleRoutesService:
     async def _get_google_directions(
         self, depot: Tuple[float, float], stops: List[VRPStop]
     ) -> Dict:
-        """Get turn-by-turn directions from Google Routes API for visualization"""
+        """Get turn - by - turn directions from Google Routes API for visualization"""
         if not self.api_key or not stops:
             return {"distance": 0, "duration": 0, "polyline": ""}
 
@@ -749,17 +746,17 @@ class GoogleRoutesService:
             "intermediates": waypoints,
             "travelMode": "DRIVE",
             "routingPreference": "TRAFFIC_AWARE",
-            "optimizeWaypointOrder": False,  # Already optimized by OR-Tools
-            "languageCode": "zh-TW",
+            "optimizeWaypointOrder": False,  # Already optimized by OR - Tools
+            "languageCode": "zh - TW",
             "regionCode": "TW",
         }
 
         try:
             async with aiohttp.ClientSession() as session:
                 headers = {
-                    "Content-Type": "application/json",
-                    "X-Goog-Api-Key": self.api_key,
-                    "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline",
+                    "Content - Type": "application / json",
+                    "X - Goog - Api - Key": self.api_key,
+                    "X - Goog - FieldMask": "routes.duration, routes.distanceMeters, routes.polyline",
                 }
 
                 async with session.post(
@@ -802,7 +799,7 @@ class GoogleRoutesService:
         try:
             seconds = int(duration_str.rstrip("s"))
             return seconds // 60
-        except:
+        except Exception:
             return 0
 
     async def calculate_distance_matrix(
@@ -848,7 +845,7 @@ class GoogleRoutesService:
             "travelMode": "DRIVE",
             "routingPreference": "TRAFFIC_AWARE",
             "departureTime": datetime.now().isoformat() + "Z",
-            "languageCode": "zh-TW",
+            "languageCode": "zh - TW",
             "regionCode": "TW",
             "units": "METRIC",
             "extraComputations": ["TOLLS"],
@@ -940,7 +937,7 @@ class GoogleRoutesService:
 
     async def get_real_time_traffic(self, route_polyline: str) -> Dict[str, Any]:
         """
-        Get real-time traffic conditions for a route
+        Get real - time traffic conditions for a route
 
         Args:
             route_polyline: Encoded polyline of the route

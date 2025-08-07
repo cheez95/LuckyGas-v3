@@ -3,7 +3,6 @@ Route plan models for dispatch operations
 """
 
 import enum
-from datetime import datetime
 
 from sqlalchemy import JSON, Boolean, Column, Date, DateTime
 from sqlalchemy import Enum as SQLEnum
@@ -62,7 +61,7 @@ class RoutePlan(Base):
     actual_end_time = Column(DateTime, nullable=True)
 
     # Optimization details
-    optimization_score = Column(Float, nullable=True)  # 0-100
+    optimization_score = Column(Float, nullable=True)  # 0 - 100
     optimization_method = Column(String(50), nullable=True)  # google, manual, ai
 
     # Additional data

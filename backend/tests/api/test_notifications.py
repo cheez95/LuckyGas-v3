@@ -1,12 +1,12 @@
 """Tests for notification API endpoints."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
 
-from app.models.notification import NotificationChannel, NotificationStatus, SMSProvider
+from app.models.notification import NotificationStatus
 
 
 class TestSMSEndpoints:
@@ -27,7 +27,7 @@ class TestSMSEndpoints:
             }
 
             response = await async_client.post(
-                "/api/v1/notifications/send-sms",
+                "/api / v1 / notifications / send - sms",
                 headers=test_token_headers_manager,
                 json={
                     "phone": "0912345678",
@@ -59,13 +59,13 @@ class TestSMSEndpoints:
             }
 
             response = await async_client.post(
-                "/api/v1/notifications/send-sms",
+                "/api / v1 / notifications / send - sms",
                 headers=test_token_headers_manager,
                 json={
                     "phone": "0912345678",
                     "template_code": "order_confirmation",
                     "template_data": {
-                        "order_number": "ORD-123",
+                        "order_number": "ORD - 123",
                         "delivery_time": "今天下午2點",
                     },
                 },
@@ -77,7 +77,7 @@ class TestSMSEndpoints:
         mock_send.assert_called_once()
         call_args = mock_send.call_args
         assert call_args.kwargs["template_code"] == "order_confirmation"
-        assert call_args.kwargs["template_data"]["order_number"] == "ORD-123"
+        assert call_args.kwargs["template_data"]["order_number"] == "ORD - 123"
 
     @pytest.mark.asyncio
     async def test_send_sms_invalid_phone(
@@ -85,7 +85,7 @@ class TestSMSEndpoints:
     ):
         """Test SMS send with invalid phone number"""
         response = await async_client.post(
-            "/api/v1/notifications/send-sms",
+            "/api / v1 / notifications / send - sms",
             headers=test_token_headers_manager,
             json={"phone": "123456", "message": "測試簡訊"},  # Invalid
         )
@@ -99,7 +99,7 @@ class TestSMSEndpoints:
     ):
         """Test SMS send permission for driver role"""
         response = await async_client.post(
-            "/api/v1/notifications/send-sms",
+            "/api / v1 / notifications / send - sms",
             headers=test_token_headers_driver,
             json={"phone": "0912345678", "message": "測試簡訊"},
         )
@@ -123,7 +123,7 @@ class TestSMSEndpoints:
             }
 
             response = await async_client.get(
-                f"/api/v1/notifications/sms-status/{message_id}",
+                f"/api / v1 / notifications / sms - status/{message_id}",
                 headers=test_token_headers_manager,
             )
 
@@ -147,7 +147,7 @@ class TestSMSEndpoints:
             }
 
             response = await async_client.post(
-                "/api/v1/notifications/send-bulk-sms",
+                "/api / v1 / notifications / send - bulk - sms",
                 headers=test_token_headers_manager,
                 json={
                     "recipients": [
@@ -178,7 +178,7 @@ class TestSMSTemplateEndpoints:
     ):
         """Test create SMS template"""
         response = await async_client.post(
-            "/api/v1/notifications/sms-templates",
+            "/api / v1 / notifications / sms - templates",
             headers=test_token_headers_manager,
             json={
                 "code": "new_customer_welcome",
@@ -202,14 +202,14 @@ class TestSMSTemplateEndpoints:
         """Test create duplicate template code"""
         # Create first template
         await async_client.post(
-            "/api/v1/notifications/sms-templates",
+            "/api / v1 / notifications / sms - templates",
             headers=test_token_headers_manager,
             json={"code": "duplicate_test", "name": "Test", "content": "Test"},
         )
 
         # Try to create duplicate
         response = await async_client.post(
-            "/api/v1/notifications/sms-templates",
+            "/api / v1 / notifications / sms - templates",
             headers=test_token_headers_manager,
             json={"code": "duplicate_test", "name": "Test 2", "content": "Test 2"},
         )
@@ -231,14 +231,15 @@ class TestSMSTemplateEndpoints:
 
         for template in templates:
             await async_client.post(
-                "/api/v1/notifications/sms-templates",
+                "/api / v1 / notifications / sms - templates",
                 headers=test_token_headers_manager,
                 json=template,
             )
 
         # List all templates
         response = await async_client.get(
-            "/api/v1/notifications/sms-templates", headers=test_token_headers_manager
+            "/api / v1 / notifications / sms - templates",
+            headers=test_token_headers_manager,
         )
 
         assert response.status_code == 200
@@ -247,7 +248,7 @@ class TestSMSTemplateEndpoints:
 
         # List only active templates
         response = await async_client.get(
-            "/api/v1/notifications/sms-templates?is_active=true",
+            "/api / v1 / notifications / sms - templates?is_active=true",
             headers=test_token_headers_manager,
         )
 
@@ -263,7 +264,7 @@ class TestSMSTemplateEndpoints:
         """Test update SMS template"""
         # Create template
         create_response = await async_client.post(
-            "/api/v1/notifications/sms-templates",
+            "/api / v1 / notifications / sms - templates",
             headers=test_token_headers_manager,
             json={"code": "update_test", "name": "原始名稱", "content": "原始內容"},
         )
@@ -272,7 +273,7 @@ class TestSMSTemplateEndpoints:
 
         # Update template
         response = await async_client.put(
-            f"/api/v1/notifications/sms-templates/{template_id}",
+            f"/api / v1 / notifications / sms - templates/{template_id}",
             headers=test_token_headers_manager,
             json={
                 "name": "更新後名稱",
@@ -294,7 +295,7 @@ class TestSMSTemplateEndpoints:
         """Test delete SMS template (admin only)"""
         # Create template
         create_response = await async_client.post(
-            "/api/v1/notifications/sms-templates",
+            "/api / v1 / notifications / sms - templates",
             headers=test_token_headers_admin,
             json={"code": "delete_test", "name": "刪除測試", "content": "測試內容"},
         )
@@ -303,7 +304,7 @@ class TestSMSTemplateEndpoints:
 
         # Delete template
         response = await async_client.delete(
-            f"/api/v1/notifications/sms-templates/{template_id}",
+            f"/api / v1 / notifications / sms - templates/{template_id}",
             headers=test_token_headers_admin,
         )
 
@@ -312,7 +313,8 @@ class TestSMSTemplateEndpoints:
 
         # Verify deletion
         get_response = await async_client.get(
-            "/api/v1/notifications/sms-templates", headers=test_token_headers_admin
+            "/api / v1 / notifications / sms - templates",
+            headers=test_token_headers_admin,
         )
 
         templates = get_response.json()
@@ -326,7 +328,7 @@ class TestProviderConfigEndpoints:
     async def test_create_provider_config(self, async_client, test_token_headers_admin):
         """Test create provider configuration (admin only)"""
         response = await async_client.post(
-            "/api/v1/notifications/providers",
+            "/api / v1 / notifications / providers",
             headers=test_token_headers_admin,
             json={
                 "provider": "twilio",
@@ -354,7 +356,7 @@ class TestProviderConfigEndpoints:
         """Test list provider configurations"""
         # Create test config
         await async_client.post(
-            "/api/v1/notifications/providers",
+            "/api / v1 / notifications / providers",
             headers=test_token_headers_manager,
             json={
                 "provider": "every8d",
@@ -363,7 +365,7 @@ class TestProviderConfigEndpoints:
         )
 
         response = await async_client.get(
-            "/api/v1/notifications/providers", headers=test_token_headers_manager
+            "/api / v1 / notifications / providers", headers=test_token_headers_manager
         )
 
         assert response.status_code == 200
@@ -382,7 +384,7 @@ class TestProviderConfigEndpoints:
         """Test update provider configuration"""
         # Create config
         await async_client.post(
-            "/api/v1/notifications/providers",
+            "/api / v1 / notifications / providers",
             headers=test_token_headers_admin,
             json={
                 "provider": "mitake",
@@ -392,7 +394,7 @@ class TestProviderConfigEndpoints:
 
         # Update config
         response = await async_client.put(
-            "/api/v1/notifications/providers/mitake",
+            "/api / v1 / notifications / providers / mitake",
             headers=test_token_headers_admin,
             json={
                 "config": {"username": "new", "password": "new"},
@@ -425,14 +427,14 @@ class TestSMSLogsEndpoints:
             # Send test messages
             for i in range(5):
                 await async_client.post(
-                    "/api/v1/notifications/send-sms",
+                    "/api / v1 / notifications / send - sms",
                     headers=test_token_headers_manager,
                     json={"phone": f"091234567{i}", "message": f"測試 {i}"},
                 )
 
         # Get all logs
         response = await async_client.get(
-            "/api/v1/notifications/sms-logs", headers=test_token_headers_manager
+            "/api / v1 / notifications / sms - logs", headers=test_token_headers_manager
         )
 
         assert response.status_code == 200
@@ -441,7 +443,7 @@ class TestSMSLogsEndpoints:
 
         # Filter by recipient
         response = await async_client.get(
-            "/api/v1/notifications/sms-logs?recipient=0912345671",
+            "/api / v1 / notifications / sms - logs?recipient=0912345671",
             headers=test_token_headers_manager,
         )
 
@@ -484,7 +486,7 @@ class TestSMSLogsEndpoints:
             mock_get_db.return_value.__aiter__.return_value = [mock_db]
 
             response = await async_client.get(
-                "/api/v1/notifications/stats", headers=test_token_headers_manager
+                "/api / v1 / notifications / stats", headers=test_token_headers_manager
             )
 
         assert response.status_code == 200
@@ -498,7 +500,7 @@ class TestSMSLogsEndpoints:
 
         # Check provider breakdown
         assert len(data["provider_breakdown"]) == 2
-        assert data["provider_breakdown"][0]["success_rate"] == 90.0  # 45/50*100
+        assert data["provider_breakdown"][0]["success_rate"] == 90.0  # 45 / 50 * 100
 
 
 @pytest.mark.asyncio
@@ -506,7 +508,7 @@ async def test_sms_integration_flow(async_client, test_token_headers_manager, te
     """Test complete SMS integration flow"""
     # 1. Create template
     template_response = await async_client.post(
-        "/api/v1/notifications/sms-templates",
+        "/api / v1 / notifications / sms - templates",
         headers=test_token_headers_manager,
         json={
             "code": "integration_test",
@@ -528,7 +530,7 @@ async def test_sms_integration_flow(async_client, test_token_headers_manager, te
         }
 
         send_response = await async_client.post(
-            "/api/v1/notifications/send-sms",
+            "/api / v1 / notifications / send - sms",
             headers=test_token_headers_manager,
             json={
                 "phone": "0912345678",
@@ -551,7 +553,7 @@ async def test_sms_integration_flow(async_client, test_token_headers_manager, te
         }
 
         status_response = await async_client.get(
-            f"/api/v1/notifications/sms-status/{message_id}",
+            f"/api / v1 / notifications / sms - status/{message_id}",
             headers=test_token_headers_manager,
         )
 

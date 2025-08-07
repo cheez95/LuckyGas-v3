@@ -1,0 +1,227 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: luckygas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/uv
+          backend/.venv
+        key: ${{ runner.os }}-uv-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+    
+    - name: Install dependencies
+      working-directory: backend
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+        uv pip install pytest pytest-asyncio pytest-cov pytest-env httpx
+    
+    - name: Run migrations
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/luckygas_test
+        TESTING: 1
+      run: |
+        source .venv/bin/activate
+        alembic upgrade head
+    
+    - name: Run tests with coverage
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379/1
+        SECRET_KEY: test-secret-key-for-testing-with-32-chars-minimum
+        TESTING: 1
+        ENVIRONMENT: test
+      run: |
+        source .venv/bin/activate
+        pytest --cov=app --cov-report=xml --cov-report=term-missing -v
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+    
+    - name: Run security checks
+      working-directory: backend
+      continue-on-error: true
+      run: |
+        source .venv/bin/activate
+        pip install bandit safety
+        bandit -r app/ -ll
+        safety check
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Run linting
+      working-directory: frontend
+      run: npm run lint
+    
+    - name: Run type checking
+      working-directory: frontend
+      run: npm run type-check
+    
+    - name: Run tests with coverage
+      working-directory: frontend
+      run: npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+
+  integration-tests:
+    name: Integration Tests
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: luckygas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install backend dependencies
+      working-directory: backend
+      run: |
+        pip install uv
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+    
+    - name: Install frontend dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Build frontend
+      working-directory: frontend
+      run: npm run build
+    
+    - name: Start backend server
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379/1
+        SECRET_KEY: test-secret-key
+        TESTING: 1
+      run: |
+        source .venv/bin/activate
+        alembic upgrade head
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10  # Wait for server to start
+    
+    - name: Run E2E tests
+      working-directory: backend
+      env:
+        API_URL: http://localhost:8000
+      run: |
+        source .venv/bin/activate
+        pytest tests/e2e/ -v -m e2e
+    
+    - name: Stop services
+      if: always()
+      run: |
+        pkill -f uvicorn || true

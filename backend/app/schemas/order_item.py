@@ -34,14 +34,12 @@ class OrderItemBase(BaseModel):
     @field_validator("discount_percentage")
     def validate_discount_percentage(cls, v):
         if v < 0 or v > 100:
-            raise ValueError("折扣百分比必須在0-100之間")
+            raise ValueError("折扣百分比必須在0 - 100之間")
         return v
 
 
 class OrderItemCreate(OrderItemBase):
     """Schema for creating order item"""
-
-    pass
 
 
 class OrderItemUpdate(BaseModel):

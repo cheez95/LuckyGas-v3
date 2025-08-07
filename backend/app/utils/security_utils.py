@@ -6,16 +6,15 @@ import hashlib
 import re
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, Request, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import cache
 from app.core.logging import get_logger
 from app.core.security import DataEncryption
-from app.core.security_config import get_password_policy, security_config
+from app.core.security_config import security_config
 
 logger = get_logger(__name__)
 
@@ -42,7 +41,7 @@ class SecurityAudit:
         }
 
         # Store in daily log
-        key = f"security:audit:{datetime.utcnow().strftime('%Y%m%d')}"
+        key = f"security:audit:{datetime.utcnow().strftime('%Y % m % d')}"
 
         try:
             current_log = await cache.get(key)
@@ -113,7 +112,7 @@ class InputSanitizer:
         filename = filename.replace("/", "_").replace("\\", "_")
 
         # Remove special characters
-        filename = re.sub(r"[^a-zA-Z0-9._-]", "_", filename)
+        filename = re.sub(r"[^a - zA - Z0 - 9._-]", "_", filename)
 
         # Limit length
         max_length = 255
@@ -154,12 +153,12 @@ class InputSanitizer:
     def sanitize_sql_identifier(identifier: str) -> str:
         """Sanitize SQL identifiers (table names, column names)."""
         # Only allow alphanumeric and underscore
-        return re.sub(r"[^a-zA-Z0-9_]", "", identifier)
+        return re.sub(r"[^a - zA - Z0 - 9_]", "", identifier)
 
     @staticmethod
     def validate_email(email: str) -> bool:
         """Validate email format."""
-        pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        pattern = r"^[a - zA - Z0 - 9._%+-]+@[a - zA - Z0 - 9.-]+\.[a - zA - Z]{2, }$"
         return bool(re.match(pattern, email))
 
     @staticmethod
@@ -195,7 +194,7 @@ class SecureTokenGenerator:
         lowercase = string.ascii_lowercase
         uppercase = string.ascii_uppercase
         digits = string.digits
-        symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+        symbols = "!@#$%^&*()_+-=[]{}|;:, .<>?"
 
         # Exclude ambiguous characters
         if exclude_ambiguous:
@@ -253,7 +252,7 @@ class PIIMasking:
         if not phone:
             return phone
 
-        # Remove non-digits
+        # Remove non - digits
         digits = re.sub(r"\D", "", phone)
 
         if len(digits) < 4:
@@ -283,7 +282,7 @@ class PIIMasking:
         if not tax_id:
             return tax_id
 
-        # Remove non-digits
+        # Remove non - digits
         digits = re.sub(r"\D", "", tax_id)
 
         if len(digits) < 4:
@@ -352,12 +351,12 @@ class RequestValidator:
     def get_client_ip(request: Request) -> str:
         """Get real client IP from request."""
         # Check forwarded headers
-        forwarded_for = request.headers.get("X-Forwarded-For")
+        forwarded_for = request.headers.get("X - Forwarded - For")
         if forwarded_for:
             # Take the first IP in the chain
-            return forwarded_for.split(",")[0].strip()
+            return forwarded_for.split(", ")[0].strip()
 
-        real_ip = request.headers.get("X-Real-IP")
+        real_ip = request.headers.get("X - Real - IP")
         if real_ip:
             return real_ip
 
@@ -370,7 +369,7 @@ class RequestValidator:
     @staticmethod
     def validate_content_type(request: Request, allowed_types: List[str]):
         """Validate request content type."""
-        content_type = request.headers.get("content-type", "").lower()
+        content_type = request.headers.get("content - type", "").lower()
 
         # Remove charset and other parameters
         content_type = content_type.split(";")[0].strip()
@@ -384,7 +383,7 @@ class RequestValidator:
     @staticmethod
     async def validate_request_size(request: Request, max_size: int = 10 * 1024 * 1024):
         """Validate request body size."""
-        content_length = request.headers.get("content-length")
+        content_length = request.headers.get("content - length")
 
         if content_length and int(content_length) > max_size:
             raise HTTPException(
@@ -406,15 +405,15 @@ class SecureHeaders:
         """Add cache control headers."""
         if cache_time > 0:
             cache_control = (
-                f"private, max-age={cache_time}"
+                f"private, max - age={cache_time}"
                 if private
-                else f"public, max-age={cache_time}"
+                else f"public, max - age={cache_time}"
             )
         else:
-            cache_control = "no-store, no-cache, must-revalidate, private"
+            cache_control = "no - store, no - cache, must - revalidate, private"
 
-        response.headers["Cache-Control"] = cache_control
-        response.headers["Pragma"] = "no-cache" if cache_time == 0 else "cache"
+        response.headers["Cache - Control"] = cache_control
+        response.headers["Pragma"] = "no - cache" if cache_time == 0 else "cache"
 
         if cache_time == 0:
             response.headers["Expires"] = "0"

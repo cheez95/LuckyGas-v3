@@ -10,6 +10,8 @@ from app.models.notification import NotificationChannel, NotificationStatus, SMS
 
 
 # SMS Send Schemas
+
+
 class SMSSendRequest(BaseModel):
     """SMS send request"""
 
@@ -97,6 +99,8 @@ class SMSStatusResponse(BaseModel):
 
 
 # SMS Template Schemas
+
+
 class SMSTemplateBase(BaseModel):
     """Base SMS template schema"""
 
@@ -104,16 +108,14 @@ class SMSTemplateBase(BaseModel):
     name: str = Field(..., description="Template name")
     description: Optional[str] = None
     content: str = Field(..., description="Template content with placeholders")
-    language: str = Field("zh-TW", description="Language code")
-    variant: str = Field("A", description="Variant for A/B testing")
+    language: str = Field("zh - TW", description="Language code")
+    variant: str = Field("A", description="Variant for A / B testing")
     weight: int = Field(100, ge=0, le=100, description="Weight for random selection")
     is_active: bool = True
 
 
 class SMSTemplateCreate(SMSTemplateBase):
     """Create SMS template schema"""
-
-    pass
 
 
 class SMSTemplateUpdate(BaseModel):
@@ -141,11 +143,13 @@ class SMSTemplateResponse(SMSTemplateBase):
 
 
 # Provider Configuration Schemas
+
+
 class ProviderConfigBase(BaseModel):
     """Base provider configuration schema"""
 
     provider: SMSProvider
-    config: Dict[str, Any] = Field(..., description="Provider-specific configuration")
+    config: Dict[str, Any] = Field(..., description="Provider - specific configuration")
     is_active: bool = True
     priority: int = Field(0, description="Higher priority = preferred provider")
     rate_limit: Optional[int] = Field(None, description="Messages per minute")
@@ -158,8 +162,6 @@ class ProviderConfigBase(BaseModel):
 
 class ProviderConfigCreate(ProviderConfigBase):
     """Create provider configuration schema"""
-
-    pass
 
 
 class ProviderConfigUpdate(BaseModel):
@@ -188,6 +190,8 @@ class ProviderConfigResponse(ProviderConfigBase):
 
 
 # SMS Log Schemas
+
+
 class SMSLogResponse(BaseModel):
     """SMS log response"""
 
@@ -215,6 +219,8 @@ class SMSLogResponse(BaseModel):
 
 
 # Notification Log Schemas
+
+
 class NotificationLogResponse(BaseModel):
     """Notification log response"""
 
@@ -237,6 +243,8 @@ class NotificationLogResponse(BaseModel):
 
 
 # Statistics Schemas
+
+
 class NotificationStatsResponse(BaseModel):
     """Notification statistics response"""
 

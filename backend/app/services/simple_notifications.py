@@ -5,14 +5,12 @@ Replaces complex notification_service.py with direct sending
 
 import logging
 import re
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import get_db
+from app.api.deps import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +23,12 @@ class SimpleNotificationService:
     - Direct SMS sending via provider API
     - Simple email sending via SMTP
     - Database logging for audit trail
-    - Taiwan-specific phone validation
+    - Taiwan - specific phone validation
     """
 
     def __init__(self):
         self.sms_provider_url = getattr(
-            settings, "SMS_PROVIDER_URL", "https://api.sms.tw/send"
+            settings, "SMS_PROVIDER_URL", "https://api.sms.tw / send"
         )
         self.sms_api_key = getattr(settings, "SMS_API_KEY", "")
         self.sms_sender = getattr(settings, "SMS_SENDER_NAME", "LuckyGas")
@@ -66,7 +64,7 @@ class SimpleNotificationService:
                     },
                     headers={
                         "Authorization": f"Bearer {self.sms_api_key}",
-                        "Content-Type": "application/json",
+                        "Content - Type": "application / json",
                     },
                 )
 
@@ -137,9 +135,9 @@ class SimpleNotificationService:
             return False
 
         message = (
-            f"【幸福氣】您的瓦斯訂單已確認\n"
+            "【幸福氣】您的瓦斯訂單已確認\n"
             f"訂單編號：{order.order_number}\n"
-            f"預計送達：{order.scheduled_date.strftime('%m月%d日')}\n"
+            f"預計送達：{order.scheduled_date.strftime('%m月 % d日')}\n"
             f"送達時段：{order.delivery_time_start}-{order.delivery_time_end}"
         )
 
@@ -151,8 +149,8 @@ class SimpleNotificationService:
             return False
 
         message = (
-            f"【幸福氣】您的瓦斯即將送達！\n"
-            f"司機將在10-15分鐘內抵達\n"
+            "【幸福氣】您的瓦斯即將送達！\n"
+            "司機將在10 - 15分鐘內抵達\n"
             f"訂單編號：{order.order_number}"
         )
 
@@ -164,9 +162,9 @@ class SimpleNotificationService:
             return False
 
         message = (
-            f"【幸福氣】您的瓦斯已送達\n"
+            "【幸福氣】您的瓦斯已送達\n"
             f"訂單編號：{order.order_number}\n"
-            f"感謝您的訂購！"
+            "感謝您的訂購！"
         )
 
         return await self.send_sms(order.customer.phone, message)
@@ -177,7 +175,7 @@ class SimpleNotificationService:
             return False
 
         message = (
-            f"【幸福氣】您有新的配送路線\n"
+            "【幸福氣】您有新的配送路線\n"
             f"路線編號：{route.route_number}\n"
             f"配送點數：{route.total_stops}\n"
             f"預計時間：{route.estimated_duration_minutes}分鐘"
@@ -190,8 +188,8 @@ class SimpleNotificationService:
         Validate Taiwan phone number format.
 
         Accepts:
-        - Mobile: 09XX-XXX-XXX or 09XXXXXXXX
-        - Landline: 0X-XXXX-XXXX or 0XXXXXXXXX
+        - Mobile: 09XX - XXX - XXX or 09XXXXXXXX
+        - Landline: 0X - XXXX - XXXX or 0XXXXXXXXX
         """
         # Remove common separators
         clean_phone = re.sub(r"[-\s()]", "", phone)
@@ -200,15 +198,15 @@ class SimpleNotificationService:
         if re.match(r"^09\d{8}$", clean_phone):
             return True
 
-        # Landline pattern (0 + area code + 7-8 digits)
-        if re.match(r"^0[2-8]\d{7,8}$", clean_phone):
+        # Landline pattern (0 + area code + 7 - 8 digits)
+        if re.match(r"^0[2 - 8]\d{7, 8}$", clean_phone):
             return True
 
         return False
 
     def _normalize_phone(self, phone: str) -> str:
         """Normalize phone number to consistent format"""
-        # Remove all non-digits
+        # Remove all non - digits
         return re.sub(r"\D", "", phone)
 
     async def _log_notification(
@@ -224,7 +222,7 @@ class SimpleNotificationService:
             async for db in get_db():
                 await db.execute(
                     """
-                    INSERT INTO notification_history 
+                    INSERT INTO notification_history
                     (type, recipient, content, status, error_message, sent_at)
                     VALUES (:type, :recipient, :content, :status, :error, NOW())
                     """,
@@ -249,7 +247,7 @@ class SimpleNotificationService:
             async for db in get_db():
                 result = await db.execute(
                     """
-                    SELECT 
+                    SELECT
                         type,
                         status,
                         COUNT(*) as count

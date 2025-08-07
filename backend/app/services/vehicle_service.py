@@ -5,7 +5,6 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 logger = logging.getLogger(__name__)
 
 

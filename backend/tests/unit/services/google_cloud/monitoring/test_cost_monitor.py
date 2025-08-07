@@ -3,6 +3,7 @@ Unit tests for Google API Cost Monitor
 """
 
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import redis.asyncio as redis
@@ -101,7 +102,7 @@ class TestGoogleAPICostMonitor:
         mock_redis.get = AsyncMock(
             side_effect=[
                 # First call for hourly total - over warning (>$5) but under critical (<$10)
-                b"6.00",  # routes - $6/hour is over warning threshold of $5
+                b"6.00",  # routes - $6 / hour is over warning threshold of $5
                 None,  # geocoding
                 None,  # places
                 None,  # vertex_ai
@@ -128,7 +129,7 @@ class TestGoogleAPICostMonitor:
         mock_redis.get = AsyncMock(
             side_effect=[
                 # First call for hourly total - over critical (>$10)
-                b"15.00",  # routes - $15/hour is over critical threshold of $10
+                b"15.00",  # routes - $15 / hour is over critical threshold of $10
                 None,  # geocoding
                 None,  # places
                 None,  # vertex_ai
@@ -270,8 +271,8 @@ class TestGoogleAPICostMonitor:
         # Create a proper async iterator mock
         async def async_scan_iter(*args, **kwargs):
             for key in [
-                b"api_cost:day:2024-01-20:routes",
-                b"api_cost:day:2024-01-20:geocoding",
+                b"api_cost:day:2024 - 01 - 20:routes",
+                b"api_cost:day:2024 - 01 - 20:geocoding",
             ]:
                 yield key
 

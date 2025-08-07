@@ -1,10 +1,7 @@
-import asyncio
-import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import joblib
 import numpy as np
 import pandas as pd
 from google.cloud import aiplatform, storage
@@ -27,7 +24,7 @@ class VertexAIService:
         aiplatform.init(
             project=self.project_id,
             location=self.location,
-            staging_bucket=f"gs://{self.bucket_name}/vertex-ai-staging",
+            staging_bucket=f"gs://{self.bucket_name}/vertex - ai - staging",
         )
 
         self.storage_client = storage.Client()
@@ -39,7 +36,7 @@ class VertexAIService:
         self.churn_prediction_model_endpoint: Optional[str] = None
 
     async def train_demand_prediction_model(
-        self, dataset_path: str, display_name: str = "lucky-gas-demand-prediction"
+        self, dataset_path: str, display_name: str = "lucky - gas - demand - prediction"
     ) -> str:
         """Train a demand prediction model using AutoML."""
         try:
@@ -47,7 +44,7 @@ class VertexAIService:
             job = AutoMLTabularTrainingJob(
                 display_name=display_name,
                 optimization_prediction_type="regression",
-                optimization_objective="minimize-rmse",
+                optimization_objective="minimize - rmse",
                 column_specs={
                     "customer_id": "categorical",
                     "day_of_week": "categorical",
@@ -84,7 +81,7 @@ class VertexAIService:
         self,
         model_name: str,
         endpoint_display_name: str,
-        machine_type: str = "n1-standard-4",
+        machine_type: str = "n1 - standard - 4",
     ) -> str:
         """Deploy a trained model to an endpoint."""
         try:
@@ -180,7 +177,7 @@ class VertexAIService:
         """Optimize delivery routes using Vertex AI."""
         try:
             if not self.route_optimization_model_endpoint:
-                # Use OR-Tools integration instead
+                # Use OR - Tools integration instead
                 return await self._optimize_routes_with_ortools(
                     orders, drivers, constraints
                 )
@@ -265,7 +262,7 @@ class VertexAIService:
                 job_display_name=job_display_name,
                 gcs_source=input_uri,
                 gcs_destination_prefix=output_uri,
-                machine_type="n1-standard-4",
+                machine_type="n1 - standard - 4",
                 starting_replica_count=1,
                 max_replica_count=5,
             )
@@ -291,7 +288,7 @@ class VertexAIService:
             return 28.5
         elif month in [12, 1, 2]:  # Winter
             return 16.0
-        else:  # Spring/Fall
+        else:  # Spring / Fall
             return 22.0
 
     async def _get_weather_humidity(self, date: datetime) -> float:
@@ -339,7 +336,7 @@ class VertexAIService:
         drivers: List[Dict[str, Any]],
         constraints: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Optimize routes using OR-Tools."""
+        """Optimize routes using OR - Tools."""
         # This will be implemented in the routes service
         from app.services.route_optimization_service import RouteOptimizationService
 
@@ -395,9 +392,9 @@ class VertexAIService:
             csv_data = data.to_csv(index=False)
 
             # Upload to GCS
-            blob_name = f"vertex-ai-datasets/{dataset_name}/data.csv"
+            blob_name = f"vertex - ai - datasets/{dataset_name}/data.csv"
             blob = self.bucket.blob(blob_name)
-            blob.upload_from_string(csv_data, content_type="text/csv")
+            blob.upload_from_string(csv_data, content_type="text / csv")
 
             logger.info(
                 f"Training data uploaded to: gs://{self.bucket_name}/{blob_name}"
@@ -413,7 +410,7 @@ class VertexAIService:
         # This would typically load from your database
         # For now, create sample data
 
-        dates = pd.date_range(start="2024-01-01", end="2024-12-31", freq="D")
+        dates = pd.date_range(start="2024 - 01 - 01", end="2024 - 12 - 31", freq="D")
         customers = [f"CUST{i:04d}" for i in range(1, 101)]
 
         data = []
@@ -448,7 +445,7 @@ def get_vertex_ai_service():
     """Get or create the singleton vertex AI service"""
     global _vertex_ai_service
     if _vertex_ai_service is None:
-        # Check if we're in development/testing mode
+        # Check if we're in development / testing mode
         import os
 
         if (

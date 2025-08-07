@@ -10,7 +10,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import redis.asyncio as redis
@@ -39,7 +39,7 @@ class IntelligentCache:
     """
     Intelligent caching system with:
     - Predictive TTL based on access patterns
-    - Cost-aware caching decisions
+    - Cost - aware caching decisions
     - Automatic cache warming for popular routes
     - Compression for large responses
     """
@@ -116,7 +116,7 @@ class IntelligentCache:
         return self.DEFAULT_TTLS.get(api_type, 3600)
 
     def _should_cache(self, api_type: str, response_size: int) -> bool:
-        """Determine if response should be cached based on cost/benefit"""
+        """Determine if response should be cached based on cost / benefit"""
         # Always cache expensive APIs
         if api_type in ["places", "routes"]:
             return True
@@ -271,7 +271,7 @@ class IntelligentCache:
         return stats_dict
 
     async def warm_cache(self, predictions: List[Dict[str, Any]]):
-        """Pre-cache predicted popular routes"""
+        """Pre - cache predicted popular routes"""
         await self._ensure_redis()
 
         warmed = 0

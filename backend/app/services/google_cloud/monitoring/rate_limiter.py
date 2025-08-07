@@ -5,7 +5,7 @@ Google API Rate Limiter
 import asyncio
 import logging
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Optional, Tuple
 
 import redis.asyncio as redis
@@ -66,7 +66,7 @@ class GoogleAPIRateLimiter:
             return True, None
 
         limits = self.LIMITS[api_type]
-        now = datetime.now()
+        datetime.now()
 
         # Check all rate limit windows
         checks = [
@@ -230,12 +230,12 @@ class GoogleAPIRateLimiter:
         # Check if we're close to limits
         second_usage = current_usage.get("usage", {}).get("second", {})
         if second_usage.get("percentage", 0) > 80:
-            # Near per-second limit, wait a bit
+            # Near per - second limit, wait a bit
             return 1.0 / limits["per_second"]
 
         minute_usage = current_usage.get("usage", {}).get("minute", {})
         if minute_usage.get("percentage", 0) > 90:
-            # Near per-minute limit, wait longer
+            # Near per - minute limit, wait longer
             return 60.0 / limits["per_minute"]
 
         return 0.0

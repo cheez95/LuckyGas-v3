@@ -2,7 +2,6 @@
 Structured logging configuration for Lucky Gas
 """
 
-import json
 import logging
 import sys
 from contextvars import ContextVar
@@ -32,7 +31,7 @@ class ContextFilter(logging.Filter):
 
         # Add application metadata
         record.environment = settings.ENVIRONMENT.value
-        record.service = "lucky-gas-backend"
+        record.service = "lucky - gas - backend"
         record.version = "1.0.0"
 
         # Add timestamp in ISO format
@@ -116,7 +115,7 @@ def setup_logging():
 
     # Add formatter based on environment
     if settings.is_development():
-        # Use human-readable format for development
+        # Use human - readable format for development
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
@@ -174,7 +173,7 @@ def configure_app_loggers():
 
 def suppress_noisy_loggers():
     """
-    Suppress or reduce verbosity of third-party loggers
+    Suppress or reduce verbosity of third - party loggers
     """
     # Suppress SQLAlchemy logs unless in debug mode
     if not settings.is_development():

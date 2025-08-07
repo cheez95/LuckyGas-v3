@@ -6,7 +6,7 @@ test.describe('Critical: Route Optimization', () => {
     await loginAsTestUser(page);
   });
 
-  test($1, async ({ page }) => {
+  test('should optimize delivery routes', async ({ page }) => {
     // Navigate to routes
     await page.click('text=路線規劃');
     await page.waitForURL(/routes/);
@@ -78,7 +78,7 @@ test.describe('Critical: Route Optimization', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should optimize delivery routes - 2', async ({ page }) => {
     // Navigate to routes
     await page.click('text=路線規劃');
     await page.waitForURL(/routes/);
@@ -129,7 +129,7 @@ test.describe('Critical: Route Optimization', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should optimize delivery routes - 3', async ({ page }) => {
     // Navigate to routes
     await page.click('text=路線規劃');
     await page.waitForURL(/routes/);
@@ -184,7 +184,7 @@ test.describe('Critical: Route Optimization', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should optimize delivery routes - 4', async ({ page }) => {
     // Check if emergency dispatch is available
     const emergencyMenu = page.locator('text=緊急派遣');
     if (await emergencyMenu.isVisible()) {

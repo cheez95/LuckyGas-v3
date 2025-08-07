@@ -1,0 +1,404 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - develop
+      - staging
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      deploy_backend:
+        description: 'Deploy backend service'
+        required: true
+        default: 'true'
+        type: boolean
+      deploy_frontend:
+        description: 'Deploy frontend service'
+        required: true
+        default: 'true'
+        type: boolean
+      run_migrations:
+        description: 'Run database migrations'
+        required: true
+        default: 'true'
+        type: boolean
+
+env:
+  GCP_PROJECT_ID: luckygas-staging
+  GCP_REGION: asia-east1
+  ARTIFACT_REGISTRY: asia-east1-docker.pkg.dev
+  BACKEND_SERVICE: luckygas-backend-staging
+  FRONTEND_SERVICE: luckygas-frontend-staging
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Build and test backend
+  backend-build:
+    if: github.event.inputs.deploy_backend != 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          uv pip install -r requirements.txt
+          uv pip install -r requirements-dev.txt
+          
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///test.db
+          SECRET_KEY: test-secret-key
+          FIRST_SUPERUSER_PASSWORD: test-password
+        run: |
+          uv run pytest tests/unit -v
+          
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/backend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=staging-latest,enable={{is_default_branch}}
+            
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+          
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }}
+          
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/backend:buildcache
+          cache-to: type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/backend:buildcache,mode=max
+          build-args: |
+            BUILD_ENV=staging
+            VERSION=${{ github.sha }}
+
+  # Build and test frontend
+  frontend-build:
+    if: github.event.inputs.deploy_frontend != 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+        
+      - name: Run tests
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm run type-check
+          npm test -- --passWithNoTests
+          
+      - name: Build application
+        working-directory: frontend
+        env:
+          VITE_API_URL: https://staging-api.luckygas.tw
+          VITE_WS_URL: wss://staging-api.luckygas.tw
+          VITE_ENVIRONMENT: staging
+        run: npm run build
+        
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=staging-latest,enable={{is_default_branch}}
+            
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+          
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }}
+          
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/frontend:buildcache
+          cache-to: type=registry,ref=${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/frontend:buildcache,mode=max
+          build-args: |
+            VITE_API_URL=https://staging-api.luckygas.tw
+            VITE_WS_URL=wss://staging-api.luckygas.tw
+            VITE_ENVIRONMENT=staging
+
+  # Deploy backend to Cloud Run
+  deploy-backend:
+    needs: backend-build
+    if: github.event.inputs.deploy_backend != 'false'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging-api.luckygas.tw
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        
+      - name: Get Cloud SQL instance connection name
+        id: cloudsql
+        run: |
+          CONNECTION_NAME=$(gcloud sql instances describe luckygas-staging-db \
+            --format="value(connectionName)")
+          echo "connection_name=$CONNECTION_NAME" >> $GITHUB_OUTPUT
+          
+      - name: Get Redis host
+        id: redis
+        run: |
+          REDIS_HOST=$(gcloud redis instances describe luckygas-staging-redis \
+            --region=${{ env.GCP_REGION }} \
+            --format="value(host)")
+          echo "host=$REDIS_HOST" >> $GITHUB_OUTPUT
+          
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+            --image ${{ needs.backend-build.outputs.image-tag }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --memory 2Gi \
+            --cpu 2 \
+            --timeout 300 \
+            --concurrency 1000 \
+            --max-instances 10 \
+            --min-instances 1 \
+            --port 8000 \
+            --allow-unauthenticated \
+            --add-cloudsql-instances ${{ steps.cloudsql.outputs.connection_name }} \
+            --set-env-vars "ENVIRONMENT=staging,GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }},REDIS_HOST=${{ steps.redis.outputs.host }}" \
+            --set-secrets "DB_PASSWORD=database-password:latest,SECRET_KEY=jwt-secret-key:latest,REDIS_PASSWORD=redis-password:latest,ADMIN_PASSWORD=admin-password:latest,GOOGLE_MAPS_API_KEY=google-maps-api-key:latest" \
+            --service-account luckygas-staging-workload@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --vpc-connector projects/${{ env.GCP_PROJECT_ID }}/locations/${{ env.GCP_REGION }}/connectors/luckygas-staging-connector
+
+  # Deploy frontend to Cloud Run
+  deploy-frontend:
+    needs: frontend-build
+    if: github.event.inputs.deploy_frontend != 'false'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.luckygas.tw
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
+            --image ${{ needs.frontend-build.outputs.image-tag }} \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 60 \
+            --concurrency 1000 \
+            --max-instances 20 \
+            --min-instances 1 \
+            --port 80 \
+            --allow-unauthenticated \
+            --service-account luckygas-staging-workload@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
+  # Run database migrations
+  run-migrations:
+    needs: deploy-backend
+    if: github.event.inputs.run_migrations != 'false'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        
+      - name: Get Cloud SQL instance connection name
+        id: cloudsql
+        run: |
+          CONNECTION_NAME=$(gcloud sql instances describe luckygas-staging-db \
+            --format="value(connectionName)")
+          echo "connection_name=$CONNECTION_NAME" >> $GITHUB_OUTPUT
+          
+      - name: Run database migrations
+        run: |
+          # Create or update migration job
+          gcloud run jobs create luckygas-migrate-staging \
+            --image ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/backend:staging-latest \
+            --region ${{ env.GCP_REGION }} \
+            --max-retries 3 \
+            --parallelism 1 \
+            --task-timeout 600 \
+            --add-cloudsql-instances ${{ steps.cloudsql.outputs.connection_name }} \
+            --set-env-vars "ENVIRONMENT=staging" \
+            --set-secrets "DB_PASSWORD=database-password:latest,POSTGRES_PASSWORD=database-password:latest" \
+            --service-account luckygas-staging-workload@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --vpc-connector projects/${{ env.GCP_PROJECT_ID }}/locations/${{ env.GCP_REGION }}/connectors/luckygas-staging-connector \
+            --command "python,-m,alembic,upgrade,head" \
+            2>/dev/null || \
+          gcloud run jobs update luckygas-migrate-staging \
+            --image ${{ env.ARTIFACT_REGISTRY }}/${{ env.GCP_PROJECT_ID }}/luckygas/backend:staging-latest \
+            --region ${{ env.GCP_REGION }}
+          
+          # Execute the migration job
+          gcloud run jobs execute luckygas-migrate-staging \
+            --region ${{ env.GCP_REGION }} \
+            --wait
+
+  # Run E2E tests
+  e2e-tests:
+    needs: [deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Playwright
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          
+      - name: Run E2E tests
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BASE_URL: https://staging.luckygas.tw
+          PLAYWRIGHT_API_URL: https://staging-api.luckygas.tw
+        run: |
+          npm run test:e2e -- --project=chromium
+          
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  # Health check validation
+  health-check:
+    needs: [deploy-backend, deploy-frontend, run-migrations]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        
+      - name: Run health checks
+        run: |
+          chmod +x deployment/scripts/validate-staging-health.sh
+          ./deployment/scripts/validate-staging-health.sh
+          
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}';
+            const color = status === 'success' ? 'good' : 'danger';
+            const message = status === 'success' 
+              ? '✅ Staging deployment completed successfully!'
+              : '❌ Staging deployment failed. Check the logs.';
+            
+            // Add deployment comment to PR if exists
+            if (context.payload.pull_request) {
+              github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: message + '\n\n[View staging environment](https://staging.luckygas.tw)'
+              });
+            }

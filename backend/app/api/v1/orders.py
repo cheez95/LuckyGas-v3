@@ -3,27 +3,24 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api import deps
 from app.api.deps import get_db
+from app.core.cache import cache, cache_result, invalidate_cache
 
 # Removed during compaction
 # from app.api.v1.socketio_handler import notify_order_update
 from app.models.customer import Customer
 from app.models.gas_product import GasProduct
+from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
 from app.models.user import User
 from app.schemas.credit import CreditCheckResult, CreditSummary
 from app.schemas.order import Order as OrderSchema
 from app.schemas.order import (
-
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy import or_
-from sqlalchemy import select
-
     OrderCreate,
     OrderCreateV2,
     OrderUpdate,
@@ -62,11 +59,11 @@ async def get_orders(
     - **is_urgent**: 是否緊急訂單
     """
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
-    order_service = OrderService(db)
+    OrderService(db)
 
     # For date range filtering, we'll need to handle this differently
     # Currently the service only filters by single scheduled_date
@@ -117,7 +114,7 @@ async def get_order(
 ):
     """獲取特定訂單詳情"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staf", "driver"]:
+    if current_user.role not in ["super_admin", "manager", "office_sta", "driver"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
@@ -147,7 +144,7 @@ async def create_order(
     創建新訂單
     """
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
@@ -176,7 +173,7 @@ async def update_order(
 ):
     """更新訂單"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
@@ -209,7 +206,7 @@ async def cancel_order(
 ):
     """取消訂單"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
@@ -232,7 +229,7 @@ async def cancel_order(
         await cache.invalidate("orders:list:*")
 
         # Removed during compaction
-        # Send real-time notification
+        # Send real - time notification
         # await notify_order_update(
         #     order_id=order_id,
         #     status="cancelled",
@@ -251,6 +248,8 @@ async def cancel_order(
 
 
 # V2 endpoints for flexible product system
+
+
 @router.post("/v2/", response_model=OrderV2)
 async def create_order_v2(
     order_create: OrderCreateV2,
@@ -263,7 +262,7 @@ async def create_order_v2(
     使用新的產品系統，通過 order_items 指定產品和數量
     """
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Verify customer exists
@@ -278,11 +277,9 @@ async def create_order_v2(
     order_data = order_create.model_dump(exclude={"order_items"})
 
     # Generate order number
-    from datetime import datetime
-
     timestamp = datetime.now()
     order_data["order_number"] = (
-        f"ORD-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
+        f"ORD-{timestamp.strftime('%Y % m % d')}-{timestamp.microsecond:06d}"
     )
 
     # Use customer's address if not specified
@@ -369,7 +366,7 @@ async def create_order_v2(
     order = result.scalar_one()
 
     # Removed during compaction
-    # Send real-time notification
+    # Send real - time notification
     # await notify_order_update(
     #     order_id=order.id,
     #     status="created",
@@ -394,7 +391,7 @@ async def get_order_v2(
 ):
     """獲取特定訂單詳情（包含彈性產品）"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staf", "driver"]:
+    if current_user.role not in ["super_admin", "manager", "office_sta", "driver"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Get order with items and products
@@ -433,7 +430,7 @@ async def update_order_v2(
 ):
     """更新訂單（彈性產品系統）"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Get order
@@ -453,7 +450,7 @@ async def update_order_v2(
         raise HTTPException(status_code=400, detail="已完成或已取消的訂單無法修改")
 
     # Store original status for notification
-    original_status = order.status.value
+    order.status.value
 
     # Update order fields
     update_data = order_update.model_dump(exclude_unset=True)
@@ -483,7 +480,7 @@ async def update_order_v2(
     order = result.scalar_one()
 
     # Removed during compaction
-    # Send real-time notification
+    # Send real - time notification
     # await notify_order_update(
     #     order_id=order.id,
     #     status=order.status.value,
@@ -506,7 +503,7 @@ async def update_order_v2(
     return order
 
 
-@router.get("/stats/summary")
+@router.get("/stats / summary")
 @cache_result("orders:stats", expire=timedelta(minutes=30))
 async def get_order_stats(
     date_from: Optional[datetime] = Query(None, description="開始日期"),
@@ -516,7 +513,7 @@ async def get_order_stats(
 ):
     """獲取訂單統計摘要"""
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Default date range: last 30 days
@@ -593,7 +590,7 @@ async def search_orders(
 
     conditions = []
 
-    # Full-text search
+    # Full - text search
     if criteria.keyword:
         keyword_conditions = or_(
             Order.order_number.ilike(f"%{criteria.keyword}%"),
@@ -624,7 +621,7 @@ async def search_orders(
                 priority_conditions.append(Order.scheduled_date.isnot(None))
             elif priority == "normal":
                 priority_conditions.append(
-                    and_(Order.is_urgent == False, Order.scheduled_date.is_(None))
+                    and_(~Order.is_urgent, Order.scheduled_date.is_(None))
                 )
         if priority_conditions:
             conditions.append(or_(*priority_conditions))
@@ -693,7 +690,7 @@ async def search_orders(
     # Get total count
     count_query = select(func.count()).select_from(Order)
     if conditions:
-        # Need to re-apply joins for count query
+        # Need to re - apply joins for count query
         if criteria.keyword or criteria.region or criteria.customer_type:
             count_query = count_query.join(Customer, Order.customer_id == Customer.id)
         if criteria.cylinder_type:
@@ -779,7 +776,7 @@ async def get_customer_credit_summary(
     - **customer_id**: 客戶ID
     """
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Get credit summary
@@ -791,7 +788,7 @@ async def get_customer_credit_summary(
     return summary
 
 
-@router.post("/credit/check", response_model=CreditCheckResult)
+@router.post("/credit / check", response_model=CreditCheckResult)
 async def check_credit_limit(
     customer_id: int = Query(..., description="客戶ID"),
     order_amount: float = Query(..., description="訂單金額"),
@@ -805,7 +802,7 @@ async def check_credit_limit(
     - **order_amount**: 訂單金額
     """
     # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Check credit limit

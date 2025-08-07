@@ -1,47 +1,29 @@
+import random
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth_deps.security import get_current_active_superuser
-from app.core.database import get_db
+from app.api.deps import get_current_active_superuser
+from app.api.deps import get_db
 from app.core.logging import get_logger
 from app.models.customer import Customer
-from app.models.sync_operation import SyncOperation, SyncStatus, ConflictResolution
+from app.models.sync_operation import ConflictResolution, SyncStatus
 from app.models.user import User
-from app.schemas.admin.migration import (
-    ConflictResolutionRequest,
-    MigrationMetrics,
-    MigrationStartRequest,
-)
-from app.services.sync_service import get_sync_service
+# Schema classes are defined in this file
 from app.services.feature_flags import get_feature_flag_service
+from app.services.sync_service import get_sync_service
 
 logger = get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/admin / migration", tags=["admin - migration"])
 
+"""
 Admin API endpoints for migration monitoring and control.
 """
-
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.deps import get_current_active_superuser, get_db
-from app.models.customer import Customer
-from app.models.user import User
-from app.services.sync_service import ConflictResolution
-
-logger = logging.getLogger(__name__)
-
-
-router = APIRouter(prefix="/admin/migration", tags=["admin-migration"])
 
 
 class MigrationMetrics(BaseModel):
@@ -113,8 +95,8 @@ async def get_migration_metrics(
         migrated_customers = migrated_result.scalar() or 0
 
         # Get sync service metrics
-    sync_service = await get_sync_service()
-        sync_metrics = await get_sync_service().get_metrics()
+        sync_service = await get_sync_service()
+        sync_metrics = await sync_service.get_metrics()
 
         # Calculate aggregate metrics
         total_synced = sum(m.total_synced for m in sync_metrics.values())
@@ -165,7 +147,7 @@ async def get_migration_metrics(
         raise HTTPException(status_code=500, detail="Failed to retrieve metrics")
 
 
-@router.get("/sync-operations")
+@router.get("/sync - operations")
 async def get_sync_operations(
     limit: int = Query(50, ge=1, le=200),
     status: Optional[SyncStatus] = None,
@@ -173,7 +155,7 @@ async def get_sync_operations(
 ) -> List[Dict[str, Any]]:
     """Get recent sync operations."""
     try:
-    sync_service = await get_sync_service()
+        await get_sync_service()
         # In production, this would query from database
         # For now, return mock data
         operations = []
@@ -223,7 +205,7 @@ async def get_conflicts(
 ) -> List[Dict[str, Any]]:
     """Get unresolved conflicts."""
     try:
-    sync_service = await get_sync_service()
+        sync_service = await get_sync_service()
         conflicts = await sync_service.get_conflicts(limit)
 
         # Enhance with customer names (in production)
@@ -242,7 +224,7 @@ async def get_conflicts(
         raise HTTPException(status_code=500, detail="Failed to retrieve conflicts")
 
 
-@router.post("/select-customers", response_model=CustomerSelectionResponse)
+@router.post("/select - customers", response_model=CustomerSelectionResponse)
 async def select_customers(
     request: CustomerSelectionRequest,
     db: AsyncSession = Depends(get_db),
@@ -277,8 +259,6 @@ async def select_customers(
         select_count = int(total_count * request.percentage / 100)
 
         # Select customers
-        import random
-
         random.seed(42)  # Consistent selection
         selected = random.sample(customers, min(select_count, total_count))
         customer_ids = [c.id for c in selected]
@@ -300,7 +280,7 @@ async def start_migration(
 ):
     """Start migration for selected customers."""
     try:
-    sync_service = await get_sync_service()
+        sync_service = await get_sync_service()
         feature_service = await get_feature_flag_service()
 
         # Process customers in batches
@@ -335,7 +315,7 @@ async def start_migration(
 async def pause_sync(current_user: User = Depends(get_current_active_superuser)):
     """Pause synchronization service."""
     try:
-    sync_service = await get_sync_service()
+        sync_service = await get_sync_service()
         await sync_service.pause_sync()
         return {"status": "paused"}
     except Exception as e:
@@ -347,7 +327,7 @@ async def pause_sync(current_user: User = Depends(get_current_active_superuser))
 async def resume_sync(current_user: User = Depends(get_current_active_superuser)):
     """Resume synchronization service."""
     try:
-    sync_service = await get_sync_service()
+        sync_service = await get_sync_service()
         await sync_service.resume_sync()
         return {"status": "resumed"}
     except Exception as e:
@@ -395,7 +375,7 @@ async def resolve_conflict(
 ):
     """Resolve a sync conflict."""
     try:
-    sync_service = await get_sync_service()
+        sync_service = await get_sync_service()
         success = await sync_service.resolve_conflict(
             conflict_id, request.resolution, request.resolvedData
         )
@@ -410,7 +390,7 @@ async def resolve_conflict(
         raise HTTPException(status_code=500, detail="Failed to resolve conflict")
 
 
-@router.get("/feature-flags")
+@router.get("/feature - flags")
 async def get_feature_flags(
     current_user: User = Depends(get_current_active_superuser),
 ) -> List[Dict[str, Any]]:
@@ -435,7 +415,7 @@ async def get_feature_flags(
         raise HTTPException(status_code=500, detail="Failed to retrieve feature flags")
 
 
-@router.put("/feature-flags/{flag_name}")
+@router.put("/feature - flags/{flag_name}")
 async def update_feature_flag(
     flag_name: str,
     request: FeatureFlagUpdateRequest,

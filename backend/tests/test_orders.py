@@ -10,8 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.customer import Customer
 from app.models.gas_product import DeliveryMethod, GasProduct, ProductAttribute
-from app.models.order import Order, OrderStatus, PaymentStatus
-from app.models.order_item import OrderItem
+from app.models.order import Order, OrderStatus
 
 
 class TestOrders:
@@ -41,7 +40,7 @@ class TestOrders:
         sample_order_data["customer_id"] = customer.id
 
         response = await client.post(
-            "/api/v1/orders/", json=sample_order_data, headers=auth_headers
+            "/api / v1 / orders/", json=sample_order_data, headers=auth_headers
         )
         if response.status_code != 200:
             print(f"Response status: {response.status_code}")
@@ -69,11 +68,11 @@ class TestOrders:
     async def test_create_order_nonexistent_customer(
         self, client: AsyncClient, auth_headers: dict, sample_order_data: dict
     ):
-        """Test creating order with non-existent customer"""
+        """Test creating order with non - existent customer"""
         sample_order_data["customer_id"] = 99999
 
         response = await client.post(
-            "/api/v1/orders/", json=sample_order_data, headers=auth_headers
+            "/api / v1 / orders/", json=sample_order_data, headers=auth_headers
         )
         assert response.status_code == 404
         assert "客戶不存在" in response.json()["detail"]
@@ -99,7 +98,7 @@ class TestOrders:
         orders = []
         for i in range(5):
             order = Order(
-                order_number=f"ORD-TEST-{i:03d}",
+                order_number=f"ORD - TEST-{i:03d}",
                 customer_id=customer.id,
                 scheduled_date=today + timedelta(days=i),
                 status=OrderStatus.PENDING if i % 2 == 0 else OrderStatus.CONFIRMED,
@@ -115,14 +114,14 @@ class TestOrders:
         await db_session.commit()
 
         # Test listing all orders
-        response = await client.get("/api/v1/orders/", headers=auth_headers)
+        response = await client.get("/api / v1 / orders/", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert len(data) >= 5
 
         # Test with status filter
         response = await client.get(
-            "/api/v1/orders/",
+            "/api / v1 / orders/",
             params={"status": OrderStatus.PENDING.value},
             headers=auth_headers,
         )
@@ -135,7 +134,7 @@ class TestOrders:
 
         # Test with urgent filter
         response = await client.get(
-            "/api/v1/orders/", params={"is_urgent": True}, headers=auth_headers
+            "/api / v1 / orders/", params={"is_urgent": True}, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -146,7 +145,7 @@ class TestOrders:
 
         # Test with date range
         response = await client.get(
-            "/api/v1/orders/",
+            "/api / v1 / orders/",
             params={
                 "date_from": today.isoformat(),
                 "date_to": (today + timedelta(days=2)).isoformat(),
@@ -174,7 +173,7 @@ class TestOrders:
         await db_session.flush()
 
         order = Order(
-            order_number="ORD-TEST-001",
+            order_number="ORD - TEST - 001",
             customer_id=customer.id,
             scheduled_date=datetime.now().date(),
             status=OrderStatus.PENDING,
@@ -187,7 +186,9 @@ class TestOrders:
         await db_session.commit()
         await db_session.refresh(order)
 
-        response = await client.get(f"/api/v1/orders/{order.id}", headers=auth_headers)
+        response = await client.get(
+            f"/api / v1 / orders/{order.id}", headers=auth_headers
+        )
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == order.id
@@ -212,7 +213,7 @@ class TestOrders:
         await db_session.flush()
 
         order = Order(
-            order_number="ORD-TEST-001",
+            order_number="ORD - TEST - 001",
             customer_id=customer.id,
             scheduled_date=datetime.now().date(),
             status=OrderStatus.PENDING,
@@ -233,7 +234,7 @@ class TestOrders:
         }
 
         response = await client.put(
-            f"/api/v1/orders/{order.id}", json=update_data, headers=auth_headers
+            f"/api / v1 / orders/{order.id}", json=update_data, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -261,7 +262,7 @@ class TestOrders:
         await db_session.flush()
 
         order = Order(
-            order_number="ORD-TEST-001",
+            order_number="ORD - TEST - 001",
             customer_id=customer.id,
             scheduled_date=datetime.now().date(),
             status=OrderStatus.DELIVERED,
@@ -277,7 +278,7 @@ class TestOrders:
         update_data = {"qty_50kg": 3}
 
         response = await client.put(
-            f"/api/v1/orders/{order.id}", json=update_data, headers=auth_headers
+            f"/api / v1 / orders/{order.id}", json=update_data, headers=auth_headers
         )
         assert response.status_code == 400
         assert "已完成或已取消的訂單無法修改" in response.json()["detail"]
@@ -299,7 +300,7 @@ class TestOrders:
         await db_session.flush()
 
         order = Order(
-            order_number="ORD-TEST-001",
+            order_number="ORD - TEST - 001",
             customer_id=customer.id,
             scheduled_date=datetime.now().date(),
             status=OrderStatus.PENDING,
@@ -313,7 +314,7 @@ class TestOrders:
         await db_session.refresh(order)
 
         response = await client.delete(
-            f"/api/v1/orders/{order.id}",
+            f"/api / v1 / orders/{order.id}",
             params={"reason": "客戶要求取消"},
             headers=auth_headers,
         )
@@ -345,7 +346,7 @@ class TestOrders:
         today = datetime.now()
         orders = [
             Order(
-                order_number="ORD-TEST-001",
+                order_number="ORD - TEST - 001",
                 customer_id=customer.id,
                 scheduled_date=today.date(),
                 status=OrderStatus.DELIVERED,
@@ -354,7 +355,7 @@ class TestOrders:
                 created_at=today - timedelta(days=5),
             ),
             Order(
-                order_number="ORD-TEST-002",
+                order_number="ORD - TEST - 002",
                 customer_id=customer.id,
                 scheduled_date=today.date(),
                 status=OrderStatus.DELIVERED,
@@ -363,7 +364,7 @@ class TestOrders:
                 created_at=today - timedelta(days=3),
             ),
             Order(
-                order_number="ORD-TEST-003",
+                order_number="ORD - TEST - 003",
                 customer_id=customer.id,
                 scheduled_date=today.date(),
                 status=OrderStatus.PENDING,
@@ -378,7 +379,7 @@ class TestOrders:
 
         # Get stats for last 30 days
         response = await client.get(
-            "/api/v1/orders/stats/summary", headers=auth_headers
+            "/api / v1 / orders / stats / summary", headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -414,7 +415,7 @@ class TestOrdersV2:
             delivery_method=DeliveryMethod.CYLINDER,
             size_kg=50,
             attribute=ProductAttribute.REGULAR,
-            sku="CYL-50-REG",
+            sku="CYL - 50 - REG",
             name_zh="50公斤桶裝瓦斯",
             unit_price=2500,
             is_available=True,
@@ -423,7 +424,7 @@ class TestOrdersV2:
             delivery_method=DeliveryMethod.CYLINDER,
             size_kg=20,
             attribute=ProductAttribute.REGULAR,
-            sku="CYL-20-REG",
+            sku="CYL - 20 - REG",
             name_zh="20公斤桶裝瓦斯",
             unit_price=1200,
             is_available=True,
@@ -463,7 +464,7 @@ class TestOrdersV2:
         }
 
         response = await client.post(
-            "/api/v1/orders/v2/", json=order_data, headers=auth_headers
+            "/api / v1 / orders / v2/", json=order_data, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()

@@ -2,8 +2,11 @@
 Invoice management API endpoints
 """
 
+from datetime import date
 from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -12,27 +15,18 @@ from app.models.customer import Customer
 from app.models.order import Order
 from app.models.user import User
 from app.schemas.invoice import (
-
-from datetime import date
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Path
-from fastapi import Query
-from sqlalchemy import and_
-from sqlalchemy import or_
-from sqlalchemy import select
-
     InvoiceBulkAction,
     InvoiceCreate,
-    InvoiceItemCreate,
     InvoiceResponse,
-    InvoiceSearchParams,
     InvoiceStats,
     InvoiceUpdate,
 )
 from app.services.einvoice_service import EInvoiceService
 from app.services.invoice_service import InvoiceService
+from app.models.invoice import Invoice
+from app.models.invoice import InvoicePaymentStatus
+from app.models.invoice import InvoiceStatus
+from sqlalchemy import desc
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -45,7 +39,7 @@ async def create_invoice(
 ):
     """Create a new invoice"""
     # Check if user has permission
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限建立發票")
 
     # Verify customer exists
@@ -182,7 +176,7 @@ async def update_invoice(
     current_user: User = Depends(get_current_user),
 ):
     """Update invoice (only draft invoices can be fully edited)"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限更新發票")
 
     invoice = await db.get(Invoice, invoice_id)
@@ -210,7 +204,7 @@ async def issue_invoice(
     current_user: User = Depends(get_current_user),
 ):
     """Issue a draft invoice (submit to government)"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限開立發票")
 
     invoice = await db.get(
@@ -225,7 +219,7 @@ async def issue_invoice(
     if invoice.status != InvoiceStatus.DRAFT:
         raise HTTPException(status_code=400, detail="只有草稿發票可以開立")
 
-    # Submit to e-invoice service
+    # Submit to e - invoice service
     einvoice_service = EInvoiceService()
     service = InvoiceService(db)
 
@@ -295,12 +289,12 @@ async def print_invoice(
     await db.commit()
 
     return {
-        "filename": f"invoice_{invoice.invoice_number}.pdf",
+        "filename": f"invoice_{invoice.invoice_number}.pd",
         "content": pdf_bytes.hex(),  # Return as hex string
     }
 
 
-@router.post("/bulk-action", response_model=dict)
+@router.post("/bulk - action", response_model=dict)
 async def bulk_invoice_action(
     action: InvoiceBulkAction,
     db: AsyncSession = Depends(get_db),
@@ -337,7 +331,7 @@ async def download_period_invoices(
     current_user: User = Depends(get_current_user),
 ):
     """Download all invoices for a period"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限下載發票")
 
     service = InvoiceService(db)

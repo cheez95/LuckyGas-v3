@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -13,12 +12,12 @@ class LocalizationService:
     - Email templates localization
     - SMS templates
     - Error messages
-    - Date/time formatting
+    - Date / time formatting
     """
 
     def __init__(self):
         self.translations = self._load_translations()
-        self.default_locale = "zh-TW"
+        self.default_locale = "zh - TW"
 
     def _load_translations(self) -> Dict[str, Dict[str, Any]]:
         """Load translation files"""
@@ -32,7 +31,7 @@ class LocalizationService:
 
         for locale_file in translations_dir.glob("*.json"):
             locale = locale_file.stem
-            with open(locale_file, "r", encoding="utf-8") as f:
+            with open(locale_file, "r", encoding="utf - 8") as f:
                 translations[locale] = json.load(f)
 
         return translations
@@ -230,7 +229,7 @@ class LocalizationService:
         }
 
         # Save translations
-        with open(translations_dir / "zh-TW.json", "w", encoding="utf-8") as f:
+        with open(translations_dir / "zh - TW.json", "w", encoding="utf - 8") as f:
             json.dump(zh_tw_translations, f, ensure_ascii=False, indent=2)
 
     def translate(self, key: str, locale: Optional[str] = None, **kwargs) -> str:
@@ -266,24 +265,24 @@ class LocalizationService:
             minguo_year = date.year - 1911
             return f"民國{minguo_year}年{date.month:02d}月{date.day:02d}日"
         elif format_type == "full":
-            return date.strftime("%Y年%m月%d日 %H:%M")
+            return date.strftime("%Y年 % m月 % d日 %H:%M")
         else:
             return date.strftime("%Y/%m/%d")
 
     def format_currency(self, amount: float) -> str:
         """Format currency for Taiwan (NT$)"""
-        return f"NT${amount:,.0f}"
+        return f"NT${amount:, .0f}"
 
     def format_phone(self, phone: str) -> str:
         """Format Taiwan phone number"""
-        # Remove all non-numeric characters
+        # Remove all non - numeric characters
         cleaned = "".join(filter(str.isdigit, phone))
 
-        # Mobile number (09XX-XXX-XXX)
+        # Mobile number (09XX - XXX - XXX)
         if cleaned.startswith("09") and len(cleaned) == 10:
             return f"{cleaned[:4]}-{cleaned[4:7]}-{cleaned[7:]}"
 
-        # Landline (0X-XXXX-XXXX)
+        # Landline (0X - XXXX - XXXX)
         elif cleaned.startswith("0") and len(cleaned) >= 9:
             if cleaned[1] in "2345678":  # Major cities
                 return f"{cleaned[:2]}-{cleaned[2:6]}-{cleaned[6:]}"

@@ -12,7 +12,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
   });
 
   test.describe('Critical User Workflows', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       const loginPage = new LoginPage(page);
       const dashboardPage = new DashboardPage(page);
       const customerPage = new CustomerPage(page);
@@ -45,7 +45,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       await expect(page.locator('text=訂單建立成功')).toBeVisible();
     });
 
-    test($1, async ({ page, context }) => {
+  test('should complete the test - 2', async ({ page, context }) => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 812 });
       
@@ -73,7 +73,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       await expect(page.locator('text=交付完成')).toBeVisible();
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       const loginPage = new LoginPage(page);
       const routePage = new RoutePage(page);
 
@@ -99,7 +99,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       await expect(page.locator('text=路線已指派')).toBeVisible();
     });
 
-    test($1, async ({ page, context }) => {
+  test('should complete the test - 4', async ({ page, context }) => {
       const loginPage = new LoginPage(page);
       
       // Open customer view
@@ -131,7 +131,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
   });
 
   test.describe('Performance Benchmarks', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       const loginPage = new LoginPage(page);
       await loginPage.login('admin@luckygas.com', 'password123');
 
@@ -147,7 +147,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       expect(timing.responseEnd - timing.requestStart).toBeLessThan(100); // < 100ms
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       // Measure page load performance
       await page.goto('/');
       
@@ -167,7 +167,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       expect(metrics.firstContentfulPaint).toBeLessThan(1500); // < 1.5s
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       // Simulate 3G network
       await page.route('**/*', async route => {
         await new Promise(resolve => setTimeout(resolve, 100)); // Simulate latency
@@ -183,7 +183,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
   });
 
   test.describe('Error Recovery and Edge Cases', () => {
-    test($1, async ({ page, context }) => {
+    test('should complete the test', async ({ page, context }) => {
       const loginPage = new LoginPage(page);
       await loginPage.login('office@luckygas.com', 'password123');
 
@@ -242,7 +242,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       await Promise.all(contexts.map(context => context.close()));
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       const loginPage = new LoginPage(page);
       const customerPage = new CustomerPage(page);
 
@@ -266,7 +266,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
   });
 
   test.describe('Security Validation', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       const loginPage = new LoginPage(page);
       
       // Attempt SQL injection in login
@@ -283,7 +283,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       await expect(page.locator('text=查無資料')).toBeVisible();
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       const loginPage = new LoginPage(page);
       const customerPage = new CustomerPage(page);
 
@@ -306,7 +306,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       expect(alert).toBeNull();
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       const loginPage = new LoginPage(page);
 
       // Login as driver
@@ -323,7 +323,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
   });
 
   test.describe('Business Continuity', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       const loginPage = new LoginPage(page);
       
       await loginPage.login('admin@luckygas.com', 'password123');
@@ -339,7 +339,7 @@ test.describe('Comprehensive Quality Validation Suite', () => {
       expect(download.suggestedFilename()).toContain('.json');
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       await page.goto('/api/health');
       
       const health = await page.evaluate(() => {

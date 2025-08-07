@@ -4,6 +4,7 @@ Handles order creation, updates, and route assignment
 """
 
 import logging
+from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,9 +18,8 @@ from app.services.credit_service import CreditService
 # Removed during compaction
 # from app.api.v1.socketio_handler import notify_order_update, notify_driver_assigned
 from app.services.google_cloud.routes_service import google_routes_service
-
-from datetime import date
-from datetime import datetime
+from app.schemas.order import OrderCreate
+from app.schemas.order import OrderUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -78,8 +78,8 @@ class OrderService:
         if not credit_result["approved"]:
             raise ValueError(
                 f"信用額度檢查失敗: {credit_result['reason']}. "
-                + f"可用額度: NT${credit_result['details'].get('available_credit', 0):,.0f}, "
-                + f"訂單金額: NT${credit_result['details'].get('requested_amount', 0):,.0f}"
+                + f"可用額度: NT${credit_result['details'].get('available_credit', 0):, .0f}, "
+                + f"訂單金額: NT${credit_result['details'].get('requested_amount', 0):, .0f}"
             )
 
         # Generate order number
@@ -432,7 +432,7 @@ class OrderService:
         # Apply discounts
         discount = 0
 
-        # Volume discount: 5% off for orders over 10,000 TWD
+        # Volume discount: 5% off for orders over 10, 000 TWD
         if total > 10000:
             discount = total * 0.05
 
@@ -449,7 +449,7 @@ class OrderService:
     def _generate_order_number(self) -> str:
         """Generate unique order number"""
         timestamp = datetime.now()
-        return f"ORD-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
+        return f"ORD-{timestamp.strftime('%Y % m % d')}-{timestamp.microsecond:06d}"
 
     async def create_bulk_orders(
         self, orders_data: List[OrderCreate], created_by: int

@@ -1,11 +1,11 @@
 """
 Test environment setup to mock external services.
-This prevents module-level service initialization errors during testing.
+This prevents module - level service initialization errors during testing.
 """
 
 import os
 import sys
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 # Set test environment
 os.environ["ENVIRONMENT"] = "test"

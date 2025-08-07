@@ -1,0 +1,423 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  
+jobs:
+  # Backend Tests
+  backend-lint:
+    name: Backend Lint & Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/uv
+          backend/.venv
+        key: ${{ runner.os }}-backend-${{ hashFiles('backend/requirements.txt') }}
+    
+    - name: Install dependencies
+      working-directory: backend
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+        uv pip install flake8 black mypy isort bandit
+    
+    - name: Run linters
+      working-directory: backend
+      run: |
+        source .venv/bin/activate
+        # Format checking
+        black --check app tests
+        isort --check-only app tests
+        # Linting
+        flake8 app tests
+        # Type checking
+        mypy app
+        # Security scanning
+        bandit -r app -ll
+  
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    needs: backend-lint
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: luckygas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/uv
+          backend/.venv
+        key: ${{ runner.os }}-backend-${{ hashFiles('backend/requirements.txt') }}
+    
+    - name: Install dependencies
+      working-directory: backend
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+        uv pip install pytest pytest-asyncio pytest-cov httpx
+    
+    - name: Run tests
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379/1
+        SECRET_KEY: test-secret-key-for-testing
+        TESTING: 1
+        ENVIRONMENT: test
+      run: |
+        source .venv/bin/activate
+        pytest --cov=app --cov-report=xml --cov-report=term -v
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+
+  # Frontend Tests
+  frontend-lint:
+    name: Frontend Lint & Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Run linters
+      working-directory: frontend
+      run: |
+        npm run lint
+        npm run type-check
+    
+    - name: Check formatting
+      working-directory: frontend
+      run: npm run format:check
+
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: frontend-lint
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: frontend
+      run: npm run test:ci
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+
+  # Docker Build Tests
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./backend
+        push: false
+        tags: luckygas-backend:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        push: false
+        tags: luckygas-frontend:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Security Scanning
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: [backend-lint, frontend-lint]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Trivy vulnerability scanner (Backend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: './backend'
+        format: 'sarif'
+        output: 'backend-trivy-results.sarif'
+    
+    - name: Upload Backend Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'backend-trivy-results.sarif'
+        category: 'backend-vulnerabilities'
+    
+    - name: Run Trivy vulnerability scanner (Frontend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: './frontend'
+        format: 'sarif'
+        output: 'frontend-trivy-results.sarif'
+    
+    - name: Upload Frontend Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'frontend-trivy-results.sarif'
+        category: 'frontend-vulnerabilities'
+
+  # API Contract Tests
+  api-contract-test:
+    name: API Contract Tests
+    runs-on: ubuntu-latest
+    needs: backend-test
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Validate OpenAPI spec
+      uses: char0n/swagger-editor-validate@v1
+      with:
+        definition-file: backend/openapi.yaml
+    
+    - name: Run contract tests
+      working-directory: backend
+      run: |
+        docker run --rm \
+          -v $(pwd):/app \
+          -w /app \
+          postman/newman:alpine \
+          run tests/postman/lucky-gas-api.json \
+          --env-var "baseUrl=http://localhost:8000"
+
+  # Performance Tests (on main branch only)
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [backend-test, frontend-test]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run k6 performance tests
+      uses: grafana/k6-action@v0.3.0
+      with:
+        filename: tests/performance/load-test.js
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: k6-performance-results
+        path: results/
+
+  # Dependency Check
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Check Python dependencies
+      working-directory: backend
+      run: |
+        pip install safety
+        safety check -r requirements.txt || true
+    
+    - name: Check npm dependencies
+      working-directory: frontend
+      run: |
+        npm audit --production || true
+
+  # Integration Tests
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: luckygas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install backend
+      working-directory: backend
+      run: |
+        pip install uv
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+    
+    - name: Install frontend
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Start backend
+      working-directory: backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379/1
+        SECRET_KEY: test-secret-key
+        TESTING: 1
+      run: |
+        source .venv/bin/activate
+        alembic upgrade head
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Run E2E tests
+      working-directory: frontend
+      env:
+        VITE_API_URL: http://localhost:8000
+      run: npm run test:e2e
+
+  # All tests passed
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [
+      backend-lint,
+      backend-test,
+      frontend-lint,
+      frontend-test,
+      docker-build,
+      security-scan,
+      api-contract-test,
+      dependency-check,
+      integration-test
+    ]
+    
+    steps:
+    - name: CI Passed
+      run: echo "All CI checks passed successfully!"

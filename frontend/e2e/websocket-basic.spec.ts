@@ -19,7 +19,7 @@ test.describe('WebSocket Basic Functionality', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test', async ({ page }) => {
     // Check if websocketService exists in window
     const hasWebSocketService = await page.evaluate(() => {
       return typeof (window as any).websocketService !== 'undefined';
@@ -28,7 +28,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(hasWebSocketService).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
     // Listen for console logs
     const consoleLogs: string[] = [];
     page.on('console', msg => {
@@ -64,7 +64,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(hasWebSocketLogs).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
     // Simulate notification message
     await page.evaluate(() => {
       // Check if notification system is available
@@ -79,7 +79,7 @@ test.describe('WebSocket Basic Functionality', () => {
     await expect(notification).toBeVisible({ timeout: 3000 });
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 4', async ({ page }) => {
     await orderPage.navigateToOrders();
     
     // Get initial order count
@@ -106,7 +106,7 @@ test.describe('WebSocket Basic Functionality', () => {
     await expect(orderRows.first()).toBeVisible();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 5', async ({ page }) => {
     // Navigate to different pages
     await dashboardPage.navigateToCustomers();
     
@@ -125,7 +125,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(hasServiceAfterNav2).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 6', async ({ page }) => {
     // Check if dashboard has real-time elements
     const statsCards = page.locator('.ant-statistic');
     const hasStats = await statsCards.count() > 0;
@@ -148,7 +148,7 @@ test.describe('WebSocket Basic Functionality', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 7', async ({ page }) => {
     // Look for activity feed
     const activityFeed = page.locator('.activity-feed, .recent-activities, [data-testid="activity-feed"]');
     
@@ -169,7 +169,7 @@ test.describe('WebSocket Basic Functionality', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 8', async ({ page }) => {
     // Check if we can access connection state
     const connectionState = await page.evaluate(() => {
       const ws = (window as any).websocketService;
@@ -180,7 +180,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(['connected', 'connecting', 'disconnected', 'unknown']).toContain(connectionState);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 9', async ({ page }) => {
     // Test subscription mechanism
     const canSubscribe = await page.evaluate(() => {
       const ws = (window as any).websocketService;
@@ -195,7 +195,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(canSubscribe).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 10', async ({ page }) => {
     // Check if driver interface is available
     const isDriverInterface = await page.url().includes('driver');
     
@@ -214,7 +214,7 @@ test.describe('WebSocket Basic Functionality', () => {
     }
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 11', async ({ page }) => {
     // Test message queuing
     const hasMessageQueue = await page.evaluate(() => {
       const ws = (window as any).websocketService;
@@ -225,7 +225,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(hasMessageQueue).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 12', async ({ page }) => {
     // Test event emitter functionality
     const canEmitEvents = await page.evaluate(() => {
       const ws = (window as any).websocketService;
@@ -240,7 +240,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(canEmitEvents).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 13', async ({ page }) => {
     // Check if heartbeat is configured
     const hasHeartbeat = await page.evaluate(() => {
       const ws = (window as any).websocketService;
@@ -252,7 +252,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(hasHeartbeat).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 14', async ({ page }) => {
     // Test reconnection capability
     const hasReconnectLogic = await page.evaluate(() => {
       const ws = (window as any).websocketService;
@@ -265,7 +265,7 @@ test.describe('WebSocket Basic Functionality', () => {
     expect(hasReconnectLogic).toBe(true);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 15', async ({ page }) => {
     // Check if token is used for WebSocket
     const usesAuthToken = await page.evaluate(() => {
       const token = localStorage.getItem('access_token');

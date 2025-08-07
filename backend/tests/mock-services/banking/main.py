@@ -7,7 +7,6 @@ import logging
 import random
 import uuid
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, Header, HTTPException
@@ -65,13 +64,13 @@ class AccountBalanceResponse(BaseModel):
 async def health_check():
     return {
         "status": "healthy",
-        "service": "mock-banking",
+        "service": "mock - banking",
         "timestamp": datetime.now().isoformat(),
     }
 
 
 @app.get(
-    "/api/banking/account/{account_number}/balance",
+    "/api / banking / account/{account_number}/balance",
     response_model=AccountBalanceResponse,
 )
 async def get_account_balance(
@@ -95,7 +94,7 @@ async def get_account_balance(
     )
 
 
-@app.post("/api/banking/transfer")
+@app.post("/api / banking / transfer")
 async def create_transfer(
     request: TransferRequest, authorization: Optional[str] = Header(None)
 ):
@@ -157,7 +156,7 @@ async def create_transfer(
     }
 
 
-@app.get("/api/banking/account/{account_number}/transactions")
+@app.get("/api / banking / account/{account_number}/transactions")
 async def get_account_transactions(
     account_number: str,
     start_date: Optional[date] = None,
@@ -203,7 +202,7 @@ async def get_account_transactions(
     }
 
 
-@app.post("/api/banking/payment-order")
+@app.post("/api / banking / payment - order")
 async def create_payment_order(request: PaymentOrderRequest):
     """Create batch payment order (ACH)"""
     logger.info(f"Payment order request with {len(request.payments)} payments")
@@ -221,7 +220,9 @@ async def create_payment_order(request: PaymentOrderRequest):
         )
 
     # Create payment order
-    order_id = f"PMT{datetime.now().strftime('%Y%m%d')}{uuid.uuid4().hex[:6].upper()}"
+    order_id = (
+        f"PMT{datetime.now().strftime('%Y % m % d')}{uuid.uuid4().hex[:6].upper()}"
+    )
 
     payment_order = {
         "order_id": order_id,
@@ -264,7 +265,7 @@ async def create_payment_order(request: PaymentOrderRequest):
     }
 
 
-@app.get("/api/banking/payment-order/{order_id}")
+@app.get("/api / banking / payment - order/{order_id}")
 async def get_payment_order_status(order_id: str):
     """Get payment order status"""
     logger.info(f"Payment order status request: {order_id}")
@@ -307,7 +308,7 @@ async def get_payment_order_status(order_id: str):
     }
 
 
-@app.post("/api/banking/validate-account")
+@app.post("/api / banking / validate - account")
 async def validate_bank_account(
     account_number: str, bank_code: str, account_name: Optional[str] = None
 ):
@@ -337,7 +338,7 @@ async def validate_bank_account(
     return response
 
 
-@app.get("/api/banking/exchange-rates")
+@app.get("/api / banking / exchange - rates")
 async def get_exchange_rates(base_currency: str = "TWD"):
     """Get current exchange rates"""
     logger.info(f"Exchange rate request for base currency: {base_currency}")
@@ -358,9 +359,9 @@ async def get_exchange_rates(base_currency: str = "TWD"):
     }
 
 
-@app.post("/api/banking/statement/download")
+@app.post("/api / banking / statement / download")
 async def download_statement(
-    account_number: str, start_date: date, end_date: date, format: str = "pdf"
+    account_number: str, start_date: date, end_date: date, format: str = "pd"
 ):
     """Generate account statement"""
     logger.info(f"Statement download request for account: {account_number}")
@@ -377,12 +378,12 @@ async def download_statement(
         "period_start": start_date.isoformat(),
         "period_end": end_date.isoformat(),
         "format": format,
-        "download_url": f"/api/banking/statement/{statement_id}/download",
+        "download_url": f"/api / banking / statement/{statement_id}/download",
         "expires_at": (datetime.now() + timedelta(hours=24)).isoformat(),
     }
 
 
-@app.delete("/api/banking/clear")
+@app.delete("/api / banking / clear")
 async def clear_banking_data():
     """Clear all banking data (for testing)"""
     # Reset to initial state

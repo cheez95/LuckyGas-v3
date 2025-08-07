@@ -1,17 +1,14 @@
 """Analytics service for generating dashboard metrics and reports."""
 
-import json
 from datetime import datetime, timedelta
-from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import and_, case, func, or_, select, text
+from sqlalchemy import and_, case, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.config import settings
 from app.core.storage import StorageService
 from app.models import (
     Customer,
@@ -24,7 +21,6 @@ from app.models import (
     Payment,
     Route,
     User,
-    Vehicle,
 )
 from app.models.order import OrderStatus
 from app.models.route import RouteStatus
@@ -217,7 +213,7 @@ class AnalyticsService:
     ) -> Dict[str, Any]:
         """Get customer metrics for dashboards."""
         # Total customers
-        total_query = select(func.count(Customer.id)).where(Customer.is_active == True)
+        total_query = select(func.count(Customer.id)).where(Customer.is_active)
         total_result = await self.db.execute(total_query)
         total_customers = total_result.scalar() or 0
 
@@ -276,7 +272,7 @@ class AnalyticsService:
         # Customer segments
         segment_query = (
             select(Customer.customer_type, func.count(Customer.id).label("count"))
-            .where(Customer.is_active == True)
+            .where(Customer.is_active)
             .group_by(Customer.customer_type)
         )
 
@@ -291,16 +287,16 @@ class AnalyticsService:
             """
             SELECT COUNT(DISTINCT current_period.customer_id) as retained
             FROM (
-                SELECT DISTINCT customer_id 
-                FROM orders 
-                WHERE created_at >= :current_start 
+                SELECT DISTINCT customer_id
+                FROM orders
+                WHERE created_at >= :current_start
                 AND created_at <= :current_end
                 AND status IN ('completed', 'delivered')
             ) current_period
             INNER JOIN (
-                SELECT DISTINCT customer_id 
-                FROM orders 
-                WHERE created_at >= :prev_start 
+                SELECT DISTINCT customer_id
+                FROM orders
+                WHERE created_at >= :prev_start
                 AND created_at < :current_start
                 AND status IN ('completed', 'delivered')
             ) prev_period ON current_period.customer_id = prev_period.customer_id
@@ -435,7 +431,7 @@ class AnalyticsService:
     async def get_performance_comparison(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
-        """Get month-over-month performance comparison."""
+        """Get month - over - month performance comparison."""
         # Current month metrics
         current_metrics = await self._get_period_metrics(start_date, end_date)
 
@@ -445,7 +441,7 @@ class AnalyticsService:
         prev_start = prev_end - timedelta(days=period_days)
         prev_metrics = await self._get_period_metrics(prev_start, prev_end)
 
-        # Year-over-year comparison
+        # Year - over - year comparison
         year_ago_end = end_date - timedelta(days=365)
         year_ago_start = start_date - timedelta(days=365)
         year_ago_metrics = await self._get_period_metrics(year_ago_start, year_ago_end)
@@ -656,7 +652,7 @@ class AnalyticsService:
         return {"routes": top_routes, "drivers": top_drivers, "products": top_products}
 
     async def get_realtime_order_status(self, date: datetime) -> Dict[str, Any]:
-        """Get real-time order status for operations dashboard."""
+        """Get real - time order status for operations dashboard."""
         start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
@@ -748,7 +744,7 @@ class AnalyticsService:
 
         # Total drivers
         total_drivers_query = select(func.count(User.id)).where(
-            and_(User.role == "driver", User.is_active == True)
+            and_(User.role == "driver", User.is_active)
         )
         total_result = await self.db.execute(total_drivers_query)
         total_drivers = total_result.scalar() or 0
@@ -1161,9 +1157,9 @@ class AnalyticsService:
             select(
                 case(
                     (Invoice.due_date >= today, "current"),
-                    (Invoice.due_date >= today - timedelta(days=30), "1-30"),
-                    (Invoice.due_date >= today - timedelta(days=60), "31-60"),
-                    (Invoice.due_date >= today - timedelta(days=90), "61-90"),
+                    (Invoice.due_date >= today - timedelta(days=30), "1 - 30"),
+                    (Invoice.due_date >= today - timedelta(days=60), "31 - 60"),
+                    (Invoice.due_date >= today - timedelta(days=90), "61 - 90"),
                     else_="over90",
                 ).label("aging_bucket"),
                 func.count(Invoice.id).label("count"),
@@ -1181,9 +1177,9 @@ class AnalyticsService:
 
         aging_breakdown = {
             "current": {"count": 0, "amount": 0},
-            "1-30": {"count": 0, "amount": 0},
-            "31-60": {"count": 0, "amount": 0},
-            "61-90": {"count": 0, "amount": 0},
+            "1 - 30": {"count": 0, "amount": 0},
+            "31 - 60": {"count": 0, "amount": 0},
+            "61 - 90": {"count": 0, "amount": 0},
             "over90": {"count": 0, "amount": 0},
         }
 
@@ -1504,7 +1500,7 @@ class AnalyticsService:
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
         """Get profit margin analysis."""
-        # Product-wise profit margins
+        # Product - wise profit margins
         product_margin_query = (
             select(
                 GasProduct.id,
@@ -1695,7 +1691,7 @@ class AnalyticsService:
                     "timestamp": current.isoformat(),
                     "responseTime": np.random.normal(150, 30),  # ms
                     "errorRate": max(0, np.random.normal(0.5, 0.2)),  # %
-                    "throughput": np.random.normal(100, 20),  # requests/min
+                    "throughput": np.random.normal(100, 20),  # requests / min
                     "cpuUsage": np.random.normal(40, 10),  # %
                     "memoryUsage": np.random.normal(60, 5),  # %
                 }
@@ -1719,26 +1715,31 @@ class AnalyticsService:
         # Mock data - would come from API monitoring
         endpoints = [
             {
-                "endpoint": "/api/v1/orders",
+                "endpoint": "/api / v1 / orders",
                 "calls": 15234,
                 "avgTime": 125,
                 "errors": 23,
             },
             {
-                "endpoint": "/api/v1/customers",
+                "endpoint": "/api / v1 / customers",
                 "calls": 8932,
                 "avgTime": 98,
                 "errors": 12,
             },
-            {"endpoint": "/api/v1/routes", "calls": 6543, "avgTime": 234, "errors": 8},
             {
-                "endpoint": "/api/v1/deliveries",
+                "endpoint": "/api / v1 / routes",
+                "calls": 6543,
+                "avgTime": 234,
+                "errors": 8,
+            },
+            {
+                "endpoint": "/api / v1 / deliveries",
                 "calls": 12876,
                 "avgTime": 156,
                 "errors": 34,
             },
             {
-                "endpoint": "/api/v1/analytics",
+                "endpoint": "/api / v1 / analytics",
                 "calls": 2341,
                 "avgTime": 456,
                 "errors": 5,
@@ -1800,7 +1801,7 @@ class AnalyticsService:
         # Active users by role
         active_users_query = (
             select(User.role, func.count(func.distinct(User.id)).label("count"))
-            .where(and_(User.is_active == True, User.last_login >= start_time))
+            .where(and_(User.is_active, User.last_login >= start_time))
             .group_by(User.role)
         )
 
@@ -1868,7 +1869,7 @@ class AnalyticsService:
         }
 
     async def get_latest_order_updates(self) -> Dict[str, Any]:
-        """Get latest order updates for real-time display."""
+        """Get latest order updates for real - time display."""
         # Recent order changes
         recent_orders_query = (
             select(Order)
@@ -1962,7 +1963,7 @@ class AnalyticsService:
         # Generate file based on format
         if format == "excel":
             file_path = await self._generate_excel_report(data, report_type)
-        elif format == "pdf":
+        elif format == "pd":
             file_path = await self._generate_pdf_report(data, report_type)
         else:  # csv
             file_path = await self._generate_csv_report(data, report_type)
@@ -1989,20 +1990,20 @@ class AnalyticsService:
 
         # Send email
         subject = f"LuckyGas {report_type.title()} Report - {start_date.date()} to {end_date.date()}"
-        body = f"""
+        body = """
         您好，
-        
+
         您要求的報表已經產生完成。
-        
+
         報表類型: {report_type.title()}
         期間: {start_date.date()} 至 {end_date.date()}
         格式: {format.upper()}
-        
+
         請點擊以下連結下載報表:
         {report_url}
-        
+
         此連結將在 7 天後失效。
-        
+
         謝謝，
         LuckyGas 系統
         """
@@ -2013,24 +2014,18 @@ class AnalyticsService:
         self, data: Dict[str, Any], report_type: str
     ) -> str:
         """Generate Excel report."""
-        # Implementation would use pandas/openpyxl to create Excel file
+        # Implementation would use pandas / openpyxl to create Excel file
         # This is a placeholder
-        return (
-            f"/tmp/{report_type}_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-        )
+        return f"/tmp/{report_type}_report_{datetime.now().strftime('%Y % m % d_ % H % M % S')}.xlsx"
 
     async def _generate_pdf_report(self, data: Dict[str, Any], report_type: str) -> str:
         """Generate PDF report."""
         # Implementation would use reportlab or similar to create PDF
         # This is a placeholder
-        return (
-            f"/tmp/{report_type}_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        )
+        return f"/tmp/{report_type}_report_{datetime.now().strftime('%Y % m % d_ % H % M % S')}.pd"
 
     async def _generate_csv_report(self, data: Dict[str, Any], report_type: str) -> str:
         """Generate CSV report."""
         # Implementation would use pandas to create CSV
         # This is a placeholder
-        return (
-            f"/tmp/{report_type}_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        )
+        return f"/tmp/{report_type}_report_{datetime.now().strftime('%Y % m % d_ % H % M % S')}.csv"

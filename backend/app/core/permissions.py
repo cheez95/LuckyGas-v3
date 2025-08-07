@@ -55,7 +55,7 @@ class Permission(str, Enum):
     NOTIFICATION_SEND = "notification:send"
 
 
-# Role-based permission mapping
+# Role - based permission mapping
 ROLE_PERMISSIONS = {
     "super_admin": ["*"],  # All permissions
     "manager": [
@@ -77,7 +77,7 @@ ROLE_PERMISSIONS = {
         Permission.SMS_SEND,
         Permission.NOTIFICATION_SEND,
     ],
-    "office_staff": [
+    "office_staf": [
         Permission.CUSTOMER_READ,
         Permission.CUSTOMER_WRITE,
         Permission.ORDER_READ,

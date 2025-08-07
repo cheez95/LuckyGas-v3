@@ -1,20 +1,20 @@
 """
-Integration tests for WebSocket real-time updates
+Integration tests for WebSocket real - time updates
 """
 
 import json
+from datetime import datetime
 
 import pytest
 
 from app.models.order import OrderStatus
 from app.models.user import UserRole
 from app.services.websocket_service import websocket_manager
-
-from datetime import datetime
+from unittest.mock import AsyncMock
 
 
 class TestWebSocketRealTimeUpdates:
-    """Test WebSocket real-time functionality"""
+    """Test WebSocket real - time functionality"""
 
     @pytest.mark.asyncio
     async def test_websocket_connection_lifecycle(self):
@@ -26,7 +26,7 @@ class TestWebSocketRealTimeUpdates:
         mock_websocket.close = AsyncMock()
 
         # Test connection
-        connection_id = "test-connection-1"
+        connection_id = "test - connection - 1"
         user_id = 1
         role = UserRole.OFFICE_STAFF.value
 
@@ -64,11 +64,13 @@ class TestWebSocketRealTimeUpdates:
         manager_ws = AsyncMock()
 
         await websocket_manager.connect(
-            office_ws, "office-1", 1, UserRole.OFFICE_STAFF.value
+            office_ws, "office - 1", 1, UserRole.OFFICE_STAFF.value
         )
-        await websocket_manager.connect(driver_ws, "driver-1", 2, UserRole.DRIVER.value)
         await websocket_manager.connect(
-            manager_ws, "manager-1", 3, UserRole.MANAGER.value
+            driver_ws, "driver - 1", 2, UserRole.DRIVER.value
+        )
+        await websocket_manager.connect(
+            manager_ws, "manager - 1", 3, UserRole.MANAGER.value
         )
 
         # Broadcast to drivers only
@@ -86,9 +88,9 @@ class TestWebSocketRealTimeUpdates:
         manager_ws.send_text.assert_not_called()
 
         # Cleanup
-        await websocket_manager.disconnect("office-1")
-        await websocket_manager.disconnect("driver-1")
-        await websocket_manager.disconnect("manager-1")
+        await websocket_manager.disconnect("office - 1")
+        await websocket_manager.disconnect("driver - 1")
+        await websocket_manager.disconnect("manager - 1")
 
     @pytest.mark.asyncio
     async def test_order_status_update_broadcast(self, db_session, test_customer):
@@ -98,10 +100,10 @@ class TestWebSocketRealTimeUpdates:
         customer_ws = AsyncMock()
 
         await websocket_manager.connect(
-            office_ws, "office-1", 1, UserRole.OFFICE_STAFF.value
+            office_ws, "office - 1", 1, UserRole.OFFICE_STAFF.value
         )
         await websocket_manager.connect(
-            customer_ws, "customer-1", test_customer.id, UserRole.CUSTOMER.value
+            customer_ws, "customer - 1", test_customer.id, UserRole.CUSTOMER.value
         )
 
         # Simulate order status update
@@ -127,22 +129,22 @@ class TestWebSocketRealTimeUpdates:
         customer_ws.send_text.assert_called_once()
 
         # Cleanup
-        await websocket_manager.disconnect("office-1")
-        await websocket_manager.disconnect("customer-1")
+        await websocket_manager.disconnect("office - 1")
+        await websocket_manager.disconnect("customer - 1")
 
     @pytest.mark.asyncio
     async def test_driver_location_updates(self):
-        """Test real-time driver location broadcasting"""
+        """Test real - time driver location broadcasting"""
         # Setup connections
         office_ws = AsyncMock()
         driver_ws = AsyncMock()
 
         driver_id = 10
         await websocket_manager.connect(
-            office_ws, "office-1", 1, UserRole.OFFICE_STAFF.value
+            office_ws, "office - 1", 1, UserRole.OFFICE_STAFF.value
         )
         await websocket_manager.connect(
-            driver_ws, "driver-1", driver_id, UserRole.DRIVER.value
+            driver_ws, "driver - 1", driver_id, UserRole.DRIVER.value
         )
 
         # Driver sends location update
@@ -173,22 +175,22 @@ class TestWebSocketRealTimeUpdates:
         assert sent_data["data"]["driver_id"] == driver_id
 
         # Cleanup
-        await websocket_manager.disconnect("office-1")
-        await websocket_manager.disconnect("driver-1")
+        await websocket_manager.disconnect("office - 1")
+        await websocket_manager.disconnect("driver - 1")
 
     @pytest.mark.asyncio
     async def test_delivery_confirmation_broadcast(self):
-        """Test delivery confirmation real-time updates"""
+        """Test delivery confirmation real - time updates"""
         # Setup connections
         office_ws = AsyncMock()
         customer_ws = AsyncMock()
 
         customer_id = 100
         await websocket_manager.connect(
-            office_ws, "office-1", 1, UserRole.OFFICE_STAFF.value
+            office_ws, "office - 1", 1, UserRole.OFFICE_STAFF.value
         )
         await websocket_manager.connect(
-            customer_ws, "customer-1", customer_id, UserRole.CUSTOMER.value
+            customer_ws, "customer - 1", customer_id, UserRole.CUSTOMER.value
         )
 
         # Delivery confirmation message
@@ -212,8 +214,8 @@ class TestWebSocketRealTimeUpdates:
         customer_ws.send_text.assert_called_once()
 
         # Cleanup
-        await websocket_manager.disconnect("office-1")
-        await websocket_manager.disconnect("customer-1")
+        await websocket_manager.disconnect("office - 1")
+        await websocket_manager.disconnect("customer - 1")
 
     @pytest.mark.asyncio
     async def test_connection_error_handling(self):
@@ -223,20 +225,20 @@ class TestWebSocketRealTimeUpdates:
         failing_ws.send_text = AsyncMock(side_effect=Exception("Connection lost"))
 
         await websocket_manager.connect(
-            failing_ws, "failing-1", 1, UserRole.OFFICE_STAFF.value
+            failing_ws, "failing - 1", 1, UserRole.OFFICE_STAFF.value
         )
 
         # Try to send message - should handle error gracefully
         try:
             await websocket_manager.send_personal_message(
-                json.dumps({"type": "test"}), "failing-1"
+                json.dumps({"type": "test"}), "failing - 1"
             )
         except Exception:
             # Should not raise exception to caller
             pass
 
         # Connection should be removed after error
-        assert "failing-1" not in websocket_manager.active_connections
+        assert "failing - 1" not in websocket_manager.active_connections
 
     @pytest.mark.asyncio
     async def test_batch_updates(self):
@@ -284,15 +286,15 @@ class TestWebSocketRealTimeUpdates:
 
         # Initial connection
         await websocket_manager.connect(
-            ws1, "conn-1", user_id, UserRole.OFFICE_STAFF.value
+            ws1, "conn - 1", user_id, UserRole.OFFICE_STAFF.value
         )
 
         # Simulate disconnection
-        await websocket_manager.disconnect("conn-1")
+        await websocket_manager.disconnect("conn - 1")
 
         # Reconnect with new connection ID
         await websocket_manager.connect(
-            ws2, "conn-2", user_id, UserRole.OFFICE_STAFF.value
+            ws2, "conn - 2", user_id, UserRole.OFFICE_STAFF.value
         )
 
         # Send message to user - should go to new connection
@@ -304,4 +306,4 @@ class TestWebSocketRealTimeUpdates:
         ws2.send_text.assert_called_once()
 
         # Cleanup
-        await websocket_manager.disconnect("conn-2")
+        await websocket_manager.disconnect("conn - 2")

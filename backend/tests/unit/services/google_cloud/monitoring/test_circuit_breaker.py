@@ -4,7 +4,6 @@ Unit tests for Circuit Breaker pattern implementation
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -19,7 +18,7 @@ class TestCircuitBreaker:
 
     @pytest.fixture
     def circuit_breaker(self):
-        """Create a CircuitBreaker instance with test-friendly settings"""
+        """Create a CircuitBreaker instance with test - friendly settings"""
         return CircuitBreaker(
             api_type="routes",  # Add required api_type parameter
             failure_threshold=3,
@@ -130,7 +129,7 @@ class TestCircuitBreaker:
         )  # Success count is reset when reopening
 
     def test_mixed_results_in_half_open(self, circuit_breaker):
-        """Test mixed success/failure in HALF_OPEN state"""
+        """Test mixed success / failure in HALF_OPEN state"""
         # Open the circuit
         for _ in range(3):
             circuit_breaker.record_failure()
@@ -231,7 +230,7 @@ class TestCircuitBreaker:
         for i in range(6):
             tasks.append(operation(False))
 
-        results = await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
         # Check final state - at least 3 failures should have been recorded
         assert circuit_breaker.failure_count >= 3

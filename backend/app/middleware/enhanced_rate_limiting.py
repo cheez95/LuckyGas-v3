@@ -1,11 +1,11 @@
 """
-Enhanced rate limiting middleware using slowapi for production-grade rate limiting.
+Enhanced rate limiting middleware using slowapi for production - grade rate limiting.
 
 This module implements:
-- Per-endpoint rate limiting with slowapi
+- Per - endpoint rate limiting with slowapi
 - API key management system
 - Advanced rate limiting strategies
-- Redis-backed distributed rate limiting
+- Redis - backed distributed rate limiting
 - Configurable rate limits per endpoint and user role
 """
 
@@ -13,22 +13,17 @@ import hashlib
 import json
 import secrets
 from datetime import datetime, timedelta
-from functools import wraps
 from typing import Any, Callable, Dict, List, Optional
 
-from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
-from sqlalchemy import select
 
 from app.core.cache import cache
 from app.core.config import settings
-from app.core.database import async_session_maker
 from app.core.logging import get_logger
-from app.models.user import User
 
 logger = get_logger(__name__)
 
@@ -38,23 +33,23 @@ class APIKeyManager:
 
     TIERS = {
         "basic": {
-            "rate_limit": "100/hour",
-            "burst_limit": "20/minute",
+            "rate_limit": "100 / hour",
+            "burst_limit": "20 / minute",
             "description": "Basic tier for standard API access",
         },
         "standard": {
-            "rate_limit": "1000/hour",
-            "burst_limit": "100/minute",
+            "rate_limit": "1000 / hour",
+            "burst_limit": "100 / minute",
             "description": "Standard tier for regular applications",
         },
         "premium": {
-            "rate_limit": "10000/hour",
-            "burst_limit": "500/minute",
-            "description": "Premium tier for high-volume applications",
+            "rate_limit": "10000 / hour",
+            "burst_limit": "500 / minute",
+            "description": "Premium tier for high - volume applications",
         },
         "enterprise": {
-            "rate_limit": "100000/hour",
-            "burst_limit": "2000/minute",
+            "rate_limit": "100000 / hour",
+            "burst_limit": "2000 / minute",
             "description": "Enterprise tier with custom limits",
         },
     }
@@ -193,7 +188,7 @@ class APIKeyManager:
 async def get_rate_limit_key(request: Request) -> str:
     """Get rate limit key based on API key, user ID, or IP address."""
     # Check for API key in header
-    api_key = request.headers.get("X-API-Key")
+    api_key = request.headers.get("X - API - Key")
     if api_key:
         metadata = await APIKeyManager.validate_api_key(api_key)
         if metadata:
@@ -212,51 +207,54 @@ limiter = Limiter(
     key_func=get_rate_limit_key,
     storage_uri=settings.REDIS_URL if settings.REDIS_URL else "memory://",
     strategy="fixed-window",
-    default_limits=["100/hour", "20/minute"],  # Default limits
+    default_limits=["100 / hour", "20 / minute"],  # Default limits
 )
 
 
 class EnhancedRateLimitMiddleware:
-    """Enhanced rate limiting middleware with per-endpoint configuration."""
+    """Enhanced rate limiting middleware with per - endpoint configuration."""
 
-    # Endpoint-specific rate limits
+    # Endpoint - specific rate limits
     ENDPOINT_LIMITS = {
         # Authentication endpoints - strict limits
-        "/api/v1/auth/login": ["5/minute", "20/hour"],
-        "/api/v1/auth/register": ["3/minute", "10/hour"],
-        "/api/v1/auth/forgot-password": ["3/minute", "10/hour"],
-        # Resource-intensive endpoints
-        "/api/v1/predictions/generate": ["10/minute", "100/hour"],
-        "/api/v1/routes/optimize": ["10/minute", "100/hour"],
-        "/api/v1/financial-reports/generate": ["5/minute", "50/hour"],
+        "/api / v1 / auth / login": ["5 / minute", "20 / hour"],
+        "/api / v1 / auth / register": ["3 / minute", "10 / hour"],
+        "/api / v1 / auth / forgot - password": ["3 / minute", "10 / hour"],
+        # Resource - intensive endpoints
+        "/api / v1 / predictions / generate": ["10 / minute", "100 / hour"],
+        "/api / v1 / routes / optimize": ["10 / minute", "100 / hour"],
+        "/api / v1 / financial - reports / generate": ["5 / minute", "50 / hour"],
         # Bulk operations
-        "/api/v1/orders/bulk-create": ["5/minute", "50/hour"],
-        "/api/v1/customers/bulk-import": ["5/minute", "30/hour"],
+        "/api / v1 / orders / bulk - create": ["5 / minute", "50 / hour"],
+        "/api / v1 / customers / bulk - import": ["5 / minute", "30 / hour"],
         # Google API proxy endpoints
-        "/api/v1/google-api/geocode": ["30/minute", "300/hour"],
-        "/api/v1/google-api/directions": ["20/minute", "200/hour"],
+        "/api / v1 / google - api / geocode": ["30 / minute", "300 / hour"],
+        "/api / v1 / google - api / directions": ["20 / minute", "200 / hour"],
         # WebSocket endpoints
-        "/api/v1/websocket/connect": ["10/minute", "100/hour"],
-        # SMS/Communication endpoints
-        "/api/v1/sms/send": ["20/minute", "200/hour"],
-        "/api/v1/communications/send-notification": ["30/minute", "300/hour"],
+        "/api / v1 / websocket / connect": ["10 / minute", "100 / hour"],
+        # SMS / Communication endpoints
+        "/api / v1 / sms / send": ["20 / minute", "200 / hour"],
+        "/api / v1 / communications / send - notification": [
+            "30 / minute",
+            "300 / hour",
+        ],
         # Financial operations
-        "/api/v1/payments/process": ["20/minute", "200/hour"],
-        "/api/v1/invoices/generate": ["20/minute", "200/hour"],
+        "/api / v1 / payments / process": ["20 / minute", "200 / hour"],
+        "/api / v1 / invoices / generate": ["20 / minute", "200 / hour"],
         # Admin endpoints - more lenient
-        "/api/v1/admin/*": ["100/minute", "1000/hour"],
+        "/api / v1 / admin/*": ["100 / minute", "1000 / hour"],
         # Health checks - very lenient
-        "/health": ["1000/minute"],
-        "/api/v1/health": ["1000/minute"],
-        "/metrics": ["1000/minute"],
+        "/health": ["1000 / minute"],
+        "/api / v1 / health": ["1000 / minute"],
+        "/metrics": ["1000 / minute"],
     }
 
-    # Role-based rate limit multipliers
+    # Role - based rate limit multipliers
     ROLE_MULTIPLIERS = {
         "super_admin": 10.0,
         "admin": 5.0,
         "manager": 3.0,
-        "office_staff": 2.0,
+        "office_staf": 2.0,
         "driver": 1.5,
         "customer": 1.0,
     }
@@ -279,9 +277,9 @@ class EnhancedRateLimitMiddleware:
 
         # Use default limits if no specific limits found
         if not limits:
-            limits = ["100/hour", "20/minute"]
+            limits = ["100 / hour", "20 / minute"]
 
-        # Apply role-based multiplier if user is authenticated
+        # Apply role - based multiplier if user is authenticated
         if user_role and user_role in cls.ROLE_MULTIPLIERS:
             multiplier = cls.ROLE_MULTIPLIERS[user_role]
             adjusted_limits = []
@@ -297,12 +295,14 @@ class EnhancedRateLimitMiddleware:
 
 
 # Rate limit decorators for specific endpoints
+
+
 def ratelimit_endpoint(limits: Optional[List[str]] = None):
     """Decorator to apply rate limiting to specific endpoints."""
 
     def decorator(func: Callable) -> Callable:
         # If no limits specified, use defaults
-        actual_limits = limits or ["100/hour", "20/minute"]
+        actual_limits = limits or ["100 / hour", "20 / minute"]
 
         # Apply each limit
         for limit in actual_limits:
@@ -332,6 +332,8 @@ async def get_api_key_tier(
 
 
 # Circuit breaker for external service calls
+
+
 class CircuitBreaker:
     """Circuit breaker pattern for external service protection."""
 
@@ -346,7 +348,7 @@ class CircuitBreaker:
         self.expected_exception = expected_exception
         self.failure_count = 0
         self.last_failure_time = None
-        self.state = "closed"  # closed, open, half-open
+        self.state = "closed"  # closed, open, half - open
 
     async def call(self, func: Callable, *args, **kwargs):
         """Execute function with circuit breaker protection."""
@@ -354,7 +356,7 @@ class CircuitBreaker:
             if datetime.utcnow() - self.last_failure_time > timedelta(
                 seconds=self.recovery_timeout
             ):
-                self.state = "half-open"
+                self.state = "half - open"
             else:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -363,7 +365,7 @@ class CircuitBreaker:
 
         try:
             result = await func(*args, **kwargs)
-            if self.state == "half-open":
+            if self.state == "half - open":
                 self.state = "closed"
                 self.failure_count = 0
             return result

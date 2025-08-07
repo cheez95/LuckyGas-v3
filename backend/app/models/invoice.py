@@ -3,7 +3,6 @@ Invoice models for financial management
 """
 
 import enum
-from datetime import datetime
 
 from sqlalchemy import JSON, Boolean, Column, Date, DateTime
 from sqlalchemy import Enum as SQLEnum
@@ -100,7 +99,7 @@ class Invoice(Base):
     )
     payment_method = Column(SQLEnum(PaymentMethod), nullable=True)
 
-    # Government e-invoice fields
+    # Government e - invoice fields
     einvoice_id = Column(String(50), unique=True, index=True)  # 電子發票ID
     qr_code_left = Column(String(200))  # QR Code 左邊內容
     qr_code_right = Column(String(200))  # QR Code 右邊內容
@@ -111,7 +110,7 @@ class Invoice(Base):
     submission_response = Column(JSON, nullable=True)  # 上傳回應
     is_printed = Column(Boolean, default=False)  # 是否已列印
 
-    # Void/Allowance tracking
+    # Void / Allowance tracking
     void_reason = Column(String(200))  # 作廢原因
     void_date = Column(Date)  # 作廢日期
     allowance_number = Column(String(20))  # 折讓單號
@@ -201,7 +200,7 @@ class Payment(Base):
     amount = Column(Float, nullable=False)
 
     # Payment reference
-    reference_number = Column(String(100))  # 轉帳編號/支票號碼
+    reference_number = Column(String(100))  # 轉帳編號 / 支票號碼
     bank_account = Column(String(50))  # 銀行帳號
 
     # Status

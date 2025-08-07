@@ -31,7 +31,7 @@ class OrderTemplateBase(BaseModel):
         None, pattern="^(daily|weekly|monthly|custom)$"
     )
     recurrence_interval: Optional[int] = Field(None, ge=1, le=365)
-    recurrence_days: Optional[List[int]] = None  # For weekly pattern: 1-7 (Mon-Sun)
+    recurrence_days: Optional[List[int]] = None  # For weekly pattern: 1 - 7 (Mon - Sun)
 
     @field_validator("products")
     @classmethod
@@ -46,7 +46,7 @@ class OrderTemplateBase(BaseModel):
             raise ValueError("Recurrence pattern is required for recurring templates")
         if not self.is_recurring and self.recurrence_pattern:
             raise ValueError(
-                "Cannot set recurrence pattern for non-recurring templates"
+                "Cannot set recurrence pattern for non - recurring templates"
             )
         return self
 

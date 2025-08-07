@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Run Epic 7 Integration Tests for Lucky Gas v3
 """
@@ -11,11 +11,11 @@ from pathlib import Path
 
 # Test configuration
 TEST_FILES = [
-    "tests/integration/test_epic7_complete_flow.py",
-    "tests/integration/test_route_optimization_integration.py",
-    "tests/integration/test_websocket_realtime.py",
-    "tests/integration/test_analytics_flow.py",
-    "tests/integration/test_story_3_3_realtime_adjustment.py",
+    "tests / integration / test_epic7_complete_flow.py",
+    "tests / integration / test_route_optimization_integration.py",
+    "tests / integration / test_websocket_realtime.py",
+    "tests / integration / test_analytics_flow.py",
+    "tests / integration / test_story_3_3_realtime_adjustment.py",
 ]
 
 
@@ -36,8 +36,8 @@ def run_test(test_file):
         "-v",
         "--tb=short",
         "--cov=app",
-        "--cov-report=term-missing",
-        "--junit-xml=test-results.xml",
+        "--cov - report=term - missing",
+        "--junit - xml=test - results.xml",
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -64,9 +64,9 @@ def main():
     os.environ["TESTING"] = "True"
     os.environ["ENVIRONMENT"] = "test"
     os.environ["DATABASE_URL"] = (
-        "postgresql+asyncpg://luckygas_test:luckygas_test_password@localhost:5433/luckygas_test"
+        "postgresql + asyncpg://luckygas_test:luckygas_test_password@localhost:5433 / luckygas_test"
     )
-    os.environ["REDIS_URL"] = "redis://localhost:6380/0"
+    os.environ["REDIS_URL"] = "redis://localhost:6380 / 0"
 
     results = []
     total_tests = 0
@@ -108,7 +108,7 @@ def main():
     print(f"Total test files: {len(TEST_FILES)}")
     print(f"Files executed: {len(results)}")
     print(f"Total duration: {total_duration:.2f} seconds")
-    print(f"\nTest Results:")
+    print("\nTest Results:")
     print(f"  ✅ Passed: {passed_tests}")
     print(f"  ❌ Failed: {failed_tests}")
     print(f"  📋 Total: {total_tests}")
@@ -128,7 +128,7 @@ def main():
     with open("epic7_test_report.json", "w") as f:
         json.dump(report_data, f, indent=2)
 
-    print(f"\n📝 Detailed report saved to: epic7_test_report.json")
+    print("\n📝 Detailed report saved to: epic7_test_report.json")
 
     # Exit with appropriate code
     exit_code = 0 if failed_tests == 0 else 1

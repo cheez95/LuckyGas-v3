@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
-from app.core.decorators import rate_limit
 from app.models.user import User
 from app.schemas.prediction import (
     BatchPredictionRequest,
@@ -22,7 +21,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/demand/daily", response_model=List[DemandPredictionResponse])
+@router.post("/demand / daily", response_model=List[DemandPredictionResponse])
 async def predict_daily_demand(
     request: DemandPredictionRequest,
     db: AsyncSession = Depends(get_db),
@@ -33,7 +32,7 @@ async def predict_daily_demand(
 
     - **prediction_date**: Date for prediction (defaults to tomorrow)
     - **customer_ids**: Optional list of customer IDs (all if not specified)
-    - **confidence_threshold**: Minimum confidence for predictions (0.0-1.0)
+    - **confidence_threshold**: Minimum confidence for predictions (0.0 - 1.0)
     """
     try:
         # Get customer data from database
@@ -90,7 +89,9 @@ async def predict_daily_demand(
         raise HTTPException(status_code=500, detail="預測需求時發生錯誤")
 
 
-@router.get("/demand/weekly", response_model=Dict[str, List[DemandPredictionResponse]])
+@router.get(
+    "/demand / weekly", response_model=Dict[str, List[DemandPredictionResponse]]
+)
 async def predict_weekly_demand(
     start_date: Optional[datetime] = Query(
         None, description="Start date for prediction"
@@ -216,7 +217,7 @@ async def create_batch_prediction(
             input_uri=request.input_gcs_path,
             output_uri=request.output_gcs_path,
             model_endpoint=request.model_type,
-            job_display_name=f"batch-prediction-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+            job_display_name=f"batch - prediction-{datetime.now().strftime('%Y % m % d-%H % M % S')}",
         )
 
         return BatchPredictionResponse(
@@ -268,7 +269,7 @@ async def get_prediction_metrics(
         raise HTTPException(status_code=500, detail="獲取預測指標時發生錯誤")
 
 
-@router.post("/train/demand-model")
+@router.post("/train / demand - model")
 async def train_demand_model(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -286,13 +287,14 @@ async def train_demand_model(
 
         # Upload to GCS
         dataset_path = await vertex_ai_service.upload_training_data(
-            training_data, f"demand-prediction-{datetime.now().strftime('%Y%m%d')}"
+            training_data,
+            f"demand - prediction-{datetime.now().strftime('%Y % m % d')}",
         )
 
         # Start training
         model_name = await vertex_ai_service.train_demand_prediction_model(
             dataset_path,
-            display_name=f"lucky-gas-demand-{datetime.now().strftime('%Y%m%d')}",
+            display_name=f"lucky - gas - demand-{datetime.now().strftime('%Y % m % d')}",
         )
 
         return {

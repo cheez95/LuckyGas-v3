@@ -1,6 +1,6 @@
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, List, Type
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
+from typing import TypeVar
 
 # Initialize Faker with Traditional Chinese locale
 fake = Faker("zh_TW")
@@ -117,7 +118,7 @@ class BaseFactory:
     def random_tax_id() -> str:
         """Generate a valid Taiwan business tax ID (統一編號)"""
         # Taiwan business tax ID is 8 digits with checksum
-        # For testing, we'll generate valid-looking IDs
+        # For testing, we'll generate valid - looking IDs
         base = [random.randint(0, 9) for _ in range(7)]
         weights = [1, 2, 1, 2, 1, 2, 4]
 

@@ -1,23 +1,23 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Legacy data migration script for Lucky Gas system
-Migrates data from SQLite (Big5) to PostgreSQL (UTF-8)
+Migrates data from SQLite (Big5) to PostgreSQL (UTF - 8)
 """
 import asyncio
 import logging
 import sqlite3
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import click
 import pandas as pd
-from sqlalchemy import insert, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
-from app.models import (Customer, DeliveryHistory, GasProduct, Order,
-                        OrderItem, Route, User, Vehicle)
+from app.models import (Customer, GasProduct, Order, OrderItem,
+                        User, Vehicle)
 from app.models.order import OrderStatus, PaymentStatus
 from app.models.user import UserRole
 from app.utils.encoding_converter import (Big5ToUTF8Converter,
@@ -71,38 +71,38 @@ class LegacyDataMigrator:
         Create standard gas products if they don't exist.
         """
         standard_products = [
-            {"size": 50, "name": "50公斤桶裝瓦斯", "code": "GAS-50KG", "price": 2500},
-            {"size": 20, "name": "20公斤桶裝瓦斯", "code": "GAS-20KG", "price": 1200},
-            {"size": 16, "name": "16公斤桶裝瓦斯", "code": "GAS-16KG", "price": 1000},
-            {"size": 10, "name": "10公斤桶裝瓦斯", "code": "GAS-10KG", "price": 700},
-            {"size": 4, "name": "4公斤桶裝瓦斯", "code": "GAS-4KG", "price": 350},
+            {"size": 50, "name": "50公斤桶裝瓦斯", "code": "GAS - 50KG", "price": 2500},
+            {"size": 20, "name": "20公斤桶裝瓦斯", "code": "GAS - 20KG", "price": 1200},
+            {"size": 16, "name": "16公斤桶裝瓦斯", "code": "GAS - 16KG", "price": 1000},
+            {"size": 10, "name": "10公斤桶裝瓦斯", "code": "GAS - 10KG", "price": 700},
+            {"size": 4, "name": "4公斤桶裝瓦斯", "code": "GAS - 4KG", "price": 350},
             # Special variants
             {
                 "size": 20,
                 "name": "20公斤營業用瓦斯",
-                "code": "GAS-20KG-BIZ",
+                "code": "GAS - 20KG - BIZ",
                 "price": 1150,
             },
             {
                 "size": 16,
                 "name": "16公斤營業用瓦斯",
-                "code": "GAS-16KG-BIZ",
+                "code": "GAS - 16KG - BIZ",
                 "price": 950,
             },
             {
                 "size": 20,
                 "name": "20公斤好運瓦斯",
-                "code": "GAS-20KG-LUCKY",
+                "code": "GAS - 20KG - LUCKY",
                 "price": 1180,
             },
             {
                 "size": 16,
                 "name": "16公斤好運瓦斯",
-                "code": "GAS-16KG-LUCKY",
+                "code": "GAS - 16KG - LUCKY",
                 "price": 980,
             },
-            {"size": 10, "name": "10公斤平安桶", "code": "GAS-10KG-SAFE", "price": 680},
-            {"size": 4, "name": "4公斤幸福罐", "code": "GAS-4KG-HAPPY", "price": 340},
+            {"size": 10, "name": "10公斤平安桶", "code": "GAS - 10KG - SAFE", "price": 680},
+            {"size": 4, "name": "4公斤幸福罐", "code": "GAS - 4KG - HAPPY", "price": 340},
         ]
 
         for product_data in standard_products:
@@ -153,7 +153,7 @@ class LegacyDataMigrator:
         df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
         conn.close()
 
-        # Convert text columns from Big5 to UTF-8
+        # Convert text columns from Big5 to UTF - 8
         df_converted = self.converter.convert_dataframe(df, columns=text_columns)
 
         logger.info(f"Read {len(df_converted)} records from {table_name}")
@@ -333,7 +333,7 @@ class LegacyDataMigrator:
                     employee_id=row["employee_id"],
                     role=UserRole.DRIVER,
                     is_active=bool(row.get("is_active", True)),
-                    # Driver-specific fields
+                    # Driver - specific fields
                     driver_license_type=row.get("license_type"),
                     driver_experience_years=int(row.get("experience_years", 0)),
                     driver_familiar_areas=self._parse_familiar_areas(
@@ -559,11 +559,11 @@ class LegacyDataMigrator:
 
         # Map cylinder quantities to products
         cylinder_mappings = [
-            ("delivered_50kg", "returned_50kg", "GAS-50KG", 2500),
-            ("delivered_20kg", "returned_20kg", "GAS-20KG", 1200),
-            ("delivered_16kg", "returned_16kg", "GAS-16KG", 1000),
-            ("delivered_10kg", "returned_10kg", "GAS-10KG", 700),
-            ("delivered_4kg", "returned_4kg", "GAS-4KG", 350),
+            ("delivered_50kg", "returned_50kg", "GAS - 50KG", 2500),
+            ("delivered_20kg", "returned_20kg", "GAS - 20KG", 1200),
+            ("delivered_16kg", "returned_16kg", "GAS - 16KG", 1000),
+            ("delivered_10kg", "returned_10kg", "GAS - 10KG", 700),
+            ("delivered_4kg", "returned_4kg", "GAS - 4KG", 350),
         ]
 
         for delivered_col, returned_col, product_code, unit_price in cylinder_mappings:
@@ -612,7 +612,7 @@ class LegacyDataMigrator:
         import re
 
         # Look for Taiwan phone patterns
-        phone_pattern = r"(09\d{2}[-\s]?\d{3}[-\s]?\d{3}|0[2-8][-\s]?\d{4}[-\s]?\d{4})"
+        phone_pattern = r"(09\d{2}[-\s]?\d{3}[-\s]?\d{3}|0[2 - 8][-\s]?\d{4}[-\s]?\d{4})"
         match = re.search(phone_pattern, contact_info)
 
         if match:
@@ -637,13 +637,13 @@ class LegacyDataMigrator:
         if time_type == "start":
             # Find first checked hour
             for hour in range(8, 21):
-                if row.get(f"hour_{hour}_{hour+1}"):
+                if row.get(f"hour_{hour}_{hour + 1}"):
                     return f"{hour:02d}:00"
         else:  # end
             # Find last checked hour
             for hour in range(20, 7, -1):
-                if row.get(f"hour_{hour}_{hour+1}"):
-                    return f"{hour+1:02d}:00"
+                if row.get(f"hour_{hour}_{hour + 1}"):
+                    return f"{hour + 1:02d}:00"
 
         return None
 
@@ -659,12 +659,12 @@ class LegacyDataMigrator:
         return None
 
     def _parse_familiar_areas(self, areas_str: str) -> List[str]:
-        """Parse comma-separated areas into list."""
+        """Parse comma - separated areas into list."""
         if pd.isna(areas_str) or not areas_str:
             return []
 
         # Split by comma and clean
-        areas = [area.strip() for area in str(areas_str).split(",")]
+        areas = [area.strip() for area in str(areas_str).split(", ")]
         return [area for area in areas if area]
 
     def _map_order_status(self, legacy_status: str) -> OrderStatus:
@@ -714,7 +714,7 @@ class LegacyDataMigrator:
         """Generate detailed migration report."""
         report_path = Path("migration_report.txt")
 
-        with open(report_path, "w", encoding="utf-8") as f:
+        with open(report_path, "w", encoding="utf - 8") as f:
             f.write("Lucky Gas Data Migration Report\n")
             f.write("=" * 50 + "\n\n")
             f.write(f"Migration Date: {datetime.now()}\n")
@@ -757,7 +757,7 @@ class LegacyDataMigrator:
                 f.write("-" * 30 + "\n")
                 for i, error in enumerate(self.errors[:50]):  # First 50 errors
                     f.write(
-                        f"{i+1}. Table: {error['table']}, Record: {error['record']}\n"
+                        f"{i + 1}. Table: {error['table']}, Record: {error['record']}\n"
                     )
                     f.write(f"   Error: {error['error']}\n\n")
 
@@ -768,22 +768,30 @@ class LegacyDataMigrator:
 
 
 @click.command()
-@click.option("--legacy-db", required=True, help="Path to legacy SQLite database")
+
+
+@click.option("--legacy - db", required=True, help="Path to legacy SQLite database")
+
+
 @click.option(
-    "--batch-size", default=1000, help="Number of records to process in each batch"
+    "--batch - size", default=1000, help="Number of records to process in each batch"
 )
+
+
 @click.option(
-    "--dry-run", is_flag=True, help="Run in dry-run mode (no actual migration)"
+    "--dry - run", is_flag=True, help="Run in dry - run mode (no actual migration)"
 )
+
+
 def main(legacy_db: str, batch_size: int, dry_run: bool):
     """
     Lucky Gas legacy data migration tool.
 
-    Migrates data from SQLite (Big5) to PostgreSQL (UTF-8).
+    Migrates data from SQLite (Big5) to PostgreSQL (UTF - 8).
     """
     if dry_run:
-        logger.info("Running in DRY-RUN mode - no data will be migrated")
-        # TODO: Implement dry-run logic
+        logger.info("Running in DRY - RUN mode - no data will be migrated")
+        # TODO: Implement dry - run logic
         return
 
     # Verify legacy database exists

@@ -1,23 +1,20 @@
 """
 Customer repository for data access operations
-Implements customer-specific queries and operations
+Implements customer - specific queries and operations
 """
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.metrics import cache_operations_counter
 from app.models.customer import Customer
-from app.models.customer_inventory import CustomerInventory
 from app.models.order import Order
-from app.repositories.base import BaseRepository, CachedRepository
-
-from datetime import timedelta
+from app.repositories.base import CachedRepository
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ logger = logging.getLogger(__name__)
 class CustomerRepository(CachedRepository[Customer]):
     """
     Repository for customer data operations
-    Extends CachedRepository for customer-specific functionality
+    Extends CachedRepository for customer - specific functionality
     """
 
     def __init__(self, session: AsyncSession):
@@ -70,11 +67,9 @@ class CustomerRepository(CachedRepository[Customer]):
             Tuple of (customers list, total count)
         """
         # Base query for active customers
-        base_query = select(Customer).where(Customer.is_terminated == False)
+        base_query = select(Customer).where(~Customer.is_terminated)
         count_query = (
-            select(func.count())
-            .select_from(Customer)
-            .where(Customer.is_terminated == False)
+            select(func.count()).select_from(Customer).where(~Customer.is_terminated)
         )
 
         # Apply filters
@@ -163,7 +158,7 @@ class CustomerRepository(CachedRepository[Customer]):
         # This is a complex query that would join with orders and predictions
         # For now, return customers with subscription or regular delivery
         query = select(Customer).where(
-            and_(Customer.is_terminated == False, Customer.is_subscription == True)
+            and_(~Customer.is_terminated, Customer.is_subscription)
         )
 
         if area:
@@ -242,7 +237,7 @@ class CustomerRepository(CachedRepository[Customer]):
         """
         query = (
             select(Customer.area, func.count(Customer.id))
-            .where(Customer.is_terminated == False)
+            .where(~Customer.is_terminated)
             .group_by(Customer.area)
         )
 
@@ -255,14 +250,14 @@ class CustomerRepository(CachedRepository[Customer]):
         self, min_monthly_orders: int = 4, min_avg_order_value: float = 5000.0
     ) -> List[Customer]:
         """
-        Get high-value customers based on order frequency and value
+        Get high - value customers based on order frequency and value
 
         Args:
             min_monthly_orders: Minimum orders per month
             min_avg_order_value: Minimum average order value
 
         Returns:
-            List of high-value customers
+            List of high - value customers
         """
         # Complex query using window functions
         # This would analyze order history to identify VIP customers
@@ -271,8 +266,8 @@ class CustomerRepository(CachedRepository[Customer]):
             select(Customer)
             .where(
                 and_(
-                    Customer.is_terminated == False,
-                    Customer.is_subscription == True,
+                    ~Customer.is_terminated,
+                    Customer.is_subscription,
                     Customer.customer_type == "commercial",
                 )
             )

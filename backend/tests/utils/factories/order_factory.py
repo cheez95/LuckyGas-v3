@@ -1,6 +1,6 @@
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, List
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -62,7 +62,7 @@ class OrderFactory(BaseFactory):
         final_amount = total_amount - discount_amount
 
         return {
-            "order_number": f"ORD-{datetime.now().strftime('%Y%m%d')}-{self.random_string(6, '0123456789')}",
+            "order_number": f"ORD-{datetime.now().strftime('%Y % m % d')}-{self.random_string(6, '0123456789')}",
             "customer_id": 1,  # Should be overridden
             "scheduled_date": datetime.now()
             + timedelta(days=self.fake.random_int(1, 7)),

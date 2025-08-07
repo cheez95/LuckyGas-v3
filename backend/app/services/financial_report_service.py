@@ -2,22 +2,19 @@
 Financial reporting service
 """
 
-import io
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
-from sqlalchemy import and_, case, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from sqlalchemy.orm import selectinload
 
 from app.models import (
     Customer,
     Invoice,
-    InvoiceItem,
     InvoicePaymentStatus,
     InvoiceStatus,
-    Order,
     Payment,
 )
 
@@ -232,7 +229,7 @@ class FinancialReportService:
         for invoice in invoices:
             if invoice.tax_type == "1":  # Taxable
                 category = "taxable_sales"
-            elif invoice.tax_type == "2":  # Zero-rated
+            elif invoice.tax_type == "2":  # Zero - rated
                 category = "zero_rated"
             else:  # Tax exempt
                 category = "tax_exempt"

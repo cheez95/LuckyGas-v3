@@ -4,6 +4,8 @@ import { message } from 'antd';
 import { navigateTo } from '../utils/router';
 import { performanceMonitor } from './performance.service';
 import i18n from '../utils/i18n';
+import { setupRetryInterceptor, setupCircuitBreakerInterceptor } from './apiInterceptor';
+import { setupGlobalErrorHandlers } from '../utils/errorHandler';
 
 // Extend axios config to include metadata
 declare module 'axios' {
@@ -235,3 +237,8 @@ export const handleApiError = (error: any): string => {
   
   return i18n.t('message.error.general');
 };
+
+// Setup error handling and interceptors
+setupRetryInterceptor(api);
+setupCircuitBreakerInterceptor(api);
+setupGlobalErrorHandlers();

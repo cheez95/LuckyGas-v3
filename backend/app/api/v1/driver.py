@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -17,17 +18,12 @@ from app.core.security import verify_user_role
 from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
 from app.models.route_delivery import (
-
-from sqlalchemy import and_
-from sqlalchemy import select
-
     DeliveryStatus,
     DeliveryStatusHistory,
     RouteDelivery,
 )
 from app.models.user import User
 from app.schemas.driver import (
-    DeliveryConfirmRequest,
     DeliveryConfirmResponse,
     DeliveryStatsResponse,
     DeliveryStatusUpdateRequest,
@@ -40,13 +36,14 @@ from app.schemas.driver import (
 from app.services.gps_service import GPSService
 from app.services.notification_service import NotificationService, NotificationType
 from app.services.websocket_service import websocket_manager as ws_manager
+from app.models.route import Route
 
 router = APIRouter()
 notification_service = NotificationService()
 gps_service = GPSService()
 
 
-@router.get("/routes/today", response_model=List[RouteListResponse])
+@router.get("/routes / today", response_model=List[RouteListResponse])
 async def get_today_routes(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> List[RouteListResponse]:
@@ -111,7 +108,7 @@ async def get_today_routes(
     return route_responses
 
 
-@router.get("/stats/today", response_model=DeliveryStatsResponse)
+@router.get("/stats / today", response_model=DeliveryStatsResponse)
 async def get_today_stats(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> DeliveryStatsResponse:
@@ -272,7 +269,7 @@ async def update_driver_location(
     return {"status": "success", "message": "位置更新成功"}
 
 
-@router.post("/deliveries/status/{delivery_id}")
+@router.post("/deliveries / status/{delivery_id}")
 async def update_delivery_status(
     delivery_id: int,
     status_update: DeliveryStatusUpdateRequest,
@@ -378,7 +375,7 @@ async def update_delivery_status(
 
 
 @router.post(
-    "/deliveries/confirm/{delivery_id}", response_model=DeliveryConfirmResponse
+    "/deliveries / confirm/{delivery_id}", response_model=DeliveryConfirmResponse
 )
 async def confirm_delivery(
     delivery_id: int,
@@ -389,7 +386,7 @@ async def confirm_delivery(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> DeliveryConfirmResponse:
-    """Confirm delivery completion with signature/photo"""
+    """Confirm delivery completion with signature / photo"""
     verify_user_role(current_user, ["driver"])
 
     # Get delivery and verify ownership
@@ -421,10 +418,10 @@ async def confirm_delivery(
     if signature:
         # Decode base64 signature and save
         signature_data = base64.b64decode(
-            signature.split(",")[1] if "," in signature else signature
+            signature.split(", ")[1] if ", " in signature else signature
         )
         signature_path = Path(
-            f"uploads/signatures/{delivery_id}_{datetime.utcnow().timestamp()}.png"
+            f"uploads / signatures/{delivery_id}_{datetime.utcnow().timestamp()}.png"
         )
         signature_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -436,7 +433,7 @@ async def confirm_delivery(
     # Save photo if provided
     if photo:
         photo_path = Path(
-            f"uploads/delivery_photos/{delivery_id}_{datetime.utcnow().timestamp()}_{photo.filename}"
+            f"uploads / delivery_photos/{delivery_id}_{datetime.utcnow().timestamp()}_{photo.filename}"
         )
         photo_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -604,7 +601,7 @@ async def sync_offline_data(
     )
 
 
-@router.post("/clock-out")
+@router.post("/clock - out")
 async def clock_out(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:

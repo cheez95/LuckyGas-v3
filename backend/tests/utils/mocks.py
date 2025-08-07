@@ -1,20 +1,12 @@
 """
-from dataclasses import dataclass
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
 Mock utilities for testing
 """
 
 import random
 import string
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, Mock
-from typing import Dict, List, Optional, Any
 
 
 class MockService:
@@ -211,7 +203,7 @@ class MockSMSService(MockService):
 
 
 class MockEInvoiceService(MockService):
-    """Mock e-invoice service"""
+    """Mock e - invoice service"""
 
     async def issue_invoice(self, invoice_data: Dict[str, Any]) -> Dict[str, Any]:
         """Mock invoice issuance"""
@@ -221,7 +213,7 @@ class MockEInvoiceService(MockService):
                 "invoice_number": "AA" + "".join(random.choices(string.digits, k=8)),
                 "status": "issued",
                 "issue_date": datetime.now().isoformat(),
-                "qr_code": "https://einvoice.nat.gov.tw/qrcode/"
+                "qr_code": "https://einvoice.nat.gov.tw / qrcode/"
                 + "".join(random.choices(string.ascii_letters, k=20)),
                 "verification_code": "".join(random.choices(string.digits, k=4)),
             },
@@ -307,8 +299,7 @@ class MockRedisClient:
         self.expires.clear()
 
     async def close(self):
-        """Close connection (no-op for mock)"""
-        pass
+        """Close connection (no - op for mock)"""
 
 
 def create_mock_websocket():
@@ -340,7 +331,7 @@ def create_mock_websocket():
 def create_mock_file_upload(
     filename: str = "test.jpg",
     content: bytes = b"test content",
-    content_type: str = "image/jpeg",
+    content_type: str = "image / jpeg",
 ):
     """Create a mock file upload"""
     from io import BytesIO

@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any, Dict, Optional, Set
 
 import redis.asyncio as redis
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 
 from app.core.config import settings
 
@@ -65,10 +65,10 @@ class WebSocketManager:
         self._background_tasks = set()
 
     async def initialize(self):
-        """Initialize Redis connection for pub/sub"""
+        """Initialize Redis connection for pub / sub"""
         try:
             self.redis_client = await redis.from_url(
-                settings.REDIS_URL, encoding="utf-8", decode_responses=True
+                settings.REDIS_URL, encoding="utf - 8", decode_responses=True
             )
             self.pubsub = self.redis_client.pubsub()
 
@@ -87,7 +87,7 @@ class WebSocketManager:
             # await message_queue.initialize(self._deliver_queued_message)
 
             logger.info(
-                "WebSocket manager initialized with Redis pub/sub and message queue"
+                "WebSocket manager initialized with Redis pub / sub and message queue"
             )
 
         except Exception as e:
@@ -95,7 +95,7 @@ class WebSocketManager:
             # Continue without Redis (single instance mode)
 
     async def _redis_listener(self):
-        """Listen for Redis pub/sub messages"""
+        """Listen for Redis pub / sub messages"""
         try:
             async for message in self.pubsub.listen():
                 if message["type"] == "message":
@@ -104,7 +104,7 @@ class WebSocketManager:
             logger.error(f"Redis listener error: {e}")
 
     async def _handle_redis_message(self, message: Dict[str, Any]):
-        """Handle message from Redis pub/sub"""
+        """Handle message from Redis pub / sub"""
         try:
             channel = message["channel"]
             data = json.loads(message["data"])
@@ -232,7 +232,7 @@ class WebSocketManager:
     async def broadcast(self, message: Dict[str, Any], channel: Optional[str] = None):
         """Broadcast message to all connections or specific channel"""
         if channel:
-            # Send to specific role/channel
+            # Send to specific role / channel
             await self.send_to_role(channel, message)
         else:
             # Send to all connections
@@ -248,7 +248,7 @@ class WebSocketManager:
         target_user_id: Optional[str] = None,
         target_role: Optional[str] = None,
     ):
-        """Publish event to Redis for cross-instance broadcasting"""
+        """Publish event to Redis for cross - instance broadcasting"""
         event_data["timestamp"] = datetime.now().isoformat()
 
         # Removed message queue during compaction - use Redis directly
@@ -403,7 +403,7 @@ class WebSocketManager:
         # For now, just broadcast the event
 
         # Notify office staff
-        await self.send_to_role("office_staff", confirmation_data)
+        await self.send_to_role("office_staf", confirmation_data)
         await self.send_to_role("manager", confirmation_data)
 
         # Notify the specific customer

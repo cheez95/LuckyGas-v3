@@ -2,7 +2,6 @@
 Performance monitoring middleware for tracking API response times and metrics.
 """
 
-import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -84,7 +83,7 @@ class PerformanceMiddleware:
     async def __call__(self, request: Request, call_next: Callable) -> Response:
         """Process request and track performance metrics."""
         # Skip health check endpoints
-        if request.url.path in ["/health", "/health/ready", "/metrics"]:
+        if request.url.path in ["/health", "/health / ready", "/metrics"]:
             return await call_next(request)
 
         # Extract endpoint info
@@ -105,7 +104,7 @@ class PerformanceMiddleware:
             duration = time.time() - start_time
 
             # Get response size (estimate if not available)
-            response_size_value = int(response.headers.get("content-length", 0))
+            response_size_value = int(response.headers.get("content - length", 0))
 
             # Update metrics
             request_count.labels(
@@ -327,7 +326,7 @@ async def run_performance_baseline():
 
 
 def _calculate_baseline_score(results: Dict[str, Any]) -> float:
-    """Calculate overall baseline performance score (0-100)."""
+    """Calculate overall baseline performance score (0 - 100)."""
     score = 100.0
 
     # Database penalties

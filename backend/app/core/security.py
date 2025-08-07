@@ -224,7 +224,7 @@ class AccountLockout:
 
     @staticmethod
     async def is_locked(identifier: str, is_ip: bool = False) -> bool:
-        """Check if account/IP is locked."""
+        """Check if account / IP is locked."""
         policy = get_lockout_policy()
         if not policy.enabled:
             return False
@@ -249,7 +249,7 @@ class AccountLockout:
 
 
 class TwoFactorAuth:
-    """Two-factor authentication management."""
+    """Two - factor authentication management."""
 
     @staticmethod
     def generate_secret() -> str:
@@ -292,7 +292,7 @@ class TwoFactorAuth:
             code = "".join(
                 secrets.choice("0123456789") for _ in range(config.backup_code_length)
             )
-            codes.append(f"{code[:4]}-{code[4:]}")  # Format: XXXX-XXXX
+            codes.append(f"{code[:4]}-{code[4:]}")  # Format: XXXX - XXXX
 
         return codes
 
@@ -324,7 +324,7 @@ class TwoFactorAuth:
         stored_code = await cache.get(key)
 
         if stored_code and stored_code == code:
-            await cache.delete(key)  # One-time use
+            await cache.delete(key)  # One - time use
             return True
 
         return False
@@ -408,7 +408,7 @@ class APIKeyManager:
 
 
 class DataEncryption:
-    """Field-level encryption for sensitive data."""
+    """Field - level encryption for sensitive data."""
 
     _fernet = None
 

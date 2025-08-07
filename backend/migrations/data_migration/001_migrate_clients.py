@@ -300,7 +300,7 @@ class ClientMigration:
             if pd.notna(value):
                 try:
                     customer_data[db_field] = float(value)
-                except:
+                except Exception:
                     pass
         
         # Process delivery time preferences

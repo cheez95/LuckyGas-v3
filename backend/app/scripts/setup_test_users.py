@@ -42,7 +42,7 @@ async def create_test_users():
             "email": "office1@luckygas.tw",
             "full_name": "辦公室人員",
             "password": "office123",
-            "role": "office_staff",
+            "role": "office_staf",
             "is_active": True,
             "display_name": "辦公室人員",
         },

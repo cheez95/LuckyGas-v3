@@ -11,6 +11,7 @@ from app.api.deps import get_current_user
 from app.core.logging import get_logger
 from app.core.security import verify_user_role
 from app.models.user import User
+from app.services.notification_service import NotificationService
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -31,7 +32,7 @@ async def send_sms(
     sms_data: SMSRequest, current_user: User = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Send SMS to customer"""
-    verify_user_role(current_user, ["driver", "office_staf", "manager", "admin"])
+    verify_user_role(current_user, ["driver", "office_sta", "manager", "admin"])
 
     # Map template to message
     template_messages = {

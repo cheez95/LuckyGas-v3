@@ -3,6 +3,7 @@ Unit tests for Development Mode Manager
 """
 
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -148,7 +149,7 @@ class TestDevelopmentModeManager:
             manager = DevelopmentModeManager()
             assert manager.is_offline() is True
 
-        # Test non-offline modes
+        # Test non - offline modes
         with patch.dict(
             os.environ,
             {"GOOGLE_API_MODE": "production", "TESTING": "false"},
@@ -233,7 +234,7 @@ class TestDevelopmentModeManager:
             assert manager.is_production() is True
 
     def test_environment_variable_case_insensitive(self, reset_env):
-        """Test that mode detection is case-insensitive"""
+        """Test that mode detection is case - insensitive"""
         test_cases = [
             ("PRODUCTION", DevelopmentMode.PRODUCTION),
             ("production", DevelopmentMode.PRODUCTION),

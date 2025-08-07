@@ -14,6 +14,8 @@ import hashlib
 import json
 import re
 import secrets
+from datetime import datetime
+from typing import Dict, Optional
 
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -21,10 +23,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.cache import cache
 from app.core.config import settings
 from app.core.logging import get_logger
-
-from datetime import datetime
-from typing import Dict
-from typing import Optional
+from starlette.requests import Request
+from starlette.responses import Response
 
 logger = get_logger(__name__)
 
@@ -52,26 +52,28 @@ class SecurityHeaders:
 
         if settings.is_production():
             # Strict Transport Security (HSTS) - only in production with HTTPS
-            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
 
             # Content Security Policy - stricter in production
             headers["Content-Security-Policy"] = (
-                "default-src 'sel'; "
-                "script-src 'sel' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
-                "style-src 'sel' 'unsafe-inline' https://fonts.googleapis.com; "
-                "font-src 'sel' https://fonts.gstatic.com; "
-                "img-src 'sel' data: https: blob:; "
-                "connect-src 'sel' wss: https://api.luckygas.tw https://*.googleapis.com; "
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https: blob:; "
+                "connect-src 'self' wss: https://api.luckygas.tw https://*.googleapis.com; "
                 "frame-ancestors 'none';"
             )
         else:
             # More lenient CSP for development
             headers["Content-Security-Policy"] = (
-                "default-src 'sel'; "
-                "script-src 'sel' 'unsafe-inline' 'unsafe-eval' localhost:* 127.0.0.1:*; "
-                "style-src 'sel' 'unsafe-inline'; "
-                "img-src 'sel' data: https: http: blob:; "
-                "connect-src 'sel' ws: wss: http: https:;"
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' localhost:* 127.0.0.1:*; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https: http: blob:; "
+                "connect-src 'self' ws: wss: http: https:;"
             )
 
         return headers
@@ -88,7 +90,7 @@ class SecurityValidation:
         r"(\band\b\s*\d+\s*=\s*\d+)",  # AND 1=1
         r"(;|'|\")",  # Common injection characters
         r"(xp_|sp_)",  # SQL Server stored procedures
-        r"(benchmark|sleep|waitfor)",  # Time-based attacks
+        r"(benchmark|sleep|waitfor)",  # Time - based attacks
     ]
 
     # Patterns for XSS detection
@@ -108,8 +110,8 @@ class SecurityValidation:
     PATH_TRAVERSAL_PATTERNS = [
         r"\.\./",
         r"\.\.\\/",
-        r"%2e%2e/",
-        r"%252e%252e/",
+        r"%2e %2e/",
+        r"%252e %252e/",
         r"\.\./\.\./",
         r"\.\.\\\.\.\\",
     ]
@@ -342,7 +344,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # Try to get real IP from headers
         forwarded_for = request.headers.get("X-Forwarded-For")
         if forwarded_for:
-            client_ip = forwarded_for.split(",")[0].strip()
+            client_ip = forwarded_for.split(", ")[0].strip()
         elif request.client:
             client_ip = request.client.host
         else:
@@ -408,7 +410,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                         status_code=400, content={"detail": "無效的請求參數"}
                     )
 
-        # Check Content-Length for POST/PUT requests
+        # Check Content - Length for POST / PUT requests
         if request.method in ["POST", "PUT", "PATCH"]:
             content_length = request.headers.get("content-length")
             if content_length and int(content_length) > self.MAX_REQUEST_SIZE:
@@ -431,7 +433,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         self, request: Request, response: Response, start_time: datetime
     ):
         """Log requests for audit trail."""
-        # Only log non-GET requests and failed requests
+        # Only log non - GET requests and failed requests
         if request.method != "GET" or response.status_code >= 400:
             duration = (datetime.utcnow() - start_time).total_seconds()
 
@@ -467,7 +469,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
 
 class CSRFProtection:
-    """CSRF protection for state-changing operations."""
+    """CSRF protection for state - changing operations."""
 
     @staticmethod
     def generate_csrf_token() -> str:

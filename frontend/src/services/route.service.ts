@@ -77,7 +77,7 @@ class RouteService {
    */
   async createRoutePlan(data: Partial<RoutePlan>): Promise<RoutePlan> {
     try {
-      const response = await api.post('/routes', data);
+      const response = await api.post('/routes/', data);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.createFailed');
@@ -91,7 +91,7 @@ class RouteService {
    */
   async getRoutePlan(id: number): Promise<RoutePlan> {
     try {
-      const response = await api.get(`/routes/${id}`);
+      const response = await api.get(`/routes/${id}/`);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.fetchFailed');
@@ -105,7 +105,7 @@ class RouteService {
    */
   async updateRoutePlan(id: number, data: Partial<RoutePlan>): Promise<RoutePlan> {
     try {
-      const response = await api.put(`/routes/${id}`, data);
+      const response = await api.put(`/routes/${id}/`, data);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.updateFailed');
@@ -119,7 +119,7 @@ class RouteService {
    */
   async deleteRoutePlan(id: number): Promise<void> {
     try {
-      await api.delete(`/routes/${id}`);
+      await api.delete(`/routes/${id}/`);
       message.success(i18n.t('common.success.deleteSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.deleteFailed');
@@ -136,7 +136,7 @@ class RouteService {
     total: number;
   }> {
     try {
-      const response = await api.get('/routes', { params });
+      const response = await api.get('/routes/', { params });
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.fetchFailed');
@@ -150,7 +150,7 @@ class RouteService {
    */
   async optimizeRoute(request: OptimizeRouteRequest): Promise<OptimizeRouteResponse> {
     try {
-      const response = await api.post('/routes/optimize', request);
+      const response = await api.post('/routes/optimize/', request);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('dispatch.route.optimizeError');
@@ -164,7 +164,7 @@ class RouteService {
    */
   async assignDriver(routeId: number, driverId: number): Promise<void> {
     try {
-      await api.post(`/routes/${routeId}/assign-driver`, { driverId });
+      await api.post(`/routes/${routeId}/assign-driver/`, { driverId });
       message.success(i18n.t('dispatch.route.assignSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('dispatch.route.assignError');
@@ -178,7 +178,7 @@ class RouteService {
    */
   async updateRouteStatus(routeId: number, status: string): Promise<void> {
     try {
-      await api.put(`/routes/${routeId}/status`, { status });
+      await api.put(`/routes/${routeId}/status/`, { status });
       message.success(i18n.t('common.success.updateSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.updateFailed');
@@ -198,7 +198,7 @@ class RouteService {
     onTimeDeliveryRate: number;
   }> {
     try {
-      const response = await api.get('/routes/statistics', {
+      const response = await api.get('/routes/statistics/', {
         params: { dateFrom, dateTo }
       });
       return response.data;
@@ -214,7 +214,7 @@ class RouteService {
    */
   async getDriverRoutes(driverId: number, date: string): Promise<RoutePlan[]> {
     try {
-      const response = await api.get(`/drivers/${driverId}/routes`, {
+      const response = await api.get(`/drivers/${driverId}/routes/`, {
         params: { date }
       });
       return response.data;
@@ -230,7 +230,7 @@ class RouteService {
    */
   async getRoutes(params: RouteSearchParams): Promise<RouteWithDetails[]> {
     try {
-      const response = await api.get('/routes', { params });
+      const response = await api.get('/routes/', { params });
       return response.data.routes || response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.fetchFailed');
@@ -244,7 +244,7 @@ class RouteService {
    */
   async optimizeRoutesBatch(params: { date: string; area?: string }): Promise<{ routes_created: number; orders_assigned: number }> {
     try {
-      const response = await api.post('/routes/optimize-batch', params);
+      const response = await api.post('/routes/optimize-batch/', params);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('dispatch.route.optimizeError');
@@ -258,7 +258,7 @@ class RouteService {
    */
   async getDriverRoute(driverId: number, routeId: number): Promise<RouteWithDetails> {
     try {
-      const response = await api.get(`/drivers/${driverId}/routes/${routeId}`);
+      const response = await api.get(`/drivers/${driverId}/routes/${routeId}/`);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.fetchFailed');
@@ -272,7 +272,7 @@ class RouteService {
    */
   async startRoute(routeId: number): Promise<void> {
     try {
-      await api.post(`/routes/${routeId}/start`);
+      await api.post(`/routes/${routeId}/start/`);
       message.success(i18n.t('dispatch.route.startSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('dispatch.route.startError');
@@ -286,7 +286,7 @@ class RouteService {
    */
   async bulkAssignRoutes(assignments: { routeId: number; driverId: number }[]): Promise<void> {
     try {
-      await api.post('/routes/bulk-assign', { assignments });
+      await api.post('/routes/bulk-assign/', { assignments });
       message.success(i18n.t('dispatch.route.bulkAssignSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('dispatch.route.bulkAssignError');
@@ -300,7 +300,7 @@ class RouteService {
    */
   async completeRoute(routeId: number): Promise<void> {
     try {
-      await api.post(`/routes/${routeId}/complete`);
+      await api.post(`/routes/${routeId}/complete/`);
       message.success(i18n.t('route.completeSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.updateFailed');
@@ -318,7 +318,7 @@ class RouteService {
     notes?: string;
   }): Promise<void> {
     try {
-      await api.post(`/routes/stops/${stopId}/complete`, data);
+      await api.post(`/routes/stops/${stopId}/complete/`, data);
       message.success(i18n.t('route.stopCompleteSuccess'));
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || i18n.t('common.error.updateFailed');
@@ -337,7 +337,7 @@ class RouteService {
     timestamp?: string;
   }): Promise<void> {
     try {
-      await api.post('/drivers/location', data);
+      await api.post('/drivers/location/', data);
     } catch (error: any) {
       // Silently fail for location updates to avoid spamming errors
       console.error('Failed to update driver location:', error);

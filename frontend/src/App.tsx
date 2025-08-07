@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, Spin } from 'antd';
 import zhTW from 'antd/locale/zh_TW';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-tw';
@@ -8,6 +8,7 @@ import './App.css';
 
 // Utils
 import { setNavigate } from './utils/router';
+import { features } from './config/features';
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -19,41 +20,65 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import SessionManager from './components/common/SessionManager';
 import WebSocketManager from './components/common/WebSocketManager';
 
-// Pages/Components
-import Login from './components/Login';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import MainLayout from './components/MainLayout';
-import Dashboard from './components/dashboard/Dashboard';
-import CustomerManagement from './pages/office/CustomerManagement';
-import OrderManagement from './pages/office/OrderManagement';
-import RoutePlanning from './pages/dispatch/RoutePlanning';
-import DriverAssignment from './pages/dispatch/DriverAssignment';
-import EmergencyDispatch from './pages/dispatch/EmergencyDispatch';
-import DispatchDashboard from './pages/dispatch/DispatchDashboard';
-import DeliveryHistory from './components/office/DeliveryHistory';
-import UserProfile from './components/UserProfile';
+// Loading fallback component
+const PageLoader = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    minHeight: '400px' 
+  }}>
+    <Spin size="large" tip="載入中..." />
+  </div>
+);
 
-// Driver Pages
-import DriverDashboard from './pages/driver/DriverDashboard';
-import RouteDetails from './pages/driver/RouteDetails';
-import DeliveryView from './pages/driver/DeliveryView';
-import DriverNavigation from './pages/driver/DriverNavigation';
-import DeliveryScanner from './pages/driver/DeliveryScanner';
+// Pages/Components - Lazy loaded
+const Login = lazy(() => import('./components/Login'));
+const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
+const ResetPassword = lazy(() => import('./components/ResetPassword'));
+const MainLayout = lazy(() => import('./components/MainLayout'));
+const Dashboard = lazy(() => import('./components/dashboard/Dashboard'));
+const CustomerManagement = lazy(() => import('./pages/office/CustomerManagement'));
+const OrderManagement = lazy(() => import('./pages/office/OrderManagement'));
+const RoutePlanning = lazy(() => import('./pages/dispatch/RoutePlanning'));
+const DriverAssignment = lazy(() => import('./pages/dispatch/DriverAssignment'));
+const EmergencyDispatch = lazy(() => import('./pages/dispatch/EmergencyDispatch'));
+const DispatchDashboard = lazy(() => import('./pages/dispatch/DispatchDashboard'));
+const DeliveryHistory = lazy(() => import('./components/office/DeliveryHistory'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
 
-// Customer Pages
-import CustomerPortal from './pages/customer/CustomerPortal';
-import OrderTracking from './pages/customer/OrderTracking';
+// Driver Pages - Lazy loaded
+const DriverDashboard = lazy(() => import('./pages/driver/DriverDashboard'));
+const RouteDetails = lazy(() => import('./pages/driver/RouteDetails'));
+const DeliveryView = lazy(() => import('./pages/driver/DeliveryView'));
+const DriverNavigation = lazy(() => import('./pages/driver/DriverNavigation'));
+const DeliveryScanner = lazy(() => import('./pages/driver/DeliveryScanner'));
 
-// Analytics Pages
-import ReportingDashboard from './pages/analytics/ReportingDashboard';
-import AnalyticsPage from './pages/AnalyticsPage';
+// Customer Pages - Lazy loaded
+const CustomerPortal = lazy(() => import('./pages/customer/CustomerPortal'));
+const OrderTracking = lazy(() => import('./pages/customer/OrderTracking'));
 
-// Admin Pages
-import ExecutiveDashboard from './pages/admin/ExecutiveDashboard';
-import OperationsDashboard from './pages/admin/OperationsDashboard';
-import FinancialDashboard from './pages/admin/FinancialDashboard';
-import PerformanceAnalytics from './pages/admin/PerformanceAnalytics';
+// Analytics Pages - Lazy loaded with prefetch
+const ReportingDashboard = lazy(() => 
+  import(/* webpackPrefetch: true */ './pages/analytics/ReportingDashboard')
+);
+const AnalyticsPage = lazy(() => 
+  import(/* webpackPrefetch: true */ './pages/AnalyticsPage')
+);
+
+// Admin Pages - Lazy loaded with prefetch for frequent users
+const ExecutiveDashboard = lazy(() => 
+  import(/* webpackPrefetch: true */ './pages/admin/ExecutiveDashboard')
+);
+const OperationsDashboard = lazy(() => 
+  import(/* webpackPrefetch: true */ './pages/admin/OperationsDashboard')
+);
+const FinancialDashboard = lazy(() => 
+  import(/* webpackPrefetch: true */ './pages/admin/FinancialDashboard')
+);
+const PerformanceAnalytics = lazy(() => 
+  import(/* webpackPrefetch: true */ './pages/admin/PerformanceAnalytics')
+);
 
 // Set dayjs locale
 dayjs.locale('zh-tw');
@@ -88,10 +113,11 @@ const App: React.FC = () => {
                 <WebSocketProvider>
                   <WebSocketManager />
                   <SessionManager>
-                    <Routes>
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/forgot-password" element={<ForgotPassword />} />
-                      <Route path="/reset-password" element={<ResetPassword />} />
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                       
                       {/* Driver Routes - No MainLayout for mobile optimization */}
                       <Route path="/driver">
@@ -125,12 +151,15 @@ const App: React.FC = () => {
                         {/* Admin Routes */}
                         <Route path="admin/executive" element={<ExecutiveDashboard />} />
                         <Route path="admin/operations" element={<OperationsDashboard />} />
-                        <Route path="admin/financial" element={<FinancialDashboard />} />
+                        {features.financialReports && (
+                          <Route path="admin/financial" element={<FinancialDashboard />} />
+                        )}
                         <Route path="admin/performance" element={<PerformanceAnalytics />} />
                         
                         <Route path="profile" element={<UserProfile />} />
                       </Route>
                     </Routes>
+                    </Suspense>
                   </SessionManager>
                 </WebSocketProvider>
               </NotificationProvider>

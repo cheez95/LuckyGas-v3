@@ -37,5 +37,3 @@ class DeliveryHistoryItem(DeliveryHistoryItemBase):
 
 class DeliveryHistoryItemInDB(DeliveryHistoryItem):
     """Schema with full database fields"""
-
-    pass

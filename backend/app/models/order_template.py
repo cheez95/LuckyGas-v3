@@ -42,8 +42,8 @@ class OrderTemplate(Base):
     # Scheduling options
     is_recurring = Column(Boolean, default=False)
     recurrence_pattern = Column(String(50))  # daily, weekly, monthly, custom
-    recurrence_interval = Column(Integer, default=1)  # Every N days/weeks/months
-    recurrence_days = Column(JSON)  # For weekly: [1,3,5] for Mon/Wed/Fri
+    recurrence_interval = Column(Integer, default=1)  # Every N days / weeks / months
+    recurrence_days = Column(JSON)  # For weekly: [1, 3, 5] for Mon / Wed / Fri
     next_scheduled_date = Column(DateTime)
 
     # Usage tracking

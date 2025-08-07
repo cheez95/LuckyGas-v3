@@ -8,9 +8,8 @@ This module provides utilities for API versioning including:
 """
 
 import re
-from datetime import datetime
 from functools import wraps
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 
 from fastapi import Header, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -83,7 +82,7 @@ class VersionConfig:
     DEPRECATED_VERSIONS = []  # List of APIVersion objects
     SUNSET_DATES = {}  # Dict of version string to sunset date
 
-    # Version-specific feature flags
+    # Version - specific feature flags
     FEATURES = {
         "v1": {
             "websocket_support": True,
@@ -96,16 +95,16 @@ class VersionConfig:
 
 def get_requested_version(
     request: Request,
-    accept_version: Optional[str] = Header(None, alias="Accept-Version"),
-    api_version: Optional[str] = Header(None, alias="API-Version"),
+    accept_version: Optional[str] = Header(None, alias="Accept - Version"),
+    api_version: Optional[str] = Header(None, alias="API - Version"),
 ) -> APIVersion:
     """
     Get the requested API version from the request.
 
     Priority order:
-    1. Accept-Version header
-    2. API-Version header
-    3. URL path (e.g., /api/v1/...)
+    1. Accept - Version header
+    2. API - Version header
+    3. URL path (e.g., /api / v1/...)
     4. Default to current version
     """
     # Check headers first
@@ -145,7 +144,7 @@ def get_requested_version(
 
         return requested_version
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(
             status_code=400, detail=f"Invalid API version format: {version_string}"
         )
@@ -173,7 +172,7 @@ def version_deprecated(
 
             if isinstance(response, JSONResponse):
                 response.headers["Deprecated"] = "true"
-                response.headers["Deprecated-Since"] = deprecated_in
+                response.headers["Deprecated - Since"] = deprecated_in
 
                 if removed_in:
                     response.headers["Sunset"] = removed_in
@@ -240,9 +239,9 @@ def get_version_features(version: APIVersion) -> Dict[str, bool]:
 
 
 def add_version_headers(response: JSONResponse, version: APIVersion) -> JSONResponse:
-    """Add version-related headers to response."""
-    response.headers["API-Version"] = str(version)
-    response.headers["API-Version-Latest"] = str(VersionConfig.CURRENT_VERSION)
+    """Add version - related headers to response."""
+    response.headers["API - Version"] = str(version)
+    response.headers["API - Version - Latest"] = str(VersionConfig.CURRENT_VERSION)
 
     # Add deprecation warning if using deprecated version
     if any(version == v for v in VersionConfig.DEPRECATED_VERSIONS):
@@ -255,7 +254,9 @@ def add_version_headers(response: JSONResponse, version: APIVersion) -> JSONResp
     return response
 
 
-# Version-specific route factories
+# Version - specific route factories
+
+
 def create_versioned_app(version: str):
     """
     Create a FastAPI app for a specific API version.
@@ -274,7 +275,7 @@ def create_versioned_app(version: str):
         openapi_url=f"/api/{version}/openapi.json",
     )
 
-    # Add version-specific middleware
+    # Add version - specific middleware
     @app.middleware("http")
     async def add_version_headers(request: Request, call_next):
         response = await call_next(request)

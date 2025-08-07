@@ -11,12 +11,11 @@ import hashlib
 import json
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
 from redis import Redis
 from sqlalchemy.orm import Session
 
@@ -92,7 +91,7 @@ class GoogleMapsProxy:
         """Get HTTP client for making API calls."""
         if not self._http_client:
             self._http_client = httpx.AsyncClient(
-                timeout=30.0, headers={"User-Agent": "LuckyGas-Backend/1.0"}
+                timeout=30.0, headers={"User - Agent": "LuckyGas - Backend / 1.0"}
             )
         return self._http_client
 
@@ -224,13 +223,13 @@ class GoogleMapsProxy:
         params["key"] = self.api_key
 
         # Build URL
-        base_url = "https://maps.googleapis.com/maps/api"
+        base_url = "https://maps.googleapis.com / maps / api"
         url = f"{base_url}/{service}/{endpoint}"
 
         try:
             start_time = time.time()
             response = await self.http_client.get(url, params=params)
-            response_time = time.time() - start_time
+            time.time() - start_time
 
             if response.status_code != 200:
                 logger.error(
@@ -266,7 +265,7 @@ maps_proxy = GoogleMapsProxy()
 @router.get("/geocode")
 async def geocode(
     address: str = Query(..., description="Address to geocode"),
-    language: str = Query("zh-TW", description="Response language"),
+    language: str = Query("zh - TW", description="Response language"),
     region: str = Query("TW", description="Region bias"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -321,11 +320,11 @@ async def geocode(
 async def directions(
     origin: str = Query(..., description="Origin location"),
     destination: str = Query(..., description="Destination location"),
-    waypoints: Optional[str] = Query(None, description="Waypoints (pipe-separated)"),
+    waypoints: Optional[str] = Query(None, description="Waypoints (pipe - separated)"),
     mode: str = Query("driving", description="Travel mode"),
     departure_time: Optional[str] = Query(None, description="Departure time"),
     avoid: Optional[str] = Query(None, description="Features to avoid"),
-    language: str = Query("zh-TW", description="Response language"),
+    language: str = Query("zh - TW", description="Response language"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -385,13 +384,13 @@ async def directions(
         raise
 
 
-@router.get("/places/nearby")
+@router.get("/places / nearby")
 async def places_nearby(
-    location: str = Query(..., description="Center location (lat,lng)"),
+    location: str = Query(..., description="Center location (lat, lng)"),
     radius: int = Query(1000, description="Search radius in meters"),
     type: Optional[str] = Query(None, description="Place type"),
     keyword: Optional[str] = Query(None, description="Search keyword"),
-    language: str = Query("zh-TW", description="Response language"),
+    language: str = Query("zh - TW", description="Response language"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -402,7 +401,7 @@ async def places_nearby(
     with authentication, rate limiting, and caching.
     """
     service = "places"
-    endpoint = "nearbysearch/json"
+    endpoint = "nearbysearch / json"
 
     # Check rate limit
     if not await maps_proxy.check_rate_limit(current_user.id, service):
@@ -445,15 +444,15 @@ async def places_nearby(
         raise
 
 
-@router.get("/distance-matrix")
+@router.get("/distance - matrix")
 async def distance_matrix(
-    origins: str = Query(..., description="Origin locations (pipe-separated)"),
+    origins: str = Query(..., description="Origin locations (pipe - separated)"),
     destinations: str = Query(
-        ..., description="Destination locations (pipe-separated)"
+        ..., description="Destination locations (pipe - separated)"
     ),
     mode: str = Query("driving", description="Travel mode"),
     departure_time: Optional[str] = Query(None, description="Departure time"),
-    language: str = Query("zh-TW", description="Response language"),
+    language: str = Query("zh - TW", description="Response language"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -511,10 +510,12 @@ async def distance_matrix(
         raise
 
 
-@router.get("/script-url")
+@router.get("/script - url")
 async def get_maps_script_url(
-    libraries: str = Query("places,drawing,geometry", description="Libraries to load"),
-    language: str = Query("zh-TW", description="Language"),
+    libraries: str = Query(
+        "places, drawing, geometry", description="Libraries to load"
+    ),
+    language: str = Query("zh - TW", description="Language"),
     region: str = Query("TW", description="Region"),
     version: str = Query("weekly", description="API version"),
     current_user: User = Depends(get_current_user),
@@ -527,7 +528,7 @@ async def get_maps_script_url(
     the Google Maps JavaScript API, keeping the API key secure on the backend.
     """
     # Build the script URL with API key
-    base_url = "https://maps.googleapis.com/maps/api/js"
+    base_url = "https://maps.googleapis.com / maps / api / js"
     params = {
         "key": maps_proxy.api_key,
         "libraries": libraries,
@@ -552,7 +553,7 @@ async def get_maps_script_url(
     return {"url": script_url}
 
 
-@router.get("/usage-stats")
+@router.get("/usage - stats")
 async def get_usage_stats(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
@@ -564,7 +565,7 @@ async def get_usage_stats(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    # Get in-memory stats
+    # Get in - memory stats
     stats = {
         "services": maps_proxy._usage_tracker,
         "timestamp": datetime.utcnow().isoformat(),
@@ -587,6 +588,8 @@ async def get_usage_stats(
 
 
 # Cleanup on shutdown
+
+
 @router.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""

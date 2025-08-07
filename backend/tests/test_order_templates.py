@@ -2,12 +2,6 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.schemas.order_template import (
-    CreateOrderFromTemplate,
-    OrderTemplateCreate,
-    OrderTemplateUpdate,
-)
-
 
 @pytest.mark.asyncio
 async def test_create_order_template(
@@ -36,17 +30,19 @@ async def test_create_order_template(
     }
 
     response = await async_client.post(
-        "/api/v1/order-templates", json=template_data, headers=test_user_headers_office
+        "/api / v1 / order - templates",
+        json=template_data,
+        headers=test_user_headers_office,
     )
     assert response.status_code == 200
     data = response.json()
     assert data["template_name"] == template_data["template_name"]
     assert data["customer_id"] == test_customer.id
-    assert data["is_recurring"] == True
+    assert data["is_recurring"]
     assert data["recurrence_pattern"] == "monthly"
     assert len(data["products"]) == 1
     assert data["times_used"] == 0
-    assert data["is_active"] == True
+    assert data["is_active"]
     assert "template_code" in data
     assert "id" in data
 
@@ -59,20 +55,20 @@ async def test_list_order_templates(
     # Create some templates first
     for i in range(3):
         template_data = {
-            "template_name": f"模板{i+1}",
+            "template_name": f"模板{i + 1}",
             "customer_id": test_customer.id,
             "products": [{"gas_product_id": 1, "quantity": 1}],
             "is_recurring": i == 0,  # First one is recurring
         }
         await async_client.post(
-            "/api/v1/order-templates",
+            "/api / v1 / order - templates",
             json=template_data,
             headers=test_user_headers_office,
         )
 
     # List all templates
     response = await async_client.get(
-        "/api/v1/order-templates", headers=test_user_headers_office
+        "/api / v1 / order - templates", headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -82,7 +78,7 @@ async def test_list_order_templates(
 
     # Filter by customer
     response = await async_client.get(
-        f"/api/v1/order-templates?customer_id={test_customer.id}",
+        f"/api / v1 / order - templates?customer_id={test_customer.id}",
         headers=test_user_headers_office,
     )
     assert response.status_code == 200
@@ -91,11 +87,12 @@ async def test_list_order_templates(
 
     # Filter by recurring
     response = await async_client.get(
-        "/api/v1/order-templates?is_recurring=true", headers=test_user_headers_office
+        "/api / v1 / order - templates?is_recurring=true",
+        headers=test_user_headers_office,
     )
     assert response.status_code == 200
     data = response.json()
-    assert all(t["is_recurring"] == True for t in data["templates"])
+    assert all(t["is_recurring"] for t in data["templates"])
 
 
 @pytest.mark.asyncio
@@ -104,7 +101,7 @@ async def test_get_order_template(
 ):
     """Test getting a specific order template"""
     response = await async_client.get(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         headers=test_user_headers_office,
     )
     assert response.status_code == 200
@@ -126,14 +123,14 @@ async def test_update_order_template(
     }
 
     response = await async_client.put(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         json=update_data,
         headers=test_user_headers_office,
     )
     assert response.status_code == 200
     data = response.json()
     assert data["template_name"] == update_data["template_name"]
-    assert data["is_active"] == False
+    assert not data["is_active"]
     assert data["priority"] == "urgent"
 
 
@@ -143,19 +140,19 @@ async def test_delete_order_template(
 ):
     """Test deleting an order template (soft delete)"""
     response = await async_client.delete(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         headers=test_user_headers_manager,
     )
     assert response.status_code == 200
 
     # Verify it's deactivated
     response = await async_client.get(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         headers=test_user_headers_manager,
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["is_active"] == False
+    assert not data["is_active"]
 
 
 @pytest.mark.asyncio
@@ -170,7 +167,7 @@ async def test_create_order_from_template(
     }
 
     response = await async_client.post(
-        "/api/v1/order-templates/create-order",
+        "/api / v1 / order - templates / create - order",
         json=request_data,
         headers=test_user_headers_office,
     )
@@ -183,7 +180,7 @@ async def test_create_order_from_template(
 
     # Verify template usage was updated
     response = await async_client.get(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         headers=test_user_headers_office,
     )
     template_data = response.json()
@@ -197,14 +194,14 @@ async def test_get_customer_templates(
 ):
     """Test getting templates for a specific customer"""
     response = await async_client.get(
-        f"/api/v1/order-templates/customer/{test_customer.id}/templates",
+        f"/api / v1 / order - templates / customer/{test_customer.id}/templates",
         headers=test_user_headers_office,
     )
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
     assert all(t["customer_id"] == test_customer.id for t in data)
-    assert all(t["is_active"] == True for t in data)  # Default active_only=True
+    assert all(t["is_active"] for t in data)  # Default active_only=True
 
 
 @pytest.mark.asyncio
@@ -223,7 +220,9 @@ async def test_weekly_recurring_template(
     }
 
     response = await async_client.post(
-        "/api/v1/order-templates", json=template_data, headers=test_user_headers_office
+        "/api / v1 / order - templates",
+        json=template_data,
+        headers=test_user_headers_office,
     )
     assert response.status_code == 200
     data = response.json()
@@ -236,10 +235,10 @@ async def test_weekly_recurring_template(
 async def test_template_permissions(
     async_client, test_order_template, test_user_headers_driver
 ):
-    """Test that drivers cannot create/update/delete templates"""
+    """Test that drivers cannot create / update / delete templates"""
     # Try to create
     response = await async_client.post(
-        "/api/v1/order-templates",
+        "/api / v1 / order - templates",
         json={"template_name": "Test", "products": []},
         headers=test_user_headers_driver,
     )
@@ -247,7 +246,7 @@ async def test_template_permissions(
 
     # Try to update
     response = await async_client.put(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         json={"template_name": "Updated"},
         headers=test_user_headers_driver,
     )
@@ -255,14 +254,14 @@ async def test_template_permissions(
 
     # Try to delete
     response = await async_client.delete(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         headers=test_user_headers_driver,
     )
     assert response.status_code == 403
 
     # But can read
     response = await async_client.get(
-        f"/api/v1/order-templates/{test_order_template.id}",
+        f"/api / v1 / order - templates/{test_order_template.id}",
         headers=test_user_headers_driver,
     )
     assert response.status_code == 200

@@ -57,9 +57,9 @@ class TestGoogleAPIRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_denied_per_second(self, rate_limiter, mock_redis):
-        """Test rate limit denied due to per-second limit"""
+        """Test rate limit denied due to per - second limit"""
         # Mock Redis responses - per_second limit exceeded
-        mock_redis.incr.return_value = 11  # Over the 10/second limit for routes
+        mock_redis.incr.return_value = 11  # Over the 10 / second limit for routes
         mock_redis.ttl = AsyncMock(return_value=1)  # TTL for wait time
 
         # Check limit
@@ -72,7 +72,7 @@ class TestGoogleAPIRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_denied_per_minute(self, rate_limiter, mock_redis):
-        """Test rate limit denied due to per-minute limit"""
+        """Test rate limit denied due to per - minute limit"""
         # Mock Redis responses - per_minute limit exceeded
         mock_redis.incr.side_effect = [5, 301]  # Under per_second, over per_minute
         mock_redis.ttl = AsyncMock(return_value=30)  # TTL for wait time
@@ -87,7 +87,7 @@ class TestGoogleAPIRateLimiter:
 
     @pytest.mark.asyncio
     async def test_check_rate_limit_denied_per_day(self, rate_limiter, mock_redis):
-        """Test rate limit denied due to per-day limit"""
+        """Test rate limit denied due to per - day limit"""
         # Mock Redis responses - per_day limit exceeded
         mock_redis.incr.side_effect = [5, 150, 25001]  # Under others, over per_day
         mock_redis.ttl = AsyncMock(return_value=3600)  # TTL for wait time

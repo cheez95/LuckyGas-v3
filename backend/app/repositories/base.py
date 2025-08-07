@@ -4,12 +4,12 @@ Provides common CRUD operations with SQLAlchemy async support
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
-from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeMeta, joinedload, selectinload
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import Select
 
 from app.core.database import Base
@@ -59,7 +59,7 @@ class BaseRepository(Generic[ModelType], ABC):
         Get single record by arbitrary fields
 
         Args:
-            **kwargs: Field-value pairs to filter by
+            **kwargs: Field - value pairs to filter by
 
         Returns:
             First matching model instance or None
@@ -85,7 +85,7 @@ class BaseRepository(Generic[ModelType], ABC):
         Args:
             skip: Number of records to skip
             limit: Maximum number of records to return
-            filters: Dictionary of field-value pairs to filter by
+            filters: Dictionary of field - value pairs to filter by
             order_by: Field name to order by (prefix with - for DESC)
             load_relationships: List of relationship names to eager load
 
@@ -127,7 +127,7 @@ class BaseRepository(Generic[ModelType], ABC):
         Count records with optional filtering
 
         Args:
-            filters: Dictionary of field-value pairs to filter by
+            filters: Dictionary of field - value pairs to filter by
 
         Returns:
             Number of matching records
@@ -243,7 +243,7 @@ class BaseRepository(Generic[ModelType], ABC):
         Check if record exists with given criteria
 
         Args:
-            **kwargs: Field-value pairs to check
+            **kwargs: Field - value pairs to check
 
         Returns:
             True if exists, False otherwise
@@ -297,13 +297,12 @@ class CachedRepository(BaseRepository[ModelType]):
 
         Args:
             id: Primary key value
-            ttl: Cache time-to-live in seconds
+            ttl: Cache time - to - live in seconds
 
         Returns:
             Model instance or None
         """
         # Import here to avoid circular dependency
-        from app.core.cache import CacheKeys, cache_result
 
         cache_key = f"{self.cache_prefix}:{id}"
 

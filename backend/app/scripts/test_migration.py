@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Test script to verify cylinder data migration readiness.
 
@@ -33,7 +33,7 @@ def main():
 
         # 1. Check database connectivity
         print("1. Testing database connectivity...")
-        result = db.execute(text("SELECT 1")).scalar()
+        db.execute(text("SELECT 1")).scalar()
         print("   ✓ Database connection successful\n")
 
         # 2. Check for customers with cylinder data
@@ -151,7 +151,7 @@ def main():
             print("⚠ Existing inventory records will be updated")
         else:
             print("✓ No existing inventory records")
-        print("\nMigration can proceed. Run with --dry-run first to preview changes.")
+        print("\nMigration can proceed. Run with --dry - run first to preview changes.")
 
     except Exception as e:
         print(f"\n❌ Error: {str(e)}")

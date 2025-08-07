@@ -1,6 +1,6 @@
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, List
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -202,12 +202,12 @@ class RouteTestDataGenerator:
         for i in range(num_routes):
             # Create driver and vehicle
             driver = await user_factory.create_driver(
-                username=f"driver_{date.strftime('%Y%m%d')}_{i}",
-                full_name=f"測試司機 {i+1}",
+                username=f"driver_{date.strftime('%Y % m % d')}_{i}",
+                full_name=f"測試司機 {i + 1}",
             )
 
             vehicle = await vehicle_factory.create(
-                license_plate=f"TEST-{date.strftime('%Y%m%d')}-{i:03d}"
+                license_plate=f"TEST-{date.strftime('%Y % m % d')}-{i:03d}"
             )
 
             # Create route

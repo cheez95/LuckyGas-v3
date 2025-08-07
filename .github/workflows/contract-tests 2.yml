@@ -1,0 +1,179 @@
+name: Contract Tests
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+env:
+  PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+  PACT_BROKER_USERNAME: ${{ secrets.PACT_BROKER_USERNAME }}
+  PACT_BROKER_PASSWORD: ${{ secrets.PACT_BROKER_PASSWORD }}
+
+jobs:
+  consumer-tests:
+    name: Consumer Contract Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        uv pip install -r pyproject.toml
+        uv pip install pact-python pytest pytest-asyncio
+    
+    - name: Run consumer contract tests
+      working-directory: ./backend
+      run: |
+        python tests/contracts/run_contract_tests.py --consumer-only
+    
+    - name: Upload pact files
+      uses: actions/upload-artifact@v3
+      with:
+        name: pact-files
+        path: backend/tests/contracts/pacts/*.json
+        retention-days: 7
+
+  provider-tests:
+    name: Provider Verification Tests
+    runs-on: ubuntu-latest
+    needs: consumer-tests
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: luckygas_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      working-directory: ./backend
+      run: |
+        uv pip install -r pyproject.toml
+        uv pip install pact-python pytest pytest-asyncio
+    
+    - name: Download pact files
+      uses: actions/download-artifact@v3
+      with:
+        name: pact-files
+        path: backend/tests/contracts/pacts
+    
+    - name: Set up test environment
+      working-directory: ./backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379
+        ENVIRONMENT: test
+      run: |
+        uv run alembic upgrade head
+        uv run python scripts/create_test_users.py
+    
+    - name: Run provider verification tests
+      working-directory: ./backend
+      env:
+        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/luckygas_test
+        REDIS_URL: redis://localhost:6379
+        ENVIRONMENT: test
+      run: |
+        python tests/contracts/run_contract_tests.py --provider-only
+
+  can-i-deploy:
+    name: Can I Deploy?
+    runs-on: ubuntu-latest
+    needs: [consumer-tests, provider-tests]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Pact CLI tools
+      run: |
+        curl -LO https://github.com/pact-foundation/pact-ruby-standalone/releases/download/v2.0.10/pact-2.0.10-linux-x86_64.tar.gz
+        tar xzf pact-2.0.10-linux-x86_64.tar.gz
+        echo "$PWD/pact/bin" >> $GITHUB_PATH
+    
+    - name: Check if safe to deploy
+      run: |
+        pact-broker can-i-deploy \
+          --pacticipant lucky-gas-frontend \
+          --version ${{ github.sha }} \
+          --pacticipant lucky-gas-backend \
+          --version ${{ github.sha }} \
+          --broker-base-url ${{ env.PACT_BROKER_URL }} \
+          --broker-username ${{ env.PACT_BROKER_USERNAME }} \
+          --broker-password ${{ env.PACT_BROKER_PASSWORD }}
+
+  contract-test-summary:
+    name: Contract Test Summary
+    runs-on: ubuntu-latest
+    needs: [consumer-tests, provider-tests]
+    if: always()
+    
+    steps:
+    - name: Contract Test Results
+      run: |
+        echo "## Contract Test Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.consumer-tests.result }}" == "success" ]]; then
+          echo "✅ Consumer contract tests: **Passed**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Consumer contract tests: **Failed**" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ needs.provider-tests.result }}" == "success" ]]; then
+          echo "✅ Provider verification tests: **Passed**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Provider verification tests: **Failed**" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Contract Testing Benefits" >> $GITHUB_STEP_SUMMARY
+        echo "- 🔒 **API Stability**: Prevents breaking changes between frontend and backend" >> $GITHUB_STEP_SUMMARY
+        echo "- 📝 **Living Documentation**: Contracts serve as API documentation" >> $GITHUB_STEP_SUMMARY
+        echo "- 🚀 **Independent Development**: Teams can work independently with confidence" >> $GITHUB_STEP_SUMMARY
+        echo "- 🛡️ **Early Detection**: Catch integration issues before deployment" >> $GITHUB_STEP_SUMMARY

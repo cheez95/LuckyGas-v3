@@ -5,7 +5,7 @@ Payment schemas for API requests and responses
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.invoice import PaymentMethod
 
@@ -18,7 +18,7 @@ class PaymentBase(BaseModel):
     payment_method: PaymentMethod
     amount: float = Field(..., gt=0, description="付款金額")
     reference_number: Optional[str] = Field(
-        None, max_length=100, description="轉帳編號/支票號碼"
+        None, max_length=100, description="轉帳編號 / 支票號碼"
     )
     bank_account: Optional[str] = Field(None, max_length=50, description="銀行帳號")
     notes: Optional[str] = Field(None, max_length=500)
@@ -26,8 +26,6 @@ class PaymentBase(BaseModel):
 
 class PaymentCreate(PaymentBase):
     """Schema for creating payments"""
-
-    pass
 
 
 class PaymentUpdate(BaseModel):
@@ -149,9 +147,9 @@ class CustomerBalance(BaseModel):
 
     # Aging
     current: float  # Not due yet
-    overdue_30: float  # 1-30 days overdue
-    overdue_60: float  # 31-60 days overdue
-    overdue_90: float  # 61-90 days overdue
+    overdue_30: float  # 1 - 30 days overdue
+    overdue_60: float  # 31 - 60 days overdue
+    overdue_90: float  # 61 - 90 days overdue
     overdue_over_90: float  # >90 days overdue
 
     # Credit info
@@ -174,7 +172,7 @@ class ReconciliationResult(BaseModel):
     total_payments: int
     total_amount: float
 
-    # Matched/Unmatched
+    # Matched / Unmatched
     matched_count: int
     matched_amount: float
     unmatched_count: int

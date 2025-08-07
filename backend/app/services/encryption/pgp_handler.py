@@ -2,19 +2,14 @@
 
 import base64
 import hashlib
-import io
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple, Union
+from datetime import datetime
+from typing import Dict, Tuple
 
 import gnupg
-from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.x509.oid import NameOID
 
 from app.core.config import settings
 from app.core.secrets_manager import get_secrets_manager
@@ -24,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class PGPHandler:
     """
-    Handler for PGP encryption/decryption operations.
+    Handler for PGP encryption / decryption operations.
 
     Supports both GPG and native Python cryptography for flexibility.
     """
@@ -43,7 +38,7 @@ class PGPHandler:
             os.makedirs(gpg_home, exist_ok=True)
 
             self.gpg = gnupg.GPG(gnupghome=gpg_home)
-            self.gpg.encoding = "utf-8"
+            self.gpg.encoding = "utf - 8"
 
             # Test GPG
             version = self.gpg.version
@@ -65,8 +60,8 @@ class PGPHandler:
 
             # Load our private key
             try:
-                our_key = sm.get_secret_value("banking-pgp-private-key")
-                passphrase = sm.get_secret_value("banking-pgp-passphrase")
+                our_key = sm.get_secret_value("banking - pgp - private - key")
+                passphrase = sm.get_secret_value("banking - pgp - passphrase")
 
                 if self.use_gpg:
                     # Import to GPG keyring
@@ -87,7 +82,9 @@ class PGPHandler:
             banks = ["mega", "ctbc", "esun", "first", "taishin"]
             for bank in banks:
                 try:
-                    public_key = sm.get_secret_value(f"banking-{bank}-pgp-public-key")
+                    public_key = sm.get_secret_value(
+                        f"banking-{bank}-pgp - public - key"
+                    )
 
                     if self.use_gpg:
                         # Import to GPG keyring
@@ -138,7 +135,7 @@ class PGPHandler:
             )
 
             if encrypted.ok:
-                return str(encrypted).encode("utf-8")
+                return str(encrypted).encode("utf - 8")
             else:
                 raise ValueError(f"Encryption failed: {encrypted.status}")
 
@@ -151,8 +148,8 @@ class PGPHandler:
         """Fallback encryption using cryptography library."""
         try:
             # Generate session key
-            session_key = os.urandom(32)  # 256-bit key
-            iv = os.urandom(16)  # 128-bit IV
+            session_key = os.urandom(32)  # 256 - bit key
+            iv = os.urandom(16)  # 128 - bit IV
 
             # Encrypt data with AES
             cipher = Cipher(
@@ -166,7 +163,7 @@ class PGPHandler:
 
             encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
 
-            # Create PGP-like message structure
+            # Create PGP - like message structure
             message = self._create_pgp_message(
                 encrypted_data, session_key, iv, recipient_bank
             )
@@ -199,13 +196,13 @@ class PGPHandler:
             passphrase = None
             if settings.ENVIRONMENT == "production":
                 sm = get_secrets_manager()
-                passphrase = sm.get_secret_value("banking-pgp-passphrase")
+                passphrase = sm.get_secret_value("banking - pgp - passphrase")
 
             # Decrypt data
             decrypted = self.gpg.decrypt(data, passphrase=passphrase)
 
             if decrypted.ok:
-                return bytes(str(decrypted), "utf-8")
+                return bytes(str(decrypted), "utf - 8")
             else:
                 raise ValueError(f"Decryption failed: {decrypted.status}")
 
@@ -217,7 +214,7 @@ class PGPHandler:
     def _decrypt_fallback(self, data: bytes) -> bytes:
         """Fallback decryption using cryptography library."""
         try:
-            # Parse PGP-like message
+            # Parse PGP - like message
             session_key, iv, encrypted_data = self._parse_pgp_message(data)
 
             # Decrypt with AES
@@ -258,12 +255,12 @@ class PGPHandler:
             passphrase = None
             if settings.ENVIRONMENT == "production":
                 sm = get_secrets_manager()
-                passphrase = sm.get_secret_value("banking-pgp-passphrase")
+                passphrase = sm.get_secret_value("banking - pgp - passphrase")
 
             # Sign data
             signed = self.gpg.sign(data, passphrase=passphrase, detach=True)
 
-            return str(signed).encode("utf-8")
+            return str(signed).encode("utf - 8")
 
         except Exception as e:
             logger.error(f"GPG signing failed: {e}")
@@ -275,7 +272,7 @@ class PGPHandler:
             # For fallback, just create a SHA256 HMAC
             key = self.key_cache.get("private", {}).get("key", b"")
             if isinstance(key, str):
-                key = key.encode("utf-8")
+                key = key.encode("utf - 8")
 
             h = hashlib.sha256()
             h.update(key)
@@ -341,36 +338,36 @@ class PGPHandler:
     def _create_pgp_message(
         self, encrypted_data: bytes, session_key: bytes, iv: bytes, recipient_bank: str
     ) -> bytes:
-        """Create PGP-like message structure."""
+        """Create PGP - like message structure."""
         # Simple structure: base64 encode everything
         message = {
             "version": "1.0",
             "recipient": recipient_bank,
-            "algorithm": "AES256-CBC",
-            "session_key": base64.b64encode(session_key).decode("utf-8"),
-            "iv": base64.b64encode(iv).decode("utf-8"),
-            "data": base64.b64encode(encrypted_data).decode("utf-8"),
+            "algorithm": "AES256 - CBC",
+            "session_key": base64.b64encode(session_key).decode("utf - 8"),
+            "iv": base64.b64encode(iv).decode("utf - 8"),
+            "data": base64.b64encode(encrypted_data).decode("utf - 8"),
             "timestamp": datetime.utcnow().isoformat(),
         }
 
-        # Create ASCII-armored format
+        # Create ASCII - armored format
         import json
 
         json_data = json.dumps(message, indent=2)
 
-        pgp_message = f"""-----BEGIN PGP MESSAGE-----
+        pgp_message = """-----BEGIN PGP MESSAGE-----
 Version: LuckyGas PGP 1.0
 
-{base64.b64encode(json_data.encode('utf-8')).decode('utf-8')}
+{base64.b64encode(json_data.encode('utf - 8')).decode('utf - 8')}
 -----END PGP MESSAGE-----"""
 
-        return pgp_message.encode("utf-8")
+        return pgp_message.encode("utf - 8")
 
     def _parse_pgp_message(self, data: bytes) -> Tuple[bytes, bytes, bytes]:
-        """Parse PGP-like message structure."""
+        """Parse PGP - like message structure."""
         try:
             # Extract base64 content
-            message_str = data.decode("utf-8")
+            message_str = data.decode("utf - 8")
             start = message_str.find("\n\n") + 2
             end = message_str.find("\n-----END")
 
@@ -378,7 +375,7 @@ Version: LuckyGas PGP 1.0
                 raise ValueError("Invalid PGP message format")
 
             base64_content = message_str[start:end].strip()
-            json_data = base64.b64decode(base64_content).decode("utf-8")
+            json_data = base64.b64decode(base64_content).decode("utf - 8")
 
             import json
 
@@ -440,12 +437,12 @@ Version: LuckyGas PGP 1.0
         # In production, would use proper asymmetric keys
         key = os.urandom(32)
 
-        public_key = f"""-----BEGIN PUBLIC KEY-----
-{base64.b64encode(key).decode('utf-8')}
+        public_key = """-----BEGIN PUBLIC KEY-----
+{base64.b64encode(key).decode('utf - 8')}
 -----END PUBLIC KEY-----"""
 
-        private_key = f"""-----BEGIN PRIVATE KEY-----
-{base64.b64encode(key).decode('utf-8')}
+        private_key = """-----BEGIN PRIVATE KEY-----
+{base64.b64encode(key).decode('utf - 8')}
 -----END PRIVATE KEY-----"""
 
         return public_key, private_key

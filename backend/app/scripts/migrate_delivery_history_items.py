@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Migrate existing delivery history records to use the new DeliveryHistoryItem structure
 This script creates DeliveryHistoryItem records from the existing column data

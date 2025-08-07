@@ -9,7 +9,7 @@ test.describe('Simple Login Test', () => {
     });
   });
 
-  test($1, async ({ page }) => {
+  test('should login successfully', async ({ page }) => {
     // Enable console logging
     page.on('console', msg => console.log('Browser console:', msg.type(), msg.text()));
     page.on('pageerror', error => console.log('Page error:', error));

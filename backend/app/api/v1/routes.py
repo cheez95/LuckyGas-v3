@@ -18,6 +18,7 @@ from app.schemas.prediction import (
 )
 from app.services.realtime_route_adjustment import realtime_route_adjustment_service
 from app.services.route_optimization_service import route_optimization_service
+from app.schemas.route import AdjustmentRequest
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ async def create_route(
         route = Route(
             route_number=route_data.get(
                 "route_number",
-                f"R{datetime.now().strftime('%Y%m%d')}-{datetime.now().microsecond:03d}",
+                f"R{datetime.now().strftime('%Y % m % d')}-{datetime.now().microsecond:03d}",
             ),
             route_name=route_data.get("route_name"),
             date=(
@@ -384,7 +385,7 @@ async def get_route_details(
             route_id=route_id,
             driver_id="DRV001",
             driver_name="司機 1",
-            vehicle_number="ABC-001",
+            vehicle_number="ABC - 001",
             stops=[
                 {
                     "sequence": 1,
@@ -550,7 +551,7 @@ async def publish_routes(
         raise HTTPException(status_code=500, detail="發布路線時發生錯誤")
 
 
-@router.get("/analytics/performance")
+@router.get("/analytics / performance")
 async def get_route_performance_analytics(
     start_date: Optional[datetime] = Query(None, description="Start date"),
     end_date: Optional[datetime] = Query(None, description="End date"),
@@ -610,7 +611,7 @@ async def get_route_performance_analytics(
         raise HTTPException(status_code=500, detail="獲取路線分析時發生錯誤")
 
 
-@router.post("/{route_id}/adjust/urgent-order")
+@router.post("/{route_id}/adjust / urgent - order")
 @rate_limit(requests_per_minute=20)
 async def add_urgent_order_to_route(
     route_id: str,
@@ -621,7 +622,7 @@ async def add_urgent_order_to_route(
     """
     Add an urgent order to an existing route.
 
-    This endpoint handles real-time insertion of urgent orders into active routes.
+    This endpoint handles real - time insertion of urgent orders into active routes.
     The system will find the optimal insertion point to minimize disruption.
     """
     try:
@@ -639,7 +640,7 @@ async def add_urgent_order_to_route(
         raise HTTPException(status_code=500, detail="新增緊急訂單時發生錯誤")
 
 
-@router.post("/{route_id}/adjust/traffic")
+@router.post("/{route_id}/adjust / traffic")
 @rate_limit(requests_per_minute=30)
 async def handle_traffic_update(
     route_id: str,
@@ -681,7 +682,7 @@ async def handle_traffic_update(
         raise HTTPException(status_code=500, detail="處理交通更新時發生錯誤")
 
 
-@router.post("/adjust/driver-unavailable")
+@router.post("/adjust / driver - unavailable")
 @rate_limit(requests_per_minute=10)
 async def handle_driver_unavailable(
     driver_id: str,
@@ -721,7 +722,7 @@ async def handle_driver_unavailable(
         raise HTTPException(status_code=500, detail="處理司機無法出勤時發生錯誤")
 
 
-@router.post("/{route_id}/optimize-stops", response_model=Dict[str, Any])
+@router.post("/{route_id}/optimize - stops", response_model=Dict[str, Any])
 async def optimize_route_stops(
     route_id: int,
     optimization_params: Dict[str, Any],
@@ -752,7 +753,7 @@ async def optimize_route_stops(
                     "order_id": i + 1,
                     "latitude": 25.0330 + (i * 0.01),
                     "longitude": 121.5654,
-                    "address": f"台北市信義區測試路{i+1}號",
+                    "address": f"台北市信義區測試路{i + 1}號",
                     "estimated_arrival": datetime.now()
                     .replace(hour=9 + i, minute=0)
                     .isoformat(),
@@ -775,7 +776,7 @@ async def optimize_route_stops(
         raise HTTPException(status_code=500, detail="優化路線時發生錯誤")
 
 
-@router.get("/adjustments/status")
+@router.get("/adjustments / status")
 async def get_adjustment_queue_status(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):

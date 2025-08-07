@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Import client list and delivery history from Excel files into PostgreSQL database
 """
@@ -10,7 +10,6 @@ import sys
 from datetime import date, datetime
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 # File paths
 RAW_DIR = project_root.parent / "raw"
-CLIENT_FILE = RAW_DIR / "2025-05 client liss.xlsx"
-DELIVERY_FILE = RAW_DIR / "2025-05 deliver history.xlsx"
+CLIENT_FILE = RAW_DIR / "2025 - 05 client liss.xlsx"
+DELIVERY_FILE = RAW_DIR / "2025 - 05 deliver history.xlsx"
 
 
 def clean_numeric(value):
@@ -39,7 +38,7 @@ def clean_numeric(value):
     if pd.isna(value):
         return None
     if isinstance(value, str):
-        # Remove any non-numeric characters
+        # Remove any non - numeric characters
         value = "".join(filter(lambda x: x.isdigit() or x == ".", value))
         if not value:
             return None
@@ -47,7 +46,7 @@ def clean_numeric(value):
         if "." in str(value):
             return float(value)
         return int(value)
-    except:
+    except Exception:
         return None
 
 
@@ -109,7 +108,8 @@ async def import_customers(session: AsyncSession):
                 # Delivery preferences
                 "area": str(row["區域"]) if pd.notna(row["區域"]) else None,
                 "delivery_time_slot": clean_numeric(row.get("時段早1午2晚3全天0", 0)),
-                "delivery_type": clean_numeric(row.get("1汽車/2機車/0全部", 0)) or 0,
+                "delivery_type": clean_numeric(row.get("1汽車 / 2機車 / 0全部", 0))
+                or 0,
                 # Consumption data
                 "avg_daily_usage": clean_numeric(row.get("平均日使用")),
                 "max_cycle_days": clean_numeric(row.get("最大週期")),
@@ -147,10 +147,10 @@ async def import_customers(session: AsyncSession):
 
             # Extract delivery time preferences
             for hour in range(8, 21):  # 8:00 to 20:00
-                col_name = f"{hour}~{hour+1}"
+                col_name = f"{hour}~{hour + 1}"
                 if col_name in row and clean_boolean(row[col_name]):
                     customer_data["delivery_time_start"] = f"{hour:02d}:00"
-                    customer_data["delivery_time_end"] = f"{hour+1:02d}:00"
+                    customer_data["delivery_time_end"] = f"{hour + 1:02d}:00"
                     break
 
             if existing_customer:
@@ -244,7 +244,7 @@ async def import_delivery_history(session: AsyncSession):
                                 trans_date = date_val.date()
                             else:
                                 trans_date = pd.to_datetime(date_val).date()
-                        except:
+                        except Exception:
                             logger.warning(f"Could not parse date: {date_val}")
                             continue
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Script to examine the structure of Excel files in the raw directory
 """
@@ -31,13 +31,13 @@ def examine_excel_file(file_path):
 
             print(f"Shape: {df.shape} (rows: {len(df)}, columns: {len(df.columns)})")
             print(f"\nColumns: {list(df.columns)}")
-            print(f"\nData types:")
+            print("\nData types:")
             print(df.dtypes)
 
-            print(f"\nFirst 5 rows:")
+            print("\nFirst 5 rows:")
             print(df.head())
 
-            print(f"\nNull values:")
+            print("\nNull values:")
             print(df.isnull().sum())
 
             # Show unique values for categorical columns
@@ -52,19 +52,19 @@ def examine_excel_file(file_path):
 def main():
     # List files in raw directory
     print(f"Raw directory: {raw_dir}")
-    print(f"Files in raw directory:")
+    print("Files in raw directory:")
     for file in os.listdir(raw_dir):
         print(f"  - {file}")
 
     # Examine client list
-    client_file = raw_dir / "2025-05 client liss.xlsx"
+    client_file = raw_dir / "2025 - 05 client liss.xlsx"
     if client_file.exists():
         examine_excel_file(client_file)
     else:
         print(f"\nClient file not found: {client_file}")
 
     # Examine delivery history
-    delivery_file = raw_dir / "2025-05 deliver history.xlsx"
+    delivery_file = raw_dir / "2025 - 05 deliver history.xlsx"
     if delivery_file.exists():
         examine_excel_file(delivery_file)
     else:

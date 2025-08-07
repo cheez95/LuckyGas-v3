@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Run Integration Test Suite for Lucky Gas v3
 
@@ -17,27 +17,27 @@ os.environ.update(
     {
         "TESTING": "True",
         "ENVIRONMENT": "test",
-        "DATABASE_URL": "postgresql+asyncpg://luckygas_test:test_password_secure_123@localhost:5433/luckygas_test",
+        "DATABASE_URL": "postgresql + asyncpg://luckygas_test:test_password_secure_123@localhost:5433 / luckygas_test",
         "POSTGRES_SERVER": "localhost",
         "POSTGRES_USER": "luckygas_test",
         "POSTGRES_PASSWORD": "test_password_secure_123",
         "POSTGRES_DB": "luckygas_test",
         "POSTGRES_PORT": "5433",
-        "REDIS_URL": "redis://:test_redis_password_123@localhost:6380/1",
+        "REDIS_URL": "redis://:test_redis_password_123@localhost:6380 / 1",
         "REDIS_HOST": "localhost",
         "REDIS_PORT": "6380",
         "REDIS_PASSWORD": "test_redis_password_123",
         "REDIS_DB": "1",
-        "SECRET_KEY": "test-secret-key-min-32-chars-required-for-testing-only",
-        "JWT_SECRET_KEY": "test-jwt-secret-key-min-32-chars-for-testing-only",
+        "SECRET_KEY": "test - secret - key - min - 32 - chars - required - for - testing - only",
+        "JWT_SECRET_KEY": "test - jwt - secret - key - min - 32 - chars - for - testing - only",
         "FIRST_SUPERUSER": "admin@test.luckygas.tw",
         "FIRST_SUPERUSER_PASSWORD": "TestAdmin123!",
-        "GCP_PROJECT_ID": "test-lucky-gas",
-        "GOOGLE_MAPS_API_KEY": "AIzaSyD-test-key-for-testing-only123456",
+        "GCP_PROJECT_ID": "test - lucky - gas",
+        "GOOGLE_MAPS_API_KEY": "AIzaSyD - test - key - for - testing - only123456",
         "STORAGE_ENDPOINT": "http://localhost:9000",
         "STORAGE_ACCESS_KEY": "minioadmin",
         "STORAGE_SECRET_KEY": "minioadmin123",
-        "GCS_BUCKET": "lucky-gas-storage",
+        "GCS_BUCKET": "lucky - gas - storage",
         "TWILIO_ACCOUNT_SID": "test_account_sid",
         "TWILIO_AUTH_TOKEN": "test_auth_token",
         "TWILIO_PHONE_NUMBER": "+1234567890",
@@ -49,22 +49,22 @@ os.environ.update(
 # Test suite configuration
 TEST_SUITES = {
     "Epic 7 Integration": [
-        "tests/integration/test_epic7_complete_flow.py",
-        "tests/integration/test_route_optimization_integration.py",
-        "tests/integration/test_websocket_realtime.py",
-        "tests/integration/test_analytics_flow.py",
-        "tests/integration/test_story_3_3_realtime_adjustment.py",
+        "tests / integration / test_epic7_complete_flow.py",
+        "tests / integration / test_route_optimization_integration.py",
+        "tests / integration / test_websocket_realtime.py",
+        "tests / integration / test_analytics_flow.py",
+        "tests / integration / test_story_3_3_realtime_adjustment.py",
     ],
     "Core API": [
-        "tests/test_auth.py",
-        "tests/test_customers.py",
-        "tests/test_orders.py",
-        "tests/test_routes.py",
+        "tests / test_auth.py",
+        "tests / test_customers.py",
+        "tests / test_orders.py",
+        "tests / test_routes.py",
     ],
     "Advanced Features": [
-        "tests/test_credit_limit.py",
-        "tests/test_order_templates.py",
-        "tests/test_data_validator.py",
+        "tests / test_credit_limit.py",
+        "tests / test_order_templates.py",
+        "tests / test_data_validator.py",
     ],
 }
 
@@ -94,8 +94,8 @@ class TestRunner:
             test_file,
             "-v",
             "--tb=short",
-            "--json-report",
-            "--json-report-file=test_result.json",
+            "--json - report",
+            "--json - report - file=test_result.json",
             "-q",  # Quiet mode for cleaner output
         ]
 
@@ -176,7 +176,7 @@ class TestRunner:
         print(f"Start Time: {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"End Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-        print(f"\n📈 Test Summary:")
+        print("\n📈 Test Summary:")
         print(f"  Total Tests: {self.total_tests}")
         print(f"  ✅ Passed: {self.passed_tests}")
         print(f"  ❌ Failed: {self.failed_tests}")
@@ -186,7 +186,7 @@ class TestRunner:
             pass_rate = (self.passed_tests / self.total_tests) * 100
             print(f"  📊 Pass Rate: {pass_rate:.1f}%")
 
-        print(f"\n🔍 Suite Results:")
+        print("\n🔍 Suite Results:")
         for suite_name, suite_data in self.results.items():
             print(f"\n  {suite_name}:")
             print(f"    Duration: {suite_data['duration']:.2f}s")
@@ -220,7 +220,7 @@ class TestRunner:
         with open("integration_test_results.json", "w") as f:
             json.dump(report_data, f, indent=2)
 
-        print(f"\n📝 Detailed report saved to: integration_test_results.json")
+        print("\n📝 Detailed report saved to: integration_test_results.json")
 
         # Create markdown report
         self.create_markdown_report(report_data)
@@ -229,7 +229,7 @@ class TestRunner:
 
     def create_markdown_report(self, report_data: dict):
         """Create markdown report for documentation"""
-        md_content = f"""# Integration Test Results
+        md_content = """# Integration Test Results
 
 **Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -263,12 +263,12 @@ class TestRunner:
 
 - **Database**: PostgreSQL 15 with PostGIS (Test instance on port 5433)
 - **Cache**: Redis 7 (Test instance on port 6380)
-- **Storage**: MinIO (S3-compatible, port 9000)
+- **Storage**: MinIO (S3 - compatible, port 9000)
 - **Email**: MailHog (SMTP testing, port 1025)
 
 ## Coverage Report
 
-Coverage data available in `htmlcov/index.html` after running with coverage enabled.
+Coverage data available in `htmlcov / index.html` after running with coverage enabled.
 
 ## Recommendations
 

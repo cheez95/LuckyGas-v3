@@ -3,7 +3,8 @@ API testing utilities
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 import jwt
 from httpx import AsyncClient, Response
@@ -16,7 +17,7 @@ from app.models.user import UserRole
 class APITestClient:
     """Enhanced test client for API testing"""
 
-    def __init__(self, client: AsyncClient, base_url: str = "", timedelta):
+    def __init__(self, client: AsyncClient, base_url: str = ""):
         self.client = client
         self.base_url = base_url
         self.auth_headers = {}
@@ -216,7 +217,7 @@ class MockExternalAPI:
 
     @staticmethod
     def mock_einvoice_response():
-        """Mock e-invoice API response"""
+        """Mock e - invoice API response"""
         return {
             "invoice_number": "AA12345678",
             "status": "issued",

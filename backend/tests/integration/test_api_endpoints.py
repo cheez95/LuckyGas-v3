@@ -14,7 +14,6 @@ from datetime import timedelta
 Integration tests for API endpoints
 """
 
-
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +44,7 @@ class TestCustomerAPIIntegration:
 
         # Create
         response = await client.post(
-            "/api/v1/customers", json=customer_data, headers=auth_headers
+            "/api / v1 / customers", json=customer_data, headers=auth_headers
         )
         assert response.status_code == 201
         created_customer = response.json()
@@ -53,7 +52,7 @@ class TestCustomerAPIIntegration:
 
         # Read
         response = await client.get(
-            f"/api/v1/customers/{customer_id}", headers=auth_headers
+            f"/api / v1 / customers/{customer_id}", headers=auth_headers
         )
         assert response.status_code == 200
         customer = response.json()
@@ -63,7 +62,9 @@ class TestCustomerAPIIntegration:
         # Update
         update_data = {"credit_limit": 100000}
         response = await client.patch(
-            f"/api/v1/customers/{customer_id}", json=update_data, headers=auth_headers
+            f"/api / v1 / customers/{customer_id}",
+            json=update_data,
+            headers=auth_headers,
         )
         assert response.status_code == 200
         updated_customer = response.json()
@@ -71,7 +72,7 @@ class TestCustomerAPIIntegration:
 
         # List with search
         response = await client.get(
-            "/api/v1/customers?search=整合測試", headers=auth_headers
+            "/api / v1 / customers?search=整合測試", headers=auth_headers
         )
         assert response.status_code == 200
         customers = response.json()
@@ -91,7 +92,7 @@ class TestCustomerAPIIntegration:
         }
 
         response = await client.post(
-            "/api/v1/customers", json=invalid_data, headers=auth_headers
+            "/api / v1 / customers", json=invalid_data, headers=auth_headers
         )
         assert response.status_code == 422
         errors = response.json()
@@ -123,31 +124,33 @@ class TestOrderAPIIntegration:
 
         # Create order
         response = await client.post(
-            "/api/v1/orders", json=order_data, headers=auth_headers
+            "/api / v1 / orders", json=order_data, headers=auth_headers
         )
         assert response.status_code == 201
         order = response.json()
         order_id = order["id"]
         assert order["status"] == OrderStatus.PENDING.value
-        assert order["total_amount"] == 3600  # (2*1500) + (1*600)
+        assert order["total_amount"] == 3600  # (2 * 1500) + (1 * 600)
 
         # Confirm order
         response = await client.post(
-            f"/api/v1/orders/{order_id}/confirm", headers=auth_headers
+            f"/api / v1 / orders/{order_id}/confirm", headers=auth_headers
         )
         assert response.status_code == 200
         confirmed_order = response.json()
         assert confirmed_order["status"] == OrderStatus.CONFIRMED.value
 
         # Get order details
-        response = await client.get(f"/api/v1/orders/{order_id}", headers=auth_headers)
+        response = await client.get(
+            f"/api / v1 / orders/{order_id}", headers=auth_headers
+        )
         assert response.status_code == 200
         order_detail = response.json()
         assert order_detail["customer"]["id"] == test_customer.id
 
         # Update delivery status (simulate driver)
         response = await client.put(
-            f"/api/v1/orders/{order_id}/status",
+            f"/api / v1 / orders/{order_id}/status",
             json={"status": OrderStatus.DELIVERED.value},
             headers=auth_headers,
         )
@@ -175,7 +178,7 @@ class TestOrderAPIIntegration:
         }
 
         response = await client.post(
-            "/api/v1/orders/bulk", json=bulk_data, headers=auth_headers
+            "/api / v1 / orders / bulk", json=bulk_data, headers=auth_headers
         )
         assert response.status_code == 201
         result = response.json()
@@ -201,7 +204,7 @@ class TestInvoiceAPIIntegration:
         }
 
         response = await client.post(
-            "/api/v1/orders", json=order_data, headers=auth_headers
+            "/api / v1 / orders", json=order_data, headers=auth_headers
         )
         order = response.json()
         order_id = order["id"]
@@ -214,7 +217,7 @@ class TestInvoiceAPIIntegration:
         }
 
         response = await client.post(
-            "/api/v1/invoices", json=invoice_data, headers=auth_headers
+            "/api / v1 / invoices", json=invoice_data, headers=auth_headers
         )
         assert response.status_code == 201
         invoice = response.json()
@@ -225,7 +228,7 @@ class TestInvoiceAPIIntegration:
 
         # Submit to government (mocked)
         response = await client.post(
-            f"/api/v1/invoices/{invoice['id']}/submit", headers=auth_headers
+            f"/api / v1 / invoices/{invoice['id']}/submit", headers=auth_headers
         )
         assert response.status_code == 200
         result = response.json()
@@ -246,7 +249,7 @@ class TestFinancialReportIntegration:
     ):
         """Test revenue report with actual data"""
         # Create test invoices
-        current_month = date.today().strftime("%Y%m")
+        current_month = date.today().strftime("%Y % m")
 
         # Create multiple invoices
         for i in range(3):
@@ -268,7 +271,7 @@ class TestFinancialReportIntegration:
 
         # Get revenue report
         response = await client.get(
-            f"/api/v1/financial-reports/revenue-summary?period={current_month}",
+            f"/api / v1 / financial - reports / revenue - summary?period={current_month}",
             headers=auth_headers,
         )
         assert response.status_code == 200
@@ -284,7 +287,8 @@ class TestFinancialReportIntegration:
     ):
         """Test AR aging report"""
         response = await client.get(
-            "/api/v1/financial-reports/accounts-receivable", headers=auth_headers
+            "/api / v1 / financial - reports / accounts - receivable",
+            headers=auth_headers,
         )
         assert response.status_code == 200
         report = response.json()
@@ -315,19 +319,19 @@ class TestAuthenticationIntegration:
         }
 
         response = await client.post(
-            "/api/v1/orders", json=order_data, headers=office_auth_headers
+            "/api / v1 / orders", json=order_data, headers=office_auth_headers
         )
         assert response.status_code == 201
 
         # Driver cannot create orders
         response = await client.post(
-            "/api/v1/orders", json=order_data, headers=driver_auth_headers
+            "/api / v1 / orders", json=order_data, headers=driver_auth_headers
         )
         assert response.status_code == 403
 
         # But driver can view their assigned routes
         response = await client.get(
-            "/api/v1/driver/routes", headers=driver_auth_headers
+            "/api / v1 / driver / routes", headers=driver_auth_headers
         )
         assert response.status_code == 200
 
@@ -337,13 +341,13 @@ class TestAuthenticationIntegration:
         expired_token = "Bearer expired.token.here"
 
         response = await client.get(
-            "/api/v1/customers", headers={"Authorization": expired_token}
+            "/api / v1 / customers", headers={"Authorization": expired_token}
         )
         assert response.status_code == 401
 
 
 class TestWebSocketIntegration:
-    """Test WebSocket real-time updates"""
+    """Test WebSocket real - time updates"""
 
     @pytest.mark.asyncio
     async def test_order_status_broadcast(
@@ -363,14 +367,14 @@ class TestWebSocketIntegration:
         }
 
         response = await client.post(
-            "/api/v1/orders", json=order_data, headers=auth_headers
+            "/api / v1 / orders", json=order_data, headers=auth_headers
         )
         order = response.json()
         order_id = order["id"]
 
         # Update status - should trigger broadcast
         response = await client.put(
-            f"/api/v1/orders/{order_id}/status",
+            f"/api / v1 / orders/{order_id}/status",
             json={"status": OrderStatus.CONFIRMED.value},
             headers=auth_headers,
         )

@@ -8,7 +8,6 @@ from typing import Optional
 
 import aiofiles
 
-from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -20,8 +19,8 @@ class StorageService:
     def __init__(self):
         # In production, this would use Google Cloud Storage
         # For now, using local file storage
-        self.base_path = Path(os.getenv("STORAGE_PATH", "/tmp/luckygas-storage"))
-        self.base_url = os.getenv("STORAGE_BASE_URL", "http://localhost:8000/files")
+        self.base_path = Path(os.getenv("STORAGE_PATH", "/tmp / luckygas - storage"))
+        self.base_url = os.getenv("STORAGE_BASE_URL", "http://localhost:8000 / files")
 
         # Create base directory if it doesn't exist
         self.base_path.mkdir(parents=True, exist_ok=True)

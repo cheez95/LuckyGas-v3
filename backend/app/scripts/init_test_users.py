@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """Initialize test users for E2E testing"""
 
 import asyncio
@@ -40,7 +40,7 @@ TEST_USERS = [
         "username": "staff@luckygas.com.tw",
         "full_name": "辦公室員工",
         "password": "Staff123!",
-        "role": "office_staff",
+        "role": "office_staf",
         "is_active": True,
     },
     {

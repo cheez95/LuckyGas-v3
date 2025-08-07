@@ -6,11 +6,10 @@ Provides mock implementations of Google Maps, Routes API, and Vertex AI
 import logging
 import random
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import Body, FastAPI, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
 # Configure logging
@@ -21,6 +20,8 @@ app = FastAPI(title="Mock GCP Services", version="1.0.0")
 
 
 # Models
+
+
 class LatLng(BaseModel):
     latitude: float
     longitude: float
@@ -42,7 +43,7 @@ class RouteRequest(BaseModel):
     computeAlternativeRoutes: bool = False
     routePreference: str = "TRAFFIC_AWARE"
     departureTime: Optional[str] = None
-    languageCode: str = "zh-TW"
+    languageCode: str = "zh - TW"
     units: str = "METRIC"
 
 
@@ -52,17 +53,21 @@ class PredictionRequest(BaseModel):
 
 
 # Health check
+
+
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
-        "service": "mock-gcp",
+        "service": "mock - gcp",
         "timestamp": datetime.now().isoformat(),
     }
 
 
 # Google Maps Geocoding API
-@app.get("/maps/api/geocode/json")
+
+
+@app.get("/maps / api / geocode / json")
 async def geocode(address: str = Query(...), key: str = Query(...)):
     """Mock Google Maps Geocoding API"""
     logger.info(f"Geocoding request for address: {address}")
@@ -95,7 +100,9 @@ async def geocode(address: str = Query(...), key: str = Query(...)):
 
 
 # Google Routes API
-@app.post("/routes/v2:computeRoutes")
+
+
+@app.post("/routes / v2:computeRoutes")
 async def compute_routes(request: RouteRequest):
     """Mock Google Routes API"""
     logger.info(
@@ -104,10 +111,10 @@ async def compute_routes(request: RouteRequest):
 
     # Calculate mock distance and duration
     num_waypoints = len(request.intermediates) + 2
-    base_distance = random.randint(5000, 20000)  # 5-20km
-    base_duration = random.randint(600, 2400)  # 10-40 minutes
+    base_distance = random.randint(5000, 20000)  # 5 - 20km
+    base_duration = random.randint(600, 2400)  # 10 - 40 minutes
 
-    # Add distance/time for each waypoint
+    # Add distance / time for each waypoint
     total_distance = base_distance * num_waypoints
     total_duration = base_duration + (num_waypoints * 300)  # 5 min per stop
 
@@ -163,13 +170,15 @@ async def compute_routes(request: RouteRequest):
 
 
 # Google Distance Matrix API
-@app.get("/maps/api/distancematrix/json")
+
+
+@app.get("/maps / api / distancematrix / json")
 async def distance_matrix(
     origins: str = Query(...),
     destinations: str = Query(...),
     key: str = Query(...),
     mode: str = Query("driving"),
-    language: str = Query("zh-TW"),
+    language: str = Query("zh - TW"),
 ):
     """Mock Google Distance Matrix API"""
     logger.info(f"Distance matrix request: {origins} to {destinations}")
@@ -182,13 +191,13 @@ async def distance_matrix(
         elements = []
         for dest in dest_list:
             # Generate random distance and duration
-            distance = random.randint(1000, 50000)  # 1-50km
-            duration = random.randint(300, 3600)  # 5-60 minutes
+            distance = random.randint(1000, 50000)  # 1 - 50km
+            duration = random.randint(300, 3600)  # 5 - 60 minutes
 
             elements.append(
                 {
                     "distance": {
-                        "text": f"{distance/1000:.1f} 公里",
+                        "text": f"{distance / 1000:.1f} 公里",
                         "value": distance,
                     },
                     "duration": {"text": f"{duration//60} 分鐘", "value": duration},
@@ -206,8 +215,10 @@ async def distance_matrix(
 
 
 # Vertex AI Predictions
+
+
 @app.post(
-    "/vertex-ai/v1/projects/{project}/locations/{location}/endpoints/{endpoint}:predict"
+    "/vertex - ai / v1 / projects/{project}/locations/{location}/endpoints/{endpoint}:predict"
 )
 async def vertex_ai_predict(
     project: str, location: str, endpoint: str, request: PredictionRequest
@@ -226,8 +237,8 @@ async def vertex_ai_predict(
                 "confidence": random.uniform(0.7, 0.95),
                 "next_order_days": random.randint(7, 30),
                 "recommended_products": [
-                    {"product_id": "GAS-20KG", "quantity": random.randint(1, 5)},
-                    {"product_id": "GAS-16KG", "quantity": random.randint(1, 3)},
+                    {"product_id": "GAS - 20KG", "quantity": random.randint(1, 5)},
+                    {"product_id": "GAS - 16KG", "quantity": random.randint(1, 3)},
                 ],
             }
         elif "route_id" in instance:
@@ -250,19 +261,21 @@ async def vertex_ai_predict(
 
     return {
         "predictions": predictions,
-        "deployedModelId": f"mock-model-{endpoint}",
-        "model": f"projects/{project}/locations/{location}/models/mock-model",
+        "deployedModelId": f"mock - model-{endpoint}",
+        "model": f"projects/{project}/locations/{location}/models / mock - model",
         "modelDisplayName": "Mock Prediction Model",
         "modelVersionId": "1",
     }
 
 
 # Places API Autocomplete
-@app.get("/maps/api/place/autocomplete/json")
+
+
+@app.get("/maps / api / place / autocomplete / json")
 async def place_autocomplete(
     input: str = Query(...),
     key: str = Query(...),
-    language: str = Query("zh-TW"),
+    language: str = Query("zh - TW"),
     components: str = Query("country:tw"),
 ):
     """Mock Google Places Autocomplete API"""
@@ -301,20 +314,22 @@ async def place_autocomplete(
 
 
 # Mock credentials file endpoint
-@app.get("/test-credentials.json")
+
+
+@app.get("/test - credentials.json")
 async def get_test_credentials():
     """Return mock GCP credentials for testing"""
     return {
         "type": "service_account",
-        "project_id": "test-lucky-gas",
-        "private_key_id": "mock-key-id",
-        "private_key": "-----BEGIN PRIVATE KEY-----\nMOCK-PRIVATE-KEY\n-----END PRIVATE KEY-----",
-        "client_email": "test-service-account@test-lucky-gas.iam.gserviceaccount.com",
+        "project_id": "test - lucky - gas",
+        "private_key_id": "mock - key - id",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMOCK - PRIVATE - KEY\n-----END PRIVATE KEY-----",
+        "client_email": "test - service - account@test - lucky - gas.iam.gserviceaccount.com",
         "client_id": "123456789",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/test-service-account%40test-lucky-gas.iam.gserviceaccount.com",
+        "auth_uri": "https://accounts.google.com / o / oauth2 / auth",
+        "token_uri": "https://oauth2.googleapis.com / token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com / oauth2 / v1 / certs",
+        "client_x509_cert_url": "https://www.googleapis.com / robot / v1 / metadata / x509 / test - service - account % 40test - lucky - gas.iam.gserviceaccount.com",
     }
 
 

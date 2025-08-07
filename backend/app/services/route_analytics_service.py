@@ -4,25 +4,21 @@ Route performance analytics service for tracking and analyzing delivery metrics.
 
 import logging
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
-import pandas as pd
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.driver import Driver
 from app.models.optimization import OptimizationHistory
-from app.models.order import Order
-from app.models.route import Route, RouteStop
+from app.models.route import Route
 from app.schemas.analytics import (
     DailyAnalyticsSummary,
     DriverPerformanceMetrics,
     FuelSavingsReport,
-    RoutePerformanceMetrics,
     WeeklyTrendReport,
 )
 from app.services.google_cloud.monitoring.intelligent_cache import get_intelligent_cache
@@ -65,9 +61,9 @@ class RouteAnalyticsService:
     def __init__(self):
         self.fuel_price_per_liter = 30.0  # TWD per liter
         self.vehicle_fuel_efficiency = {
-            "small": 8.0,  # km/liter for small trucks
-            "medium": 6.0,  # km/liter for medium trucks
-            "large": 4.0,  # km/liter for large trucks
+            "small": 8.0,  # km / liter for small trucks
+            "medium": 6.0,  # km / liter for medium trucks
+            "large": 4.0,  # km / liter for large trucks
         }
 
     async def get_daily_analytics(
@@ -304,7 +300,7 @@ class RouteAnalyticsService:
             and_(
                 OptimizationHistory.created_at >= start_date,
                 OptimizationHistory.created_at <= end_date,
-                OptimizationHistory.success == True,
+                OptimizationHistory.success,
             )
         )
 
@@ -383,7 +379,7 @@ class RouteAnalyticsService:
         }
 
     def _calculate_time_metrics(self, routes: List[Route]) -> Dict[str, float]:
-        """Calculate time-based metrics."""
+        """Calculate time - based metrics."""
         total_stops = 0
         on_time_stops = 0
         delays = []
@@ -491,13 +487,13 @@ class RouteAnalyticsService:
                     ):
                         stats["on_time"] += 1
 
-        # Calculate on-time percentage
+        # Calculate on - time percentage
         for stats in driver_stats.values():
             stats["on_time_pct"] = (
                 (stats["on_time"] / stats["total"] * 100) if stats["total"] > 0 else 0
             )
 
-        # Sort by on-time percentage
+        # Sort by on - time percentage
         top_drivers = sorted(
             driver_stats.values(), key=lambda x: x["on_time_pct"], reverse=True
         )[:5]
@@ -551,7 +547,7 @@ class RouteAnalyticsService:
         """Generate improvement suggestions based on data."""
         suggestions = []
 
-        # Check on-time performance
+        # Check on - time performance
         avg_on_time = np.mean(
             [s.on_time_percentage for s in summaries if s.total_routes > 0]
         )
@@ -624,7 +620,7 @@ class RouteAnalyticsService:
                 "on_time_pct": 0,
             }
 
-            # Calculate on-time percentage
+            # Calculate on - time percentage
             total = sum(1 for r in routes for s in r.stops if s.status == "completed")
             on_time = sum(
                 1

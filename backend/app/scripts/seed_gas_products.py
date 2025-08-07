@@ -160,7 +160,7 @@ async def create_gas_products():
                         print(f"Created: {product.sku} - {product.name_zh}")
 
         await session.commit()
-        print(f"\nSummary:")
+        print("\nSummary:")
         print(f"Created {created_count} new products")
         print(f"Updated {updated_count} existing products")
         print(f"Total products: {created_count + updated_count}")

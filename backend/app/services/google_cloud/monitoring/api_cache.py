@@ -56,7 +56,7 @@ class GoogleAPICache:
         Returns:
             Cache key string
         """
-        # Remove non-deterministic parameters
+        # Remove non - deterministic parameters
         filtered_params = {
             k: v
             for k, v in params.items()
@@ -303,7 +303,7 @@ class GoogleAPICache:
         self, api_type: str, common_requests: List[Dict[str, Any]]
     ) -> int:
         """
-        Pre-populate cache with common requests
+        Pre - populate cache with common requests
 
         Args:
             api_type: Type of API

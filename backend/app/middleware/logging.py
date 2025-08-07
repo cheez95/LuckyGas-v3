@@ -106,7 +106,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 exc_info=True,
             )
 
-            # Re-raise exception
+            # Re - raise exception
             raise
 
         finally:

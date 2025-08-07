@@ -10,7 +10,6 @@ from typing import List, Optional
 
 import aiosmtplib
 
-from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -57,7 +56,7 @@ class EmailService:
                     message.add_attachment(
                         content,
                         maintype="application",
-                        subtype="octet-stream",
+                        subtype="octet - stream",
                         filename=filename,
                     )
 
@@ -98,11 +97,11 @@ class EmailService:
             msg["Subject"] = subject
 
             # Add text and HTML parts
-            part1 = MIMEText(body, "plain", "utf-8")
+            part1 = MIMEText(body, "plain", "utf - 8")
             msg.attach(part1)
 
             if html_body:
-                part2 = MIMEText(html_body, "html", "utf-8")
+                part2 = MIMEText(html_body, "html", "utf - 8")
                 msg.attach(part2)
 
             # Add attachments if any
@@ -110,7 +109,7 @@ class EmailService:
                 for filename, content in attachments:
                     part = MIMEApplication(content)
                     part.add_header(
-                        "Content-Disposition", "attachment", filename=filename
+                        "Content - Disposition", "attachment", filename=filename
                     )
                     msg.attach(part)
 

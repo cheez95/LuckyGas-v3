@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -287,8 +287,8 @@ class OrderTemplateService:
         """Get templates that need to be scheduled for a specific date"""
         query = select(OrderTemplate).where(
             and_(
-                OrderTemplate.is_active == True,
-                OrderTemplate.is_recurring == True,
+                OrderTemplate.is_active,
+                OrderTemplate.is_recurring,
                 OrderTemplate.next_scheduled_date <= date,
             )
         )
@@ -312,7 +312,7 @@ class OrderTemplateService:
         elif pattern == "weekly":
             if days:
                 # Find next occurrence based on specified days
-                current_weekday = base.weekday() + 1  # 1-7 (Mon-Sun)
+                current_weekday = base.weekday() + 1  # 1 - 7 (Mon - Sun)
                 next_days = [d for d in days if d > current_weekday]
 
                 if next_days:

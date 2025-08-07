@@ -19,7 +19,7 @@ class UpdatedOrderService(BaseOrderService):
     """
     OrderService with integrated simple notifications and WebSocket events.
 
-    This demonstrates how to add real-time updates and notifications
+    This demonstrates how to add real - time updates and notifications
     to existing services without complex queuing.
     """
 
@@ -81,7 +81,7 @@ class UpdatedOrderService(BaseOrderService):
             # Driver assigned - notify customer
             message = (
                 f"【幸福氣】您的訂單 {order.order_number} 已安排配送\n"
-                f"預計送達時間：{order.scheduled_date.strftime('%m月%d日')}"
+                f"預計送達時間：{order.scheduled_date.strftime('%m月 % d日')}"
             )
             await notification_service.send_sms(order.customer.phone, message)
 
@@ -123,7 +123,7 @@ class UpdatedOrderService(BaseOrderService):
         speed: float = 0,
     ):
         """Update driver location and broadcast"""
-        # Store in cache/database if needed
+        # Store in cache / database if needed
         # For now, just broadcast
 
         await websocket_manager.broadcast_event(
@@ -148,6 +148,7 @@ class UpdatedOrderService(BaseOrderService):
 # Example usage in API endpoint
 """
 from app.services.order_service_updated import UpdatedOrderService
+
 
 @router.post("/orders")
 async def create_order(
@@ -178,9 +179,9 @@ async def update_order_status(
         notes=notes,
         updated_by=current_user.id
     )
-    
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    
+
     return order
 """

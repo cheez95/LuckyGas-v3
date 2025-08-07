@@ -7,7 +7,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient, ConnectError, ReadTimeout
@@ -19,7 +19,7 @@ class TestExternalAPIChaos:
     @pytest.mark.chaos
     @pytest.mark.asyncio
     async def test_einvoice_api_failure(self, client: AsyncClient):
-        """Test system behavior when E-Invoice API fails"""
+        """Test system behavior when E - Invoice API fails"""
         # Create order that needs invoice
         order_data = {
             "customer_id": 1,
@@ -30,24 +30,24 @@ class TestExternalAPIChaos:
             "issue_invoice": True,
         }
 
-        # Mock E-Invoice API failure
+        # Mock E - Invoice API failure
         with patch(
             "app.services.einvoice_service.EInvoiceService.issue_invoice"
         ) as mock_einvoice:
-            mock_einvoice.side_effect = ConnectError("E-Invoice API unavailable")
+            mock_einvoice.side_effect = ConnectError("E - Invoice API unavailable")
 
             # Create order
             response = await client.post(
-                "/api/v1/orders",
+                "/api / v1 / orders",
                 json=order_data,
-                headers={"Authorization": "Bearer test-token"},
+                headers={"Authorization": "Bearer test - token"},
             )
 
             # Order creation should succeed even if invoice fails
             assert response.status_code in [
                 201,
                 401,
-            ], "Order creation should not fail due to E-Invoice API"
+            ], "Order creation should not fail due to E - Invoice API"
 
             if response.status_code == 201:
                 order = response.json()["data"]
@@ -62,8 +62,8 @@ class TestExternalAPIChaos:
 
                 # Check retry queue
                 queue_response = await client.get(
-                    f"/api/v1/admin/invoice-queue",
-                    headers={"Authorization": "Bearer admin-token"},
+                    "/api / v1 / admin / invoice - queue",
+                    headers={"Authorization": "Bearer admin - token"},
                 )
 
                 if queue_response.status_code == 200:
@@ -76,7 +76,7 @@ class TestExternalAPIChaos:
     @pytest.mark.chaos
     @pytest.mark.asyncio
     async def test_einvoice_api_timeout(self, client: AsyncClient):
-        """Test handling of E-Invoice API timeouts"""
+        """Test handling of E - Invoice API timeouts"""
         timeout_scenarios = [
             {"delay": 5, "timeout": 3, "should_fail": True},  # Timeout
             {"delay": 2, "timeout": 5, "should_fail": False},  # Success
@@ -84,7 +84,7 @@ class TestExternalAPIChaos:
         ]
 
         for scenario in timeout_scenarios:
-            # Mock slow E-Invoice API
+            # Mock slow E - Invoice API
             async def slow_einvoice(*args, **kwargs):
                 await asyncio.sleep(scenario["delay"])
                 return {"invoice_number": "TEST123", "status": "success"}
@@ -98,9 +98,9 @@ class TestExternalAPIChaos:
 
                 # Attempt to issue invoice
                 response = await client.post(
-                    "/api/v1/invoices/issue",
+                    "/api / v1 / invoices / issue",
                     json={"order_id": 1},
-                    headers={"Authorization": "Bearer test-token"},
+                    headers={"Authorization": "Bearer test - token"},
                     timeout=scenario["timeout"],
                 )
 
@@ -132,7 +132,8 @@ class TestExternalAPIChaos:
 
             # Try to sync bank transactions
             response = await client.post(
-                "/api/v1/banking/sync", headers={"Authorization": "Bearer admin-token"}
+                "/api / v1 / banking / sync",
+                headers={"Authorization": "Bearer admin - token"},
             )
 
             # Should handle gracefully
@@ -167,13 +168,13 @@ class TestExternalAPIChaos:
             with patch(
                 "app.services.banking_service.BankingSFTPService.download_file"
             ) as mock_download:
-                mock_download.return_value = scenario["content"].encode("utf-8")
+                mock_download.return_value = scenario["content"].encode("utf - 8")
 
                 # Attempt to process banking file
                 response = await client.post(
-                    "/api/v1/banking/process-file",
+                    "/api / v1 / banking / process - file",
                     json={"filename": f"test_{scenario['type']}.txt"},
-                    headers={"Authorization": "Bearer admin-token"},
+                    headers={"Authorization": "Bearer admin - token"},
                 )
 
                 # Should not crash, should handle gracefully
@@ -211,9 +212,9 @@ class TestExternalAPIChaos:
         ):
             # Send notification
             response = await client.post(
-                "/api/v1/notifications/sms",
+                "/api / v1 / notifications / sms",
                 json=notification_data,
-                headers={"Authorization": "Bearer test-token"},
+                headers={"Authorization": "Bearer test - token"},
                 timeout=5.0,  # Shorter timeout than SMS delay
             )
 
@@ -239,17 +240,16 @@ class TestExternalAPIChaos:
         """Test handling of SMS gateway rate limits"""
         # Send many SMS requests quickly
         sms_requests = []
-        rate_limit_hit = False
 
         for i in range(20):  # Typical rate limit threshold
             response = await client.post(
-                "/api/v1/notifications/sms",
+                "/api / v1 / notifications / sms",
                 json={
                     "customer_id": i + 1,
                     "message": f"Test message {i}",
                     "phone": f"091234{i:04d}",
                 },
-                headers={"Authorization": "Bearer test-token"},
+                headers={"Authorization": "Bearer test - token"},
             )
 
             sms_requests.append(
@@ -262,12 +262,11 @@ class TestExternalAPIChaos:
 
             # Check for rate limit response
             if response.status_code == 429:
-                rate_limit_hit = True
                 rate_limit_response = response.json()
 
-                # Should provide retry-after header or info
+                # Should provide retry - after header or info
                 retry_after = response.headers.get(
-                    "Retry-After"
+                    "Retry - After"
                 ) or rate_limit_response.get("retry_after")
                 assert (
                     retry_after is not None
@@ -301,12 +300,12 @@ class TestExternalAPIChaos:
 
             # Try to optimize routes
             response = await client.post(
-                "/api/v1/routes/optimize",
+                "/api / v1 / routes / optimize",
                 json={
                     "date": (datetime.now() + timedelta(days=1)).isoformat(),
                     "area": "信義區",
                 },
-                headers={"Authorization": "Bearer test-token"},
+                headers={"Authorization": "Bearer test - token"},
             )
 
             # Should fallback gracefully
@@ -347,14 +346,14 @@ class TestExternalAPIChaos:
         ):
 
             # All external APIs fail
-            mock_einvoice.side_effect = ConnectError("E-Invoice down")
+            mock_einvoice.side_effect = ConnectError("E - Invoice down")
             mock_sms.side_effect = ReadTimeout("SMS timeout")
             mock_maps.side_effect = Exception("Maps API error")
 
             # Core operations should still work
             # Test order creation
             order_response = await client.post(
-                "/api/v1/orders",
+                "/api / v1 / orders",
                 json={
                     "customer_id": 1,
                     "scheduled_date": (datetime.now() + timedelta(days=1)).isoformat(),
@@ -362,7 +361,7 @@ class TestExternalAPIChaos:
                     "payment_method": "cash",
                     "delivery_address": "Test",
                 },
-                headers={"Authorization": "Bearer test-token"},
+                headers={"Authorization": "Bearer test - token"},
             )
 
             # Order should still be created
@@ -373,14 +372,14 @@ class TestExternalAPIChaos:
 
             # Test customer creation
             customer_response = await client.post(
-                "/api/v1/customers",
+                "/api / v1 / customers",
                 json={
                     "customer_code": "CHAOS001",
                     "short_name": "Chaos Test",
                     "address": "Test Address",
                     "phone": "0912345678",
                 },
-                headers={"Authorization": "Bearer test-token"},
+                headers={"Authorization": "Bearer test - token"},
             )
 
             # Customer should still be created
@@ -390,7 +389,7 @@ class TestExternalAPIChaos:
             ], "Core operations should work despite external API failures"
 
             # Check system health
-            health_response = await client.get("/api/v1/health")
+            health_response = await client.get("/api / v1 / health")
             assert (
                 health_response.status_code == 200
             ), "System should remain healthy despite external API failures"
@@ -441,19 +440,19 @@ class TestExternalAPIChaos:
                 # Trigger service usage
                 if scenario["service"] == "einvoice":
                     response = await client.post(
-                        "/api/v1/orders/1/invoice",
-                        headers={"Authorization": "Bearer test-token"},
+                        "/api / v1 / orders / 1 / invoice",
+                        headers={"Authorization": "Bearer test - token"},
                     )
                 elif scenario["service"] == "sms":
                     response = await client.post(
-                        "/api/v1/notifications/delivery/1",
-                        headers={"Authorization": "Bearer test-token"},
+                        "/api / v1 / notifications / delivery / 1",
+                        headers={"Authorization": "Bearer test - token"},
                     )
                 elif scenario["service"] == "maps":
                     response = await client.post(
-                        "/api/v1/routes/optimize",
-                        json={"date": "2024-12-25", "area": "test"},
-                        headers={"Authorization": "Bearer test-token"},
+                        "/api / v1 / routes / optimize",
+                        json={"date": "2024 - 12 - 25", "area": "test"},
+                        headers={"Authorization": "Bearer test - token"},
                     )
 
                 # Should not fail completely

@@ -3,9 +3,8 @@ Full system integration tests using mock services
 Tests the complete flow from API endpoints through services to database
 """
 
-import json
 from datetime import date, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
@@ -13,11 +12,9 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
-from app.main import app
 from app.models.customer import Customer, CustomerType
-from app.models.delivery import Delivery
 from app.models.order import Order, OrderStatus
-from app.models.route import Route, RouteStatus
+from app.models.route import RouteStatus
 from app.models.user import User, UserRole
 from app.services.google_cloud.mock_routes_service import MockGoogleRoutesService
 from app.services.google_cloud.mock_vertex_ai_service import (
@@ -87,7 +84,7 @@ class TestFullSystemIntegration:
         return {
             "admin": admin,
             "driver": driver,
-            "office_staff": office_staff,
+            "office_staf": office_staff,
             "customers": [customer1, customer2],
         }
 
@@ -119,7 +116,7 @@ class TestFullSystemIntegration:
         """Client with authentication token"""
         # Login as office staff
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "office@test.com", "password": "office123"},
         )
         assert response.status_code == 200
@@ -153,19 +150,23 @@ class TestFullSystemIntegration:
             "is_urgent": False,
         }
 
-        response = await authenticated_client.post("/api/v1/orders", json=order_data)
+        response = await authenticated_client.post(
+            "/api / v1 / orders", json=order_data
+        )
         assert response.status_code == 200
         order1 = response.json()
 
         # Create second order
         order_data["customer_id"] = customers[1].id
         order_data["delivery_address"] = customers[1].address
-        response = await authenticated_client.post("/api/v1/orders", json=order_data)
+        response = await authenticated_client.post(
+            "/api / v1 / orders", json=order_data
+        )
         assert response.status_code == 200
         order2 = response.json()
 
         # Step 2: Generate predictions (using mock Vertex AI)
-        response = await authenticated_client.post("/api/v1/predictions/generate")
+        response = await authenticated_client.post("/api / v1 / predictions / generate")
         assert response.status_code == 200
         predictions = response.json()
         assert predictions["predictions_count"] > 0
@@ -178,13 +179,15 @@ class TestFullSystemIntegration:
             "order_ids": [order1["id"], order2["id"]],
         }
 
-        response = await authenticated_client.post("/api/v1/routes", json=route_data)
+        response = await authenticated_client.post(
+            "/api / v1 / routes", json=route_data
+        )
         assert response.status_code == 200
         route = response.json()
 
         # Step 4: Optimize route (using mock Routes API)
         response = await authenticated_client.post(
-            f"/api/v1/routes/{route['id']}/optimize"
+            f"/api / v1 / routes/{route['id']}/optimize"
         )
         assert response.status_code == 200
         optimized_route = response.json()
@@ -194,28 +197,28 @@ class TestFullSystemIntegration:
         # Step 5: Driver starts route
         # Login as driver
         driver_response = await authenticated_client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "driver@test.com", "password": "driver123"},
         )
         driver_token = driver_response.json()["access_token"]
         authenticated_client.headers["Authorization"] = f"Bearer {driver_token}"
 
         # Get driver's routes
-        response = await authenticated_client.get("/api/v1/driver/routes")
+        response = await authenticated_client.get("/api / v1 / driver / routes")
         assert response.status_code == 200
         driver_routes = response.json()
         assert len(driver_routes) > 0
 
         # Start route
         response = await authenticated_client.post(
-            f"/api/v1/driver/routes/{route['id']}/start"
+            f"/api / v1 / driver / routes/{route['id']}/start"
         )
         assert response.status_code == 200
 
         # Step 6: Complete deliveries
         # Get route deliveries
         response = await authenticated_client.get(
-            f"/api/v1/driver/routes/{route['id']}/deliveries"
+            f"/api / v1 / driver / routes/{route['id']}/deliveries"
         )
         assert response.status_code == 200
         deliveries = response.json()
@@ -229,7 +232,7 @@ class TestFullSystemIntegration:
         }
 
         response = await authenticated_client.post(
-            f"/api/v1/driver/deliveries/{deliveries[0]['id']}/complete",
+            f"/api / v1 / driver / deliveries/{deliveries[0]['id']}/complete",
             json=delivery_data,
         )
         assert response.status_code == 200
@@ -251,7 +254,7 @@ class TestFullSystemIntegration:
         }
 
         response = await authenticated_client.post(
-            "/api/v1/invoices", json=invoice_data
+            "/api / v1 / invoices", json=invoice_data
         )
         assert response.status_code == 200
         invoice = response.json()
@@ -282,7 +285,9 @@ class TestFullSystemIntegration:
             "is_urgent": True,
         }
 
-        response = await authenticated_client.post("/api/v1/orders", json=order_data)
+        response = await authenticated_client.post(
+            "/api / v1 / orders", json=order_data
+        )
         assert response.status_code == 200
         urgent_order = response.json()
         assert urgent_order["is_urgent"] is True
@@ -296,7 +301,9 @@ class TestFullSystemIntegration:
             "is_emergency": True,
         }
 
-        response = await authenticated_client.post("/api/v1/routes", json=route_data)
+        response = await authenticated_client.post(
+            "/api / v1 / routes", json=route_data
+        )
         assert response.status_code == 200
         emergency_route = response.json()
 
@@ -304,7 +311,7 @@ class TestFullSystemIntegration:
         assert emergency_route["status"] == RouteStatus.ASSIGNED.value
 
         # Get dispatch dashboard data
-        response = await authenticated_client.get("/api/v1/dispatch/dashboard")
+        response = await authenticated_client.get("/api / v1 / dispatch / dashboard")
         assert response.status_code == 200
         dashboard = response.json()
         assert dashboard["urgent_orders"] > 0
@@ -336,13 +343,13 @@ class TestFullSystemIntegration:
             }
 
             response = await authenticated_client.post(
-                "/api/v1/orders", json=order_data
+                "/api / v1 / orders", json=order_data
             )
             assert response.status_code == 200
 
         # Generate financial reports
         response = await authenticated_client.get(
-            "/api/v1/financial-reports/revenue-summary",
+            "/api / v1 / financial - reports / revenue - summary",
             params={
                 "start_date": (date.today() - timedelta(days=7)).isoformat(),
                 "end_date": date.today().isoformat(),
@@ -355,7 +362,7 @@ class TestFullSystemIntegration:
 
         # Get customer statements
         response = await authenticated_client.get(
-            f"/api/v1/financial-reports/customer-statement/{customer.id}"
+            f"/api / v1 / financial - reports / customer - statement/{customer.id}"
         )
         assert response.status_code == 200
         statement = response.json()
@@ -366,10 +373,10 @@ class TestFullSystemIntegration:
     async def test_websocket_real_time_updates(
         self, authenticated_client: AsyncClient, test_data, mock_services
     ):
-        """Test WebSocket real-time updates during order processing"""
+        """Test WebSocket real - time updates during order processing"""
         # This would require WebSocket test client
         # For now, test the WebSocket endpoints exist
-        response = await authenticated_client.get("/api/v1/websocket/status")
+        response = await authenticated_client.get("/api / v1 / websocket / status")
         assert response.status_code == 200
 
         status = response.json()
@@ -378,6 +385,8 @@ class TestFullSystemIntegration:
 
 
 # Additional integration test for batch operations
+
+
 @pytest.mark.asyncio
 async def test_batch_order_import(
     authenticated_client: AsyncClient,
@@ -405,7 +414,7 @@ async def test_batch_order_import(
     ]
 
     response = await authenticated_client.post(
-        "/api/v1/orders/batch-import", json={"orders": batch_orders}
+        "/api / v1 / orders / batch - import", json={"orders": batch_orders}
     )
     assert response.status_code == 200
     result = response.json()

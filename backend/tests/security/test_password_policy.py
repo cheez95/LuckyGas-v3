@@ -5,7 +5,6 @@ Tests for password policy enforcement
 import pytest
 
 from app.core.security import PasswordValidator
-from app.core.security_config import get_password_policy
 
 
 class TestPasswordPolicy:
@@ -71,4 +70,3 @@ class TestPasswordPolicy:
     async def test_password_history(self):
         """Test password history check"""
         # This would need a mock cache setup
-        pass

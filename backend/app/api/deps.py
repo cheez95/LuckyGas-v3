@@ -11,7 +11,7 @@ from app.core.security import decode_access_token
 from app.models.user import User as UserModel
 from app.schemas.user import TokenData
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api / v1 / auth / login")
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -25,7 +25,7 @@ async def get_current_user(
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="無法驗證憑據",
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={"WWW - Authenticate": "Bearer"},
     )
 
     try:

@@ -12,12 +12,8 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-import asyncpg
 import httpx
-import pytest
-import redis.asyncio as redis
 from kubernetes import client, config
-from minio import Minio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,7 +23,7 @@ class BusinessContinuityTest:
     def __init__(
         self,
         base_url: str = "http://localhost:8000",
-        db_url: str = "postgresql://postgres:password@localhost:5432/luckygas",
+        db_url: str = "postgresql://postgres:password@localhost:5432 / luckygas",
         redis_url: str = "redis://localhost:6379",
         minio_url: str = "localhost:9000",
     ):
@@ -36,12 +32,12 @@ class BusinessContinuityTest:
         self.redis_url = redis_url
         self.minio_url = minio_url
         self.results = []
-        self.backup_location = "/tmp/luckygas-backups"
+        self.backup_location = "/tmp / luckygas - backups"
 
         # Initialize Kubernetes client
         try:
             config.load_incluster_config()
-        except:
+        except Exception:
             config.load_kube_config()
 
         self.k8s_v1 = client.CoreV1Api()
@@ -91,7 +87,7 @@ class BusinessContinuityTest:
             # Trigger database backup
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.base_url}/api/v1/admin/backup/database",
+                    f"{self.base_url}/api / v1 / admin / backup / database",
                     headers={"Authorization": "Bearer admin_token"},
                     json={"destination": backup_file},
                 )
@@ -124,9 +120,9 @@ class BusinessContinuityTest:
             # Test file storage backup
             start_time = time.time()
             response = await client.post(
-                f"{self.base_url}/api/v1/admin/backup/files",
+                f"{self.base_url}/api / v1 / admin / backup / files",
                 headers={"Authorization": "Bearer admin_token"},
-                json={"bucket": "luckygas-files"},
+                json={"bucket": "luckygas - files"},
             )
 
             if response.status_code == 200:
@@ -197,7 +193,7 @@ class BusinessContinuityTest:
             start_time = time.time()
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.base_url}/api/v1/admin/restore/database",
+                    f"{self.base_url}/api / v1 / admin / restore / database",
                     headers={"Authorization": "Bearer admin_token"},
                     json={"backup_file": backup_file},
                 )
@@ -230,9 +226,9 @@ class BusinessContinuityTest:
         return result
 
     async def test_point_in_time_recovery(self) -> Dict[str, Any]:
-        """Test point-in-time recovery capabilities"""
+        """Test point - in - time recovery capabilities"""
         result = {
-            "test": "Point-in-Time Recovery",
+            "test": "Point - in - Time Recovery",
             "status": "PASSED",
             "details": [],
             "metrics": {},
@@ -253,17 +249,17 @@ class BusinessContinuityTest:
             recovery_point = timeline_data[2]["timestamp"]
             expected_data_count = 3
 
-            # Perform point-in-time recovery
+            # Perform point - in - time recovery
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{self.base_url}/api/v1/admin/restore/point-in-time",
+                    f"{self.base_url}/api / v1 / admin / restore / point - in - time",
                     headers={"Authorization": "Bearer admin_token"},
                     json={"recovery_point": recovery_point.isoformat()},
                 )
 
                 if response.status_code == 200:
                     result["details"].append(
-                        f"Point-in-time recovery to {recovery_point}"
+                        f"Point - in - time recovery to {recovery_point}"
                     )
 
                     # Verify only data up to recovery point exists
@@ -272,7 +268,7 @@ class BusinessContinuityTest:
                     )
                     if actual_count == expected_data_count:
                         result["details"].append(
-                            "Point-in-time recovery verified successfully"
+                            "Point - in - time recovery verified successfully"
                         )
                     else:
                         result["status"] = "FAILED"
@@ -283,7 +279,7 @@ class BusinessContinuityTest:
                     # Check WAL replay metrics
                     metrics = response.json().get("metrics", {})
                     result["metrics"]["wal_replay_time"] = metrics.get(
-                        "replay_time", "N/A"
+                        "replay_time", "N / A"
                     )
                     result["metrics"]["transactions_replayed"] = metrics.get(
                         "transactions", 0
@@ -291,7 +287,7 @@ class BusinessContinuityTest:
                 else:
                     result["status"] = "FAILED"
                     result["details"].append(
-                        "Point-in-time recovery not supported or failed"
+                        "Point - in - time recovery not supported or failed"
                     )
 
         except Exception as e:
@@ -471,7 +467,7 @@ class BusinessContinuityTest:
             rollback_point = await self._create_rollback_point()
 
             # Simulate bad deployment
-            bad_version = "v99.99.99-bad"
+            bad_version = "v99.99.99 - bad"
             deployment_result = await self._deploy_version(bad_version)
 
             if deployment_result["status"] == "failed":
@@ -541,7 +537,7 @@ class BusinessContinuityTest:
                 {"type": "email", "target": "ops@luckygas.com"},
                 {"type": "sms", "target": "+886912345678"},
                 {"type": "slack", "target": "#alerts"},
-                {"type": "webhook", "target": "https://alerts.luckygas.com/webhook"},
+                {"type": "webhook", "target": "https://alerts.luckygas.com / webhook"},
             ]
 
             # Trigger various alert scenarios
@@ -579,7 +575,9 @@ class BusinessContinuityTest:
             successful = len(notifications_sent) - len(notifications_failed)
             result["metrics"]["alerts_sent"] = len(notifications_sent)
             result["metrics"]["alerts_delivered"] = successful
-            result["metrics"]["delivery_rate"] = f"{(successful/total_alerts)*100:.1f}%"
+            result["metrics"][
+                "delivery_rate"
+            ] = f"{(successful / total_alerts)*100:.1f}%"
 
             # Test alert escalation
             escalation_test = await self._test_alert_escalation()
@@ -658,7 +656,7 @@ class BusinessContinuityTest:
     async def test_data_export_import(self) -> Dict[str, Any]:
         """Test data export and import procedures"""
         result = {
-            "test": "Data Export/Import",
+            "test": "Data Export / Import",
             "status": "PASSED",
             "details": [],
             "metrics": {},
@@ -747,7 +745,7 @@ class BusinessContinuityTest:
                     result["status"] = "FAILED"
                     result["details"].append(f"System failed without {service}")
 
-                # Re-enable service
+                # Re - enable service
                 await self._enable_service(service)
 
         except Exception as e:
@@ -782,7 +780,7 @@ class BusinessContinuityTest:
                 result["metrics"]["retention_days"] = retention_test["days"]
             else:
                 result["status"] = "FAILED"
-                result["details"].append("Data retention non-compliant")
+                result["details"].append("Data retention non - compliant")
 
             # Test data privacy compliance
             privacy_test = await self._test_data_privacy()
@@ -810,7 +808,7 @@ class BusinessContinuityTest:
     async def test_recovery_time_objectives(self) -> Dict[str, Any]:
         """Test Recovery Time and Point Objectives"""
         result = {
-            "test": "RTO/RPO Compliance",
+            "test": "RTO / RPO Compliance",
             "status": "PASSED",
             "details": [],
             "metrics": {},
@@ -833,7 +831,7 @@ class BusinessContinuityTest:
 
             for failure in simulated_failures:
                 # Simulate failure
-                failure_time = datetime.now()
+                datetime.now()
                 await self._simulate_failure(failure)
 
                 # Measure recovery
@@ -887,10 +885,10 @@ class BusinessContinuityTest:
 
     # Helper methods
     async def _create_test_customer(self) -> Optional[Dict[str, Any]]:
-        """Create a test customer for backup/restore testing"""
+        """Create a test customer for backup / restore testing"""
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/api/v1/customers",
+                f"{self.base_url}/api / v1 / customers",
                 json={
                     "code": f"BCT_TEST_{int(time.time())}",
                     "name": "Business Continuity Test Customer",
@@ -908,7 +906,7 @@ class BusinessContinuityTest:
         """Delete test customer"""
         async with httpx.AsyncClient() as client:
             response = await client.delete(
-                f"{self.base_url}/api/v1/customers/{customer_id}",
+                f"{self.base_url}/api / v1 / customers/{customer_id}",
                 headers={"Authorization": "Bearer test_token"},
             )
             return response.status_code == 204
@@ -917,7 +915,7 @@ class BusinessContinuityTest:
         """Verify if customer exists"""
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/api/v1/customers/{customer_id}",
+                f"{self.base_url}/api / v1 / customers/{customer_id}",
                 headers={"Authorization": "Bearer test_token"},
             )
             return response.status_code == 200
@@ -928,7 +926,7 @@ class BusinessContinuityTest:
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/api/v1/admin/backup/full",
+                f"{self.base_url}/api / v1 / admin / backup / full",
                 json={"destination": backup_file},
                 headers={"Authorization": "Bearer admin_token"},
                 timeout=300.0,
@@ -942,7 +940,7 @@ class BusinessContinuityTest:
         """Backup system configuration"""
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/api/v1/admin/configuration/export",
+                f"{self.base_url}/api / v1 / admin / configuration / export",
                 headers={"Authorization": "Bearer admin_token"},
             )
 
@@ -970,7 +968,7 @@ class BusinessContinuityTest:
             try:
                 os.remove(backup)
                 cleaned += 1
-            except:
+            except Exception:
                 pass
         return cleaned
 
@@ -985,7 +983,7 @@ class BusinessContinuityTest:
                 "total_tests": total_tests,
                 "passed": passed_tests,
                 "failed": total_tests - passed_tests,
-                "readiness_score": f"{(passed_tests/total_tests)*100:.1f}%",
+                "readiness_score": f"{(passed_tests / total_tests)*100:.1f}%",
             },
             "compliance": {
                 "rto_target": "5 minutes",
@@ -1046,10 +1044,10 @@ async def main():
     report = await tester.run_all_tests()
 
     # Save report
-    with open("business-continuity-report.json", "w") as f:
+    with open("business - continuity - report.json", "w") as f:
         json.dump(report, f, indent=2)
 
-    print(f"\nBusiness Continuity Test Summary:")
+    print("\nBusiness Continuity Test Summary:")
     print(f"Total Tests: {report['summary']['total_tests']}")
     print(f"Passed: {report['summary']['passed']}")
     print(f"Failed: {report['summary']['failed']}")

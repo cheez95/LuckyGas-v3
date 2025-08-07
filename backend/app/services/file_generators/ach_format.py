@@ -5,10 +5,9 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from app.models.banking import PaymentBatch, PaymentTransaction
-from app.models.customer import Customer
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class ACHRecord:
     record_type: str
 
     def to_fixed_width(self, field_definitions: List[tuple]) -> str:
-        """Convert record to fixed-width format."""
+        """Convert record to fixed - width format."""
         result = ""
         for field_name, width, alignment, padding in field_definitions:
             value = str(getattr(self, field_name, ""))
@@ -165,7 +164,7 @@ class TaiwanACHGenerator:
 
         Args:
             batch: Payment batch with transactions
-            encoding: File encoding (big5 or utf-8)
+            encoding: File encoding (big5 or utf - 8)
 
         Returns:
             bytes: Encoded file content
@@ -208,8 +207,8 @@ class TaiwanACHGenerator:
 
         return ACHHeader(
             batch_number=batch.batch_number,
-            creation_date=now.strftime("%Y%m%d"),
-            creation_time=now.strftime("%H%M%S"),
+            creation_date=now.strftime("%Y % m % d"),
+            creation_time=now.strftime("%H % M % S"),
             company_code=self.company_code,
             company_name=self.company_name,
             bank_code=self.BANK_CODES.get(batch.bank_code, "000"),
@@ -246,7 +245,7 @@ class TaiwanACHGenerator:
             account_number=transaction.account_number,
             account_holder=self._format_name(transaction.account_holder),
             amount=str(amount_cents).zfill(13),
-            payment_date=transaction.scheduled_date.strftime("%Y%m%d"),
+            payment_date=transaction.scheduled_date.strftime("%Y % m % d"),
             id_number=id_number,
             payment_description=(
                 f"Gas Bill {transaction.invoice_id}"
@@ -277,10 +276,10 @@ class TaiwanACHGenerator:
         """
         Parse bank and branch codes from account number.
 
-        Taiwan account format: BBB-BBBB-AAAAAAAAAA
-        Where B = Bank/Branch code, A = Account number
+        Taiwan account format: BBB - BBBB - AAAAAAAAAA
+        Where B = Bank / Branch code, A = Account number
         """
-        # Remove all non-numeric characters
+        # Remove all non - numeric characters
         clean_account = re.sub(r"\D", "", account_number)
 
         if len(clean_account) >= 7:
@@ -317,29 +316,29 @@ class TaiwanACHGenerator:
         for idx, transaction in enumerate(batch.transactions):
             # Validate account number
             if not transaction.account_number:
-                errors.append(f"Transaction {idx+1}: Missing account number")
+                errors.append(f"Transaction {idx + 1}: Missing account number")
             elif not re.match(r"^[\d\-]+$", transaction.account_number):
-                errors.append(f"Transaction {idx+1}: Invalid account number format")
+                errors.append(f"Transaction {idx + 1}: Invalid account number format")
 
             # Validate account holder
             if not transaction.account_holder:
-                errors.append(f"Transaction {idx+1}: Missing account holder name")
+                errors.append(f"Transaction {idx + 1}: Missing account holder name")
             elif len(transaction.account_holder) > 30:
                 logger.warning(
-                    f"Transaction {idx+1}: Account holder name will be truncated"
+                    f"Transaction {idx + 1}: Account holder name will be truncated"
                 )
 
             # Validate amount
             if transaction.amount <= 0:
                 errors.append(
-                    f"Transaction {idx+1}: Invalid amount {transaction.amount}"
+                    f"Transaction {idx + 1}: Invalid amount {transaction.amount}"
                 )
             elif transaction.amount > Decimal("9999999999.99"):
-                errors.append(f"Transaction {idx+1}: Amount exceeds maximum")
+                errors.append(f"Transaction {idx + 1}: Amount exceeds maximum")
 
             # Validate customer reference
             if transaction.customer and not transaction.customer.bank_code:
-                logger.warning(f"Transaction {idx+1}: Customer missing bank code")
+                logger.warning(f"Transaction {idx + 1}: Customer missing bank code")
 
         return errors
 
@@ -377,7 +376,7 @@ class ACHReconciliationParser:
                 result = self._parse_detail_record(line)
                 if result:
                     results.append(result)
-            elif record_type == "R":  # Return/reject record
+            elif record_type == "R":  # Return / reject record
                 result = self._parse_return_record(line)
                 if result:
                     results.append(result)
@@ -396,7 +395,7 @@ class ACHReconciliationParser:
                 "bank_reference": line[27:47].strip(),
                 "response_code": line[47:50].strip(),
                 "response_message": self._get_response_message(line[47:50]),
-                "processed_date": datetime.strptime(line[50:58], "%Y%m%d"),
+                "processed_date": datetime.strptime(line[50:58], "%Y % m % d"),
                 "processed_amount": Decimal(line[58:71]) / 100,
                 "success": line[47:50].strip() == "000",
             }
@@ -405,7 +404,7 @@ class ACHReconciliationParser:
             return None
 
     def _parse_return_record(self, line: str) -> Optional[Dict]:
-        """Parse return/reject record."""
+        """Parse return / reject record."""
         if len(line) < 200:
             return None
 
@@ -415,7 +414,7 @@ class ACHReconciliationParser:
                 "transaction_id": line[7:27].strip(),
                 "return_reason_code": line[27:30].strip(),
                 "return_reason": self._get_return_reason(line[27:30]),
-                "return_date": datetime.strptime(line[30:38], "%Y%m%d"),
+                "return_date": datetime.strptime(line[30:38], "%Y % m % d"),
                 "original_amount": Decimal(line[38:51]) / 100,
                 "success": False,
             }
@@ -424,7 +423,7 @@ class ACHReconciliationParser:
             return None
 
     def _get_response_message(self, code: str) -> str:
-        """Get human-readable response message for code."""
+        """Get human - readable response message for code."""
         messages = {
             "000": "交易成功",
             "001": "帳號錯誤",
@@ -441,7 +440,7 @@ class ACHReconciliationParser:
         return messages.get(code.strip(), "未知錯誤")
 
     def _get_return_reason(self, code: str) -> str:
-        """Get human-readable return reason."""
+        """Get human - readable return reason."""
         reasons = {
             "R01": "餘額不足",
             "R02": "帳戶已結清",

@@ -26,18 +26,16 @@ if test_env_path.exists():
 
     load_dotenv(test_env_path)
 
-from app.core.cache import get_redis_client
 from app.core.config import settings
 from app.core.database import Base, get_async_session
 from app.core.security import create_access_token, get_password_hash
 from app.main import app
 from app.models.customer import Customer, CustomerType
-from app.models.invoice import Invoice, InvoiceStatus
 from app.models.order import Order, OrderStatus
 from app.models.user import User, UserRole
 
-# Test database URL - use PostgreSQL test database from docker-compose
-TEST_DATABASE_URL = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+# Test database URL - use PostgreSQL test database from docker - compose
+TEST_DATABASE_URL = f"postgresql + asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 
 
 @pytest.fixture(scope="session")
@@ -103,9 +101,9 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 @pytest_asyncio.fixture(scope="function")
 async def redis_client():
     """Create test Redis client"""
-    # Use the test Redis instance from docker-compose
+    # Use the test Redis instance from docker - compose
     redis_url = (
-        settings.REDIS_URL or "redis://:test_redis_password_123@localhost:6380/1"
+        settings.REDIS_URL or "redis://:test_redis_password_123@localhost:6380 / 1"
     )
 
     client = await redis.from_url(redis_url, decode_responses=True)
@@ -197,7 +195,7 @@ async def test_customer(db_session: AsyncSession) -> Customer:
 async def test_order(db_session: AsyncSession, test_customer: Customer) -> Order:
     """Create test order"""
     order = Order(
-        order_number=f"ORD{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        order_number=f"ORD{datetime.now().strftime('%Y % m % d % H % M % S')}",
         customer_id=test_customer.id,
         order_date=datetime.now(),
         scheduled_date=datetime.now().date() + timedelta(days=1),
@@ -212,7 +210,7 @@ async def test_order(db_session: AsyncSession, test_customer: Customer) -> Order
         unit_price_16kg=480,
         unit_price_10kg=300,
         unit_price_4kg=120,
-        total_amount=4800,  # (2*1500) + (1*600) + (3*300)
+        total_amount=4800,  # (2 * 1500) + (1 * 600) + (3 * 300)
         delivery_address=test_customer.address,
         is_taxable=True,
     )
@@ -250,6 +248,8 @@ async def driver_auth_headers(test_driver_user: User) -> dict:
 
 
 # Mock external services
+
+
 @pytest.fixture
 def mock_google_routes_api(mocker):
     """Mock Google Routes API responses"""
@@ -267,7 +267,7 @@ def mock_google_routes_api(mocker):
 
 @pytest.fixture
 def mock_einvoice_api(mocker):
-    """Mock Taiwan E-Invoice API responses"""
+    """Mock Taiwan E - Invoice API responses"""
     mock = mocker.patch("app.services.einvoice_service.EInvoiceService.submit_invoice")
     mock.return_value = {
         "success": True,
@@ -280,13 +280,15 @@ def mock_einvoice_api(mocker):
 
 @pytest.fixture
 def mock_websocket_manager(mocker):
-    """Mock WebSocket manager for real-time updates"""
+    """Mock WebSocket manager for real - time updates"""
     mock = mocker.patch("app.services.websocket_service.websocket_manager.broadcast")
     mock.return_value = None
     return mock
 
 
 # Additional fixtures for integration tests
+
+
 @pytest_asyncio.fixture
 async def test_route(db_session: AsyncSession, test_driver_user: User) -> None:
     """Create test route"""
@@ -295,7 +297,7 @@ async def test_route(db_session: AsyncSession, test_driver_user: User) -> None:
 
     # Create vehicle first
     vehicle = Vehicle(
-        license_plate="TEST-001", type="truck", capacity_kg=1000, status="active"
+        license_plate="TEST - 001", type="truck", capacity_kg=1000, status="active"
     )
     db_session.add(vehicle)
     await db_session.commit()

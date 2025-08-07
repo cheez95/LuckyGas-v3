@@ -1,5 +1,5 @@
 """
-Real-time route adjustment service for handling dynamic route changes.
+Real - time route adjustment service for handling dynamic route changes.
 Handles urgent orders, traffic updates, and route rebalancing.
 """
 
@@ -11,7 +11,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.metrics import route_adjustment_counter, route_adjustment_summary
@@ -69,7 +69,7 @@ class AdjustmentResult:
 
 
 class RealtimeRouteAdjustmentService:
-    """Service for real-time route adjustments."""
+    """Service for real - time route adjustments."""
 
     def __init__(self):
         self.vrp_optimizer = VRPOptimizer()
@@ -265,9 +265,9 @@ class RealtimeRouteAdjustmentService:
     async def _handle_traffic_update(
         self, request: AdjustmentRequest
     ) -> AdjustmentResult:
-        """Handle traffic-based route adjustments."""
+        """Handle traffic - based route adjustments."""
         route_id = request.route_id
-        traffic_data = request.data.get("traffic", {})
+        request.data.get("traffic", {})
 
         try:
             # Get current route
@@ -284,7 +284,7 @@ class RealtimeRouteAdjustmentService:
                     optimization_time_ms=0,
                 )
 
-            # Get real-time traffic data from Google Routes API
+            # Get real - time traffic data from Google Routes API
             traffic_info = await self.routes_service.get_traffic_info(
                 [stop.to_location() for stop in route.stops]
             )
@@ -320,7 +320,7 @@ class RealtimeRouteAdjustmentService:
                         ],
                         new_total_distance=route.total_distance_km,
                         new_total_time=route.total_duration_minutes,
-                        message=f"Route reoptimized due to traffic",
+                        message="Route reoptimized due to traffic",
                         optimization_time_ms=100,
                     )
 
@@ -365,7 +365,7 @@ class RealtimeRouteAdjustmentService:
 
         # Calculate insertion cost for each route
         best_route = None
-        min_cost = float("inf")
+        min_cost = float("in")
 
         for route in routes:
             # Skip if vehicle capacity exceeded
@@ -385,7 +385,7 @@ class RealtimeRouteAdjustmentService:
         self, route: Route, order: Order, session: AsyncSession
     ) -> int:
         """Find the optimal position to insert an order in a route."""
-        min_detour = float("inf")
+        min_detour = float("in")
         best_position = len(route.stops) + 1
 
         order_location = (order.delivery_latitude, order.delivery_longitude)
@@ -593,14 +593,12 @@ class RealtimeRouteAdjustmentService:
     ) -> AdjustmentResult:
         """Handle driver unavailability by reassigning routes."""
         # Implementation for driver unavailability
-        pass
 
     async def _handle_generic_adjustment(
         self, request: AdjustmentRequest
     ) -> AdjustmentResult:
         """Handle generic route adjustments."""
         # Implementation for other adjustment types
-        pass
 
 
 # Singleton instance

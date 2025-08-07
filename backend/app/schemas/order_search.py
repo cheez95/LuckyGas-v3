@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class OrderSearchCriteria(BaseModel):
     """訂單搜尋條件"""
 
-    # Full-text search
+    # Full - text search
     keyword: Optional[str] = None
 
     # Date range

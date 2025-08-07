@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Quick Smoke Test', () => {
-  test($1, async ({ page }) => {
+  test('should complete the test', async ({ page }) => {
     // Navigate to the app
     await page.goto('/');
     
@@ -18,7 +18,7 @@ test.describe('Quick Smoke Test', () => {
     await page.screenshot({ path: 'screenshots/login-page.png' });
   });
   
-  test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
     await page.goto('/login');
     
     // Try to login with invalid credentials

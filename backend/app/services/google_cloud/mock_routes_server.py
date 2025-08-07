@@ -10,10 +10,10 @@ import json
 import logging
 import math
 import random
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List, Tuple
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 
 logger = logging.getLogger(__name__)
@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 mock_app = FastAPI(title="Mock Google Routes API", version="1.0.0")
 
 # Mock API key for testing
-MOCK_API_KEY = "mock_AIzaSyC-1234567890abcdefghijklmnop"
+MOCK_API_KEY = "mock_AIzaSyC - 1234567890abcdefghijklmnop"
 
-# Taiwan-specific mock data
+# Taiwan - specific mock data
 TAIWAN_AREAS = ["信義區", "大安區", "中山區", "內湖區", "士林區", "北投區"]
 TRAFFIC_CONDITIONS = ["NORMAL", "SLOW", "CONGESTION"]
 
@@ -127,7 +127,7 @@ class MockRoutesServer:
             distance = self.calculate_haversine_distance(
                 start[0], start[1], end[0], end[1]
             )
-            # Assume average speed of 30 km/h in city
+            # Assume average speed of 30 km / h in city
             duration = (distance / 30) * 3600  # Convert to seconds
 
             # Add random traffic delay
@@ -174,7 +174,7 @@ class MockRoutesServer:
                 "estimatedPrice": [
                     {
                         "currencyCode": "TWD",
-                        "units": "0",  # Taiwan highways are mostly toll-free
+                        "units": "0",  # Taiwan highways are mostly toll - free
                         "nanos": 0,
                     }
                 ]
@@ -182,7 +182,7 @@ class MockRoutesServer:
 
         response = {"routes": [route]}
 
-        # Add fuel-efficient route if requested
+        # Add fuel - efficient route if requested
         if "FUEL_EFFICIENT" in request_data.get("requestedReferenceRoutes", []):
             fuel_efficient_route = {
                 **route,
@@ -220,7 +220,7 @@ class MockRoutesServer:
                 )
 
                 # Calculate duration with traffic
-                base_duration = (distance / 30) * 3600  # 30 km/h average
+                base_duration = (distance / 30) * 3600  # 30 km / h average
                 traffic_factor = random.uniform(1.0, 1.3)
                 duration = base_duration * traffic_factor
 
@@ -264,7 +264,7 @@ async def validate_api_key_middleware(request: Request, call_next):
     if request.url.path == "/docs" or request.url.path == "/openapi.json":
         return await call_next(request)
 
-    api_key = request.headers.get("X-Goog-Api-Key")
+    api_key = request.headers.get("X - Goog - Api - Key")
     if not api_key or not await mock_server.validate_api_key(api_key):
         return JSONResponse(
             status_code=401,
@@ -294,7 +294,7 @@ async def validate_api_key_middleware(request: Request, call_next):
     return response
 
 
-@mock_app.post("/directions/v2:computeRoutes")
+@mock_app.post("/directions / v2:computeRoutes")
 async def compute_routes(request: Request):
     """Mock Google Routes API computeRoutes endpoint"""
     try:
@@ -309,15 +309,15 @@ async def compute_routes(request: Request):
         )
 
 
-@mock_app.post("/distanceMatrix/v2:computeRouteMatrix")
+@mock_app.post("/distanceMatrix / v2:computeRouteMatrix")
 async def compute_route_matrix(request: Request):
     """Mock Google Routes API computeRouteMatrix endpoint"""
     try:
         request_data = await request.json()
         result = await mock_server.compute_route_matrix(request_data)
-        # Return as newline-delimited JSON (streaming format)
+        # Return as newline - delimited JSON (streaming format)
         response_content = "\n".join(json.dumps(element) for element in result)
-        return Response(content=response_content, media_type="application/json")
+        return Response(content=response_content, media_type="application / json")
     except Exception as e:
         logger.error(f"Error in mock computeRouteMatrix: {e}")
         return JSONResponse(

@@ -11,7 +11,6 @@ Unit tests for Enhanced Google Routes Service
 """
 
 import json
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -34,7 +33,7 @@ class TestEnhancedGoogleRoutesService:
             return_value={
                 "calls": 10,
                 "limit": 100,
-                "reset_time": "2024-01-01T00:00:00",
+                "reset_time": "2024 - 01 - 01T00:00:00",
             }
         )
 
@@ -303,7 +302,7 @@ class TestEnhancedGoogleRoutesService:
 
         service._circuit_breaker.call = AsyncMock(side_effect=mock_circuit_breaker_call)
 
-        # Mock OR-Tools optimizer
+        # Mock OR - Tools optimizer
         # Create mock VRPStop objects
         from app.services.optimization.ortools_optimizer import VRPStop
 
@@ -312,15 +311,15 @@ class TestEnhancedGoogleRoutesService:
             stop = VRPStop(
                 order_id=i + 1,
                 customer_id=i + 1,
-                customer_name=f"Customer {i+1}",
-                address=f"Address {i+1}",
+                customer_name=f"Customer {i + 1}",
+                address=f"Address {i + 1}",
                 latitude=25.033 + i * 0.001,
                 longitude=121.565 + i * 0.001,
                 demand={"20kg": 1},
                 time_window=(480, 1080),  # 8am to 6pm
                 service_time=10,
             )
-            # Add estimated_arrival as an attribute (OR-Tools would set this)
+            # Add estimated_arrival as an attribute (OR - Tools would set this)
             stop.estimated_arrival = 480 + 30 * i  # Start at 8am, 30 minutes per stop
             mock_stops.append(stop)
 
@@ -343,8 +342,8 @@ class TestEnhancedGoogleRoutesService:
             for i in range(5):
                 customer = Customer(
                     id=i + 1,
-                    short_name=f"Customer {i+1}",
-                    address=f"Address {i+1}",
+                    short_name=f"Customer {i + 1}",
+                    address=f"Address {i + 1}",
                     latitude=25.033 + i * 0.001,
                     longitude=121.565 + i * 0.001,
                 )
@@ -352,7 +351,7 @@ class TestEnhancedGoogleRoutesService:
                     id=i + 1,
                     customer_id=i + 1,
                     customer=customer,
-                    delivery_address=f"Address {i+1}",
+                    delivery_address=f"Address {i + 1}",
                     qty_20kg=1,
                 )
                 orders.append(order)

@@ -4,11 +4,11 @@ API decorators for common functionality like rate limiting, caching, and version
 
 import hashlib
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Optional
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.core.cache import cache
@@ -20,10 +20,10 @@ logger = get_logger(__name__)
 
 def rate_limit(requests_per_minute: int):
     """
-    Decorator for endpoint-specific rate limiting.
+    Decorator for endpoint - specific rate limiting.
 
     Usage:
-        @router.get("/expensive-operation")
+        @router.get("/expensive - operation")
         @rate_limit(5)
         async def expensive_operation():
             ...
@@ -88,8 +88,8 @@ def cache_response(expire_seconds: int = 300, key_prefix: Optional[str] = None):
                 # Return cached response
                 data = json.loads(cached_data)
                 response = JSONResponse(content=data)
-                response.headers["X-Cache"] = "HIT"
-                response.headers["X-Cache-Key"] = cache_key
+                response.headers["X - Cache"] = "HIT"
+                response.headers["X - Cache - Key"] = cache_key
                 return response
 
             # Execute function
@@ -114,10 +114,10 @@ def cache_response(expire_seconds: int = 300, key_prefix: Optional[str] = None):
 
                 # Add cache headers
                 if hasattr(result, "headers"):
-                    result.headers["X-Cache"] = "MISS"
-                    result.headers["X-Cache-Key"] = cache_key
-                    result.headers["Cache-Control"] = (
-                        f"private, max-age={expire_seconds}"
+                    result.headers["X - Cache"] = "MISS"
+                    result.headers["X - Cache - Key"] = cache_key
+                    result.headers["Cache - Control"] = (
+                        f"private, max - age={expire_seconds}"
                     )
 
             return result
@@ -162,7 +162,7 @@ def validate_taiwan_phone(phone_field: str = "phone"):
                             detail={
                                 "message": "無效的電話號碼格式",
                                 "field": phone_field,
-                                "hint": "請使用台灣電話格式，例如：0912-345-678 或 02-1234-5678",
+                                "hint": "請使用台灣電話格式，例如：0912 - 345 - 678 或 02 - 1234 - 5678",
                             },
                         )
 
@@ -208,7 +208,7 @@ def validate_taiwan_address(address_field: str = "address"):
                             detail={
                                 "message": "無效的地址格式",
                                 "field": address_field,
-                                "hint": "請包含縣市、區/鄉/鎮、路/街及門牌號碼",
+                                "hint": "請包含縣市、區 / 鄉 / 鎮、路 / 街及門牌號碼",
                             },
                         )
 
@@ -264,7 +264,7 @@ def track_performance(metric_name: str):
         metric_name: Name for the metric
 
     Usage:
-        @router.get("/complex-calculation")
+        @router.get("/complex - calculation")
         @track_performance("complex_calculation")
         async def complex_calculation():
             ...
@@ -294,7 +294,7 @@ def track_performance(metric_name: str):
 
                 # Add performance header if it's a response
                 if hasattr(result, "headers"):
-                    result.headers["X-Performance-Ms"] = str(int(duration * 1000))
+                    result.headers["X - Performance - Ms"] = str(int(duration * 1000))
 
                 return result
 
@@ -346,7 +346,7 @@ def paginate(default_limit: int = 20, max_limit: int = 100):
             elif limit < 1:
                 limit = 1
 
-            # Ensure skip is non-negative
+            # Ensure skip is non - negative
             if skip < 0:
                 skip = 0
 
@@ -355,8 +355,8 @@ def paginate(default_limit: int = 20, max_limit: int = 100):
 
             # Add pagination headers if it's a response
             if hasattr(result, "headers"):
-                result.headers["X-Pagination-Skip"] = str(skip)
-                result.headers["X-Pagination-Limit"] = str(limit)
+                result.headers["X - Pagination - Skip"] = str(skip)
+                result.headers["X - Pagination - Limit"] = str(limit)
 
             return result
 

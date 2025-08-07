@@ -8,7 +8,6 @@ import random
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -36,7 +35,7 @@ from app.models import (
 )
 from app.schemas.user import UserRole
 
-# Taiwan-specific test data
+# Taiwan - specific test data
 TAIWAN_CITIES = [
     "台北市",
     "新北市",
@@ -262,12 +261,37 @@ class TestDataGenerator:
         print("🔥 Creating gas products...")
 
         products_data = [
-            {"name": "16公斤桶裝瓦斯", "code": "GAS-16KG", "price": 800, "weight": 16},
-            {"name": "20公斤桶裝瓦斯", "code": "GAS-20KG", "price": 1000, "weight": 20},
-            {"name": "50公斤桶裝瓦斯", "code": "GAS-50KG", "price": 2500, "weight": 50},
-            {"name": "4公斤桶裝瓦斯", "code": "GAS-4KG", "price": 200, "weight": 4},
-            {"name": "瓦斯爐具-單口", "code": "STOVE-1", "price": 1500, "weight": 5},
-            {"name": "瓦斯爐具-雙口", "code": "STOVE-2", "price": 2500, "weight": 8},
+            {
+                "name": "16公斤桶裝瓦斯",
+                "code": "GAS - 16KG",
+                "price": 800,
+                "weight": 16,
+            },
+            {
+                "name": "20公斤桶裝瓦斯",
+                "code": "GAS - 20KG",
+                "price": 1000,
+                "weight": 20,
+            },
+            {
+                "name": "50公斤桶裝瓦斯",
+                "code": "GAS - 50KG",
+                "price": 2500,
+                "weight": 50,
+            },
+            {"name": "4公斤桶裝瓦斯", "code": "GAS - 4KG", "price": 200, "weight": 4},
+            {
+                "name": "瓦斯爐具 - 單口",
+                "code": "STOVE - 1",
+                "price": 1500,
+                "weight": 5,
+            },
+            {
+                "name": "瓦斯爐具 - 雙口",
+                "code": "STOVE - 2",
+                "price": 2500,
+                "weight": 8,
+            },
             {"name": "調節器", "code": "REGULATOR", "price": 300, "weight": 0.5},
             {"name": "瓦斯管", "code": "HOSE", "price": 200, "weight": 0.3},
         ]
@@ -292,14 +316,38 @@ class TestDataGenerator:
         print("🚚 Creating vehicles...")
 
         vehicles_data = [
-            {"license_plate": "ABC-1234", "capacity_kg": 1000, "vehicle_type": "truck"},
-            {"license_plate": "DEF-5678", "capacity_kg": 1500, "vehicle_type": "truck"},
-            {"license_plate": "GHI-9012", "capacity_kg": 800, "vehicle_type": "van"},
-            {"license_plate": "JKL-3456", "capacity_kg": 1200, "vehicle_type": "truck"},
-            {"license_plate": "MNO-7890", "capacity_kg": 1000, "vehicle_type": "truck"},
-            {"license_plate": "PQR-2345", "capacity_kg": 600, "vehicle_type": "van"},
-            {"license_plate": "STU-6789", "capacity_kg": 1500, "vehicle_type": "truck"},
-            {"license_plate": "VWX-0123", "capacity_kg": 1000, "vehicle_type": "truck"},
+            {
+                "license_plate": "ABC - 1234",
+                "capacity_kg": 1000,
+                "vehicle_type": "truck",
+            },
+            {
+                "license_plate": "DEF - 5678",
+                "capacity_kg": 1500,
+                "vehicle_type": "truck",
+            },
+            {"license_plate": "GHI - 9012", "capacity_kg": 800, "vehicle_type": "van"},
+            {
+                "license_plate": "JKL - 3456",
+                "capacity_kg": 1200,
+                "vehicle_type": "truck",
+            },
+            {
+                "license_plate": "MNO - 7890",
+                "capacity_kg": 1000,
+                "vehicle_type": "truck",
+            },
+            {"license_plate": "PQR - 2345", "capacity_kg": 600, "vehicle_type": "van"},
+            {
+                "license_plate": "STU - 6789",
+                "capacity_kg": 1500,
+                "vehicle_type": "truck",
+            },
+            {
+                "license_plate": "VWX - 0123",
+                "capacity_kg": 1000,
+                "vehicle_type": "truck",
+            },
         ]
 
         for veh_data in vehicles_data:
@@ -327,24 +375,24 @@ class TestDataGenerator:
             number = random.randint(1, 500)
 
             customer = Customer(
-                customer_code=f"C{i+1:05d}",
-                name=f"測試客戶{i+1}",
+                customer_code=f"C{i + 1:05d}",
+                name=f"測試客戶{i + 1}",
                 customer_type=random.choice(CUSTOMER_TYPES),
                 phone=f"09{random.randint(10000000, 99999999)}",
                 delivery_address=f"{city}{district}{street}{number}號",
                 delivery_latitude=25.0330 + random.uniform(-0.1, 0.1),
                 delivery_longitude=121.5654 + random.uniform(-0.1, 0.1),
-                contact_person=f"聯絡人{i+1}",
+                contact_person=f"聯絡人{i + 1}",
                 is_active=True,
                 credit_limit=random.choice([30000, 50000, 100000, 200000]),
                 payment_terms=random.choice([0, 30, 60]),
                 discount_rate=random.choice([0, 0.05, 0.1]),
-                notes=f"測試客戶備註 {i+1}",
+                notes=f"測試客戶備註 {i + 1}",
             )
 
             # Add some customers with email
             if random.random() > 0.7:
-                customer.email = f"customer{i+1}@test.com"
+                customer.email = f"customer{i + 1}@test.com"
 
             self.db.add(customer)
             self.customers.append(customer)
@@ -377,7 +425,7 @@ class TestDataGenerator:
             order_date = datetime.now() - timedelta(days=random.randint(0, 60))
 
             order = Order(
-                order_number=f"ORD{order_date.strftime('%Y%m%d')}{i+1:04d}",
+                order_number=f"ORD{order_date.strftime('%Y % m % d')}{i + 1:04d}",
                 customer_id=customer.id,
                 customer_name=customer.name,
                 delivery_address=customer.delivery_address,
@@ -390,7 +438,7 @@ class TestDataGenerator:
                 status=random.choice(ORDER_STATUSES),
                 payment_method=random.choice(PAYMENT_METHODS),
                 priority=random.choice(["normal", "high", "urgent"]),
-                notes=f"測試訂單備註 {i+1}" if random.random() > 0.7 else None,
+                notes=f"測試訂單備註 {i + 1}" if random.random() > 0.7 else None,
                 created_at=order_date,
                 total_amount=0,  # Will be calculated
             )
@@ -441,7 +489,7 @@ class TestDataGenerator:
         for day_offset in range(7):
             route_date = date.today() + timedelta(days=day_offset)
 
-            # Create 2-3 routes per day
+            # Create 2 - 3 routes per day
             num_routes = random.randint(2, 3)
 
             for route_num in range(num_routes):
@@ -451,7 +499,7 @@ class TestDataGenerator:
                 vehicle = random.choice(self.vehicles)
 
                 route = Route(
-                    route_number=f"R{route_date.strftime('%Y%m%d')}{route_num+1:02d}",
+                    route_number=f"R{route_date.strftime('%Y % m % d')}{route_num + 1:02d}",
                     route_date=route_date,
                     driver_id=driver.id,
                     vehicle_id=vehicle.id,
@@ -461,13 +509,13 @@ class TestDataGenerator:
                     total_distance_km=random.uniform(20, 100),
                     total_duration_minutes=random.randint(120, 480),
                     optimization_score=random.uniform(0.7, 0.95),
-                    notes=f"測試路線 {route_num+1}",
+                    notes=f"測試路線 {route_num + 1}",
                 )
 
                 self.db.add(route)
                 await self.db.flush()
 
-                # Assign 5-15 orders to each route
+                # Assign 5 - 15 orders to each route
                 route_orders = random.sample(
                     [o for o in pending_orders if o.delivery_date.date() == route_date],
                     min(

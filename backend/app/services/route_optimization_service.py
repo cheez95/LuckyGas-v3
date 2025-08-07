@@ -1,7 +1,6 @@
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import googlemaps
 import numpy as np
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class RouteOptimizationService:
-    """Service for optimizing delivery routes using OR-Tools and Google Routes API."""
+    """Service for optimizing delivery routes using OR - Tools and Google Routes API."""
 
     def __init__(self):
         self._gmaps = None
@@ -63,7 +62,7 @@ class RouteOptimizationService:
             # Create vehicle capacities
             vehicle_capacities = [driver.get("max_capacity", 50) for driver in drivers]
 
-            # Solve using OR-Tools
+            # Solve using OR - Tools
             solution = self._solve_vrp(
                 distance_matrix,
                 time_matrix,
@@ -109,7 +108,7 @@ class RouteOptimizationService:
         for i in range(n):
             for j in range(i + 1, n):
                 try:
-                    # For small distances, use straight-line distance
+                    # For small distances, use straight - line distance
                     dist = distance.distance(
                         (locations[i]["lat"], locations[i]["lng"]),
                         (locations[j]["lat"], locations[j]["lng"]),
@@ -121,8 +120,8 @@ class RouteOptimizationService:
                     matrix[i][j] = int(dist * 1000)  # Convert to meters
                     matrix[j][i] = matrix[i][j]
 
-                except Exception as e:
-                    # Fallback to straight-line distance
+                except Exception:
+                    # Fallback to straight - line distance
                     dist = self._haversine_distance(
                         locations[i]["lat"],
                         locations[i]["lng"],
@@ -141,7 +140,7 @@ class RouteOptimizationService:
         # For now, estimate based on distance and average speed
         distance_matrix = await self._create_distance_matrix(orders, depot_location)
 
-        # Average speed in urban Taiwan (km/h)
+        # Average speed in urban Taiwan (km / h)
         avg_speed = 30
 
         time_matrix = []
@@ -164,7 +163,7 @@ class RouteOptimizationService:
         num_vehicles: int,
         constraints: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Solve Vehicle Routing Problem using OR-Tools."""
+        """Solve Vehicle Routing Problem using OR - Tools."""
 
         # Create routing index manager
         manager = pywrapcp.RoutingIndexManager(
@@ -241,7 +240,7 @@ class RouteOptimizationService:
         solution: pywrapcp.Assignment,
         num_vehicles: int,
     ) -> Dict[str, Any]:
-        """Extract solution from OR-Tools solver."""
+        """Extract solution from OR - Tools solver."""
         routes = []
         unassigned = []
 
@@ -252,7 +251,7 @@ class RouteOptimizationService:
             while not routing.IsEnd(index):
                 node_index = manager.IndexToNode(index)
                 if node_index != 0:  # Skip depot
-                    route.append(node_index - 1)  # Adjust for 0-based order indexing
+                    route.append(node_index - 1)  # Adjust for 0 - based order indexing
                 index = solution.Value(routing.NextVar(index))
 
             if route:
@@ -333,7 +332,7 @@ class RouteOptimizationService:
 
             formatted_routes.append(
                 {
-                    "route_id": f"R-{datetime.now().strftime('%Y%m%d')}-{route_data['vehicle_id'] + 1:02d}",
+                    "route_id": f"R-{datetime.now().strftime('%Y % m % d')}-{route_data['vehicle_id'] + 1:02d}",
                     "driver_id": driver["id"],
                     "driver_name": driver["name"],
                     "vehicle_number": driver.get("vehicle_number", ""),
@@ -386,7 +385,7 @@ class RouteOptimizationService:
     def _simple_route_assignment(
         self, orders: List[Dict[str, Any]], drivers: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Simple round-robin route assignment as fallback."""
+        """Simple round - robin route assignment as fallback."""
         routes = []
         orders_per_driver = len(orders) // len(drivers) + 1
 
@@ -408,7 +407,7 @@ class RouteOptimizationService:
 
                 routes.append(
                     {
-                        "route_id": f"R-{datetime.now().strftime('%Y%m%d')}-{i + 1:02d}",
+                        "route_id": f"R-{datetime.now().strftime('%Y % m % d')}-{i + 1:02d}",
                         "driver_id": driver["id"],
                         "driver_name": driver["name"],
                         "stops": stops,
@@ -457,7 +456,7 @@ class RouteOptimizationService:
     ) -> float:
         """Calculate route efficiency score."""
         # Simple efficiency calculation
-        distance_per_stop = distance / stops if stops > 0 else float("inf")
+        distance_per_stop = distance / stops if stops > 0 else float("in")
 
         # Ideal distance per stop (km)
         ideal_distance = 5.0

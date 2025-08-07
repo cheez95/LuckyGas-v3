@@ -121,7 +121,7 @@ class TestGoogleAPIErrorHandler:
         assert GoogleAPIErrorHandler.should_retry(APIErrorType.NETWORK_ERROR) is True
         assert GoogleAPIErrorHandler.should_retry(APIErrorType.TIMEOUT) is True
 
-        # Non-retryable errors
+        # Non - retryable errors
         assert GoogleAPIErrorHandler.should_retry(APIErrorType.INVALID_API_KEY) is False
         assert GoogleAPIErrorHandler.should_retry(APIErrorType.INVALID_REQUEST) is False
         assert GoogleAPIErrorHandler.should_retry(APIErrorType.NOT_FOUND) is False
@@ -143,7 +143,7 @@ class TestGoogleAPIErrorHandler:
         )
         assert 1.6 <= delay <= 2.4  # 2.0 with jitter
 
-        # Test with retry-after header
+        # Test with retry - after header
         delay = GoogleAPIErrorHandler.get_retry_delay(
             APIErrorType.RATE_LIMIT, attempt=0, retry_after=5
         )
@@ -155,7 +155,7 @@ class TestGoogleAPIErrorHandler:
         )
         assert 1.6 <= delay <= 2.4  # 2.0 base with jitter
 
-        # Test timeout (non-exponential)
+        # Test timeout (non - exponential)
         delay = GoogleAPIErrorHandler.get_retry_delay(APIErrorType.TIMEOUT, attempt=0)
         assert delay == 2.0  # No exponential backoff for timeout
 
@@ -344,7 +344,7 @@ class TestGoogleAPIErrorHandler:
         assert details["message"] == "Error occurred"
         assert details["code"] == "ERROR_CODE"
 
-        # Test non-JSON string
+        # Test non - JSON string
         plain_error = "Plain text error message"
         details = GoogleAPIErrorHandler.extract_error_details(plain_error)
         assert details["message"] == "Plain text error message"
@@ -356,14 +356,14 @@ class TestGoogleAPIErrorHandler:
             status_code=500,
             details={"foo": "bar"},
             api_type="test_api",
-            endpoint="/test/endpoint",
+            endpoint="/test / endpoint",
         )
 
         assert str(error) == "Test error"
         assert error.status_code == 500
         assert error.details == {"foo": "bar"}
         assert error.api_type == "test_api"
-        assert error.endpoint == "/test/endpoint"
+        assert error.endpoint == "/test / endpoint"
         assert isinstance(error.timestamp, datetime)
 
         # Test to_dict
@@ -372,5 +372,5 @@ class TestGoogleAPIErrorHandler:
         assert error_dict["status_code"] == 500
         assert error_dict["details"] == {"foo": "bar"}
         assert error_dict["api_type"] == "test_api"
-        assert error_dict["endpoint"] == "/test/endpoint"
+        assert error_dict["endpoint"] == "/test / endpoint"
         assert "timestamp" in error_dict

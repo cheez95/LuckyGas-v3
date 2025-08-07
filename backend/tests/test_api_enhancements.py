@@ -3,16 +3,11 @@ Tests for API enhancement features including CORS, rate limiting,
 versioning, and WebSocket functionality.
 """
 
-import asyncio
-import json
-from datetime import datetime
-
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
 from app.core.config import settings
-from app.main import app
 
 
 class TestCORSConfiguration:
@@ -22,42 +17,43 @@ class TestCORSConfiguration:
     async def test_cors_preflight_request(self, client: AsyncClient):
         """Test CORS preflight (OPTIONS) request."""
         response = await client.options(
-            "/api/v1/customers",
+            "/api / v1 / customers",
             headers={
                 "Origin": "http://localhost:3000",
-                "Access-Control-Request-Method": "GET",
-                "Access-Control-Request-Headers": "Authorization, Content-Type",
+                "Access - Control - Request - Method": "GET",
+                "Access - Control - Request - Headers": "Authorization, Content - Type",
             },
         )
 
         assert response.status_code == 200
-        assert "Access-Control-Allow-Origin" in response.headers
-        assert "Access-Control-Allow-Methods" in response.headers
-        assert "Access-Control-Allow-Headers" in response.headers
-        assert response.headers["Access-Control-Max-Age"] == "3600"
+        assert "Access - Control - Allow - Origin" in response.headers
+        assert "Access - Control - Allow - Methods" in response.headers
+        assert "Access - Control - Allow - Headers" in response.headers
+        assert response.headers["Access - Control - Max - Age"] == "3600"
 
     @pytest.mark.asyncio
     async def test_cors_actual_request(self, client: AsyncClient):
         """Test CORS headers on actual request."""
         response = await client.get(
-            "/api/v1/health", headers={"Origin": "http://localhost:3000"}
+            "/api / v1 / health", headers={"Origin": "http://localhost:3000"}
         )
 
         assert response.status_code == 200
         assert (
-            response.headers["Access-Control-Allow-Origin"] == "http://localhost:3000"
+            response.headers["Access - Control - Allow - Origin"]
+            == "http://localhost:3000"
         )
-        assert response.headers["Access-Control-Allow-Credentials"] == "true"
+        assert response.headers["Access - Control - Allow - Credentials"] == "true"
 
     @pytest.mark.asyncio
     async def test_cors_invalid_origin(self, client: AsyncClient):
         """Test CORS with invalid origin."""
         response = await client.get(
-            "/api/v1/health", headers={"Origin": "http://malicious-site.com"}
+            "/api / v1 / health", headers={"Origin": "http://malicious - site.com"}
         )
 
         # Should not include CORS headers for invalid origin
-        assert "Access-Control-Allow-Origin" not in response.headers
+        assert "Access - Control - Allow - Origin" not in response.headers
 
 
 class TestRateLimiting:
@@ -73,7 +69,6 @@ class TestRateLimiting:
     @pytest_asyncio.fixture
     async def rate_limited_client(self, db_session, monkeypatch):
         """Create a client with a low rate limit for testing."""
-        from unittest.mock import AsyncMock
 
         from httpx import ASGITransport, AsyncClient
 
@@ -132,9 +127,9 @@ class TestRateLimiting:
             allow_methods=["*"],
             allow_headers=["*"],
             expose_headers=[
-                "X-RateLimit-Limit",
-                "X-RateLimit-Remaining",
-                "X-RateLimit-Reset",
+                "X - RateLimit - Limit",
+                "X - RateLimit - Remaining",
+                "X - RateLimit - Reset",
             ],
         )
 
@@ -152,11 +147,11 @@ class TestRateLimiting:
         """Test normal usage within rate limits."""
         # Make requests within limit
         for i in range(5):
-            response = await client.get("/api/v1/health")
+            response = await client.get("/api / v1 / health")
             assert response.status_code == 200
-            assert "X-RateLimit-Limit" in response.headers
-            assert "X-RateLimit-Remaining" in response.headers
-            assert int(response.headers["X-RateLimit-Remaining"]) >= 0
+            assert "X - RateLimit - Limit" in response.headers
+            assert "X - RateLimit - Remaining" in response.headers
+            assert int(response.headers["X - RateLimit - Remaining"]) >= 0
 
     @pytest.mark.asyncio
     async def test_rate_limit_exceeded(self, rate_limited_client: AsyncClient):
@@ -164,7 +159,7 @@ class TestRateLimiting:
         # Make requests to exceed limit (limit is set to 2 in rate_limited_client)
         responses = []
         for i in range(5):
-            response = await rate_limited_client.get("/api/v1/health")
+            response = await rate_limited_client.get("/api / v1 / health")
             responses.append(response)
 
         # Check that some requests were rate limited
@@ -174,20 +169,21 @@ class TestRateLimiting:
         # Check rate limit response
         limited_response = rate_limited[0]
         assert limited_response.status_code == 429
-        assert "Retry-After" in limited_response.headers
+        assert "Retry - After" in limited_response.headers
         assert limited_response.json()["error"] == "rate_limit_exceeded"
 
     @pytest.mark.asyncio
     async def test_rate_limit_different_endpoints(self, client: AsyncClient):
-        """Test that rate limits are per-endpoint."""
+        """Test that rate limits are per - endpoint."""
         # Hit limit on one endpoint
         for i in range(10):
             await client.post(
-                "/api/v1/auth/login", json={"username": "test", "password": "test"}
+                "/api / v1 / auth / login",
+                json={"username": "test", "password": "test"},
             )
 
         # Should still be able to access other endpoints
-        response = await client.get("/api/v1/health")
+        response = await client.get("/api / v1 / health")
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -198,18 +194,22 @@ class TestRateLimiting:
         # Anonymous requests
         anon_responses = []
         for i in range(5):
-            response = await client.get("/api/v1/customers/")
+            response = await client.get("/api / v1 / customers/")
             anon_responses.append(response)
 
         # Authenticated requests should have higher limit
         auth_responses = []
         for i in range(10):
-            response = await client.get("/api/v1/customers/", headers=auth_headers)
+            response = await client.get("/api / v1 / customers/", headers=auth_headers)
             auth_responses.append(response)
 
         # Check that authenticated requests have higher remaining
-        anon_remaining = int(anon_responses[-1].headers.get("X-RateLimit-Remaining", 0))
-        auth_remaining = int(auth_responses[-1].headers.get("X-RateLimit-Remaining", 0))
+        anon_remaining = int(
+            anon_responses[-1].headers.get("X - RateLimit - Remaining", 0)
+        )
+        auth_remaining = int(
+            auth_responses[-1].headers.get("X - RateLimit - Remaining", 0)
+        )
 
         # Authenticated should have more remaining (or at least not be rate limited yet)
         assert auth_remaining >= 0 or anon_remaining < auth_remaining
@@ -221,17 +221,17 @@ class TestAPIVersioning:
     @pytest.mark.asyncio
     async def test_version_in_url_path(self, client: AsyncClient):
         """Test version detection from URL path."""
-        response = await client.get("/api/v1/health")
+        response = await client.get("/api / v1 / health")
         assert response.status_code == 200
         # Version headers should be present
-        if "API-Version" in response.headers:
-            assert response.headers["API-Version"] == "v1.0.0"
+        if "API - Version" in response.headers:
+            assert response.headers["API - Version"] == "v1.0.0"
 
     @pytest.mark.asyncio
     async def test_version_in_header(self, client: AsyncClient):
         """Test version detection from headers."""
         response = await client.get(
-            "/api/v1/health", headers={"Accept-Version": "v1.2"}
+            "/api / v1 / health", headers={"Accept - Version": "v1.2"}
         )
         assert response.status_code == 200
 
@@ -239,7 +239,9 @@ class TestAPIVersioning:
     async def test_deprecated_version_warning(self, client: AsyncClient):
         """Test deprecated version warning."""
         # Assuming v1.0 is deprecated
-        response = await client.get("/api/v1/health", headers={"API-Version": "v1.0"})
+        response = await client.get(
+            "/api / v1 / health", headers={"API - Version": "v1.0"}
+        )
 
         # Should still work but with deprecation warning
         assert response.status_code == 200
@@ -249,7 +251,9 @@ class TestAPIVersioning:
     @pytest.mark.asyncio
     async def test_unsupported_version(self, client: AsyncClient):
         """Test unsupported version error."""
-        response = await client.get("/api/v1/health", headers={"API-Version": "v0.1"})
+        response = await client.get(
+            "/api / v1 / health", headers={"API - Version": "v0.1"}
+        )
 
         # Should return error for unsupported version
         if response.status_code == 400:
@@ -257,9 +261,11 @@ class TestAPIVersioning:
 
     @pytest.mark.asyncio
     async def test_version_specific_features(self, client: AsyncClient):
-        """Test version-specific feature availability."""
+        """Test version - specific feature availability."""
         # Test feature available in newer version
-        response = await client.get("/api/v1/info", headers={"Accept-Version": "v1.2"})
+        response = await client.get(
+            "/api / v1 / info", headers={"Accept - Version": "v1.2"}
+        )
 
         if response.status_code == 200:
             data = response.json()
@@ -268,7 +274,7 @@ class TestAPIVersioning:
 
 
 class TestWebSocketEnhancements:
-    """Test WebSocket/Socket.IO enhancements."""
+    """Test WebSocket / Socket.IO enhancements."""
 
     @pytest.mark.asyncio
     async def test_socketio_cors_configuration(self):
@@ -308,7 +314,7 @@ class TestWebSocketEnhancements:
 
         # Should not have rate limit headers
         for response in responses:
-            assert "X-RateLimit-Limit" not in response.headers
+            assert "X - RateLimit - Limit" not in response.headers
 
 
 class TestAPIEnhancementIntegration:
@@ -325,11 +331,11 @@ class TestAPIEnhancementIntegration:
     async def test_full_request_flow(self, auth_headers, client: AsyncClient):
         """Test a request going through all enhancements."""
         response = await client.get(
-            "/api/v1/customers/",
+            "/api / v1 / customers/",
             headers={
                 **auth_headers,
                 "Origin": "http://localhost:3000",
-                "Accept-Version": "v1.2",
+                "Accept - Version": "v1.2",
             },
         )
 
@@ -337,25 +343,25 @@ class TestAPIEnhancementIntegration:
         assert response.status_code in [200, 404]  # 404 if no customers
 
         # CORS headers
-        assert "Access-Control-Allow-Origin" in response.headers
+        assert "Access - Control - Allow - Origin" in response.headers
 
         # Rate limit headers
-        assert "X-RateLimit-Limit" in response.headers
-        assert "X-RateLimit-Remaining" in response.headers
+        assert "X - RateLimit - Limit" in response.headers
+        assert "X - RateLimit - Remaining" in response.headers
 
         # Performance headers
-        assert "X-Process-Time" in response.headers
+        assert "X - Process - Time" in response.headers
 
         # Version headers (if implemented)
-        if "API-Version" in response.headers:
-            assert response.headers["API-Version-Latest"] is not None
+        if "API - Version" in response.headers:
+            assert response.headers["API - Version - Latest"] is not None
 
     @pytest.mark.asyncio
     async def test_error_handling_with_enhancements(self, client: AsyncClient):
         """Test error responses include proper headers."""
         # Make invalid request
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             json={"invalid": "data"},
             headers={"Origin": "http://localhost:3000"},
         )
@@ -364,16 +370,18 @@ class TestAPIEnhancementIntegration:
         assert response.status_code == 422
 
         # Should still have CORS headers
-        assert "Access-Control-Allow-Origin" in response.headers
+        assert "Access - Control - Allow - Origin" in response.headers
 
         # Should have rate limit headers
-        assert "X-RateLimit-Limit" in response.headers
+        assert "X - RateLimit - Limit" in response.headers
 
         # Should have correlation ID
-        assert "X-Request-ID" in response.headers
+        assert "X - Request - ID" in response.headers
 
 
 # Fixtures for testing
+
+
 @pytest_asyncio.fixture
 async def auth_headers(client: AsyncClient, test_admin):
     """Get authentication headers for testing."""

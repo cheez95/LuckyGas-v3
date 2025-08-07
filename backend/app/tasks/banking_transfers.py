@@ -2,8 +2,8 @@
 
 import asyncio
 import logging
-from datetime import datetime, time, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime, time
+from typing import Any, Dict
 
 from celery import Celery
 from celery.schedules import crontab
@@ -11,14 +11,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
-from app.core.database import get_db
 from app.core.logging import setup_logging
 from app.models.banking import (
     BankConfiguration,
     PaymentBatch,
     PaymentBatchStatus,
     ReconciliationLog,
-    ReconciliationStatus,
 )
 from app.services.banking_service import BankingService
 from app.services.banking_sftp import BankingSFTPService
@@ -32,8 +30,8 @@ setup_logging()
 # Initialize Celery
 celery_app = Celery(
     "banking_tasks",
-    broker=settings.REDIS_URL or "redis://localhost:6379/0",
-    backend=settings.REDIS_URL or "redis://localhost:6379/0",
+    broker=settings.REDIS_URL or "redis://localhost:6379 / 0",
+    backend=settings.REDIS_URL or "redis://localhost:6379 / 0",
 )
 
 # Configure Celery
@@ -41,7 +39,7 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    timezone="Asia/Taipei",
+    timezone="Asia / Taipei",
     enable_utc=True,
     task_track_started=True,
     task_time_limit=3600,  # 1 hour
@@ -67,31 +65,31 @@ def get_task_db() -> Session:
 # Schedule configuration
 celery_app.conf.beat_schedule = {
     # Daily payment file generation and upload (6 AM Taiwan time)
-    "generate-daily-payments": {
+    "generate - daily - payments": {
         "task": "banking_tasks.generate_and_upload_payments",
         "schedule": crontab(hour=6, minute=0),
         "args": (),
     },
     # Check for reconciliation files every 30 minutes during business hours
-    "check-reconciliation-files": {
+    "check - reconciliation - files": {
         "task": "banking_tasks.check_and_process_reconciliation",
-        "schedule": crontab(minute="*/30", hour="8-18"),
+        "schedule": crontab(minute="*/30", hour="8 - 18"),
         "args": (),
     },
     # Process retry queue every hour
-    "process-retry-queue": {
+    "process - retry - queue": {
         "task": "banking_tasks.process_retry_queue",
         "schedule": crontab(minute=0),
         "args": (),
     },
     # Daily reconciliation report (7 PM Taiwan time)
-    "daily-reconciliation-report": {
+    "daily - reconciliation - report": {
         "task": "banking_tasks.generate_daily_report",
         "schedule": crontab(hour=19, minute=0),
         "args": (),
     },
     # Health check every 5 minutes
-    "sftp-health-check": {
+    "sftp - health - check": {
         "task": "banking_tasks.perform_health_check",
         "schedule": crontab(minute="*/5"),
         "args": (),
@@ -221,13 +219,13 @@ def generate_and_upload_payments(self) -> Dict[str, Any]:
                         #     type='email',
                         #     recipient=settings.BANKING_NOTIFICATION_EMAIL,
                         #     subject=f'Payment Batch Uploaded - {bank_config.bank_name}',
-                        #     content=f"""
+                        #     content="""
                         #     Payment batch {batch.batch_number} has been successfully uploaded.
                         #
                         #     Details:
                         #     - Bank: {bank_config.bank_name}
                         #     - Transactions: {batch.total_transactions}
-                        #     - Total Amount: NT${batch.total_amount:,.2f}
+                        #     - Total Amount: NT${batch.total_amount:, .2f}
                         #     - File: {file_name}
                         #     - Upload Time: {batch.uploaded_at.strftime('%Y-%m-%d %H:%M:%S')}
                         #     """
@@ -253,7 +251,7 @@ def generate_and_upload_payments(self) -> Dict[str, Any]:
                         #     type='email',
                         #     recipient=settings.BANKING_NOTIFICATION_EMAIL,
                         #     subject=f'Payment Batch Upload Failed - {bank_config.bank_name}',
-                        #     content=f"""
+                        #     content="""
                         #     Failed to upload payment batch {batch.batch_number}.
                         #
                         #     Error: {result.error}
@@ -309,8 +307,8 @@ def check_and_process_reconciliation(self) -> Dict[str, Any]:
 
     try:
         banking_service = BankingService(db)
-        sftp_service = BankingSFTPService(db)
-        notification_service = NotificationService(db)
+        BankingSFTPService(db)
+        NotificationService(db)
 
         # Get all active bank configurations
         banks = db.query(BankConfiguration).filter_by(is_active=True).all()
@@ -345,7 +343,7 @@ def check_and_process_reconciliation(self) -> Dict[str, Any]:
                             #     type='email',
                             #     recipient=settings.BANKING_NOTIFICATION_EMAIL,
                             #     subject=f'Reconciliation Alert - {bank_config.bank_name}',
-                            #     content=f"""
+                            #     content="""
                             #     Reconciliation file {file_name} has been processed with unmatched transactions.
                             #
                             #     Summary:
@@ -455,7 +453,7 @@ def generate_daily_report() -> Dict[str, Any]:
         }
 
         # Send report
-        notification_service = NotificationService(db)
+        NotificationService(db)
         # TODO: Fix async notification in sync Celery task
         # await notification_service.send_notification(
         #     type='email',
@@ -522,7 +520,7 @@ def _is_within_processing_window(bank_config: BankConfiguration) -> bool:
         # Get current Taiwan time
         from pytz import timezone
 
-        taiwan_tz = timezone("Asia/Taipei")
+        taiwan_tz = timezone("Asia / Taipei")
         current_time = datetime.now(taiwan_tz).time()
 
         return current_time < cutoff
@@ -540,7 +538,7 @@ def _generate_file_name(pattern: str, batch_number: str, date: datetime) -> str:
         "{YYYY}": date.strftime("%Y"),
         "{MM}": date.strftime("%m"),
         "{DD}": date.strftime("%d"),
-        "{YYYYMMDD}": date.strftime("%Y%m%d"),
+        "{YYYYMMDD}": date.strftime("%Y % m % d"),
         "{BATCH}": batch_number,
         "{TIMESTAMP}": str(int(time_module.time())),
     }
@@ -554,7 +552,7 @@ def _generate_file_name(pattern: str, batch_number: str, date: datetime) -> str:
 
 def _format_daily_report(report: Dict[str, Any]) -> str:
     """Format daily report for email."""
-    return f"""
+    return """
 Daily Banking Operations Report
 Date: {report['date']}
 
@@ -562,7 +560,7 @@ Payment Batches:
 - Total Batches: {report['payment_batches']['total']}
 - Successfully Uploaded: {report['payment_batches']['uploaded']}
 - Failed: {report['payment_batches']['failed']}
-- Total Amount: NT${report['payment_batches']['total_amount']:,.2f}
+- Total Amount: NT${report['payment_batches']['total_amount']:, .2f}
 - Total Transactions: {report['payment_batches']['total_transactions']}
 
 Reconciliation Summary:
@@ -576,6 +574,8 @@ This is an automated report. For details, please check the admin panel.
 
 
 # Manual task triggers for testing
+
+
 @celery_app.task
 def test_bank_connection(bank_code: str) -> Dict[str, Any]:
     """Test SFTP connection for a specific bank."""

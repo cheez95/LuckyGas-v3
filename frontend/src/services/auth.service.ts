@@ -10,7 +10,7 @@ export const authService = {
     formData.append('password', credentials.password);
     
     console.log('🔐 Sending login request...');
-    const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login', formData, {
+    const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login/', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -48,7 +48,7 @@ export const authService = {
   
   async logout(): Promise<void> {
     // Call logout endpoint if needed
-    // await api.post('/auth/logout');
+    // await api.post('/auth/logout/');
     
     // Clear tokens and expiry
     localStorage.removeItem('access_token');
@@ -58,23 +58,23 @@ export const authService = {
   
   
   async getCurrentUser(): Promise<User> {
-    const response = await api.get<User>('/auth/me');
+    const response = await api.get<User>('/auth/me/');
     return response.data;
   },
   
   async requestPasswordReset(email: string): Promise<void> {
-    await api.post('/auth/forgot-password', { email });
+    await api.post('/auth/forgot-password/', { email });
   },
   
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    await api.post('/auth/reset-password', {
+    await api.post('/auth/reset-password/', {
       token,
       new_password: newPassword,
     });
   },
   
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    await api.post('/auth/change-password', {
+    await api.post('/auth/change-password/', {
       current_password: currentPassword,
       new_password: newPassword,
     });
@@ -82,7 +82,7 @@ export const authService = {
   
   async refreshToken(refreshToken: string): Promise<TokenRefreshResponse> {
     const response = await api.post<TokenRefreshResponse & { token_type: string }>(
-      '/auth/refresh',
+      '/auth/refresh/',
       { refresh_token: refreshToken }
     );
     

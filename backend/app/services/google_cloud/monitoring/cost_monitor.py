@@ -2,7 +2,6 @@
 Google API Cost Monitoring and Control
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -30,12 +29,12 @@ class GoogleAPICostMonitor:
 
     # Budget thresholds (in USD)
     THRESHOLDS = {
-        "hourly_warning": Decimal("5.00"),  # $5/hour warning
-        "hourly_critical": Decimal("10.00"),  # $10/hour critical
-        "daily_warning": Decimal("50.00"),  # $50/day warning
-        "daily_critical": Decimal("100.00"),  # $100/day critical
-        "monthly_warning": Decimal("1000.00"),  # $1000/month warning
-        "monthly_critical": Decimal("2000.00"),  # $2000/month critical
+        "hourly_warning": Decimal("5.00"),  # $5 / hour warning
+        "hourly_critical": Decimal("10.00"),  # $10 / hour critical
+        "daily_warning": Decimal("50.00"),  # $50 / day warning
+        "daily_critical": Decimal("100.00"),  # $100 / day critical
+        "monthly_warning": Decimal("1000.00"),  # $1000 / month warning
+        "monthly_critical": Decimal("2000.00"),  # $2000 / month critical
     }
 
     def __init__(self, redis_client: Optional[redis.Redis] = None):
@@ -291,7 +290,7 @@ class GoogleAPICostMonitor:
             if cost:
                 # Handle bytes response from Redis
                 if isinstance(cost, bytes):
-                    cost = cost.decode("utf-8")
+                    cost = cost.decode("utf - 8")
                 cost_decimal = Decimal(cost)
                 report["costs_by_api"][api_type] = float(cost_decimal)
                 total_cost += cost_decimal
@@ -302,7 +301,7 @@ class GoogleAPICostMonitor:
             if count:
                 # Handle bytes response from Redis
                 if isinstance(count, bytes):
-                    count = count.decode("utf-8")
+                    count = count.decode("utf - 8")
                 count_int = int(count)
                 report["counts_by_api"][api_type] = count_int
                 total_calls += count_int

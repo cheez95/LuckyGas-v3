@@ -1,22 +1,17 @@
 """
 Data validation framework for Lucky Gas migration
-Validates data integrity, business rules, and Taiwan-specific formats
+Validates data integrity, business rules, and Taiwan - specific formats
 """
 
 import logging
 import re
 from collections import defaultdict
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import pandas as pd
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Customer, GasProduct, Order, User, Vehicle
-from app.models.order import OrderStatus
-from app.models.user import UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +47,7 @@ class DataValidator:
             "warnings_by_type": defaultdict(int),
         }
 
-    # Taiwan-specific format validators
+    # Taiwan - specific format validators
 
     @staticmethod
     def validate_taiwan_phone(phone: str) -> Tuple[bool, Optional[str]]:
@@ -70,19 +65,19 @@ class DataValidator:
 
         # Mobile: 09XX followed by 6 digits
         mobile_pattern = r"^09\d{8}$"
-        # Landline: 0 + area code (1-2 digits) + 7-8 digits
-        landline_pattern = r"^0[2-8]\d{7,8}$"
+        # Landline: 0 + area code (1 - 2 digits) + 7 - 8 digits
+        landline_pattern = r"^0[2 - 8]\d{7, 8}$"
 
         if re.match(mobile_pattern, cleaned):
-            # Format as 09XX-XXX-XXX
+            # Format as 09XX - XXX - XXX
             return True, f"{cleaned[:4]}-{cleaned[4:7]}-{cleaned[7:]}"
         elif re.match(landline_pattern, cleaned):
             # Format based on area code length
             if cleaned[0:2] in ["02", "03", "04", "05", "06", "07", "08"]:
-                # 2-digit area code
+                # 2 - digit area code
                 return True, f"{cleaned[:2]}-{cleaned[2:6]}-{cleaned[6:]}"
             else:
-                # 3-digit area code
+                # 3 - digit area code
                 return True, f"{cleaned[:3]}-{cleaned[3:6]}-{cleaned[6:]}"
 
         return False, None
@@ -113,7 +108,7 @@ class DataValidator:
                 issues.append(f"Missing {component} in address")
 
         # Check for postal code (optional but recommended)
-        postal_pattern = r"^\d{3,5}"
+        postal_pattern = r"^\d{3, 5}"
         if not re.match(postal_pattern, address):
             issues.append("No postal code at beginning of address")
 
@@ -242,16 +237,16 @@ class DataValidator:
                             self.validation_stats["warnings_by_type"][
                                 "high_inventory"
                             ] += 1
-                    except:
+                    except Exception:
                         errors.append(f"Invalid number for {col}: {row[col]}")
                         self.validation_stats["errors_by_type"]["invalid_number"] += 1
 
             # Check delivery time preferences
             if row.get("needs_same_day_delivery") and not any(
-                row.get(f"hour_{h}_{h+1}") for h in range(8, 20)
+                row.get(f"hour_{h}_{h + 1}") for h in range(8, 20)
             ):
                 warnings.append(
-                    "Same-day delivery requested but no time slots selected"
+                    "Same - day delivery requested but no time slots selected"
                 )
                 self.validation_stats["warnings_by_type"]["missing_time_slots"] += 1
 
@@ -278,7 +273,7 @@ class DataValidator:
 
     def validate_order_data(self, order_df: pd.DataFrame) -> pd.DataFrame:
         """
-        Validate order/delivery data.
+        Validate order / delivery data.
 
         Returns:
             DataFrame with validation results
@@ -318,7 +313,7 @@ class DataValidator:
                     elif days_diff < -365:  # More than 1 year in future
                         warnings.append(f"Far future order: {sched_date}")
                         self.validation_stats["warnings_by_type"]["future_order"] += 1
-                except:
+                except Exception:
                     errors.append(f"Invalid date format: {row['scheduled_date']}")
                     self.validation_stats["errors_by_type"]["invalid_date"] += 1
 
@@ -363,7 +358,7 @@ class DataValidator:
                                 "negative_quantity"
                             ] += 1
                         total_delivered += value
-                    except:
+                    except Exception:
                         errors.append(f"Invalid number for {col}: {row[col]}")
                         self.validation_stats["errors_by_type"]["invalid_number"] += 1
 
@@ -378,7 +373,7 @@ class DataValidator:
                             self.validation_stats["warnings_by_type"][
                                 "return_exceed"
                             ] += 1
-                    except:
+                    except Exception:
                         pass
 
             # Check if any items delivered
@@ -553,9 +548,9 @@ class DataValidator:
 
         Args:
             output_path: Path to save report
-            include_details: Include detailed error/warning lists
+            include_details: Include detailed error / warning lists
         """
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(output_path, "w", encoding="utf - 8") as f:
             f.write(self.generate_validation_report())
 
             if include_details and (self.validation_errors or self.validation_warnings):
@@ -676,7 +671,7 @@ if __name__ == "__main__":
     # Run validation
     results = validate_migration_data(customers_df, orders_df, output_dir)
 
-    print(f"\nValidation Summary:")
+    print("\nValidation Summary:")
     print(
         f"  Valid Customers: {results['valid_customers']}/{results['total_customers']}"
     )

@@ -4,7 +4,7 @@ Unit tests for Google API Cache
 
 import json
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import redis.asyncio as redis
@@ -84,7 +84,7 @@ class TestGoogleAPICache:
         # Mock Redis get returning None
         mock_redis.get = AsyncMock(return_value=None)
 
-        # Get non-existent cache
+        # Get non - existent cache
         params = {"origin": "台北市", "destination": "新北市"}
         result = await api_cache.get("routes", params)
 
@@ -123,11 +123,11 @@ class TestGoogleAPICache:
 
     @pytest.mark.asyncio
     async def test_invalidate_nonexistent(self, api_cache, mock_redis):
-        """Test invalidating non-existent cache"""
+        """Test invalidating non - existent cache"""
         # Mock Redis delete returning 0 (not found)
         mock_redis.delete = AsyncMock(return_value=0)
 
-        # Invalidate non-existent
+        # Invalidate non - existent
         params = {"origin": "台北市", "destination": "新北市"}
         invalidated = await api_cache.invalidate("routes", params)
 

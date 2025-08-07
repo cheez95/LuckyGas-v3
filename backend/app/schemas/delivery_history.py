@@ -38,8 +38,6 @@ class DeliveryHistoryBase(BaseModel):
 class DeliveryHistoryCreate(DeliveryHistoryBase):
     """Schema for creating delivery history record"""
 
-    pass
-
 
 class DeliveryHistoryUpdate(BaseModel):
     """Schema for updating delivery history record"""

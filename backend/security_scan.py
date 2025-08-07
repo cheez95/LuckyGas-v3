@@ -85,7 +85,7 @@ class SecurityScanner:
             with open(file_path, 'r', encoding='utf-8') as f:
                 f.read(1)
             return True
-        except:
+        except Exception:
             return False
     
     def is_safe_pattern(self, match: str) -> bool:

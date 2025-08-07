@@ -1,12 +1,11 @@
 """
-Mock E-Invoice Service for Testing
-Simulates Taiwan E-Invoice API functionality
+Mock E - Invoice Service for Testing
+Simulates Taiwan E - Invoice API functionality
 """
 
 import logging
 import random
 import string
-import uuid
 from datetime import date, datetime
 from typing import Dict, List, Optional
 
@@ -17,7 +16,7 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Mock E-Invoice Service", version="1.0.0")
+app = FastAPI(title="Mock E - Invoice Service", version="1.0.0")
 
 # Store invoices for testing
 invoices: Dict[str, dict] = {}
@@ -28,7 +27,7 @@ class InvoiceItem(BaseModel):
     quantity: int
     unit_price: float
     amount: float
-    tax_type: str = "1"  # 1: Taxable, 2: Zero-rated, 3: Tax-exempt
+    tax_type: str = "1"  # 1: Taxable, 2: Zero - rated, 3: Tax - exempt
 
 
 class InvoiceRequest(BaseModel):
@@ -67,7 +66,7 @@ class InvoiceResponse(BaseModel):
 async def health_check():
     return {
         "status": "healthy",
-        "service": "mock-einvoice",
+        "service": "mock - einvoice",
         "timestamp": datetime.now().isoformat(),
     }
 
@@ -80,7 +79,7 @@ def generate_invoice_number() -> str:
 
 
 def generate_random_number() -> str:
-    """Generate 4-digit random number for invoice"""
+    """Generate 4 - digit random number for invoice"""
     return "".join(random.choices(string.digits, k=4))
 
 
@@ -104,12 +103,12 @@ def generate_bar_code(invoice_number: str, date: str) -> str:
     return f"{period}{invoice_number}{generate_random_number()}"
 
 
-@app.post("/api/einvoice/issue", response_model=InvoiceResponse)
+@app.post("/api / einvoice / issue", response_model=InvoiceResponse)
 async def issue_invoice(
     request: InvoiceRequest, authorization: Optional[str] = Header(None)
 ):
-    """Issue a new e-invoice"""
-    logger.info(f"E-Invoice issue request for buyer: {request.buyer_name}")
+    """Issue a new e - invoice"""
+    logger.info(f"E - Invoice issue request for buyer: {request.buyer_name}")
 
     # Validate items total matches
     calculated_total = sum(item.amount for item in request.items)
@@ -168,12 +167,12 @@ async def issue_invoice(
         "love_code": request.love_code,
     }
 
-    logger.info(f"E-Invoice issued successfully: {invoice_number}")
+    logger.info(f"E - Invoice issued successfully: {invoice_number}")
 
     return response
 
 
-@app.get("/api/einvoice/{invoice_number}")
+@app.get("/api / einvoice/{invoice_number}")
 async def get_invoice(invoice_number: str):
     """Get invoice details"""
     logger.info(f"Get invoice request: {invoice_number}")
@@ -184,7 +183,7 @@ async def get_invoice(invoice_number: str):
     return invoices[invoice_number]
 
 
-@app.post("/api/einvoice/{invoice_number}/void")
+@app.post("/api / einvoice/{invoice_number}/void")
 async def void_invoice(invoice_number: str, reason: str = "Customer request"):
     """Void an issued invoice"""
     logger.info(f"Void invoice request: {invoice_number}")
@@ -210,7 +209,7 @@ async def void_invoice(invoice_number: str, reason: str = "Customer request"):
     }
 
 
-@app.post("/api/einvoice/{invoice_number}/allowance")
+@app.post("/api / einvoice/{invoice_number}/allowance")
 async def create_allowance(
     invoice_number: str,
     allowance_amount: float,
@@ -246,7 +245,7 @@ async def create_allowance(
     return allowance
 
 
-@app.get("/api/einvoice/query")
+@app.get("/api / einvoice / query")
 async def query_invoices(
     start_date: date,
     end_date: date,
@@ -284,7 +283,7 @@ async def query_invoices(
     return {"total": len(results), "invoices": results}
 
 
-@app.post("/api/einvoice/batch")
+@app.post("/api / einvoice / batch")
 async def batch_issue_invoices(invoices_data: List[InvoiceRequest]):
     """Issue multiple invoices in batch"""
     logger.info(f"Batch invoice request for {len(invoices_data)} invoices")
@@ -318,7 +317,7 @@ async def batch_issue_invoices(invoices_data: List[InvoiceRequest]):
     }
 
 
-@app.get("/api/einvoice/winning")
+@app.get("/api / einvoice / winning")
 async def check_winning_numbers(period: str, invoice_number: str):  # Format: YYYYMM
     """Check if invoice won lottery"""
     logger.info(f"Check winning for invoice: {invoice_number} in period {period}")
@@ -350,7 +349,7 @@ async def check_winning_numbers(period: str, invoice_number: str):  # Format: YY
     return {"is_winner": False, "invoice_number": invoice_number, "period": period}
 
 
-@app.delete("/api/einvoice/clear")
+@app.delete("/api / einvoice / clear")
 async def clear_invoices():
     """Clear all invoices (for testing)"""
     invoices.clear()

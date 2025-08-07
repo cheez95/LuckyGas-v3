@@ -7,13 +7,12 @@ with proper deprecation and feature flags.
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from app.core.decorators import cache_response, rate_limit
 from app.core.logging import get_logger
 from app.core.versioning import (
     APIVersion,
-    get_requested_version,
     get_version_features,
     requires_version,
     version_deprecated,
@@ -26,7 +25,7 @@ def create_versioned_router(version: str) -> APIRouter:
     """
     Create a router for a specific API version.
 
-    This allows for version-specific implementations while
+    This allows for version - specific implementations while
     maintaining backward compatibility.
     """
     router = APIRouter()
@@ -54,7 +53,7 @@ def create_versioned_router(version: str) -> APIRouter:
         @version_deprecated(
             deprecated_in="v1.1",
             removed_in="v2.0",
-            alternative="/api/v1/customers/list",
+            alternative="/api / v1 / customers / list",
         )
         @rate_limit(100)
         async def get_customers_v1_0(
@@ -62,7 +61,7 @@ def create_versioned_router(version: str) -> APIRouter:
         ) -> Dict[str, Any]:
             """
             Legacy customer list endpoint.
-            Deprecated in favor of /customers/list with better filtering.
+            Deprecated in favor of /customers / list with better filtering.
             """
             logger.info(f"Legacy customers endpoint called (v{version_obj})")
 
@@ -70,13 +69,13 @@ def create_versioned_router(version: str) -> APIRouter:
                 "customers": [],  # Placeholder
                 "total": 0,
                 "version": "1.0",
-                "_deprecation_notice": "Use /api/v1/customers/list instead",
+                "_deprecation_notice": "Use /api / v1 / customers / list instead",
             }
 
     # Version 1.1+ endpoints
     if version_obj >= APIVersion("v1.1"):
 
-        @router.get("/customers/list")
+        @router.get("/customers / list")
         @rate_limit(200)
         @cache_response(expire_seconds=300)
         async def get_customers_list(
@@ -92,7 +91,7 @@ def create_versioned_router(version: str) -> APIRouter:
             """
             logger.info(f"Enhanced customers endpoint called (v{version_obj})")
 
-            # Version-specific logic
+            # Version - specific logic
             response = {
                 "customers": [],  # Placeholder
                 "total": 0,
@@ -103,7 +102,7 @@ def create_versioned_router(version: str) -> APIRouter:
             # Add extra fields for v1.2+
             if version_obj >= APIVersion("v1.2"):
                 response["metadata"] = {
-                    "last_updated": "2024-01-20T10:00:00Z",
+                    "last_updated": "2024 - 01 - 20T10:00:00Z",
                     "cache_status": "miss",
                 }
 
@@ -112,7 +111,7 @@ def create_versioned_router(version: str) -> APIRouter:
     # Version 1.2+ exclusive features
     if version_obj >= APIVersion("v1.2"):
 
-        @router.post("/customers/batch")
+        @router.post("/customers / batch")
         @requires_version("v1.2")
         @rate_limit(10)
         async def create_customers_batch(
@@ -136,7 +135,7 @@ def create_versioned_router(version: str) -> APIRouter:
                 "batch_id": "batch_123",
             }
 
-        @router.get("/predictions/advanced")
+        @router.get("/predictions / advanced")
         @requires_version("v1.2")
         @rate_limit(50)
         async def get_advanced_predictions(
@@ -163,14 +162,15 @@ def create_versioned_router(version: str) -> APIRouter:
 
         @router.websocket("/ws")
         async def websocket_endpoint(websocket):
-            """WebSocket endpoint for real-time updates."""
+            """WebSocket endpoint for real - time updates."""
             # This would be handled by Socket.IO in production
-            pass
 
     return router
 
 
 # Example usage in main app
+
+
 def setup_versioned_apis(app):
     """
     Set up versioned API routers in the main application.
@@ -179,18 +179,18 @@ def setup_versioned_apis(app):
     """
     # Register v1.0 (deprecated but still supported)
     v1_0_router = create_versioned_router("v1.0")
-    app.include_router(v1_0_router, prefix="/api/v1.0", tags=["v1.0 (deprecated)"])
+    app.include_router(v1_0_router, prefix="/api / v1.0", tags=["v1.0 (deprecated)"])
 
     # Register v1.1
     v1_1_router = create_versioned_router("v1.1")
-    app.include_router(v1_1_router, prefix="/api/v1.1", tags=["v1.1"])
+    app.include_router(v1_1_router, prefix="/api / v1.1", tags=["v1.1"])
 
     # Register v1.2 (current)
     v1_2_router = create_versioned_router("v1.2")
-    app.include_router(v1_2_router, prefix="/api/v1.2", tags=["v1.2 (current)"])
+    app.include_router(v1_2_router, prefix="/api / v1.2", tags=["v1.2 (current)"])
 
     # Default v1 points to latest v1.x
-    app.include_router(v1_2_router, prefix="/api/v1", tags=["v1 (latest)"])
+    app.include_router(v1_2_router, prefix="/api / v1", tags=["v1 (latest)"])
 
 
 # Version migration helpers

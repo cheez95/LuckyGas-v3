@@ -28,7 +28,7 @@ class DeliveryHistoryItem(Base):
     # Flow meter specific (for historical data import)
     flow_quantity = Column(Float)  # Actual kg delivered for flow deliveries
 
-    # Legacy product identification (for import/mapping)
+    # Legacy product identification (for import / mapping)
     legacy_product_code = Column(String(50))  # e.g., "qty_50kg", "flow_haoyun20kg"
 
     # Relationships

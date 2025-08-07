@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """Seed test data for driver functionality testing"""
 
 import asyncio
-import random
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -79,7 +78,7 @@ async def seed_driver_test_data():
             from app.models.gas_product import DeliveryMethod, ProductAttribute
 
             product = GasProduct(
-                sku="GAS-C20-R",
+                sku="GAS - C20 - R",
                 name_zh="20公斤家用桶裝瓦斯",
                 name_en="20kg Home Gas Cylinder",
                 description="家用桶裝瓦斯",
@@ -98,7 +97,7 @@ async def seed_driver_test_data():
 
         # Morning route
         morning_route = Route(
-            route_number=f"RT{today.strftime('%Y%m%d')}-001",
+            route_number=f"RT{today.strftime('%Y % m % d')}-001",
             route_name="早班路線 - 大安信義區",
             scheduled_date=today,
             date=datetime.combine(today, datetime.min.time()),
@@ -115,7 +114,7 @@ async def seed_driver_test_data():
 
         # Afternoon route
         afternoon_route = Route(
-            route_number=f"RT{today.strftime('%Y%m%d')}-002",
+            route_number=f"RT{today.strftime('%Y % m % d')}-002",
             route_name="午班路線 - 士林北投區",
             scheduled_date=today,
             date=datetime.combine(today, datetime.min.time()),
@@ -136,14 +135,14 @@ async def seed_driver_test_data():
         for i, customer in enumerate(customers[:5]):
             # Create order
             order = Order(
-                order_number=f"ORD{today.strftime('%Y%m%d')}-{i+1:03d}",
+                order_number=f"ORD{today.strftime('%Y % m % d')}-{i + 1:03d}",
                 customer_id=customer.id,
                 order_date=datetime.utcnow(),
                 delivery_date=datetime.combine(today, datetime.min.time()),
                 status=OrderStatus.CONFIRMED if i >= 2 else OrderStatus.DELIVERED,
                 total_amount=800,
                 delivery_address=customer.address,
-                notes=f"測試訂單 {i+1}",
+                notes=f"測試訂單 {i + 1}",
             )
             session.add(order)
             await session.flush()
@@ -180,14 +179,14 @@ async def seed_driver_test_data():
         for i, customer in enumerate(customers[5:]):
             # Create order
             order = Order(
-                order_number=f"ORD{today.strftime('%Y%m%d')}-{i+6:03d}",
+                order_number=f"ORD{today.strftime('%Y % m % d')}-{i + 6:03d}",
                 customer_id=customer.id,
                 order_date=datetime.utcnow(),
                 delivery_date=datetime.combine(today, datetime.min.time()),
                 status=OrderStatus.CONFIRMED,
                 total_amount=800,
                 delivery_address=customer.address,
-                notes=f"測試訂單 {i+6}",
+                notes=f"測試訂單 {i + 6}",
             )
             session.add(order)
             await session.flush()
@@ -215,9 +214,9 @@ async def seed_driver_test_data():
 
         await session.commit()
 
-        print(f"Created test data:")
+        print("Created test data:")
         print(f"- 2 routes for driver {driver.full_name}")
-        print(f"- 5 deliveries for morning route (2 completed, 3 pending)")
+        print("- 5 deliveries for morning route (2 completed, 3 pending)")
         print(f"- {len(customers[5:])} deliveries for afternoon route (all pending)")
 
     await engine.dispose()

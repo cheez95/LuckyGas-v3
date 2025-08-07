@@ -1,10 +1,10 @@
 """
-Route delivery model - links routes to deliveries/orders
+Route delivery model - links routes to deliveries / orders
 """
 
 from enum import Enum
 
-from sqlalchemy import Boolean, Column, Date, DateTime
+from sqlalchemy import Column, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
@@ -21,7 +21,7 @@ class DeliveryStatus(str, Enum):
 
 
 class RouteDelivery(Base):
-    """Link between routes and orders/deliveries"""
+    """Link between routes and orders / deliveries"""
 
     __tablename__ = "route_deliveries"
 

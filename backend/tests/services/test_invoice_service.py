@@ -9,10 +9,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from app.models.customer import Customer, CustomerType
-from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
+from app.models.invoice import Invoice, InvoiceStatus, InvoiceType
 from app.models.order import Order, OrderStatus
-from app.schemas.invoice import InvoiceCreate
 from app.services.invoice_service import InvoiceService
+
+# Import invoice test marker
+from tests.conftest_payment import requires_invoice
 
 
 @pytest.fixture
@@ -66,11 +68,12 @@ def sample_order(sample_customer):
         unit_price_16kg=Decimal("480"),
         unit_price_10kg=Decimal("300"),
         unit_price_4kg=Decimal("120"),
-        total_amount=Decimal("6300"),  # (2*1500) + (3*600) + (5*300)
+        total_amount=Decimal("6300"),  # (2 * 1500) + (3 * 600) + (5 * 300)
         is_taxable=True,
     )
 
 
+@requires_invoice
 class TestInvoiceService:
     """Test cases for invoice service"""
 
@@ -154,7 +157,7 @@ class TestInvoiceService:
         items = await invoice_service._calculate_invoice_items(sample_order)
 
         # Assert
-        assert len(items) == 3  # Only non-zero quantities
+        assert len(items) == 3  # Only non - zero quantities
 
         # Check 50kg item
         item_50kg = next(item for item in items if item.description == "瓦斯 50公斤")

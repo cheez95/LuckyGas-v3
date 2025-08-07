@@ -26,15 +26,13 @@ class InvoiceItemBase(BaseModel):
     unit: str = Field("個", max_length=20, description="單位")
     unit_price: float = Field(..., ge=0, description="單價")
     amount: float = Field(..., ge=0, description="小計")
-    tax_type: str = Field("1", pattern="^[1-3]$", description="課稅別")
+    tax_type: str = Field("1", pattern="^[1 - 3]$", description="課稅別")
     tax_amount: float = Field(0, ge=0, description="稅額")
     remark: Optional[str] = Field(None, max_length=200)
 
 
 class InvoiceItemCreate(InvoiceItemBase):
     """Schema for creating invoice items"""
-
-    pass
 
 
 class InvoiceItemResponse(InvoiceItemBase):
@@ -55,13 +53,13 @@ class InvoiceBase(BaseModel):
     invoice_date: date
 
     # Buyer information
-    buyer_tax_id: Optional[str] = Field(None, max_length=8, pattern="^[0-9]{8}$")
+    buyer_tax_id: Optional[str] = Field(None, max_length=8, pattern="^[0 - 9]{8}$")
     buyer_name: str = Field(..., min_length=1, max_length=200)
     buyer_address: Optional[str] = Field(None, max_length=500)
 
     # Amounts
     sales_amount: float = Field(..., ge=0, description="銷售額")
-    tax_type: str = Field("1", pattern="^[1-3]$")
+    tax_type: str = Field("1", pattern="^[1 - 3]$")
     tax_rate: float = Field(0.05, ge=0, le=1)
     tax_amount: float = Field(..., ge=0)
     total_amount: float = Field(..., ge=0)
@@ -154,7 +152,7 @@ class InvoiceResponse(InvoiceBase):
     status: InvoiceStatus
     payment_status: InvoicePaymentStatus
 
-    # E-invoice fields
+    # E - invoice fields
     einvoice_id: Optional[str]
     qr_code_left: Optional[str]
     qr_code_right: Optional[str]
@@ -166,7 +164,7 @@ class InvoiceResponse(InvoiceBase):
     paid_amount: float
     paid_date: Optional[date]
 
-    # Void/Allowance
+    # Void / Allowance
     void_reason: Optional[str]
     void_date: Optional[date]
     allowance_number: Optional[str]

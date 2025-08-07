@@ -5,19 +5,13 @@ Provides realistic mock predictions for development and testing.
 """
 
 import asyncio
-import json
 import logging
 import random
 from datetime import date, datetime, timedelta
-from math import cos, pi, sin
-from typing import Any, Dict, List, Optional, Tuple
+from math import pi, sin
+from typing import Any, Dict, List, Optional
 
-import numpy as np
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.models.customer import Customer
-from app.models.delivery import DeliveryPrediction
 from app.models.order import Order
 
 logger = logging.getLogger(__name__)
@@ -31,10 +25,10 @@ class MockVertexAIDemandPredictionService:
 
     def __init__(self):
         # Don't call parent __init__ to avoid API initialization
-        self.model_name = "mock-vertex-ai-model"
+        self.model_name = "mock - vertex - ai - model"
         self.mock_delays = {"min": 0.05, "max": 0.3}  # 50ms minimum  # 300ms maximum
 
-        # Taiwan-specific patterns
+        # Taiwan - specific patterns
         self.seasonal_factors = {
             1: 1.2,  # January - New Year, cold weather
             2: 1.1,  # February - Chinese New Year
@@ -60,7 +54,7 @@ class MockVertexAIDemandPredictionService:
             6: 0.9,  # Sunday - Lower demand
         }
 
-        # Area-specific demand patterns
+        # Area - specific demand patterns
         self.area_base_demand = {
             "信義區": {"base": 150, "volatility": 0.15},
             "大安區": {"base": 120, "volatility": 0.12},
@@ -82,14 +76,14 @@ class MockVertexAIDemandPredictionService:
             "20kg": 0.30,  # Large households
             "16kg": 0.20,  # Medium households
             "10kg": 0.10,  # Small households
-            "4kg": 0.05,  # Portable/camping
+            "4kg": 0.05,  # Portable / camping
         }
 
     async def initialize_endpoint(self):
         """Mock endpoint initialization"""
         logger.info("Mock Vertex AI endpoint initialized")
-        self.endpoint = "mock-endpoint"
-        self.model = "mock-model"
+        self.endpoint = "mock - endpoint"
+        self.model = "mock - model"
 
     async def predict_daily_demand(
         self, customer_data: List[Dict[str, Any]], prediction_date: datetime
@@ -121,7 +115,7 @@ class MockVertexAIDemandPredictionService:
 
         for customer in customer_data:
             # Use customer ID as seed for consistent results
-            customer_id = customer.get("id", f"CUST{random.randint(1,9999):04d}")
+            customer_id = customer.get("id", f"CUST{random.randint(1, 9999):04d}")
 
             # Calculate demand based on customer's average consumption
             avg_consumption = customer.get("avg_consumption", 20)
@@ -197,7 +191,7 @@ class MockVertexAIDemandPredictionService:
                 product_demands[product] = qty
                 remaining -= qty
 
-        # Add time-based patterns
+        # Add time - based patterns
         peak_hours = [10, 11, 14, 15, 16, 17]  # Business hours
         hourly_distribution = self._generate_hourly_distribution(peak_hours)
 
@@ -335,7 +329,7 @@ class MockVertexAIDemandPredictionService:
             "risk_factors": risk_factors,
             "recommendations": recommendations,
             "confidence_score": round(0.7 + random.uniform(0, 0.2), 3),
-            "model_version": "mock-churn-v1.0",
+            "model_version": "mock - churn - v1.0",
             "prediction_date": datetime.now().isoformat(),
             "warnings": ["Using mock prediction service (development mode)"],
         }
@@ -391,7 +385,7 @@ class MockVertexAIDemandPredictionService:
             total_distance_saved += original_distance - route["estimated_distance_km"]
 
         return {
-            "optimization_id": f"mock-opt-{datetime.now().timestamp()}",
+            "optimization_id": f"mock - opt-{datetime.now().timestamp()}",
             "optimized_routes": optimized_routes,
             "total_routes": len(optimized_routes),
             "total_orders": len(orders),
@@ -490,7 +484,7 @@ class MockVertexAIDemandPredictionService:
                 "minimum_demand": min(d["demand"] for d in trend_data),
                 "standard_deviation": 150,  # Mock value
             },
-            "model_version": "mock-analysis-v1.0",
+            "model_version": "mock - analysis - v1.0",
             "warnings": ["Using mock analysis service (development mode)"],
         }
 
@@ -528,9 +522,9 @@ class MockVertexAIDemandPredictionService:
         urgent_count = int(predictions_count * 0.15)  # 15% urgent
 
         return {
-            "batch_id": f"mock-batch-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+            "batch_id": f"mock - batch-{datetime.now().strftime('%Y % m % d-%H % M % S')}",
             "predictions_count": predictions_count,
-            "model_version": "mock-model-v1.0",
+            "model_version": "mock - model - v1.0",
             "execution_time_seconds": round(delay + random.uniform(5, 15), 2),
             "timestamp": datetime.utcnow().isoformat(),
             "summary": {
@@ -579,7 +573,7 @@ class MockVertexAIDemandPredictionService:
                 "season_adjustment": "normal",
                 "inventory_status": "adequate",
             },
-            "model_version": "mock-model-v1.0",
+            "model_version": "mock - model - v1.0",
             "warnings": ["Using mock prediction service (development mode)"],
         }
 
@@ -588,7 +582,7 @@ class MockVertexAIDemandPredictionService:
         Get prediction model performance metrics (mock)
         """
         return {
-            "model_id": "mock-model-v1.0",
+            "model_id": "mock - model - v1.0",
             "accuracy_metrics": {
                 "mae": 2.5,  # Mean Absolute Error in days
                 "rmse": 3.2,  # Root Mean Square Error
@@ -623,9 +617,9 @@ class MockVertexAIDemandPredictionService:
         logger.info("Mock model training completed")
 
         return {
-            "model_id": f"mock-model-{datetime.now().strftime('%Y%m%d')}",
-            "endpoint_id": f"mock-endpoint-{datetime.now().strftime('%Y%m%d')}",
-            "model_name": f"demand_predictor_v{datetime.now().strftime('%Y%m%d')}",
+            "model_id": f"mock - model-{datetime.now().strftime('%Y % m % d')}",
+            "endpoint_id": f"mock - endpoint-{datetime.now().strftime('%Y % m % d')}",
+            "model_name": f"demand_predictor_v{datetime.now().strftime('%Y % m % d')}",
             "status": "trained_and_deployed",
             "created_at": datetime.utcnow().isoformat(),
             "training_hours": round(delay / 3600, 2),

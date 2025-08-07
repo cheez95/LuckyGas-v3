@@ -2,15 +2,13 @@
 Load test scenarios for Lucky Gas API using Locust.
 
 Run with:
-    locust -f tests/load/locustfile.py --host http://localhost:8000
+    locust -f tests / load / locustfile.py --host http://localhost:8000
 """
 
-import json
 import random
 from datetime import datetime, timedelta
 
-from locust import HttpUser, SequentialTaskSet, TaskSet, between, task
-from locust.exception import RescueTaskSet
+from locust import HttpUser, TaskSet, between, task
 
 
 class AuthenticatedUser:
@@ -19,7 +17,8 @@ class AuthenticatedUser:
     def on_start(self):
         """Login and get access token."""
         response = self.client.post(
-            "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+            "/api / v1 / auth / login",
+            json={"username": "admin", "password": "admin123"},
         )
 
         if response.status_code == 200:
@@ -32,7 +31,7 @@ class AuthenticatedUser:
     def on_stop(self):
         """Logout when stopping."""
         if hasattr(self, "headers") and self.headers:
-            self.client.post("/api/v1/auth/logout", headers=self.headers)
+            self.client.post("/api / v1 / auth / logout", headers=self.headers)
 
 
 class CustomerManagementTasks(TaskSet, AuthenticatedUser):
@@ -50,7 +49,7 @@ class CustomerManagementTasks(TaskSet, AuthenticatedUser):
         limit = random.choice([10, 20, 50])
 
         with self.client.get(
-            f"/api/v1/customers?skip={skip}&limit={limit}",
+            f"/api / v1 / customers?skip={skip}&limit={limit}",
             headers=self.headers,
             catch_response=True,
         ) as response:
@@ -73,9 +72,9 @@ class CustomerManagementTasks(TaskSet, AuthenticatedUser):
 
         customer_id = random.choice(self.customer_ids)
         self.client.get(
-            f"/api/v1/customers/{customer_id}",
+            f"/api / v1 / customers/{customer_id}",
             headers=self.headers,
-            name="/api/v1/customers/[id]",
+            name="/api / v1 / customers/[id]",
         )
 
     @task(1)
@@ -84,7 +83,9 @@ class CustomerManagementTasks(TaskSet, AuthenticatedUser):
         queries = ["張", "李", "王", "測試", "A-", "B-"]
         query = random.choice(queries)
 
-        self.client.get(f"/api/v1/customers/search?q={query}", headers=self.headers)
+        self.client.get(
+            f"/api / v1 / customers / search?q={query}", headers=self.headers
+        )
 
     @task(1)
     def create_customer(self):
@@ -99,7 +100,7 @@ class CustomerManagementTasks(TaskSet, AuthenticatedUser):
             "mobile": f"09{random.randint(10000000, 99999999)}",
             "address": f"台北市測試區負載路{random.randint(1, 999)}號",
             "delivery_address": f"台北市測試區配送路{random.randint(1, 999)}號",
-            "area": random.choice(["A-瑞光", "B-內湖", "C-南港", "D-信義"]),
+            "area": random.choice(["A - 瑞光", "B - 內湖", "C - 南港", "D - 信義"]),
             "delivery_time_start": "09:00",
             "delivery_time_end": "18:00",
             "contact_person": f"測試員{random.randint(1, 99)}",
@@ -112,7 +113,7 @@ class CustomerManagementTasks(TaskSet, AuthenticatedUser):
         }
 
         response = self.client.post(
-            "/api/v1/customers", json=customer_data, headers=self.headers
+            "/api / v1 / customers", json=customer_data, headers=self.headers
         )
 
         if response.status_code == 201:
@@ -127,7 +128,9 @@ class OrderManagementTasks(TaskSet, AuthenticatedUser):
         """Initialize with auth and get some customers."""
         super().on_start()
         # Get customer list
-        response = self.client.get("/api/v1/customers?limit=50", headers=self.headers)
+        response = self.client.get(
+            "/api / v1 / customers?limit=50", headers=self.headers
+        )
         if response.status_code == 200:
             self.customers = response.json()["items"]
         else:
@@ -151,7 +154,7 @@ class OrderManagementTasks(TaskSet, AuthenticatedUser):
             params["customer_id"] = random.choice(self.customers)["id"]
 
         response = self.client.get(
-            "/api/v1/orders", params=params, headers=self.headers
+            "/api / v1 / orders", params=params, headers=self.headers
         )
 
     @task(2)
@@ -189,12 +192,14 @@ class OrderManagementTasks(TaskSet, AuthenticatedUser):
             "delivery_notes": "負載測試訂單" if random.random() > 0.7 else None,
         }
 
-        self.client.post("/api/v1/orders", json=order_data, headers=self.headers)
+        self.client.post("/api / v1 / orders", json=order_data, headers=self.headers)
 
     @task(1)
     def get_order_statistics(self):
         """Get order statistics."""
-        self.client.get("/api/v1/orders/statistics/summary", headers=self.headers)
+        self.client.get(
+            "/api / v1 / orders / statistics / summary", headers=self.headers
+        )
 
 
 class RouteOptimizationTasks(TaskSet, AuthenticatedUser):
@@ -204,7 +209,7 @@ class RouteOptimizationTasks(TaskSet, AuthenticatedUser):
     def list_routes(self):
         """List routes for today."""
         self.client.get(
-            f"/api/v1/routes?date={datetime.now().date().isoformat()}",
+            f"/api / v1 / routes?date={datetime.now().date().isoformat()}",
             headers=self.headers,
         )
 
@@ -212,7 +217,7 @@ class RouteOptimizationTasks(TaskSet, AuthenticatedUser):
     def optimize_routes(self):
         """Request route optimization."""
         self.client.post(
-            "/api/v1/routes/optimize",
+            "/api / v1 / routes / optimize",
             json={"date": datetime.now().date().isoformat(), "algorithm": "balanced"},
             headers=self.headers,
         )
@@ -222,9 +227,9 @@ class RouteOptimizationTasks(TaskSet, AuthenticatedUser):
         """Get routes for a specific driver."""
         driver_id = random.randint(1, 10)
         self.client.get(
-            f"/api/v1/routes/driver/{driver_id}",
+            f"/api / v1 / routes / driver/{driver_id}",
             headers=self.headers,
-            name="/api/v1/routes/driver/[id]",
+            name="/api / v1 / routes / driver/[id]",
         )
 
 
@@ -235,8 +240,8 @@ class WebSocketTasks(TaskSet):
     def connect_websocket(self):
         """Simulate WebSocket connection (placeholder)."""
         # Note: Locust doesn't natively support WebSocket
-        # This is a placeholder for HTTP-based real-time endpoints
-        self.client.get("/api/v1/notifications/stream", stream=True)
+        # This is a placeholder for HTTP - based real - time endpoints
+        self.client.get("/api / v1 / notifications / stream", stream=True)
 
 
 class MixedWorkloadUser(HttpUser):
@@ -263,7 +268,8 @@ class MobileDriverUser(HttpUser):
     def on_start(self):
         """Login as driver."""
         response = self.client.post(
-            "/api/v1/auth/login", json={"username": "driver1", "password": "driver123"}
+            "/api / v1 / auth / login",
+            json={"username": "driver1", "password": "driver123"},
         )
 
         if response.status_code == 200:
@@ -275,7 +281,7 @@ class MobileDriverUser(HttpUser):
     @task(3)
     def get_my_routes(self):
         """Get driver's assigned routes."""
-        self.client.get("/api/v1/driver/routes/today", headers=self.headers)
+        self.client.get("/api / v1 / driver / routes / today", headers=self.headers)
 
     @task(2)
     def update_delivery_status(self):
@@ -289,10 +295,10 @@ class MobileDriverUser(HttpUser):
         }
 
         self.client.put(
-            f"/api/v1/orders/{order_id}/status",
+            f"/api / v1 / orders/{order_id}/status",
             json=status_update,
             headers=self.headers,
-            name="/api/v1/orders/[id]/status",
+            name="/api / v1 / orders/[id]/status",
         )
 
     @task(1)
@@ -301,15 +307,15 @@ class MobileDriverUser(HttpUser):
         order_id = random.randint(1, 1000)
         # Simulate signature upload (would be base64 in real scenario)
         signature_data = {
-            "signature": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+            "signature": "data:image / png;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
             "recipient_name": f"收件人{random.randint(1, 99)}",
         }
 
         self.client.post(
-            f"/api/v1/orders/{order_id}/signature",
+            f"/api / v1 / orders/{order_id}/signature",
             json=signature_data,
             headers=self.headers,
-            name="/api/v1/orders/[id]/signature",
+            name="/api / v1 / orders/[id]/signature",
         )
 
 
@@ -321,7 +327,8 @@ class AdminDashboardUser(HttpUser):
     def on_start(self):
         """Login as admin."""
         response = self.client.post(
-            "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+            "/api / v1 / auth / login",
+            json={"username": "admin", "password": "admin123"},
         )
 
         if response.status_code == 200:
@@ -334,9 +341,11 @@ class AdminDashboardUser(HttpUser):
     def view_dashboard_stats(self):
         """View dashboard statistics."""
         # Multiple parallel requests like a real dashboard
-        self.client.get("/api/v1/orders/statistics/summary", headers=self.headers)
-        self.client.get("/api/v1/customers/statistics", headers=self.headers)
-        self.client.get("/api/v1/routes/statistics", headers=self.headers)
+        self.client.get(
+            "/api / v1 / orders / statistics / summary", headers=self.headers
+        )
+        self.client.get("/api / v1 / customers / statistics", headers=self.headers)
+        self.client.get("/api / v1 / routes / statistics", headers=self.headers)
 
     @task(1)
     def generate_report(self):
@@ -346,10 +355,10 @@ class AdminDashboardUser(HttpUser):
         end_date = datetime.now().date().isoformat()
 
         self.client.get(
-            f"/api/v1/reports/{report_type}",
+            f"/api / v1 / reports/{report_type}",
             params={"start_date": start_date, "end_date": end_date},
             headers=self.headers,
-            name=f"/api/v1/reports/[type]",
+            name="/api / v1 / reports/[type]",
         )
 
     @task(1)
@@ -359,8 +368,8 @@ class AdminDashboardUser(HttpUser):
         format_type = random.choice(["csv", "excel"])
 
         self.client.get(
-            f"/api/v1/export/{export_type}",
+            f"/api / v1 / export/{export_type}",
             params={"format": format_type},
             headers=self.headers,
-            name=f"/api/v1/export/[type]",
+            name="/api / v1 / export/[type]",
         )

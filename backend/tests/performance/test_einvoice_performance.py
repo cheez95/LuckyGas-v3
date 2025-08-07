@@ -1,5 +1,5 @@
 """
-Performance tests for Taiwan E-Invoice API integration
+Performance tests for Taiwan E - Invoice API integration
 
 Tests cover:
 - API response time requirements
@@ -23,9 +23,13 @@ import pytest
 from app.models.invoice import Invoice, InvoiceItem, InvoiceType
 from app.services.einvoice_service import EInvoiceService, get_einvoice_service
 
+# Import invoice test marker
+from tests.conftest_payment import requires_invoice
 
+
+@requires_invoice
 class TestEInvoicePerformance:
-    """Performance benchmarks for e-invoice service"""
+    """Performance benchmarks for e - invoice service"""
 
     @pytest.fixture
     def performance_invoice(self):
@@ -51,7 +55,7 @@ class TestEInvoicePerformance:
         for i in range(10):
             item = MagicMock(spec=InvoiceItem)
             item.sequence = i + 1
-            item.product_name = f"測試產品 {i+1}"
+            item.product_name = f"測試產品 {i + 1}"
             item.quantity = 10
             item.unit = "個"
             item.unit_price = 100
@@ -86,10 +90,10 @@ class TestEInvoicePerformance:
         max_time = max(times)
         min_time = min(times)
 
-        print(f"\nMock Mode Performance:")
-        print(f"  Average: {avg_time*1000:.2f}ms")
-        print(f"  Min: {min_time*1000:.2f}ms")
-        print(f"  Max: {max_time*1000:.2f}ms")
+        print("\nMock Mode Performance:")
+        print(f"  Average: {avg_time * 1000:.2f}ms")
+        print(f"  Min: {min_time * 1000:.2f}ms")
+        print(f"  Max: {max_time * 1000:.2f}ms")
 
         # Mock mode should be very fast
         assert avg_time < 0.01  # 10ms average
@@ -103,8 +107,8 @@ class TestEInvoicePerformance:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -115,9 +119,9 @@ class TestEInvoicePerformance:
             service = EInvoiceService(environment="production")
 
             with patch("httpx.AsyncClient") as mock_client:
-                # Simulate realistic API response time (100-300ms)
+                # Simulate realistic API response time (100 - 300ms)
                 async def mock_post(*args, **kwargs):
-                    await asyncio.sleep(0.1 + (i % 3) * 0.1)  # 100-300ms
+                    await asyncio.sleep(0.1 + (i % 3) * 0.1)  # 100 - 300ms
                     return MagicMock(
                         status_code=200,
                         json=lambda: {
@@ -147,8 +151,8 @@ class TestEInvoicePerformance:
                         assert result["status"] == "success"
 
                     avg_time = sum(times) / len(times)
-                    print(f"\nProduction Mode Performance (with network simulation):")
-                    print(f"  Average: {avg_time*1000:.2f}ms")
+                    print("\nProduction Mode Performance (with network simulation):")
+                    print(f"  Average: {avg_time * 1000:.2f}ms")
 
                     # Should be under 2 seconds including network
                     assert avg_time < 2.0
@@ -161,8 +165,8 @@ class TestEInvoicePerformance:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
@@ -210,10 +214,10 @@ class TestEInvoicePerformance:
                     # All should succeed
                     assert all(r["status"] == "success" for r in results)
 
-                    print(f"\nConcurrent Request Performance:")
-                    print(f"  Total requests: 50")
+                    print("\nConcurrent Request Performance:")
+                    print("  Total requests: 50")
                     print(f"  Total time: {total_time:.2f}s")
-                    print(f"  Throughput: {50/total_time:.2f} requests/second")
+                    print(f"  Throughput: {50 / total_time:.2f} requests / second")
 
                     # Should complete 50 requests in under 10 seconds
                     assert total_time < 10.0
@@ -226,8 +230,8 @@ class TestEInvoicePerformance:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 1,  # Reduce for faster testing
                 "retry_delay": 0.1,
@@ -258,12 +262,12 @@ class TestEInvoicePerformance:
                     for i in range(5):
                         try:
                             await service.submit_invoice(invoice)
-                        except:
+                        except Exception:
                             pass
 
                     circuit_open_time = time.time() - start_time
 
-                    # Now test fast-fail when circuit is open
+                    # Now test fast - fail when circuit is open
                     fast_fail_times = []
                     for i in range(10):
                         start = time.time()
@@ -275,11 +279,11 @@ class TestEInvoicePerformance:
 
                     avg_fail_time = sum(fast_fail_times) / len(fast_fail_times)
 
-                    print(f"\nCircuit Breaker Performance:")
+                    print("\nCircuit Breaker Performance:")
                     print(f"  Time to open: {circuit_open_time:.2f}s")
-                    print(f"  Fast-fail time: {avg_fail_time*1000:.2f}ms")
+                    print(f"  Fast - fail time: {avg_fail_time * 1000:.2f}ms")
 
-                    # Fast-fail should be very quick
+                    # Fast - fail should be very quick
                     assert avg_fail_time < 0.001  # 1ms
 
     @pytest.mark.asyncio
@@ -301,7 +305,7 @@ class TestEInvoicePerformance:
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_growth = final_memory - initial_memory
 
-        print(f"\nMemory Usage Pattern:")
+        print("\nMemory Usage Pattern:")
         print(f"  Initial: {initial_memory:.2f} MB")
         print(f"  Final: {final_memory:.2f} MB")
         print(f"  Growth: {memory_growth:.2f} MB")
@@ -343,12 +347,12 @@ class TestEInvoicePerformance:
                 "throughput": batch_size / total_time,
             }
 
-        print(f"\nBatch Processing Performance:")
+        print("\nBatch Processing Performance:")
         for size, metrics in results.items():
             print(f"  Batch size {size}:")
             print(f"    Total time: {metrics['total_time']:.3f}s")
             print(f"    Per invoice: {metrics['per_invoice']*1000:.2f}ms")
-            print(f"    Throughput: {metrics['throughput']:.2f} invoices/s")
+            print(f"    Throughput: {metrics['throughput']:.2f} invoices / s")
 
         # Larger batches should be more efficient
         assert results[100]["per_invoice"] < results[1]["per_invoice"]
@@ -361,8 +365,8 @@ class TestEInvoicePerformance:
             mock_config.return_value = {
                 "app_id": "PROD_APP_ID",
                 "api_key": "PROD_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 0.1,  # Fast for testing
@@ -406,8 +410,8 @@ class TestEInvoicePerformance:
                     assert result["status"] == "success"
                     assert call_count == 3
 
-                    print(f"\nRetry Performance Impact:")
-                    print(f"  Retries: 2")
+                    print("\nRetry Performance Impact:")
+                    print("  Retries: 2")
                     print(f"  Total time: {retry_time:.2f}s")
                     print(f"  Expected minimum: {0.1 + 0.2:.2f}s (exponential backoff)")
 

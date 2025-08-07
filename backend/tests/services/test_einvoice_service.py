@@ -1,5 +1,5 @@
 """
-Tests for Taiwan Government E-Invoice API Service
+Tests for Taiwan Government E - Invoice API Service
 
 Tests cover:
 - Invoice submission (B2B and B2C)
@@ -12,16 +12,14 @@ Tests cover:
 - Validation functions
 """
 
-import json
 import time
-from datetime import date, datetime
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from datetime import date
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
 
-from app.core.einvoice_config import EINVOICE_ERROR_CODES
-from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, InvoiceType
+from app.models.invoice import Invoice, InvoiceItem, InvoiceType
 from app.services.einvoice_service import (
     CircuitBreaker,
     CircuitState,
@@ -29,8 +27,13 @@ from app.services.einvoice_service import (
     get_einvoice_service,
 )
 
+# Import invoice test marker
+from tests.conftest_payment import requires_invoice
+
 
 # Test fixtures
+
+
 @pytest.fixture
 def mock_invoice():
     """Create a mock invoice for testing"""
@@ -68,7 +71,7 @@ def mock_invoice():
 
 @pytest.fixture
 def einvoice_service():
-    """Create E-Invoice service instance for testing"""
+    """Create E - Invoice service instance for testing"""
     with patch("app.core.config.settings") as mock_settings:
         mock_settings.ENVIRONMENT = "test"
         mock_settings.COMPANY_TAX_ID = "87654321"
@@ -79,6 +82,7 @@ def einvoice_service():
         return service
 
 
+@requires_invoice
 class TestCircuitBreaker:
     """Test circuit breaker functionality"""
 
@@ -120,7 +124,7 @@ class TestCircuitBreaker:
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_half_open_recovery(self):
-        """Test circuit breaker recovery to half-open state"""
+        """Test circuit breaker recovery to half - open state"""
         breaker = CircuitBreaker(failure_threshold=2, recovery_timeout=0.1)
 
         @breaker
@@ -139,23 +143,22 @@ class TestCircuitBreaker:
         # Wait for recovery timeout
         time.sleep(0.2)
 
-        # Should allow one attempt (half-open)
+        # Should allow one attempt (half - open)
         result = await test_function(should_fail=False)
         assert result == "success"
         assert breaker.state == CircuitState.CLOSED
         assert breaker.failure_count == 0
 
 
+@requires_invoice
 class TestEInvoiceService:
-    """Test E-Invoice service functionality"""
+    """Test E - Invoice service functionality"""
 
     def test_service_initialization(self, einvoice_service):
         """Test service initialization"""
         assert einvoice_service.app_id == "PLACEHOLDER_TEST_APP_ID"
         assert einvoice_service.api_key == "PLACEHOLDER_TEST_API_KEY"
-        assert (
-            einvoice_service.mock_mode == True
-        )  # Should be in mock mode with placeholder
+        assert einvoice_service.mock_mode  # Should be in mock mode with placeholder
         assert einvoice_service.timeout == 30
         assert einvoice_service.max_retries == 3
 
@@ -194,7 +197,7 @@ class TestEInvoiceService:
 
         assert data["MerchantID"] == einvoice_service.app_id
         assert data["InvoiceNo"] == "AB12345678"
-        assert data["InvoiceDate"] == "2025/01/20"
+        assert data["InvoiceDate"] == "2025 / 01 / 20"
         assert data["RandomNumber"] == "1234"
         assert data["SalesAmount"] == 1000
         assert data["TaxAmount"] == 50
@@ -314,12 +317,12 @@ class TestEInvoiceService:
         assert not einvoice_service.validate_tax_id("12345678")  # Invalid checksum
         assert not einvoice_service.validate_tax_id("1234567")  # Too short
         assert not einvoice_service.validate_tax_id("123456789")  # Too long
-        assert not einvoice_service.validate_tax_id("ABCD1234")  # Non-numeric
+        assert not einvoice_service.validate_tax_id("ABCD1234")  # Non - numeric
         assert not einvoice_service.validate_tax_id("")  # Empty
 
     @pytest.mark.asyncio
     async def test_retry_logic(self, einvoice_service):
-        """Test retry logic with exponential backoff"""
+        """Test retry logic with exponential backof"""
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = AsyncMock()
             mock_response.raise_for_status.side_effect = [
@@ -371,8 +374,9 @@ class TestEInvoiceService:
         assert service1 is service2
 
 
+@requires_invoice
 class TestEInvoiceServiceProduction:
-    """Test E-Invoice service production mode behavior"""
+    """Test E - Invoice service production mode behavior"""
 
     @pytest.fixture
     def production_service(self):
@@ -381,13 +385,13 @@ class TestEInvoiceServiceProduction:
             mock_config.return_value = {
                 "app_id": "REAL_APP_ID",
                 "api_key": "REAL_API_KEY",
-                "b2b_api_url": "https://www.einvoice.nat.gov.tw/BIZAPIVAN/biz",
-                "b2c_api_url": "https://www.einvoice.nat.gov.tw/INVAPIVAN/invapp",
+                "b2b_api_url": "https://www.einvoice.nat.gov.tw / BIZAPIVAN / biz",
+                "b2c_api_url": "https://www.einvoice.nat.gov.tw / INVAPIVAN / invapp",
                 "timeout": 30,
                 "max_retries": 3,
                 "retry_delay": 1,
-                "cert_path": "/path/to/cert.pem",
-                "key_path": "/path/to/key.pem",
+                "cert_path": "/path / to / cert.pem",
+                "key_path": "/path / to / key.pem",
             }
 
             service = EInvoiceService(environment="production")

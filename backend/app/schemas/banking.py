@@ -1,7 +1,6 @@
 """Pydantic schemas for banking operations."""
 
 from datetime import datetime
-from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -41,6 +40,8 @@ class TransactionStatus(str, Enum):
 
 
 # Bank Configuration Schemas
+
+
 class BankConfigBase(BaseModel):
     """Base schema for bank configuration."""
 
@@ -59,7 +60,9 @@ class BankConfigBase(BaseModel):
     file_format: str = Field(
         ..., pattern="^(fixed_width|csv)$", description="File format type"
     )
-    encoding: str = Field(default="UTF-8", description="File encoding (UTF-8 or Big5)")
+    encoding: str = Field(
+        default="UTF - 8", description="File encoding (UTF - 8 or Big5)"
+    )
     delimiter: Optional[str] = Field(None, max_length=5, description="CSV delimiter")
     payment_file_pattern: Optional[str] = Field(
         None, description="Payment file naming pattern"
@@ -84,7 +87,7 @@ class BankConfigCreate(BankConfigBase):
 
     sftp_password: str = Field(..., description="SFTP password (will be encrypted)")
     sftp_private_key: Optional[str] = Field(
-        None, description="SSH private key for key-based auth"
+        None, description="SSH private key for key - based auth"
     )
 
 
@@ -122,6 +125,8 @@ class BankConfigResponse(BankConfigBase):
 
 
 # Payment Batch Schemas
+
+
 class PaymentBatchCreate(BaseModel):
     """Schema for creating a payment batch."""
 
@@ -156,6 +161,8 @@ class PaymentBatchResponse(BaseModel):
 
 
 # Payment Transaction Schemas
+
+
 class PaymentTransactionResponse(BaseModel):
     """Schema for payment transaction response."""
 
@@ -180,6 +187,8 @@ class PaymentTransactionResponse(BaseModel):
 
 
 # Reconciliation Schemas
+
+
 class ReconciliationLogResponse(BaseModel):
     """Schema for reconciliation log response."""
 
@@ -202,6 +211,8 @@ class ReconciliationLogResponse(BaseModel):
 
 
 # File Operation Schemas
+
+
 class GeneratePaymentFileRequest(BaseModel):
     """Request to generate a payment file."""
 
@@ -248,6 +259,8 @@ class ProcessReconciliationRequest(BaseModel):
 
 
 # Report Schemas
+
+
 class PaymentStatusReport(BaseModel):
     """Detailed payment status report."""
 
@@ -278,6 +291,8 @@ class PaymentBatchListResponse(BaseModel):
 
 
 # Banking Monitor Schemas
+
+
 class BankingHealthCheck(BaseModel):
     """Banking system health check response."""
 

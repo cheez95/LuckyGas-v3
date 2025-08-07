@@ -11,7 +11,7 @@ test.describe('Visual Regression Tests', () => {
   // Login page screenshots
   test.describe('Login Page', () => {
     for (const viewport of viewports) {
-      test($1, async ({ page }) => {
+      test('should match visual snapshot', async ({ page }) => {
         await page.setViewportSize(viewport);
         await page.goto('http://localhost:5173');
         
@@ -38,7 +38,7 @@ test.describe('Visual Regression Tests', () => {
   // Dashboard screenshots
   test.describe('Dashboard', () => {
     for (const viewport of viewports) {
-      test($1, async ({ page }) => {
+      test('should match visual snapshot', async ({ page }) => {
         await page.setViewportSize(viewport);
         await loginAsTestUser(page);
         
@@ -70,7 +70,7 @@ test.describe('Visual Regression Tests', () => {
   // Customer Management screenshots
   test.describe('Customer Management', () => {
     for (const viewport of viewports) {
-      test($1, async ({ page }) => {
+      test('should match visual snapshot', async ({ page }) => {
         await page.setViewportSize(viewport);
         await loginAsTestUser(page);
         
@@ -98,7 +98,7 @@ test.describe('Visual Regression Tests', () => {
   // Order Management screenshots
   test.describe('Order Management', () => {
     for (const viewport of viewports) {
-      test($1, async ({ page }) => {
+      test('should match visual snapshot', async ({ page }) => {
         await page.setViewportSize(viewport);
         await loginAsTestUser(page);
         
@@ -125,7 +125,7 @@ test.describe('Visual Regression Tests', () => {
   // Route Planning screenshots
   test.describe('Route Planning', () => {
     for (const viewport of viewports) {
-      test($1, async ({ page }) => {
+      test('should match visual snapshot', async ({ page }) => {
         await page.setViewportSize(viewport);
         await loginAsTestUser(page);
         
@@ -152,7 +152,7 @@ test.describe('Visual Regression Tests', () => {
 
   // Component-specific screenshots
   test.describe('UI Components', () => {
-    test($1, async ({ page }) => {
+    test('should match visual snapshot', async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await loginAsTestUser(page);
       
@@ -161,7 +161,7 @@ test.describe('Visual Regression Tests', () => {
       await expect(nav).toHaveScreenshot('navigation-desktop.png');
     });
 
-    test($1, async ({ page }) => {
+  test('should match visual snapshot - 2', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await loginAsTestUser(page);
       
@@ -176,7 +176,7 @@ test.describe('Visual Regression Tests', () => {
       }
     });
 
-    test($1, async ({ page }) => {
+  test('should match visual snapshot - 3', async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto('http://localhost:5173');
       
@@ -185,7 +185,7 @@ test.describe('Visual Regression Tests', () => {
       await expect(loginForm).toHaveScreenshot('login-form.png');
     });
 
-    test($1, async ({ page }) => {
+  test('should match visual snapshot - 4', async ({ page }) => {
       await page.setViewportSize({ width: 1920, height: 1080 });
       await loginAsTestUser(page);
       
@@ -203,7 +203,7 @@ test.describe('Visual Regression Tests', () => {
 
   // Dark mode tests (if implemented)
   test.describe('Theme Variations', () => {
-    test($1, async ({ page }) => {
+    test('should match visual snapshot', async ({ page }) => {
       await loginAsTestUser(page);
       
       // Look for theme toggle

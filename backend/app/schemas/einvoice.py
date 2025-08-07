@@ -1,40 +1,42 @@
 """
-Taiwan E-Invoice Pydantic schemas for API validation
+Taiwan E - Invoice Pydantic schemas for API validation
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
 class InvoiceData(BaseModel):
-    """Schema for Taiwan e-invoice data validation"""
+    """Schema for Taiwan e - invoice data validation"""
 
     # Basic Information
     MerchantID: str = Field(..., description="Merchant ID")
     InvoiceNo: str = Field(
-        ..., regex=r"^[A-Z]{2}\d{8}$", description="Invoice number (e.g., AB12345678)"
+        ..., regex=r"^[A - Z]{2}\d{8}$", description="Invoice number (e.g., AB12345678)"
     )
     InvoiceDate: str = Field(
-        ..., regex=r"^\d{4}/\d{2}/\d{2}$", description="Invoice date (YYYY/MM/DD)"
+        ..., regex=r"^\d{4}/\d{2}/\d{2}$", description="Invoice date (YYYY / MM / DD)"
     )
     InvoiceTime: str = Field(
         ..., regex=r"^\d{2}:\d{2}:\d{2}$", description="Invoice time (HH:MM:SS)"
     )
-    RandomNumber: str = Field(..., regex=r"^\d{4}$", description="4-digit random code")
+    RandomNumber: str = Field(
+        ..., regex=r"^\d{4}$", description="4 - digit random code"
+    )
 
-    # Amounts (integers only for e-invoice API)
+    # Amounts (integers only for e - invoice API)
     SalesAmount: int = Field(..., ge=0, description="Sales amount before tax")
     TaxType: Literal["1", "2", "3", "4", "9"] = Field(..., description="Tax type code")
-    TaxRate: float = Field(..., ge=0, le=1, description="Tax rate (0-1)")
+    TaxRate: float = Field(..., ge=0, le=1, description="Tax rate (0 - 1)")
     TaxAmount: int = Field(..., ge=0, description="Tax amount")
     TotalAmount: int = Field(..., ge=0, description="Total amount including tax")
 
     # Invoice Type and Marks
     InvoiceType: str = Field(..., regex=r"^\d{2}$", description="Invoice type code")
-    PrintMark: Literal["Y", "N"] = Field(..., description="Print mark (Y/N)")
-    DonateMark: Literal["0", "1"] = Field(..., description="Donate mark (0/1)")
+    PrintMark: Literal["Y", "N"] = Field(..., description="Print mark (Y / N)")
+    DonateMark: Literal["0", "1"] = Field(..., description="Donate mark (0 / 1)")
 
     # Carrier Information
     CarrierType: str = Field("", description="Carrier type code")
@@ -109,7 +111,7 @@ class InvoiceData(BaseModel):
 
 
 class InvoiceResponse(BaseModel):
-    """Response from e-invoice API"""
+    """Response from e - invoice API"""
 
     RtnCode: str = Field(..., description="Return code (1=success)")
     RtnMsg: str = Field(..., description="Return message")
@@ -131,7 +133,9 @@ class InvoiceSubmitResponse(BaseModel):
     """Response after submitting invoice"""
 
     status: Literal["success", "error"] = Field(..., description="Submission status")
-    einvoice_id: Optional[str] = Field(None, description="E-invoice ID from government")
+    einvoice_id: Optional[str] = Field(
+        None, description="E - invoice ID from government"
+    )
     message: str = Field(..., description="Status message")
     qr_code_left: Optional[str] = Field(None, description="QR code left part")
     qr_code_right: Optional[str] = Field(None, description="QR code right part")
@@ -144,7 +148,7 @@ class InvoiceVoidRequest(BaseModel):
     """Request to void an invoice"""
 
     invoice_number: str = Field(
-        ..., regex=r"^[A-Z]{2}\d{8}$", description="Invoice number to void"
+        ..., regex=r"^[A - Z]{2}\d{8}$", description="Invoice number to void"
     )
     reason: str = Field(..., max_length=200, description="Void reason")
 
@@ -153,7 +157,7 @@ class InvoiceAllowanceRequest(BaseModel):
     """Request to issue allowance"""
 
     original_invoice_number: str = Field(
-        ..., regex=r"^[A-Z]{2}\d{8}$", description="Original invoice number"
+        ..., regex=r"^[A - Z]{2}\d{8}$", description="Original invoice number"
     )
     allowance_amount: float = Field(
         ..., gt=0, description="Allowance amount before tax"

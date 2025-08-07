@@ -26,8 +26,6 @@ class GasProductBase(BaseModel):
 class GasProductCreate(GasProductBase):
     """Schema for creating gas products"""
 
-    pass
-
 
 class GasProductUpdate(BaseModel):
     """Schema for updating gas products"""

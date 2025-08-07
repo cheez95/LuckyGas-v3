@@ -18,8 +18,8 @@ PACT_BROKER_USERNAME = os.environ.get("PACT_BROKER_USERNAME", "")
 PACT_BROKER_PASSWORD = os.environ.get("PACT_BROKER_PASSWORD", "")
 
 # Application details
-CONSUMER_NAME = "lucky-gas-frontend"
-PROVIDER_NAME = "lucky-gas-backend"
+CONSUMER_NAME = "lucky - gas - frontend"
+PROVIDER_NAME = "lucky - gas - backend"
 PACT_DIR = os.path.join(os.path.dirname(__file__), "pacts")
 PACT_FILE_WRITE_MODE = "overwrite"
 
@@ -63,7 +63,10 @@ def mock_provider_url() -> str:
 @pytest.fixture
 def auth_headers() -> dict:
     """Common authentication headers for API requests."""
-    return {"Authorization": "Bearer test-token", "Content-Type": "application/json"}
+    return {
+        "Authorization": "Bearer test - token",
+        "Content - Type": "application / json",
+    }
 
 
 def publish_pact_to_broker(pact_file: str, version: str = "1.0.0") -> None:
@@ -81,21 +84,21 @@ def publish_pact_to_broker(pact_file: str, version: str = "1.0.0") -> None:
     import subprocess
 
     cmd = [
-        "pact-broker",
+        "pact - broker",
         "publish",
         pact_file,
-        "--consumer-app-version",
+        "--consumer - app - version",
         version,
-        "--broker-base-url",
+        "--broker - base - url",
         PACT_BROKER_URL,
     ]
 
     if PACT_BROKER_USERNAME and PACT_BROKER_PASSWORD:
         cmd.extend(
             [
-                "--broker-username",
+                "--broker - username",
                 PACT_BROKER_USERNAME,
-                "--broker-password",
+                "--broker - password",
                 PACT_BROKER_PASSWORD,
             ]
         )
@@ -126,6 +129,8 @@ def verify_pact_version_compatibility(
 
 
 # Test data generators for consistent contract testing
+
+
 def generate_customer_data(customer_id: str = "CUST0001") -> dict:
     """Generate consistent customer data for contract tests."""
     return {
@@ -135,7 +140,7 @@ def generate_customer_data(customer_id: str = "CUST0001") -> dict:
         "address": "台北市信義區測試路123號",
         "area": "信義區",
         "is_active": True,
-        "created_at": "2024-01-20T00:00:00Z",
+        "created_at": "2024 - 01 - 20T00:00:00Z",
     }
 
 
@@ -144,7 +149,7 @@ def generate_order_data(order_id: int = 1) -> dict:
     return {
         "id": order_id,
         "customer_id": "CUST0001",
-        "order_date": "2024-01-20T00:00:00Z",
+        "order_date": "2024 - 01 - 20T00:00:00Z",
         "status": "pending",
         "payment_status": "unpaid",
         "is_urgent": False,
@@ -156,8 +161,8 @@ def generate_order_data(order_id: int = 1) -> dict:
 def generate_auth_token_response() -> dict:
     """Generate consistent auth token response for contract tests."""
     return {
-        "access_token": "test-access-token",
-        "refresh_token": "test-refresh-token",
+        "access_token": "test - access - token",
+        "refresh_token": "test - refresh - token",
         "token_type": "bearer",
         "expires_in": 3600,
     }
@@ -167,7 +172,7 @@ def generate_prediction_data() -> dict:
     """Generate consistent prediction data for contract tests."""
     return {
         "customer_id": "CUST0001",
-        "prediction_date": "2024-01-21",
+        "prediction_date": "2024 - 01 - 21",
         "predicted_demand": 2,
         "confidence": 0.85,
         "factors": {

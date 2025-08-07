@@ -4,7 +4,6 @@ Tests route planning, optimization, and driver assignment workflows
 """
 
 from datetime import date, timedelta
-from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -27,7 +26,7 @@ class TestDispatchIntegration:
         """Create test data for dispatch operations"""
         # Create vehicles
         vehicle1 = Vehicle(
-            license_plate="ABC-123",
+            license_plate="ABC - 123",
             vehicle_type="truck",
             capacity_50kg=20,
             capacity_20kg=50,
@@ -37,7 +36,7 @@ class TestDispatchIntegration:
             is_active=True,
         )
         vehicle2 = Vehicle(
-            license_plate="XYZ-789",
+            license_plate="XYZ - 789",
             vehicle_type="van",
             capacity_50kg=10,
             capacity_20kg=30,
@@ -86,10 +85,10 @@ class TestDispatchIntegration:
         for i, area in enumerate(areas):
             customer = Customer(
                 customer_code=f"AREA{i:03d}",
-                name=f"{area}客戶{i+1}",
+                name=f"{area}客戶{i + 1}",
                 customer_type=CustomerType.BUSINESS,
                 phone=f"0912345{i:03d}",
-                address=f"台北市{area}測試路{i+1}號",
+                address=f"台北市{area}測試路{i + 1}號",
                 area=area,
                 cylinder_qty_50kg=2,
                 cylinder_qty_20kg=5,
@@ -122,7 +121,7 @@ class TestDispatchIntegration:
 
         # Login as manager
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "manager@test.com", "password": "password"},
         )
         assert response.status_code == 200
@@ -144,13 +143,13 @@ class TestDispatchIntegration:
                 "delivery_notes": f"Order for {customer.area}",
             }
 
-            response = await client.post("/api/v1/orders", json=order_data)
+            response = await client.post("/api / v1 / orders", json=order_data)
             assert response.status_code == 200
             order_ids.append(response.json()["id"])
 
         # Get unassigned orders
         response = await client.get(
-            "/api/v1/dispatch/unassigned-orders",
+            "/api / v1 / dispatch / unassigned - orders",
             params={"date": (date.today() + timedelta(days=1)).isoformat()},
         )
         assert response.status_code == 200
@@ -170,7 +169,7 @@ class TestDispatchIntegration:
         }
 
         response = await client.post(
-            "/api/v1/dispatch/optimize-routes", json=route_request
+            "/api / v1 / dispatch / optimize - routes", json=route_request
         )
         assert response.status_code == 200
         optimized_routes = response.json()
@@ -187,16 +186,16 @@ class TestDispatchIntegration:
             assignment = {
                 "driver_id": data["drivers"][i].id,
                 "vehicle_id": data["vehicles"][i].id,
-                "notes": f"Route {i+1} optimized",
+                "notes": f"Route {i + 1} optimized",
             }
 
             response = await client.post(
-                f"/api/v1/routes/{route_data['route_id']}/assign", json=assignment
+                f"/api / v1 / routes/{route_data['route_id']}/assign", json=assignment
             )
             assert response.status_code == 200
 
         # Verify dispatch dashboard
-        response = await client.get("/api/v1/dispatch/dashboard")
+        response = await client.get("/api / v1 / dispatch / dashboard")
         assert response.status_code == 200
         dashboard = response.json()
         assert dashboard["total_routes"] == len(optimized_routes["routes"])
@@ -216,7 +215,7 @@ class TestDispatchIntegration:
 
         # Login as manager
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": "manager@test.com", "password": "password"},
         )
         token = response.json()["access_token"]
@@ -233,7 +232,7 @@ class TestDispatchIntegration:
                 "qty_20kg": 2,
                 "delivery_address": customer.address,
             }
-            response = await client.post("/api/v1/orders", json=order_data)
+            response = await client.post("/api / v1 / orders", json=order_data)
             regular_orders.append(response.json()["id"])
 
         # Create route for regular orders
@@ -244,7 +243,7 @@ class TestDispatchIntegration:
             "vehicle_id": data["vehicles"][0].id,
             "order_ids": regular_orders,
         }
-        response = await client.post("/api/v1/routes", json=route_data)
+        response = await client.post("/api / v1 / routes", json=route_data)
         regular_route = response.json()
 
         # Create emergency order
@@ -258,7 +257,7 @@ class TestDispatchIntegration:
             "delivery_notes": "緊急！瓦斯用完了",
             "is_urgent": True,
         }
-        response = await client.post("/api/v1/orders", json=emergency_order_data)
+        response = await client.post("/api / v1 / orders", json=emergency_order_data)
         emergency_order = response.json()
 
         # Dispatch emergency order
@@ -268,7 +267,9 @@ class TestDispatchIntegration:
             "max_delay_minutes": 30,
         }
 
-        response = await client.post("/api/v1/dispatch/emergency", json=dispatch_data)
+        response = await client.post(
+            "/api / v1 / dispatch / emergency", json=dispatch_data
+        )
         assert response.status_code == 200
         dispatch_result = response.json()
 
@@ -278,7 +279,7 @@ class TestDispatchIntegration:
         assert dispatch_result["estimated_arrival_time"] is not None
 
         # Check route was updated
-        response = await client.get(f"/api/v1/routes/{regular_route['id']}")
+        response = await client.get(f"/api / v1 / routes/{regular_route['id']}")
         updated_route = response.json()
         assert emergency_order["id"] in [o["id"] for o in updated_route["orders"]]
 
@@ -292,7 +293,7 @@ class TestDispatchIntegration:
         mock_websocket,
         db_session: AsyncSession,
     ):
-        """Test real-time route tracking and status updates"""
+        """Test real - time route tracking and status updates"""
         data = dispatch_test_data
         driver = data["drivers"][0]
 
@@ -329,14 +330,14 @@ class TestDispatchIntegration:
 
         # Login as driver
         response = await client.post(
-            "/api/v1/auth/login",
+            "/api / v1 / auth / login",
             data={"username": driver.email, "password": "password"},
         )
         token = response.json()["access_token"]
         client.headers["Authorization"] = f"Bearer {token}"
 
         # Start route
-        response = await client.post(f"/api/v1/driver/routes/{route.id}/start")
+        response = await client.post(f"/api / v1 / driver / routes/{route.id}/start")
         assert response.status_code == 200
 
         # Verify WebSocket notification was sent
@@ -350,7 +351,8 @@ class TestDispatchIntegration:
             "speed": 30,
         }
         response = await client.post(
-            f"/api/v1/driver/routes/{route.id}/update-location", json=location_update
+            f"/api / v1 / driver / routes/{route.id}/update - location",
+            json=location_update,
         )
         assert response.status_code == 200
 
@@ -362,7 +364,7 @@ class TestDispatchIntegration:
             "delivery_notes": "順利送達",
         }
         response = await client.post(
-            f"/api/v1/driver/deliveries/complete", json=delivery_data
+            "/api / v1 / driver / deliveries / complete", json=delivery_data
         )
         assert response.status_code == 200
 
@@ -371,7 +373,7 @@ class TestDispatchIntegration:
         assert orders[0].status == OrderStatus.DELIVERED
 
         # Get route progress
-        response = await client.get(f"/api/v1/driver/routes/{route.id}/progress")
+        response = await client.get(f"/api / v1 / driver / routes/{route.id}/progress")
         assert response.status_code == 200
         progress = response.json()
         assert progress["completed_orders"] == 1

@@ -74,7 +74,7 @@ class SecretsManager:
                     f"projects/{self.project_id}/secrets/{secret_id}/versions/{version}"
                 )
                 response = self._client.access_secret_version(request={"name": name})
-                secret_value = response.payload.data.decode("UTF-8")
+                secret_value = response.payload.data.decode("UTF - 8")
                 logger.debug(f"Retrieved secret from Secret Manager: {secret_id}")
                 return secret_value
             except gcp_exceptions.NotFound:
@@ -111,7 +111,7 @@ class SecretsManager:
 
         Args:
             secret_id: The ID for the new secret
-            secret_value: The secret value (string or dict to be JSON-encoded)
+            secret_value: The secret value (string or dict to be JSON - encoded)
 
         Returns:
             True if successful, False otherwise
@@ -133,9 +133,9 @@ class SecretsManager:
 
             # Add the secret version
             if isinstance(secret_value, dict):
-                secret_data = json.dumps(secret_value).encode("UTF-8")
+                secret_data = json.dumps(secret_value).encode("UTF - 8")
             else:
-                secret_data = str(secret_value).encode("UTF-8")
+                secret_data = str(secret_value).encode("UTF - 8")
 
             self._client.add_secret_version(
                 request={"parent": secret.name, "payload": {"data": secret_data}}
@@ -170,9 +170,9 @@ class SecretsManager:
             parent = f"projects/{self.project_id}/secrets/{secret_id}"
 
             if isinstance(secret_value, dict):
-                secret_data = json.dumps(secret_value).encode("UTF-8")
+                secret_data = json.dumps(secret_value).encode("UTF - 8")
             else:
-                secret_data = str(secret_value).encode("UTF-8")
+                secret_data = str(secret_value).encode("UTF - 8")
 
             self._client.add_secret_version(
                 request={"parent": parent, "payload": {"data": secret_data}}
@@ -261,6 +261,8 @@ def get_secrets_manager() -> SecretsManager:
 
 
 # Convenience functions
+
+
 def get_secret(secret_id: str, version: str = "latest") -> Optional[str]:
     """Get a secret value."""
     return get_secrets_manager().get_secret(secret_id, version)

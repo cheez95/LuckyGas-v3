@@ -35,7 +35,7 @@ class GoogleAPIError(Exception):
         self.timestamp = datetime.now()
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert error to dictionary for logging/reporting"""
+        """Convert error to dictionary for logging / reporting"""
         return {
             "message": str(self),
             "status_code": self.status_code,
@@ -112,7 +112,7 @@ class GoogleAPIErrorHandler:
         },
     }
 
-    # Non-retryable error types
+    # Non - retryable error types
     NON_RETRYABLE = {
         APIErrorType.INVALID_API_KEY,
         APIErrorType.INVALID_REQUEST,
@@ -130,7 +130,7 @@ class GoogleAPIErrorHandler:
     ) -> APIErrorType:
         """Classify the error type based on status code, response body, or exception"""
 
-        # Handle network/connection errors
+        # Handle network / connection errors
         if exception:
             if isinstance(exception, asyncio.TimeoutError):
                 return APIErrorType.TIMEOUT
@@ -189,7 +189,7 @@ class GoogleAPIErrorHandler:
     ) -> float:
         """Calculate retry delay based on error type and attempt number"""
 
-        # Use Retry-After header if provided
+        # Use Retry - After header if provided
         if retry_after and retry_after > 0:
             return float(retry_after)
 
@@ -236,7 +236,7 @@ class GoogleAPIErrorHandler:
             Result from the function
 
         Raises:
-            GoogleAPIError: If all retries are exhausted or error is non-retryable
+            GoogleAPIError: If all retries are exhausted or error is non - retryable
         """
         last_error = None
         total_attempts = 0
@@ -290,15 +290,15 @@ class GoogleAPIErrorHandler:
                 # Check if we should retry
                 if not cls.should_retry(error_type):
                     logger.error(
-                        f"Non-retryable API error {error_type.value}: {e} "
+                        f"Non - retryable API error {error_type.value}: {e} "
                         f"(api: {api_type}, endpoint: {endpoint})"
                     )
                     raise last_error
 
-                # Check retry-after header
+                # Check retry - after header
                 retry_after = None
                 if hasattr(e, "headers"):
-                    retry_after = e.headers.get("Retry-After")
+                    retry_after = e.headers.get("Retry - After")
                     if retry_after:
                         try:
                             retry_after = int(retry_after)
@@ -325,7 +325,7 @@ class GoogleAPIErrorHandler:
                 await asyncio.sleep(delay)
 
             except (asyncio.TimeoutError, aiohttp.ClientError, ConnectionError) as e:
-                # Handle network/timeout errors
+                # Handle network / timeout errors
                 error_type = cls.classify_error(exception=e)
 
                 last_error = GoogleAPIError(
@@ -339,7 +339,7 @@ class GoogleAPIErrorHandler:
                 # Check if we should retry
                 if not cls.should_retry(error_type):
                     logger.error(
-                        f"Non-retryable network error: {e} "
+                        f"Non - retryable network error: {e} "
                         f"(api: {api_type}, endpoint: {endpoint})"
                     )
                     raise last_error
@@ -351,7 +351,7 @@ class GoogleAPIErrorHandler:
                 strategy = cls.RETRY_STRATEGIES.get(error_type, {})
                 if attempt >= strategy.get("max_retries", 0):
                     logger.error(
-                        f"Max retries exceeded for network error "
+                        "Max retries exceeded for network error "
                         f"(api: {api_type}, endpoint: {endpoint}, attempts: {total_attempts})"
                     )
                     raise last_error

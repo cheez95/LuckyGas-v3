@@ -94,7 +94,7 @@ async def detailed_health_check(
         "services": {},
     }
 
-    # Check E-Invoice service
+    # Check E - Invoice service
     try:
         einvoice_service = get_einvoice_service()
         einvoice_health = await einvoice_service.health_check()
@@ -163,7 +163,7 @@ async def detailed_health_check(
     return health_status
 
 
-@router.get("/circuit-breakers", response_model=Dict[str, Any])
+@router.get("/circuit - breakers", response_model=Dict[str, Any])
 async def get_circuit_breakers(
     current_user: User = Depends(get_current_active_superuser),
 ):
@@ -177,7 +177,7 @@ async def get_api_metrics(current_user: User = Depends(get_current_active_superu
     return api_monitor.get_dashboard_data()
 
 
-@router.post("/circuit-breakers/{service_name}/reset")
+@router.post("/circuit - breakers/{service_name}/reset")
 async def reset_circuit_breaker(
     service_name: str, current_user: User = Depends(get_current_active_superuser)
 ):
@@ -209,7 +209,7 @@ async def test_service_integration(
     Test specific service integration.
 
     Service types:
-    - einvoice: Test E-Invoice API connection
+    - einvoice: Test E - Invoice API connection
     - banking_{bank}: Test banking SFTP connection
     - sms_{provider}: Test SMS provider connection
     """
@@ -263,7 +263,7 @@ async def test_service_integration(
             return {"service": service_type, "status": "error", "error": str(e)}
 
     elif service_type.startswith("sms_"):
-        provider_name = service_type.replace("sms_", "")
+        service_type.replace("sms_", "")
         try:
             # Send test SMS to monitoring number
             result = await enhanced_sms_service.send_sms(

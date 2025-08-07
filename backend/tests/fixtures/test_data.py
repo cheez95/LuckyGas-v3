@@ -20,8 +20,8 @@ class TestDataFixtures:
                 "invoice_title": "王小明瓦斯行有限公司",
                 "tax_id": "53212539",
                 "address": "台北市信義區信義路五段123號",
-                "phone1": "02-27584321",
-                "phone2": "0912-345-678",
+                "phone1": "02 - 27584321",
+                "phone2": "0912 - 345 - 678",
                 "contact_person": "王小明",
                 "delivery_address": "台北市信義區信義路五段123號1樓",
                 "area": "信義區",
@@ -38,7 +38,7 @@ class TestDataFixtures:
                 "invoice_title": "陳美惠",
                 "tax_id": "",
                 "address": "台北市大安區復興南路二段45巷8號3樓",
-                "phone1": "0933-456-789",
+                "phone1": "0933 - 456 - 789",
                 "contact_person": "陳美惠",
                 "delivery_address": "台北市大安區復興南路二段45巷8號3樓",
                 "area": "大安區",
@@ -55,8 +55,8 @@ class TestDataFixtures:
                 "invoice_title": "幸福餐飲股份有限公司",
                 "tax_id": "28457693",
                 "address": "台北市中山區民生東路三段88號",
-                "phone1": "02-25147896",
-                "phone2": "02-25147897",
+                "phone1": "02 - 25147896",
+                "phone2": "02 - 25147897",
                 "contact_person": "李經理",
                 "delivery_address": "台北市中山區民生東路三段88號B1",
                 "area": "中山區",
@@ -73,7 +73,7 @@ class TestDataFixtures:
                 "invoice_title": "林志成",
                 "tax_id": "",
                 "address": "新北市板橋區文化路一段268號15樓",
-                "phone1": "0922-789-456",
+                "phone1": "0922 - 789 - 456",
                 "contact_person": "林志成",
                 "delivery_address": "新北市板橋區文化路一段268號15樓",
                 "area": "板橋區",
@@ -90,8 +90,8 @@ class TestDataFixtures:
                 "invoice_title": "快樂製造有限公司",
                 "tax_id": "16842957",
                 "address": "桃園市龜山區文化二路188號",
-                "phone1": "03-3698741",
-                "phone2": "0911-222-333",
+                "phone1": "03 - 3698741",
+                "phone2": "0911 - 222 - 333",
                 "contact_person": "張廠長",
                 "delivery_address": "桃園市龜山區文化二路188號側門",
                 "area": "龜山區",
@@ -275,9 +275,9 @@ class TestDataFixtures:
                 "scenario": "encoding_issues",
                 "description": "Handle various character encodings",
                 "test_data": [
-                    {"name": "測試客戶", "encoding": "utf-8"},
+                    {"name": "測試客戶", "encoding": "utf - 8"},
                     {"name": "测试客户", "encoding": "gb2312"},
-                    {"name": "テスト顧客", "encoding": "shift-jis"},
+                    {"name": "テスト顧客", "encoding": "shift - jis"},
                 ],
                 "expected_behavior": "convert_to_utf8",
                 "validation_rules": ["all_characters_readable", "no_data_corruption"],
@@ -310,11 +310,11 @@ class TestDataFixtures:
                 for i in range(500)  # 500 concurrent orders
             ],
             "network_test_endpoints": [
-                "/api/v1/health",
-                "/api/v1/customers",
-                "/api/v1/orders",
-                "/api/v1/routes/optimize",
-                "/api/v1/predictions/daily",
+                "/api / v1 / health",
+                "/api / v1 / customers",
+                "/api / v1 / orders",
+                "/api / v1 / routes / optimize",
+                "/api / v1 / predictions / daily",
             ],
             "resource_limits": {
                 "max_memory_mb": 512,
@@ -326,6 +326,8 @@ class TestDataFixtures:
 
 
 # Export test data generator functions
+
+
 def generate_customers(count: int) -> List[Dict[str, Any]]:
     """Generate specified number of test customers"""
     base_customers = TestDataFixtures.get_sample_customers()

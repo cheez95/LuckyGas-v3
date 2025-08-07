@@ -19,6 +19,7 @@ import { orderService } from '../../services/order.service';
 import { customerService } from '../../services/customer.service';
 import { routeService } from '../../services/route.service';
 import { predictionService } from '../../services/prediction.service';
+import { features } from '../../config/features';
 
 const { Title } = Typography;
 
@@ -57,7 +58,6 @@ const Dashboard: React.FC = () => {
       
       // Fetch today's orders
       const orders = await orderService.getOrders({
-        status: 'all',
         date_from: today,
         date_to: today,
       });
@@ -67,16 +67,16 @@ const Dashboard: React.FC = () => {
       
       // Fetch today's routes
       const routes = await routeService.getRoutes({
-        date_from: dayjs().startOf('day').toISOString(),
-        date_to: dayjs().endOf('day').toISOString(),
+        date_from: dayjs().format('YYYY-MM-DD'),
+        date_to: dayjs().format('YYYY-MM-DD'),
       });
       setTodayRoutes(routes);
       
       // Calculate statistics
       const driversOnRoute = routes.filter(r => r.status === 'in_progress').length;
-      const todayRevenue = orders.reduce((sum, order) => {
+      const todayRevenue = features.anyPaymentFeature ? orders.reduce((sum, order) => {
         return sum + order.order_items.reduce((itemSum, item) => itemSum + item.total_price, 0);
-      }, 0);
+      }, 0) : 0;
       
       setStats({
         todayOrders: orders.length,
@@ -259,17 +259,19 @@ const Dashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card hoverable>
-            <Statistic
-              title={t('dashboard.todayRevenue')}
-              value={stats.todayRevenue}
-              prefix={<DollarOutlined />}
-              valueStyle={{ color: '#cf1322' }}
-              suffix={t('dashboard.yuan')}
-            />
-          </Card>
-        </Col>
+        {features.anyPaymentFeature && (
+          <Col xs={24} sm={12} lg={6}>
+            <Card hoverable>
+              <Statistic
+                title={t('dashboard.todayRevenue')}
+                value={stats.todayRevenue}
+                prefix={<DollarOutlined />}
+                valueStyle={{ color: '#cf1322' }}
+                suffix={t('dashboard.yuan')}
+              />
+            </Card>
+          </Col>
+        )}
       </Row>
       
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>

@@ -3,14 +3,13 @@ Integration tests for external API mocking
 """
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.models.invoice import Invoice, InvoiceStatus, InvoiceType
-from app.models.order import Order, OrderStatus
 from app.services.dispatch.google_routes_service import (
     GoogleRoutesService,
     Location,
@@ -135,11 +134,11 @@ class TestGoogleRoutesAPIMocking:
 
 
 class TestEInvoiceAPIMocking:
-    """Test Taiwan E-Invoice API integration with mocks"""
+    """Test Taiwan E - Invoice API integration with mocks"""
 
     @pytest.mark.asyncio
     async def test_einvoice_submission_mock(self, test_customer):
-        """Test e-invoice submission with mocked government API"""
+        """Test e - invoice submission with mocked government API"""
         # Create test invoice
         invoice = Invoice(
             id=1,
@@ -200,7 +199,7 @@ class TestEInvoiceAPIMocking:
 
     @pytest.mark.asyncio
     async def test_einvoice_void_mock(self):
-        """Test e-invoice voiding with mocked API"""
+        """Test e - invoice voiding with mocked API"""
         mock_response = {
             "RtnCode": 1,
             "RtnMsg": "作廢發票成功",
@@ -235,7 +234,7 @@ class TestEInvoiceAPIMocking:
 
     @pytest.mark.asyncio
     async def test_einvoice_query_mock(self):
-        """Test e-invoice query with mocked API"""
+        """Test e - invoice query with mocked API"""
         mock_response = {
             "RtnCode": 1,
             "RtnMsg": "查詢成功",

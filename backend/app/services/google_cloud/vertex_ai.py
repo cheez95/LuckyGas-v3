@@ -8,7 +8,7 @@ import json
 import logging
 import random
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import select
 
@@ -30,12 +30,14 @@ class DemandPredictionService:
         self.project_id = (
             settings.GCP_PROJECT_ID
             if hasattr(settings, "GCP_PROJECT_ID")
-            else "placeholder-project"
+            else "placeholder - project"
         )
         self.location = (
-            settings.GCP_LOCATION if hasattr(settings, "GCP_LOCATION") else "asia-east1"
+            settings.GCP_LOCATION
+            if hasattr(settings, "GCP_LOCATION")
+            else "asia - east1"
         )
-        self.model_id = "placeholder-model-v1"
+        self.model_id = "placeholder - model - v1"
 
     async def train_demand_model(self) -> Dict[str, Any]:
         """
@@ -75,9 +77,7 @@ class DemandPredictionService:
 
         async for session in get_async_session():
             # Get all active customers
-            result = await session.execute(
-                select(Customer).where(Customer.is_active == True)
-            )
+            result = await session.execute(select(Customer).where(Customer.is_active))
             customers = result.scalars().all()
 
             for customer in customers:
@@ -112,7 +112,7 @@ class DemandPredictionService:
             await session.commit()
 
         return {
-            "batch_id": f"batch-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}",
+            "batch_id": f"batch-{datetime.utcnow().strftime('%Y % m % d-%H % M % S')}",
             "predictions_count": predictions_created,
             "model_version": self.model_id,
             "execution_time_seconds": 5.2,

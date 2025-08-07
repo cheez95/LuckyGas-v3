@@ -1,6 +1,8 @@
 from datetime import timedelta
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -13,12 +15,6 @@ from app.models.user import User as UserModel
 from app.models.user import UserRole
 from app.schemas.customer import Customer, CustomerCreate, CustomerList, CustomerUpdate
 from app.schemas.customer_inventory import (
-
-from sqlalchemy import func
-from sqlalchemy import select
-from typing import Any
-from typing import Optional
-
     CustomerInventory,
     CustomerInventoryList,
     CustomerInventoryUpdate,
@@ -59,7 +55,7 @@ async def get_customers(
             else bool(is_active)
         )
 
-    # Use service to search/list customers
+    # Use service to search / list customers
     customers, total = await customer_service.search_customers(
         search_term=search,
         area=area,
@@ -120,7 +116,7 @@ async def create_customer(
         # Create customer using service
         customer = await customer_service.create_customer(customer_in)
 
-        # Clear customer-related cache
+        # Clear customer - related cache
         await cache.invalidate("customers:*")
 
         return customer
@@ -152,7 +148,7 @@ async def update_customer(
     if not customer:
         raise HTTPException(status_code=404, detail="客戶不存在")
 
-    # Clear customer-related cache after update
+    # Clear customer - related cache after update
     await cache.invalidate("customers:*")
 
     return customer
@@ -182,7 +178,7 @@ async def delete_customer(
     if not success:
         raise HTTPException(status_code=404, detail="客戶不存在")
 
-    # Clear customer-related cache after delete
+    # Clear customer - related cache after delete
     await cache.invalidate("customers:*")
 
     return {"message": "客戶已停用"}

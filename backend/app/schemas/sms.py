@@ -1,4 +1,4 @@
-"""SMS-related Pydantic schemas."""
+"""SMS - related Pydantic schemas."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -26,7 +26,7 @@ class SMSSendRequest(BaseModel):
 
     @validator("phone")
     def validate_phone(cls, v):
-        # Remove non-numeric characters
+        # Remove non - numeric characters
         cleaned = "".join(filter(str.isdigit, v))
 
         # Validate Taiwan phone format
@@ -94,10 +94,10 @@ class SMSTemplateBase(BaseModel):
     name: str = Field(..., description="Template name")
     description: Optional[str] = Field(None, description="Template description")
     content: str = Field(..., description="Template content with placeholders")
-    language: str = Field("zh-TW", description="Template language")
-    variant: str = Field("A", description="A/B test variant")
+    language: str = Field("zh - TW", description="Template language")
+    variant: str = Field("A", description="A / B test variant")
     weight: int = Field(
-        100, ge=0, le=100, description="Selection weight for A/B testing"
+        100, ge=0, le=100, description="Selection weight for A / B testing"
     )
 
 
@@ -150,8 +150,6 @@ class ProviderConfigBase(BaseModel):
 class ProviderConfigUpdate(ProviderConfigBase):
     """Update model for provider configuration"""
 
-    pass
-
 
 class ProviderConfigResponse(ProviderConfigBase):
     """Response model for provider configuration"""
@@ -161,7 +159,7 @@ class ProviderConfigResponse(ProviderConfigBase):
     total_sent: int
     total_failed: int
     success_rate: Optional[float]
-    health_status: Optional[str] = Field(None, description="Real-time health status")
+    health_status: Optional[str] = Field(None, description="Real - time health status")
     created_at: datetime
     updated_at: datetime
 

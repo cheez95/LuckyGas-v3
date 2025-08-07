@@ -84,7 +84,7 @@ class LocationUpdateRequest(BaseModel):
     longitude: float = Field(..., ge=-180, le=180)
     accuracy: Optional[float] = Field(None, description="GPS accuracy in meters")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    speed: Optional[float] = Field(None, description="Speed in km/h")
+    speed: Optional[float] = Field(None, description="Speed in km / h")
     heading: Optional[float] = Field(None, description="Heading in degrees")
 
 

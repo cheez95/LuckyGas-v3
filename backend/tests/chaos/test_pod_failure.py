@@ -5,7 +5,6 @@ Tests system resilience when backend pods are terminated
 
 import asyncio
 import os
-import subprocess
 import time
 from datetime import datetime, timedelta
 
@@ -25,13 +24,13 @@ class TestPodFailureRecovery:
             pytest.skip("Not running in Kubernetes environment")
 
         # Record baseline metrics
-        response = await client.get("/api/v1/health")
+        response = await client.get("/api / v1 / health")
         assert response.status_code == 200
-        baseline_response_time = response.elapsed.total_seconds()
+        response.elapsed.total_seconds()
 
         # Get current pod name
-        pod_name = os.getenv("HOSTNAME", "test-pod")
-        namespace = os.getenv("POD_NAMESPACE", "default")
+        pod_name = os.getenv("HOSTNAME", "test - pod")
+        os.getenv("POD_NAMESPACE", "default")
 
         # Simulate pod termination (in real env, would use kubectl)
         # For testing, we'll simulate by stopping the service temporarily
@@ -47,7 +46,7 @@ class TestPodFailureRecovery:
         while recovery_attempts < max_attempts:
             try:
                 # Check if service is responding
-                response = await client.get("/api/v1/health", timeout=2.0)
+                response = await client.get("/api / v1 / health", timeout=2.0)
                 if response.status_code == 200:
                     service_available = True
                     break
@@ -69,7 +68,7 @@ class TestPodFailureRecovery:
 
         # Verify no data loss during recovery
         response = await client.get(
-            "/api/v1/orders", headers={"Authorization": "Bearer test-token"}
+            "/api / v1 / orders", headers={"Authorization": "Bearer test - token"}
         )
         assert response.status_code in [200, 401]  # Either success or auth required
 
@@ -85,7 +84,7 @@ class TestPodFailureRecovery:
         start_time = time.time()
         while (time.time() - start_time) < test_duration:
             try:
-                response = await client.get("/api/v1/health", timeout=1.0)
+                response = await client.get("/api / v1 / health", timeout=1.0)
                 availability_checks.append(
                     {
                         "timestamp": time.time(),
@@ -158,9 +157,9 @@ class TestPodFailureRecovery:
 
         # Submit order
         response = await client.post(
-            "/api/v1/orders",
+            "/api / v1 / orders",
             json=test_order_data,
-            headers={"Authorization": "Bearer test-token"},
+            headers={"Authorization": "Bearer test - token"},
         )
 
         if response.status_code == 201:
@@ -174,8 +173,8 @@ class TestPodFailureRecovery:
 
             # Verify order was persisted correctly
             response = await client.get(
-                f"/api/v1/orders/{order_id}",
-                headers={"Authorization": "Bearer test-token"},
+                f"/api / v1 / orders/{order_id}",
+                headers={"Authorization": "Bearer test - token"},
             )
 
             if response.status_code == 200:
@@ -192,7 +191,7 @@ class TestPodFailureRecovery:
     async def test_connection_pool_recovery(self, client: AsyncClient):
         """Test database connection pool recovery after disruption"""
         # Baseline connection test
-        response = await client.get("/api/v1/health/db")
+        response = await client.get("/api / v1 / health / db")
         assert response.status_code == 200
 
         # Simulate connection pool exhaustion by making many concurrent requests
@@ -202,8 +201,8 @@ class TestPodFailureRecovery:
         async def make_request(client: AsyncClient, request_id: int):
             try:
                 response = await client.get(
-                    "/api/v1/customers",
-                    headers={"Authorization": "Bearer test-token"},
+                    "/api / v1 / customers",
+                    headers={"Authorization": "Bearer test - token"},
                     timeout=5.0,
                 )
                 return {
@@ -220,7 +219,7 @@ class TestPodFailureRecovery:
                 }
 
         # Fire concurrent requests
-        start_time = time.time()
+        time.time()
         for i in range(concurrent_requests):
             task = asyncio.create_task(make_request(client, i))
             tasks.append(task)
@@ -245,7 +244,7 @@ class TestPodFailureRecovery:
         # Verify pool recovers after load
         await asyncio.sleep(2)  # Allow pool to recover
 
-        response = await client.get("/api/v1/health/db")
+        response = await client.get("/api / v1 / health / db")
         assert response.status_code == 200, "Database connection pool did not recover"
 
     @pytest.mark.chaos
@@ -254,10 +253,10 @@ class TestPodFailureRecovery:
         """Test that failures in one component don't cascade to others"""
         # Test isolation between different service components
         components = [
-            "/api/v1/health",  # Core health
-            "/api/v1/health/db",  # Database
-            "/api/v1/health/redis",  # Cache
-            "/api/v1/health/external",  # External services
+            "/api / v1 / health",  # Core health
+            "/api / v1 / health / db",  # Database
+            "/api / v1 / health / redis",  # Cache
+            "/api / v1 / health / external",  # External services
         ]
 
         component_status = {}
@@ -279,7 +278,7 @@ class TestPodFailureRecovery:
                 }
 
         # Even if some components fail, core health should remain available
-        assert component_status["/api/v1/health"][
+        assert component_status["/api / v1 / health"][
             "available"
         ], "Core health check failed - cascading failure detected"
 

@@ -1,5 +1,5 @@
 """
-Google OR-Tools VRP (Vehicle Routing Problem) optimizer for Lucky Gas deliveries
+Google OR - Tools VRP (Vehicle Routing Problem) optimizer for Lucky Gas deliveries
 """
 
 import logging
@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from math import atan2, cos, radians, sin, sqrt
 from typing import Dict, List, Optional, Tuple
 
-import numpy as np
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 logger = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ class VRPVehicle:
 
 class ORToolsOptimizer:
     """
-    Vehicle Routing Problem optimizer using Google OR-Tools
+    Vehicle Routing Problem optimizer using Google OR - Tools
     Optimizes multiple routes considering:
     - Vehicle capacities for different gas cylinder sizes
     - Customer time windows
@@ -65,7 +64,7 @@ class ORToolsOptimizer:
 
         distance_matrix = self._calculate_distance_matrix(locations)
 
-        # Create time matrix (distance in km * 2 for average speed 30km/h in city)
+        # Create time matrix (distance in km * 2 for average speed 30km / h in city)
         time_matrix = [[int(dist * 2) for dist in row] for row in distance_matrix]
 
         # Extract demands for each product type
@@ -189,7 +188,7 @@ class ORToolsOptimizer:
                 else int(max_vehicle_time)
             )
 
-            # Ensure start <= end and both are non-negative
+            # Ensure start <= end and both are non - negative
             if start_time > end_time:
                 logger.warning(
                     f"Invalid time window: start ({start_time}) > end ({end_time}), swapping values"
@@ -247,12 +246,12 @@ class ORToolsOptimizer:
         solution = routing.SolveWithParameters(search_parameters)
 
         if solution:
-            logger.info("OR-Tools found optimal solution")
+            logger.info("OR - Tools found optimal solution")
             return self._extract_solution(
                 manager, routing, solution, stops, vehicles, data
             )
         else:
-            logger.warning("OR-Tools could not find solution, using fallback")
+            logger.warning("OR - Tools could not find solution, using fallback")
             return self._fallback_assignment(stops, vehicles)
 
     def _extract_solution(
@@ -312,7 +311,7 @@ class ORToolsOptimizer:
                 total_time += route_time
 
         # Log summary
-        logger.info(f"Total distance: {total_distance/1000:.1f} km")
+        logger.info(f"Total distance: {total_distance / 1000:.1f} km")
         logger.info(f"Total time: {total_time} minutes")
         logger.info(f"Average stops per vehicle: {len(stops) / len(vehicles):.1f}")
 
@@ -328,7 +327,7 @@ class ORToolsOptimizer:
         for i in range(n):
             for j in range(n):
                 if i != j:
-                    # Return distance in meters for OR-Tools
+                    # Return distance in meters for OR - Tools
                     matrix[i][j] = int(
                         self._haversine_distance(
                             locations[i][0],
@@ -370,7 +369,7 @@ class ORToolsOptimizer:
     def _fallback_assignment(
         self, stops: List[VRPStop], vehicles: List[VRPVehicle]
     ) -> Dict[int, List[VRPStop]]:
-        """Simple fallback assignment when OR-Tools fails"""
+        """Simple fallback assignment when OR - Tools fails"""
         logger.warning("Using fallback assignment strategy")
 
         # Sort stops by geographic area (simple clustering by latitude)

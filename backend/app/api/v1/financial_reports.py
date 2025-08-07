@@ -3,6 +3,7 @@ Financial reporting API endpoints
 """
 
 import io
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,12 +14,10 @@ from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.services.financial_report_service import FinancialReportService
 
-from datetime import date
-
-router = APIRouter(prefix="/financial-reports", tags=["financial-reports"])
+router = APIRouter(prefix="/financial - reports", tags=["financial - reports"])
 
 
-@router.get("/revenue-summary")
+@router.get("/revenue - summary")
 async def get_revenue_summary(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     db: AsyncSession = Depends(get_db),
@@ -34,7 +33,7 @@ async def get_revenue_summary(
     return summary
 
 
-@router.get("/accounts-receivable")
+@router.get("/accounts - receivable")
 async def get_accounts_receivable_report(
     as_of_date: date = Query(default=date.today()),
     customer_id: Optional[int] = None,
@@ -42,7 +41,7 @@ async def get_accounts_receivable_report(
     current_user: User = Depends(get_current_user),
 ):
     """Get accounts receivable aging report"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限查看應收帳款報表")
 
     service = FinancialReportService(db)
@@ -53,7 +52,7 @@ async def get_accounts_receivable_report(
     return report
 
 
-@router.get("/tax-report")
+@router.get("/tax - report")
 async def get_tax_report(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     db: AsyncSession = Depends(get_db),
@@ -69,7 +68,7 @@ async def get_tax_report(
     return report
 
 
-@router.get("/cash-flow")
+@router.get("/cash - flow")
 async def get_cash_flow_report(
     date_from: date = Query(...),
     date_to: date = Query(...),
@@ -86,7 +85,7 @@ async def get_cash_flow_report(
     return report
 
 
-@router.get("/profit-loss")
+@router.get("/profit - loss")
 async def get_profit_loss_statement(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     db: AsyncSession = Depends(get_db),
@@ -102,7 +101,7 @@ async def get_profit_loss_statement(
     return statement
 
 
-@router.get("/customer-statement")
+@router.get("/customer - statement")
 async def get_customer_statement(
     customer_id: int,
     date_from: date = Query(...),
@@ -111,7 +110,7 @@ async def get_customer_statement(
     current_user: User = Depends(get_current_user),
 ):
     """Get customer account statement"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限查看客戶對帳單")
 
     service = FinancialReportService(db)
@@ -122,7 +121,7 @@ async def get_customer_statement(
     return statement
 
 
-@router.get("/sales-analysis")
+@router.get("/sales - analysis")
 async def get_sales_analysis(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     group_by: str = Query("customer", pattern="^(customer|product|area|date)$"),
@@ -130,7 +129,7 @@ async def get_sales_analysis(
     current_user: User = Depends(get_current_user),
 ):
     """Get sales analysis report"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限查看銷售分析")
 
     service = FinancialReportService(db)
@@ -139,7 +138,7 @@ async def get_sales_analysis(
     return analysis
 
 
-@router.get("/compliance-report")
+@router.get("/compliance - report")
 async def get_compliance_report(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     db: AsyncSession = Depends(get_db),
@@ -155,7 +154,7 @@ async def get_compliance_report(
     return report
 
 
-@router.post("/generate-401")
+@router.post("/generate - 401")
 async def generate_401_file(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     db: AsyncSession = Depends(get_db),
@@ -170,13 +169,13 @@ async def generate_401_file(
 
     # Return as downloadable file
     return StreamingResponse(
-        io.BytesIO(file_content.encode("utf-8")),
-        media_type="text/plain",
-        headers={"Content-Disposition": f"attachment; filename=401_{period}.txt"},
+        io.BytesIO(file_content.encode("utf - 8")),
+        media_type="text / plain",
+        headers={"Content - Disposition": f"attachment; filename=401_{period}.txt"},
     )
 
 
-@router.post("/generate-403")
+@router.post("/generate - 403")
 async def generate_403_file(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     db: AsyncSession = Depends(get_db),
@@ -191,18 +190,18 @@ async def generate_403_file(
 
     # Return as downloadable file
     return StreamingResponse(
-        io.BytesIO(file_content.encode("utf-8")),
-        media_type="text/plain",
-        headers={"Content-Disposition": f"attachment; filename=403_{period}.txt"},
+        io.BytesIO(file_content.encode("utf - 8")),
+        media_type="text / plain",
+        headers={"Content - Disposition": f"attachment; filename=403_{period}.txt"},
     )
 
 
-@router.get("/dashboard-metrics")
+@router.get("/dashboard - metrics")
 async def get_financial_dashboard_metrics(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """Get financial metrics for dashboard"""
-    if current_user.role not in ["super_admin", "manager", "office_staff"]:
+    if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="沒有權限查看財務指標")
 
     service = FinancialReportService(db)
@@ -211,7 +210,7 @@ async def get_financial_dashboard_metrics(
     return metrics
 
 
-@router.post("/export-to-accounting")
+@router.post("/export - to - accounting")
 async def export_to_accounting_system(
     period: str = Query(..., pattern="^\\d{6}$", description="Period in YYYYMM format"),
     system: str = Query(..., pattern="^(excel|csv|quickbooks|sap)$"),
@@ -226,11 +225,13 @@ async def export_to_accounting_system(
 
     if system == "excel":
         file_content = await service.export_to_excel(period)
-        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        media_type = (
+            "application / vnd.openxmlformats - officedocument.spreadsheetml.sheet"
+        )
         filename = f"financial_export_{period}.xlsx"
     elif system == "csv":
         file_content = await service.export_to_csv(period)
-        media_type = "text/csv"
+        media_type = "text / csv"
         filename = f"financial_export_{period}.csv"
     else:
         # For QuickBooks or SAP, would implement specific formats
@@ -239,5 +240,5 @@ async def export_to_accounting_system(
     return StreamingResponse(
         io.BytesIO(file_content),
         media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content - Disposition": f"attachment; filename={filename}"},
     )

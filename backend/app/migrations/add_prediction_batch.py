@@ -3,7 +3,6 @@ Add prediction batch table and batch_id to predictions
 """
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 from alembic import op
 

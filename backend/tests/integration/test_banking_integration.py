@@ -1,9 +1,8 @@
 """Integration tests for banking service with mocked SFTP."""
 
-import io
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -19,6 +18,9 @@ from app.models.customer import Customer
 from app.models.invoice import Invoice, InvoicePaymentStatus
 from app.models.user import User
 from app.services.banking_service import BankingService
+
+# Import banking test marker
+from tests.conftest_payment import requires_banking
 
 
 @pytest.fixture
@@ -49,11 +51,11 @@ def test_bank_config(db: Session):
         sftp_port=22,
         sftp_username="testuser",
         sftp_password="testpass",
-        upload_path="/test/upload/",
-        download_path="/test/download/",
-        archive_path="/test/archive/",
+        upload_path="/test / upload/",
+        download_path="/test / download/",
+        archive_path="/test / archive/",
         file_format="fixed_width",
-        encoding="UTF-8",
+        encoding="UTF - 8",
         payment_file_pattern="PAY_{YYYYMMDD}_{BATCH}.txt",
         reconciliation_file_pattern="REC_{YYYYMMDD}.txt",
         is_active=True,
@@ -74,14 +76,14 @@ def test_customers(db: Session):
 
     for i in range(3):
         customer = Customer(
-            customer_code=f"CUST00{i+1}",
-            short_name=f"Customer {i+1}",
-            address=f"Test Address {i+1}",
+            customer_code=f"CUST00{i + 1}",
+            short_name=f"Customer {i + 1}",
+            address=f"Test Address {i + 1}",
             phone=f"0912345{i:03d}",
             payment_method="bank_transfer",
             bank_code="TEST",
             bank_account_number=f"123456789012{i:02d}",
-            bank_account_holder=f"Customer {i+1}",
+            bank_account_holder=f"Customer {i + 1}",
         )
         db.add(customer)
         customers.append(customer)
@@ -97,7 +99,7 @@ def test_invoices(db: Session, test_customers):
 
     for i, customer in enumerate(test_customers):
         invoice = Invoice(
-            invoice_number=f"INV2024010{i+1}",
+            invoice_number=f"INV2024010{i + 1}",
             customer_id=customer.id,
             invoice_date=datetime.now().date(),
             due_date=(datetime.now() + timedelta(days=30)).date(),
@@ -113,6 +115,7 @@ def test_invoices(db: Session, test_customers):
     return invoices
 
 
+@requires_banking
 class TestBankingIntegration:
     """Integration tests for banking workflows."""
 
@@ -175,7 +178,7 @@ class TestBankingIntegration:
         mock_sftp.listdir.return_value = ["REC_20240120.txt"]
         mock_sftp.getfo = Mock(
             side_effect=lambda remote, local: local.write(
-                reconciliation_content.encode("UTF-8")
+                reconciliation_content.encode("UTF - 8")
             )
         )
 
@@ -273,11 +276,11 @@ class TestBankingIntegration:
             sftp_port=22,
             sftp_username="csvuser",
             sftp_password="csvpass",
-            upload_path="/csv/upload/",
-            download_path="/csv/download/",
+            upload_path="/csv / upload/",
+            download_path="/csv / download/",
             file_format="csv",
-            encoding="UTF-8",
-            delimiter=",",
+            encoding="UTF - 8",
+            delimiter=", ",
             payment_file_pattern="PAY_{YYYYMMDD}.csv",
             is_active=True,
         )
@@ -306,7 +309,7 @@ class TestBankingIntegration:
 
         # Verify data format
         for i in range(1, len(lines)):
-            fields = lines[i].split(",")
+            fields = lines[i].split(", ")
             assert len(fields) >= 6  # At least 6 fields per row
 
     def _generate_reconciliation_file(self, batch: PaymentBatch) -> str:
@@ -314,7 +317,7 @@ class TestBankingIntegration:
         lines = []
 
         # Header
-        lines.append(f"H{datetime.now().strftime('%Y%m%d')}TEST001")
+        lines.append(f"H{datetime.now().strftime('%Y % m % d')}TEST001")
 
         # Detail records
         transactions = batch.transactions
@@ -328,12 +331,12 @@ class TestBankingIntegration:
                 response_msg = "Insufficient funds"
 
             detail = (
-                f"D{str(i+1).zfill(6)}"
+                f"D{str(i + 1).zfill(6)}"
                 f"{trans.transaction_id:20}"
-                f"REF{str(i+1).zfill(3):17}"
+                f"REF{str(i + 1).zfill(3):17}"
                 f"{response_code}"
                 f"{response_msg:100}"
-                f"{datetime.now().strftime('%Y%m%d')}"
+                f"{datetime.now().strftime('%Y % m % d')}"
             )
             lines.append(detail)
 

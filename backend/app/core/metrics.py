@@ -93,7 +93,7 @@ cylinders_delivered_counter = Counter(
 
 customer_satisfaction_gauge = Gauge(
     "lucky_gas_customer_satisfaction_score",
-    "Customer satisfaction score (1-5)",
+    "Customer satisfaction score (1 - 5)",
     ["area", "customer_type"],
 )
 
@@ -197,7 +197,7 @@ websocket_connections_gauge = Gauge(
 
 websocket_messages_counter = Counter(
     "lucky_gas_websocket_messages_total",
-    "WebSocket messages sent/received",
+    "WebSocket messages sent / received",
     ["direction", "message_type"],
 )
 
@@ -237,6 +237,8 @@ def get_cloud_metrics():
 
 
 # Enhanced metric recording functions with Cloud Monitoring integration
+
+
 def record_prediction(customer_type: str, status: str):
     """Record prediction generation in both Prometheus and Cloud Monitoring"""
     prediction_counter.labels(customer_type=customer_type, status=status).inc()

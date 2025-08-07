@@ -2,7 +2,6 @@
 GPS tracking service for driver location management
 """
 
-import asyncio
 import math
 from collections import defaultdict
 from dataclasses import dataclass
@@ -35,7 +34,7 @@ class GPSService:
     """Service for managing driver GPS locations"""
 
     def __init__(self):
-        # In-memory storage for driver locations
+        # In - memory storage for driver locations
         # In production, this would use Redis or similar
         self._driver_locations: Dict[int, DriverLocation] = {}
         self._location_history: Dict[int, List[DriverLocation]] = defaultdict(list)
@@ -145,7 +144,9 @@ class GPSService:
         )
 
         # Estimate speed (use current speed or default)
-        speed_kmh = location.speed if location.speed else 30  # Default 30 km/h in city
+        speed_kmh = (
+            location.speed if location.speed else 30
+        )  # Default 30 km / h in city
 
         # Calculate time (hours)
         time_hours = distance / speed_kmh

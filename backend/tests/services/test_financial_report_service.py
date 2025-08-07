@@ -2,16 +2,19 @@
 Unit tests for financial report service
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from app.models.customer import Customer, CustomerType
+from app.models.customer import Customer
 from app.models.invoice import Invoice, InvoiceStatus, InvoiceType
 from app.services.financial_report_service import FinancialReportService
+
+# Import financial test marker
+from tests.conftest_payment import requires_financial
 
 
 @pytest.fixture
@@ -78,6 +81,7 @@ def sample_invoices():
     ]
 
 
+@requires_financial
 class TestFinancialReportService:
     """Test cases for financial report service"""
 
@@ -176,12 +180,12 @@ class TestFinancialReportService:
         buckets = aging_report["aging_buckets"]
         assert buckets["current"]["amount"] == Decimal("10000")
         assert buckets["current"]["count"] == 1
-        assert buckets["1-30"]["amount"] == Decimal("0")
-        assert buckets["1-30"]["count"] == 0
-        assert buckets["31-60"]["amount"] == Decimal("15000")  # 20000 - 5000
-        assert buckets["31-60"]["count"] == 1
-        assert buckets["61-90"]["amount"] == Decimal("0")
-        assert buckets["61-90"]["count"] == 0
+        assert buckets["1 - 30"]["amount"] == Decimal("0")
+        assert buckets["1 - 30"]["count"] == 0
+        assert buckets["31 - 60"]["amount"] == Decimal("15000")  # 20000 - 5000
+        assert buckets["31 - 60"]["count"] == 1
+        assert buckets["61 - 90"]["amount"] == Decimal("0")
+        assert buckets["61 - 90"]["count"] == 0
         assert buckets["over_90"]["amount"] == Decimal("30000")
         assert buckets["over_90"]["count"] == 1
 

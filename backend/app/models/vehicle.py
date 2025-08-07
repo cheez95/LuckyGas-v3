@@ -3,9 +3,8 @@ Vehicle model for dispatch operations
 """
 
 import enum
-from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import Boolean, Column, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship

@@ -3,32 +3,26 @@ Data export service for Lucky Gas.
 Handles exporting data to various formats (CSV, Excel, JSON).
 """
 
-import csv
 import io
 import json
 import logging
 import zipfile
-from datetime import date, datetime
-from pathlib import Path
+from datetime import date
 from typing import Any, BinaryIO, Dict, List, Optional
 
-import aiofiles
 import pandas as pd
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill
-from openpyxl.utils.dataframe import dataframe_to_rows
-from sqlalchemy import and_, or_, select
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 # Payment model imported from order module if needed
-from app.core.config import settings
 from app.models.customer import Customer
 from app.models.delivery import Delivery
-from app.models.driver import Driver
-from app.models.gas_product import GasProduct as Product
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.order import Order
 from app.models.order_item import OrderItem
+from app.models.payment import Payment
 from app.models.route import Route, RouteStop
 from app.utils.datetime_utils import format_taiwan_date
 
@@ -458,18 +452,18 @@ class DataExportService:
                 "financial_summary",
             )
         else:
-            raise ValueError(f"Financial summary only supports Excel format")
+            raise ValueError("Financial summary only supports Excel format")
 
     def _export_to_csv(self, df: pd.DataFrame, filename: str) -> BinaryIO:
         """Export DataFrame to CSV."""
         output = io.BytesIO()
 
         # Write BOM for Excel compatibility with Chinese characters
-        output.write(b"\xef\xbb\xbf")
+        output.write(b"\xef\xbb\xb")
 
         # Convert to CSV
-        csv_data = df.to_csv(index=False, encoding="utf-8")
-        output.write(csv_data.encode("utf-8"))
+        csv_data = df.to_csv(index=False, encoding="utf - 8")
+        output.write(csv_data.encode("utf - 8"))
 
         output.seek(0)
         return output
@@ -487,7 +481,7 @@ class DataExportService:
                 csv_data = csv_buffer.getvalue()
 
                 # Add BOM for Excel compatibility
-                csv_bytes = b"\xef\xbb\xbf" + csv_data.encode("utf-8")
+                csv_bytes = b"\xef\xbb\xb" + csv_data.encode("utf - 8")
                 zf.writestr(f"{name}.csv", csv_bytes)
 
         output.seek(0)
@@ -518,7 +512,7 @@ class DataExportService:
                     cell.fill = header_fill
                     cell.alignment = header_alignment
 
-                # Auto-adjust column widths
+                # Auto - adjust column widths
                 for column_cells in worksheet.columns:
                     length = max(len(str(cell.value or "")) for cell in column_cells)
                     worksheet.column_dimensions[column_cells[0].column_letter].width = (
@@ -526,8 +520,6 @@ class DataExportService:
                     )
 
                 # Add borders and alignment
-                from openpyxl.styles import Border, Side
-
                 thin_border = Border(
                     left=Side(style="thin"),
                     right=Side(style="thin"),
@@ -551,7 +543,7 @@ class DataExportService:
         output = io.BytesIO()
 
         json_data = json.dumps(data, ensure_ascii=False, indent=2, default=str)
-        output.write(json_data.encode("utf-8"))
+        output.write(json_data.encode("utf - 8"))
 
         output.seek(0)
         return output

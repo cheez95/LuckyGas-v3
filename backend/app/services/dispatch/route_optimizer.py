@@ -2,28 +2,23 @@
 Route optimization service for intelligent delivery planning
 """
 
-import asyncio
 import logging
-import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.customer import Customer
-from app.models.gas_product import GasProduct
 from app.models.order import Order, OrderStatus
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.services.dispatch.google_routes_service import (
     Location,
     RouteRequest,
     RouteStop,
-    RoutingPreference,
-    TravelMode,
     get_routes_service,
 )
 
@@ -199,7 +194,7 @@ class RouteOptimizer:
         self, orders: List[Order]
     ) -> List[List[Order]]:
         """
-        Cluster orders by geographic proximity using simple grid-based clustering
+        Cluster orders by geographic proximity using simple grid - based clustering
         """
         # Group orders by area first
         area_groups = defaultdict(list)
@@ -210,7 +205,7 @@ class RouteOptimizer:
         # For each area, further cluster by proximity
         all_clusters = []
         for area, area_orders in area_groups.items():
-            # Simple grid-based clustering
+            # Simple grid - based clustering
             # In production, use more sophisticated clustering like DBSCAN
             clusters = self._grid_cluster_orders(area_orders, grid_size_km=2.0)
             all_clusters.extend(clusters)
@@ -220,7 +215,7 @@ class RouteOptimizer:
     def _grid_cluster_orders(
         self, orders: List[Order], grid_size_km: float = 2.0
     ) -> List[List[Order]]:
-        """Simple grid-based clustering of orders"""
+        """Simple grid - based clustering of orders"""
         if not orders:
             return []
 
@@ -531,7 +526,7 @@ class RouteOptimizer:
     def _calculate_optimization_score(
         self, route_result: Any, orders: List[Order], constraints: DriverConstraints
     ) -> float:
-        """Calculate optimization score (0-100)"""
+        """Calculate optimization score (0 - 100)"""
         score = 100.0
 
         # Penalize for long routes

@@ -1,6 +1,6 @@
 """
 Customer service layer for business logic
-Handles customer-related operations and coordinates with repositories
+Handles customer - related operations and coordinates with repositories
 """
 
 import logging
@@ -13,6 +13,7 @@ from app.models.customer import Customer
 from app.repositories.customer_repository import CustomerRepository
 from app.repositories.order_repository import OrderRepository
 from app.schemas.customer import CustomerCreate, CustomerUpdate
+from app.core.metrics import cache_operations_counter
 
 # from app.api.v1.socketio_handler import send_notification  # Removed during compaction
 
@@ -161,7 +162,7 @@ class CustomerService:
             search_term: Search in code, name, address
             area: Filter by area
             customer_type: Filter by type
-            is_active: Filter active/inactive
+            is_active: Filter active / inactive
             skip: Pagination offset
             limit: Pagination limit
 
@@ -245,7 +246,7 @@ class CustomerService:
             days_since_last: Days since last order
 
         Returns:
-            Score from 0-100
+            Score from 0 - 100
         """
         score = 0.0
 

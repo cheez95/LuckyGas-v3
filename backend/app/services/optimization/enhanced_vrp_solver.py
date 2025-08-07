@@ -1,6 +1,6 @@
 """
 Enhanced VRP (Vehicle Routing Problem) solver for Lucky Gas deliveries
-Integrates Google Routes API with OR-Tools for optimal route planning
+Integrates Google Routes API with OR - Tools for optimal route planning
 """
 
 import asyncio
@@ -15,7 +15,7 @@ from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from sklearn.cluster import DBSCAN
 
 from app.models.customer import Customer
-from app.models.order import Order, OrderStatus
+from app.models.order import Order
 from app.models.route import Route, RouteStatus, RouteStop
 from app.models.user import User
 from app.services.dispatch.google_routes_service import Location, RouteRequest
@@ -39,7 +39,7 @@ class OptimizationConfig:
     clustering_epsilon_km: float = 1.5  # DBSCAN clustering radius
     min_cluster_size: int = 3
 
-    # Taiwan-specific
+    # Taiwan - specific
     peak_hours: List[Tuple[int, int]] = field(
         default_factory=lambda: [(7, 9), (17, 19)]
     )
@@ -72,7 +72,7 @@ class OptimizationConfig:
 
 @dataclass
 class EnhancedVRPStop(VRPStop):
-    """Enhanced stop with additional Taiwan-specific fields"""
+    """Enhanced stop with additional Taiwan - specific fields"""
 
     area: str
     customer_type: str
@@ -96,8 +96,8 @@ class OptimizationResult:
 
 class EnhancedVRPSolver:
     """
-    Production-ready VRP solver combining OR-Tools with Google Routes API
-    Optimized for Taiwan-specific delivery patterns
+    Production - ready VRP solver combining OR - Tools with Google Routes API
+    Optimized for Taiwan - specific delivery patterns
     """
 
     def __init__(self, config: Optional[OptimizationConfig] = None):
@@ -283,7 +283,7 @@ class EnhancedVRPSolver:
     ) -> List[List[EnhancedVRPStop]]:
         """
         Cluster stops using DBSCAN for geographic proximity
-        Consider Taiwan-specific patterns like restaurant lunch rushes
+        Consider Taiwan - specific patterns like restaurant lunch rushes
         """
         if len(stops) < self.config.min_cluster_size:
             return [stops]
@@ -305,7 +305,7 @@ class EnhancedVRPSolver:
         clusters = defaultdict(list)
         for idx, label in enumerate(clustering.labels_):
             if label == -1:  # Noise points
-                # Create single-stop cluster
+                # Create single - stop cluster
                 clusters[f"single_{idx}"] = [stops[idx]]
             else:
                 clusters[label].append(stops[idx])
@@ -369,11 +369,11 @@ class EnhancedVRPSolver:
         vehicles: List[VRPVehicle],
         depot_location: Tuple[float, float],
     ) -> Dict[int, List[EnhancedVRPStop]]:
-        """Optimize a single cluster using OR-Tools"""
+        """Optimize a single cluster using OR - Tools"""
         if not stops:
             return {i: [] for i in range(len(vehicles))}
 
-        # Create OR-Tools data model
+        # Create OR - Tools data model
         data = await self._create_ortools_data_model(stops, vehicles, depot_location)
 
         # Create routing model
@@ -383,7 +383,7 @@ class EnhancedVRPSolver:
 
         routing = pywrapcp.RoutingModel(manager)
 
-        # Set up the model with Taiwan-specific constraints
+        # Set up the model with Taiwan - specific constraints
         self._setup_routing_model(routing, manager, data)
 
         # Set search parameters optimized for speed
@@ -416,7 +416,7 @@ class EnhancedVRPSolver:
         vehicles: List[VRPVehicle],
         depot_location: Tuple[float, float],
     ) -> Dict[str, Any]:
-        """Create data model for OR-Tools with caching"""
+        """Create data model for OR - Tools with caching"""
         locations = [depot_location] + [s.geocoded_location for s in stops]
 
         # Get distance matrix (with caching)
@@ -521,7 +521,7 @@ class EnhancedVRPSolver:
         manager: pywrapcp.RoutingIndexManager,
         data: Dict[str, Any],
     ):
-        """Set up OR-Tools routing model with constraints"""
+        """Set up OR - Tools routing model with constraints"""
 
         # Distance callback
         def distance_callback(from_index, to_index):
@@ -580,7 +580,7 @@ class EnhancedVRPSolver:
                 int(time_window[0]), int(time_window[1])
             )
 
-        # Priority constraints - prioritize high-priority customers
+        # Priority constraints - prioritize high - priority customers
         for node in range(1, len(data["priorities"])):
             if data["priorities"][node] > 1:
                 routing.AddDisjunction(
@@ -595,7 +595,7 @@ class EnhancedVRPSolver:
         stops: List[EnhancedVRPStop],
         vehicles: List[VRPVehicle],
     ) -> Dict[int, List[EnhancedVRPStop]]:
-        """Extract solution from OR-Tools"""
+        """Extract solution from OR - Tools"""
         routes = {}
 
         for vehicle_id in range(len(vehicles)):
@@ -744,8 +744,8 @@ class EnhancedVRPSolver:
         for vehicle_id, route_data in detailed_routes.items():
             # Create Route
             route = Route(
-                route_number=f"R{optimization_date.strftime('%Y%m%d')}-{vehicle_id+1:03d}",
-                name=f"路線 {vehicle_id+1}",
+                route_number=f"R{optimization_date.strftime('%Y % m % d')}-{vehicle_id + 1:03d}",
+                name=f"路線 {vehicle_id + 1}",
                 date=optimization_date,
                 scheduled_date=optimization_date.date(),
                 driver_id=vehicle_id,  # Would map to actual driver
@@ -885,7 +885,7 @@ class EnhancedVRPSolver:
                     hours * 60 + minutes - 480
                 )  # Subtract 8 hours (8 AM start)
                 start_minutes = max(0, start_minutes)
-            except:
+            except Exception:
                 start_minutes = default_start
         else:
             start_minutes = default_start
@@ -897,7 +897,7 @@ class EnhancedVRPSolver:
                 end_minutes = max(
                     start_minutes + 30, end_minutes
                 )  # At least 30 min window
-            except:
+            except Exception:
                 end_minutes = default_end
         else:
             end_minutes = default_end
@@ -934,7 +934,7 @@ class EnhancedVRPSolver:
             while remaining_stops:
                 # Find nearest feasible stop
                 best_stop = None
-                best_distance = float("inf")
+                best_distance = float("in")
 
                 for stop in remaining_stops:
                     # Check capacity
@@ -980,7 +980,7 @@ class EnhancedVRPSolver:
         """Simple fallback when optimization fails"""
         logger.warning("Using fallback optimization")
 
-        # Simple round-robin assignment
+        # Simple round - robin assignment
         routes = []
         route_stops = {}
 
@@ -997,8 +997,8 @@ class EnhancedVRPSolver:
 
             # Create route
             route = Route(
-                route_number=f"R{optimization_date.strftime('%Y%m%d')}-{i+1:03d}",
-                name=f"路線 {i+1}",
+                route_number=f"R{optimization_date.strftime('%Y % m % d')}-{i + 1:03d}",
+                name=f"路線 {i + 1}",
                 date=optimization_date,
                 scheduled_date=optimization_date.date(),
                 driver_id=driver.id,

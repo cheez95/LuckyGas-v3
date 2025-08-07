@@ -1,11 +1,9 @@
 """Chunghwa Telecom SMS provider implementation for Taiwan local SMS."""
 
 import hashlib
-import json
 import logging
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 import aiohttp
@@ -19,15 +17,17 @@ logger = logging.getLogger(__name__)
 class ChunghwaProvider:
     """
     Chunghwa Telecom (中華電信) SMS provider for Taiwan
-    Production-ready implementation with CHT SMS API
+    Production - ready implementation with CHT SMS API
     """
 
     def __init__(self):
         self.account_id = settings.CHT_SMS_ACCOUNT_ID
         self.password = settings.CHT_SMS_PASSWORD
-        self.api_url = settings.CHT_SMS_API_URL or "https://api.emome.net/SMS/SendSMS"
+        self.api_url = (
+            settings.CHT_SMS_API_URL or "https://api.emome.net / SMS / SendSMS"
+        )
         self.status_url = (
-            settings.CHT_SMS_STATUS_URL or "https://api.emome.net/SMS/QueryStatus"
+            settings.CHT_SMS_STATUS_URL or "https://api.emome.net / SMS / QueryStatus"
         )
 
         # Connection pool
@@ -42,7 +42,7 @@ class ChunghwaProvider:
         """Initialize provider with connection pool"""
         connector = aiohttp.TCPConnector(
             limit=50,  # Total connection pool size
-            limit_per_host=20,  # Per-host connection limit
+            limit_per_host=20,  # Per - host connection limit
             ttl_dns_cache=300,  # DNS cache timeout
         )
 
@@ -105,13 +105,13 @@ class ChunghwaProvider:
             )
 
             headers = {
-                "Content-Type": "application/xml; charset=UTF-8",
-                "Accept": "application/xml",
+                "Content - Type": "application / xml; charset=UTF - 8",
+                "Accept": "application / xml",
             }
 
             # Send request
             async with self._session.post(
-                self.api_url, data=xml_data.encode("utf-8"), headers=headers
+                self.api_url, data=xml_data.encode("utf - 8"), headers=headers
             ) as response:
                 response_text = await response.text()
 
@@ -180,12 +180,12 @@ class ChunghwaProvider:
             )
 
             headers = {
-                "Content-Type": "application/xml; charset=UTF-8",
-                "Accept": "application/xml",
+                "Content - Type": "application / xml; charset=UTF - 8",
+                "Accept": "application / xml",
             }
 
             async with self._session.post(
-                self.status_url, data=xml_data.encode("utf-8"), headers=headers
+                self.status_url, data=xml_data.encode("utf - 8"), headers=headers
             ) as response:
                 if response.status == 200:
                     response_text = await response.text()
@@ -237,13 +237,13 @@ class ChunghwaProvider:
             xml_data = self._build_balance_xml(timestamp, signature)
 
             headers = {
-                "Content-Type": "application/xml; charset=UTF-8",
-                "Accept": "application/xml",
+                "Content - Type": "application / xml; charset=UTF - 8",
+                "Accept": "application / xml",
             }
 
             async with self._session.post(
                 self.api_url.replace("SendSMS", "QueryBalance"),
-                data=xml_data.encode("utf-8"),
+                data=xml_data.encode("utf - 8"),
                 headers=headers,
             ) as response:
                 if response.status == 200:
@@ -286,12 +286,12 @@ class ChunghwaProvider:
     ) -> bool:
         """
         Register webhook for delivery updates
-        Note: CHT requires callback URL to be pre-configured in account settings
+        Note: CHT requires callback URL to be pre - configured in account settings
         """
         # Chunghwa Telecom requires webhook URLs to be configured in account settings
         # Cannot dynamically register per message
         logger.info(
-            f"CHT requires pre-configured webhooks, cannot set for {message_id}"
+            f"CHT requires pre - configured webhooks, cannot set for {message_id}"
         )
         return False
 
@@ -299,7 +299,7 @@ class ChunghwaProvider:
         """Create authentication signature"""
         # CHT uses MD5 hash of account_id + password + timestamp
         signature_string = f"{self.account_id}{self.password}{timestamp}"
-        return hashlib.md5(signature_string.encode("utf-8")).hexdigest()
+        return hashlib.md5(signature_string.encode("utf - 8")).hexdigest()
 
     def _calculate_segments(self, message: str) -> int:
         """Calculate number of SMS segments for message"""
@@ -311,7 +311,7 @@ class ChunghwaProvider:
             else:
                 byte_count += 1  # ASCII character
 
-        # CHT limits: 70 bytes for single segment, 67 bytes for multi-segment
+        # CHT limits: 70 bytes for single segment, 67 bytes for multi - segment
         if byte_count <= 70:
             return 1
         else:
@@ -321,7 +321,7 @@ class ChunghwaProvider:
         self, phone: str, message: str, msg_id: str, timestamp: int, signature: str
     ) -> str:
         """Build XML request for sending SMS"""
-        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        xml = """<?xml version="1.0" encoding="UTF - 8"?>
 <SmsMessage>
     <Account>{self.account_id}</Account>
     <Signature>{signature}</Signature>
@@ -329,14 +329,14 @@ class ChunghwaProvider:
     <MessageId>{msg_id}</MessageId>
     <Recipient>{phone}</Recipient>
     <Message><![CDATA[{message}]]></Message>
-    <Type>N</Type>
-    <Encoding>UTF8</Encoding>
+    <Type > N</Type>
+    <Encoding > UTF8</Encoding>
 </SmsMessage>"""
         return xml
 
     def _build_status_xml(self, msg_id: str, timestamp: int, signature: str) -> str:
         """Build XML request for status query"""
-        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        xml = """<?xml version="1.0" encoding="UTF - 8"?>
 <StatusQuery>
     <Account>{self.account_id}</Account>
     <Signature>{signature}</Signature>
@@ -347,7 +347,7 @@ class ChunghwaProvider:
 
     def _build_balance_xml(self, timestamp: int, signature: str) -> str:
         """Build XML request for balance query"""
-        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        xml = """<?xml version="1.0" encoding="UTF - 8"?>
 <BalanceQuery>
     <Account>{self.account_id}</Account>
     <Signature>{signature}</Signature>
@@ -418,7 +418,7 @@ class ChunghwaProvider:
             return {"success": False, "error": f"Response parse error: {str(e)}"}
 
     def _get_error_message(self, error_code: str) -> str:
-        """Get human-readable error message for CHT error codes"""
+        """Get human - readable error message for CHT error codes"""
         error_messages = {
             "1": "認證失敗",
             "2": "帳號錯誤",

@@ -2,11 +2,10 @@
 Google Routes API integration service for route optimization
 """
 
-import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -55,7 +54,7 @@ class RouteStop:
     order_id: str
     delivery_time_window: Optional[Tuple[datetime, datetime]] = None
     service_duration_minutes: int = 10  # Default 10 minutes per stop
-    priority: int = 1  # 1-5, higher is more important
+    priority: int = 1  # 1 - 5, higher is more important
     notes: Optional[str] = None
 
 
@@ -90,8 +89,10 @@ class RouteResult:
 class GoogleRoutesService:
     """Service for interacting with Google Routes API"""
 
-    BASE_URL = "https://routes.googleapis.com/directions/v2:computeRoutes"
-    MATRIX_URL = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix"
+    BASE_URL = "https://routes.googleapis.com / directions / v2:computeRoutes"
+    MATRIX_URL = (
+        "https://routes.googleapis.com / distanceMatrix / v2:computeRouteMatrix"
+    )
 
     def __init__(self):
         self.config = None
@@ -136,9 +137,9 @@ class GoogleRoutesService:
 
         # Add field mask to specify what we want in response
         headers = {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": self._api_key,
-            "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs,routes.optimizedIntermediateWaypointIndex,routes.warnings,routes.viewport",
+            "Content - Type": "application / json",
+            "X - Goog - Api - Key": self._api_key,
+            "X - Goog - FieldMask": "routes.duration, routes.distanceMeters, routes.polyline.encodedPolyline, routes.legs, routes.optimizedIntermediateWaypointIndex, routes.warnings, routes.viewport",
         }
 
         try:
@@ -190,9 +191,9 @@ class GoogleRoutesService:
         }
 
         headers = {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": self._api_key,
-            "X-Goog-FieldMask": "originIndex,destinationIndex,distanceMeters,duration,status",
+            "Content - Type": "application / json",
+            "X - Goog - Api - Key": self._api_key,
+            "X - Goog - FieldMask": "originIndex, destinationIndex, distanceMeters, duration, status",
         }
 
         try:
@@ -233,7 +234,7 @@ class GoogleRoutesService:
                 "avoidHighways": request.avoid_highways,
                 "avoidFerries": True,
             },
-            "languageCode": "zh-TW",
+            "languageCode": "zh - TW",
             "units": "METRIC",
         }
 
@@ -305,8 +306,8 @@ class GoogleRoutesService:
         """Generate a cache key for the route request"""
         # Create a unique key based on locations and parameters
         key_parts = [
-            f"{request.origin.latitude},{request.origin.longitude}",
-            f"{request.destination.latitude},{request.destination.longitude}",
+            f"{request.origin.latitude}, {request.origin.longitude}",
+            f"{request.destination.latitude}, {request.destination.longitude}",
             request.travel_mode.value,
             request.routing_preference.value,
             str(request.optimize_waypoint_order),
@@ -314,7 +315,7 @@ class GoogleRoutesService:
 
         # Add waypoints
         for stop in request.waypoints:
-            key_parts.append(f"{stop.location.latitude},{stop.location.longitude}")
+            key_parts.append(f"{stop.location.latitude}, {stop.location.longitude}")
 
         return f"route:{':'.join(key_parts)}"
 

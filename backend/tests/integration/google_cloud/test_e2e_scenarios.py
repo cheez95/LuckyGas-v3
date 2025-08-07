@@ -1,17 +1,15 @@
 """
-End-to-end integration tests for Google API scenarios
+End - to - end integration tests for Google API scenarios
 """
 
-import asyncio
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -31,13 +29,13 @@ from app.services.google_cloud.vertex_ai_service_enhanced import (
 
 @pytest.mark.e2e
 class TestE2EScenarios:
-    """End-to-end test scenarios"""
+    """End - to - end test scenarios"""
 
     @pytest_asyncio.fixture
     async def test_db(self):
         """Create test database"""
-        # Use in-memory SQLite for tests
-        engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+        # Use in - memory SQLite for tests
+        engine = create_async_engine("sqlite + aiosqlite:///:memory:")
         async with engine.begin() as conn:
             # Create tables
             from app.models import Base
@@ -81,7 +79,7 @@ class TestE2EScenarios:
                     customer = Customer(
                         name=f"Test Customer {i}",
                         phone=f"0912345{i:03d}",
-                        address=f"台北市信義區信義路{i+1}段{i+1}號",
+                        address=f"台北市信義區信義路{i + 1}段{i + 1}號",
                         lat=25.033 + i * 0.01,
                         lng=121.565 + i * 0.01,
                         is_active=True,
@@ -108,26 +106,26 @@ class TestE2EScenarios:
                 await session.commit()
 
             # 2. Generate predictions
-            response = client.post("/api/v1/predictions/generate")
+            response = client.post("/api / v1 / predictions / generate")
             assert response.status_code == 200
             prediction_result = response.json()
             assert prediction_result["predictions_count"] > 0
 
             # 3. Get predictions
-            response = client.get("/api/v1/predictions/daily")
+            response = client.get("/api / v1 / predictions / daily")
             assert response.status_code == 200
             predictions = response.json()
             assert len(predictions) > 0
 
             # 4. Optimize routes
-            response = client.post("/api/v1/routes/optimize/daily")
+            response = client.post("/api / v1 / routes / optimize / daily")
             assert response.status_code == 200
             routes = response.json()
             assert "optimized_routes" in routes
             assert len(routes["optimized_routes"]) > 0
 
             # 5. Check dashboard metrics
-            response = client.get("/api/v1/google-api/dashboard/overview")
+            response = client.get("/api / v1 / google - api / dashboard / overview")
             assert response.status_code == 200
             dashboard = response.json()
             assert "services" in dashboard
@@ -155,7 +153,7 @@ class TestE2EScenarios:
 
             # Should fall back to mock service
             response = client.post(
-                "/api/v1/routes/calculate",
+                "/api / v1 / routes / calculate",
                 json={
                     "origin": {"lat": 25.033, "lng": 121.565},
                     "destination": {"lat": 25.047, "lng": 121.517},
@@ -186,7 +184,7 @@ class TestE2EScenarios:
             # Make requests until circuit opens
             for i in range(5):
                 response = client.post(
-                    "/api/v1/routes/calculate",
+                    "/api / v1 / routes / calculate",
                     json={
                         "origin": {"lat": 25.033, "lng": 121.565},
                         "destination": {"lat": 25.047, "lng": 121.517},
@@ -218,7 +216,7 @@ class TestE2EScenarios:
             results = []
             for i in range(5):
                 response = client.post(
-                    "/api/v1/routes/calculate",
+                    "/api / v1 / routes / calculate",
                     json={
                         "origin": {"lat": 25.033, "lng": 121.565},
                         "destination": {"lat": 25.047, "lng": 121.517},
@@ -236,7 +234,7 @@ class TestE2EScenarios:
             # First request - cache miss
             start_time = datetime.now()
             response1 = client.post(
-                "/api/v1/routes/calculate",
+                "/api / v1 / routes / calculate",
                 json={
                     "origin": {"lat": 25.033, "lng": 121.565},
                     "destination": {"lat": 25.047, "lng": 121.517},
@@ -251,7 +249,7 @@ class TestE2EScenarios:
             # Second request - cache hit
             start_time = datetime.now()
             response2 = client.post(
-                "/api/v1/routes/calculate",
+                "/api / v1 / routes / calculate",
                 json={
                     "origin": {"lat": 25.033, "lng": 121.565},
                     "destination": {"lat": 25.047, "lng": 121.517},
@@ -298,7 +296,7 @@ class TestE2EScenarios:
             )
 
         # Get dashboard overview
-        response = client.get("/api/v1/google-api/dashboard/overview")
+        response = client.get("/api / v1 / google - api / dashboard / overview")
         assert response.status_code == 200
 
         dashboard = response.json()
@@ -307,7 +305,7 @@ class TestE2EScenarios:
         assert dashboard["services"]["vertex_ai"]["predictions"]["total"] == 50
 
         # Get cost report
-        response = client.get("/api/v1/google-api/dashboard/costs")
+        response = client.get("/api / v1 / google - api / dashboard / costs")
         assert response.status_code == 200
 
         costs = response.json()
@@ -318,7 +316,7 @@ class TestE2EScenarios:
     async def test_api_key_security(self, client):
         """Test API key security features"""
         # Try to access API key endpoint without auth
-        response = client.get("/api/v1/google-api/keys")
+        response = client.get("/api / v1 / google - api / keys")
         assert response.status_code in [401, 403]  # Unauthorized or Forbidden
 
         # Test key rotation workflow
@@ -331,7 +329,7 @@ class TestE2EScenarios:
             # Update key (with proper auth in real scenario)
             # This would typically require admin authentication
             # response = client.put(
-            #     "/api/v1/google-api/keys/routes",
+            #     "/api / v1 / google - api / keys / routes",
             #     json={"key": "new_secure_key"},
             #     headers={"Authorization": "Bearer admin_token"}
             # )
@@ -342,7 +340,7 @@ class TestE2EScenarios:
 
         async def make_request(client, request_id):
             response = client.post(
-                "/api/v1/routes/calculate",
+                "/api / v1 / routes / calculate",
                 json={
                     "origin": {"lat": 25.033 + request_id * 0.001, "lng": 121.565},
                     "destination": {"lat": 25.047, "lng": 121.517},
@@ -418,7 +416,7 @@ class TestE2EScenarios:
 
                 # Make request
                 response = client.post(
-                    "/api/v1/routes/calculate",
+                    "/api / v1 / routes / calculate",
                     json={
                         "origin": {"lat": 25.033, "lng": 121.565},
                         "destination": {"lat": 25.047, "lng": 121.517},

@@ -1,16 +1,16 @@
 """
-Taiwan Government E-Invoice API Service
+Taiwan Government E - Invoice API Service
 
 This module implements integration with the Taiwan Ministry of Finance
-E-Invoice platform (財政部電子發票整合服務平台) for B2B and B2C invoice
+E - Invoice platform (財政部電子發票整合服務平台) for B2B and B2C invoice
 management.
 
 Key Features:
 - B2B and B2C invoice submission
-- Certificate-based authentication
+- Certificate - based authentication
 - Automatic retry with exponential backoff
 - Circuit breaker pattern for fault tolerance
-- Request/response logging for audit trail
+- Request / response logging for audit trail
 - Traditional Chinese encoding support
 - Test and production environment support
 """
@@ -22,10 +22,10 @@ import hmac
 import json
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from functools import wraps
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import httpx
 
@@ -55,7 +55,7 @@ def validate_einvoice_config(config):
     return True
 
 
-from app.models import Invoice, InvoiceItem
+from app.models import Invoice
 from app.models.invoice import InvoiceStatus, InvoiceType
 
 # Configure logging
@@ -144,14 +144,14 @@ class CircuitBreaker:
 
 class EInvoiceService:
     """
-    Service for integrating with Taiwan Ministry of Finance E-Invoice platform
+    Service for integrating with Taiwan Ministry of Finance E - Invoice platform
 
     This implements both B2B and B2C APIs for comprehensive invoice management
     """
 
     def __init__(self, environment: str = None):
         """
-        Initialize E-Invoice service
+        Initialize E - Invoice service
 
         Args:
             environment: 'test' or 'production', defaults to settings.ENVIRONMENT
@@ -167,7 +167,7 @@ class EInvoiceService:
         try:
             validate_einvoice_config(self.config)
         except ValueError as e:
-            logger.warning(f"E-Invoice configuration validation failed: {e}")
+            logger.warning(f"E - Invoice configuration validation failed: {e}")
             logger.warning("Service will run in mock mode")
             self.mock_mode = True
         else:
@@ -207,9 +207,9 @@ class EInvoiceService:
         self.client_config = {
             "timeout": httpx.Timeout(self.timeout),
             "headers": {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "User-Agent": f"LuckyGas-EInvoice-Client/1.0 ({settings.ENVIRONMENT})",
+                "Content - Type": "application / json",
+                "Accept": "application / json",
+                "User - Agent": f"LuckyGas - EInvoice - Client / 1.0 ({settings.ENVIRONMENT})",
             },
             "verify": True,  # Always verify SSL in production
             "follow_redirects": False,  # Security: don't follow redirects
@@ -232,7 +232,7 @@ class EInvoiceService:
             sm = get_secrets_manager()
 
             # Load API credentials
-            api_creds = sm.get_secret_json("einvoice-api-credentials")
+            api_creds = sm.get_secret_json("einvoice - api - credentials")
             if api_creds:
                 self.config.update(
                     {
@@ -240,11 +240,11 @@ class EInvoiceService:
                         "api_key": api_creds.get("api_key", self.config.get("api_key")),
                     }
                 )
-                logger.info("Loaded E-Invoice API credentials from Secret Manager")
+                logger.info("Loaded E - Invoice API credentials from Secret Manager")
 
             # Load certificate if stored in Secret Manager
-            cert_data = sm.get_secret("einvoice-certificate")
-            key_data = sm.get_secret("einvoice-private-key")
+            cert_data = sm.get_secret("einvoice - certificate")
+            key_data = sm.get_secret("einvoice - private - key")
 
             if cert_data and key_data:
                 # Write to temporary files (will be cleaned up)
@@ -266,7 +266,7 @@ class EInvoiceService:
                 self.config["cert_path"] = cert_file.name
                 self.config["key_path"] = key_file.name
 
-                logger.info("Loaded E-Invoice certificates from Secret Manager")
+                logger.info("Loaded E - Invoice certificates from Secret Manager")
 
         except Exception as e:
             logger.error(f"Failed to load production credentials: {e}")
@@ -280,20 +280,20 @@ class EInvoiceService:
             self.metrics = {
                 "requests_total": Counter(
                     "einvoice_requests_total",
-                    "Total E-Invoice API requests",
+                    "Total E - Invoice API requests",
                     ["endpoint", "status"],
                 ),
                 "request_duration": Histogram(
                     "einvoice_request_duration_seconds",
-                    "E-Invoice API request duration",
+                    "E - Invoice API request duration",
                     ["endpoint"],
                 ),
                 "circuit_breaker_state": Gauge(
                     "einvoice_circuit_breaker_state",
-                    "Circuit breaker state (0=closed, 1=open, 2=half-open)",
+                    "Circuit breaker state (0=closed, 1=open, 2=half - open)",
                 ),
                 "invoice_success_rate": Gauge(
-                    "einvoice_success_rate", "E-Invoice submission success rate"
+                    "einvoice_success_rate", "E - Invoice submission success rate"
                 ),
             }
         except ImportError:
@@ -301,7 +301,7 @@ class EInvoiceService:
             self.metrics = None
 
     async def health_check(self) -> Dict[str, Any]:
-        """Check E-Invoice API health status"""
+        """Check E - Invoice API health status"""
         try:
             async with httpx.AsyncClient(**self.client_config) as client:
                 response = await client.get(
@@ -332,7 +332,7 @@ class EInvoiceService:
             data: Request data to sign
 
         Returns:
-            Base64 encoded HMAC-SHA256 signature
+            Base64 encoded HMAC - SHA256 signature
         """
         # Sort parameters alphabetically
         sorted_params = sorted(data.items())
@@ -349,13 +349,15 @@ class EInvoiceService:
 
         param_string = "&".join(param_strings)
 
-        # Generate HMAC-SHA256
+        # Generate HMAC - SHA256
         signature = hmac.new(
-            self.api_key.encode("utf-8"), param_string.encode("utf-8"), hashlib.sha256
+            self.api_key.encode("utf - 8"),
+            param_string.encode("utf - 8"),
+            hashlib.sha256,
         ).digest()
 
         # Base64 encode
-        return base64.b64encode(signature).decode("utf-8")
+        return base64.b64encode(signature).decode("utf - 8")
 
     def _prepare_invoice_data(self, invoice: Invoice) -> Dict[str, Any]:
         """
@@ -436,7 +438,7 @@ class EInvoiceService:
         return data
 
     def _generate_random_code(self) -> str:
-        """Generate 4-digit random code for invoice"""
+        """Generate 4 - digit random code for invoice"""
         import random
 
         return str(random.randint(1000, 9999))
@@ -457,13 +459,13 @@ class EInvoiceService:
             "environment": settings.ENVIRONMENT,
             "service": "einvoice",
             "endpoint": endpoint,
-            "invoice_no": log_data.get("InvoiceNo", "N/A"),
-            "buyer_id": log_data.get("BuyerId", "N/A"),
+            "invoice_no": log_data.get("InvoiceNo", "N / A"),
+            "buyer_id": log_data.get("BuyerId", "N / A"),
             "amount": log_data.get("TotalAmount", 0),
             "request_id": f"{time.time()}-{log_data.get('InvoiceNo', 'NA')}",
         }
 
-        logger.info(f"E-Invoice API Request", extra={"audit": audit_entry})
+        logger.info("E - Invoice API Request", extra={"audit": audit_entry})
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f"Request data: {json.dumps(log_data, ensure_ascii=False)}")
@@ -478,7 +480,7 @@ class EInvoiceService:
         """Log API response for audit trail with enhanced monitoring"""
         try:
             response_data = response.json()
-        except:
+        except Exception:
             response_data = {"raw": response.text[:500]}  # Limit raw text size
 
         success = response_data.get("RtnCode") == "1"
@@ -496,7 +498,7 @@ class EInvoiceService:
             "error_message": response_data.get("RtnMsg") if not success else None,
         }
 
-        logger.info(f"E-Invoice API Response", extra={"audit": audit_entry})
+        logger.info("E - Invoice API Response", extra={"audit": audit_entry})
 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
@@ -547,7 +549,7 @@ class EInvoiceService:
                 else:
                     response = await client.get(url, params=data)
 
-                duration = time.time() - start_time
+                time.time() - start_time
 
                 # Check for HTTP errors
                 response.raise_for_status()
@@ -573,7 +575,7 @@ class EInvoiceService:
     @CircuitBreaker()
     async def submit_invoice(self, invoice: Invoice) -> Dict[str, Any]:
         """
-        Submit invoice to government e-invoice platform
+        Submit invoice to government e - invoice platform
 
         Args:
             invoice: Invoice instance to submit
@@ -733,7 +735,7 @@ class EInvoiceService:
             )
 
         # Generate allowance number
-        allowance_no = f"D{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        allowance_no = f"D{datetime.now().strftime('%Y % m % d % H % M % S')}"
 
         # Prepare request data
         data = {
@@ -899,8 +901,8 @@ class EInvoiceService:
         import re
 
         validators = {
-            "3J0002": r"^[A-Z0-9+\-\./]{7}$",  # 手機條碼
-            "CQ0001": r"^[A-Z]{2}\d{14}$",  # 自然人憑證
+            "3J0002": r"^[A - Z0 - 9+\-\./]{7}$",  # 手機條碼
+            "CQ0001": r"^[A - Z]{2}\d{14}$",  # 自然人憑證
             "1K0001": r"^\d{16}$",  # 悠遊卡
             "1H0001": r"^\d{16}$",  # 一卡通
             "2G0001": r"^\d{16}$",  # icash
@@ -941,8 +943,8 @@ class EInvoiceService:
         """
         Get the next available invoice number from the sequence.
 
-        This method handles the Taiwan e-invoice sequential numbering requirement.
-        It uses database-level locking to ensure no duplicate numbers are issued.
+        This method handles the Taiwan e - invoice sequential numbering requirement.
+        It uses database - level locking to ensure no duplicate numbers are issued.
 
         Args:
             db_session: Database session for transaction
@@ -950,7 +952,7 @@ class EInvoiceService:
             prefix: Invoice prefix (e.g., "AA", "AB"). If None, uses first available
 
         Returns:
-            str: Next invoice number in format PREFIX+8digits (e.g., "AA10000001")
+            str: Next invoice number in format PREFIX + 8digits (e.g., "AA10000001")
 
         Raises:
             ValueError: If no active sequence found or range exhausted
@@ -961,15 +963,15 @@ class EInvoiceService:
 
         from app.models.invoice_sequence import InvoiceSequence
 
-        # Default to current year/month if not specified
+        # Default to current year / month if not specified
         if year_month is None:
-            year_month = datetime.now().strftime("%Y%m")
+            year_month = datetime.now().strftime("%Y % m")
 
         # Build query for active sequences
         query = select(InvoiceSequence).where(
             and_(
                 InvoiceSequence.year_month == year_month,
-                InvoiceSequence.is_active == True,
+                InvoiceSequence.is_active,
                 InvoiceSequence.current_number <= InvoiceSequence.range_end,
             )
         )
@@ -1031,7 +1033,7 @@ class EInvoiceService:
         # Return mock response
         return {
             "status": "success",
-            "einvoice_id": f"TEST{invoice.invoice_number}{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "einvoice_id": f"TEST{invoice.invoice_number}{datetime.now().strftime('%Y % m % d % H % M % S')}",
             "message": "測試環境 - 發票開立成功",
             "qr_code_left": f"**{invoice.invoice_number}:{invoice.random_code or '1234'}",
             "qr_code_right": f"{int(invoice.total_amount)}:{invoice.buyer_tax_id or '00000000'}",
@@ -1067,7 +1069,7 @@ class EInvoiceService:
 
         return {
             "status": "success",
-            "allowance_number": f"ALLOW{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            "allowance_number": f"ALLOW{datetime.now().strftime('%Y % m % d % H % M % S')}",
             "message": f"測試環境 - 折讓單開立成功：{reason}",
             "allowance_time": datetime.now().isoformat(),
             "api_response": {"RtnCode": "1", "RtnMsg": "Success"},
@@ -1105,7 +1107,7 @@ _einvoice_service = None
 
 def get_einvoice_service() -> EInvoiceService:
     """
-    Get E-Invoice service singleton
+    Get E - Invoice service singleton
 
     Returns:
         EInvoiceService instance

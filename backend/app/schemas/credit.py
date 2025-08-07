@@ -1,5 +1,5 @@
 """
-Credit-related schemas for API responses
+Credit - related schemas for API responses
 """
 
 from typing import Optional
@@ -64,8 +64,8 @@ class CreditSummary(BaseModel):
 
 
 class CreditBlockRequest(BaseModel):
-    """Request to block/unblock customer credit"""
+    """Request to block / unblock customer credit"""
 
-    reason: str = Field(..., description="封鎖/解除封鎖原因")
+    reason: str = Field(..., description="封鎖 / 解除封鎖原因")
 
     model_config = {"json_schema_extra": {"example": {"reason": "逾期款項超過30天"}}}

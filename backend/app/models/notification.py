@@ -2,7 +2,6 @@
 
 import enum
 import uuid
-from datetime import datetime
 
 from sqlalchemy import (
     JSON,
@@ -123,11 +122,11 @@ class SMSTemplate(Base):
 
     # Configuration
     is_active = Column(Boolean, default=True, nullable=False)
-    language = Column(String(10), default="zh-TW", nullable=False)
+    language = Column(String(10), default="zh - TW", nullable=False)
 
-    # A/B testing
+    # A / B testing
     variant = Column(String(10), default="A")  # A, B, C for testing
-    weight = Column(Integer, default=100)  # Weight for random selection (0-100)
+    weight = Column(Integer, default=100)  # Weight for random selection (0 - 100)
 
     # Performance metrics
     sent_count = Column(Integer, default=0)

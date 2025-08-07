@@ -66,13 +66,13 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                 method=request.method, endpoint=path_template, status_code="500"
             ).inc()
 
-            # Re-raise exception
+            # Re - raise exception
             raise
 
     def _get_path_template(self, path: str) -> str:
         """
         Convert path with IDs to template format
-        e.g., /api/v1/customers/123 -> /api/v1/customers/{id}
+        e.g., /api / v1 / customers / 123 -> /api / v1 / customers/{id}
         """
         parts = path.split("/")
         template_parts = []

@@ -1,16 +1,11 @@
+import re
 from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.validators import (
-    TaiwanAddressField,
-    TaiwanPhoneField,
-    TaiwanTaxIdField,
     TaiwanValidators,
-    address_validator,
-    phone_validator,
-    tax_id_validator,
 )
 
 
@@ -120,14 +115,16 @@ class CustomerBase(BaseModel):
         False, alias="已終止", description="Whether customer is terminated"
     )
     needs_same_day_delivery: bool = Field(
-        False, alias="當日配送", description="Whether customer needs same-day delivery"
+        False,
+        alias="當日配送",
+        description="Whether customer needs same - day delivery",
     )
 
     # Customer type
     customer_type: Optional[str] = Field(
         None,
         alias="客戶類型",
-        description="Customer type (residential/commercial)",
+        description="Customer type (residential / commercial)",
         max_length=50,
     )
 
@@ -180,7 +177,7 @@ class CustomerBase(BaseModel):
                 "invoice_title": "幸福瓦斯行",
                 "short_name": "幸福瓦斯",
                 "address": "台北市中正區重慶南路一段122號",
-                "phone": "0912-345-678",
+                "phone": "0912 - 345 - 678",
                 "tax_id": "12345678",
                 "cylinders_20kg": 10,
                 "cylinders_16kg": 5,

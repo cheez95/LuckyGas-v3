@@ -46,8 +46,8 @@ class VehicleFactory(BaseFactory):
         }
 
     def _generate_license_plate(self) -> str:
-        """Generate a Taiwan-style license plate"""
-        # Taiwan license plate format: ABC-1234 or AB-1234
+        """Generate a Taiwan - style license plate"""
+        # Taiwan license plate format: ABC - 1234 or AB - 1234
         letters = "".join(
             random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=random.choice([2, 3]))
         )

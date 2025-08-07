@@ -1,0 +1,349 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: [main]
+    types:
+      - completed
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: asia-east1
+  BACKEND_SERVICE: luckygas-backend
+  FRONTEND_BUCKET: luckygas-frontend
+
+jobs:
+  staging-deployment:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY_STAGING }}
+        project_id: ${{ secrets.GCP_PROJECT_ID_STAGING }}
+        export_default_credentials: true
+    
+    - name: Configure Docker for GCR
+      run: |
+        gcloud auth configure-docker gcr.io
+    
+    - name: Deploy Backend to Staging
+      run: |
+        # Build and push Docker image
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID_STAGING }}/${{ env.BACKEND_SERVICE }}:staging-${{ github.sha }} ./backend
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID_STAGING }}/${{ env.BACKEND_SERVICE }}:staging-${{ github.sha }}
+        
+        # Deploy to Cloud Run
+        gcloud run deploy ${{ env.BACKEND_SERVICE }}-staging \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID_STAGING }}/${{ env.BACKEND_SERVICE }}:staging-${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.GCP_REGION }} \
+          --allow-unauthenticated \
+          --service-account luckygas-backend@${{ secrets.GCP_PROJECT_ID_STAGING }}.iam.gserviceaccount.com \
+          --add-cloudsql-instances ${{ secrets.CLOUD_SQL_INSTANCE_STAGING }} \
+          --update-env-vars "ENVIRONMENT=staging,GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID_STAGING }}" \
+          --update-secrets "DATABASE_URL=database-url-staging:latest,REDIS_URL=redis-url-staging:latest,SECRET_KEY=secret-key-staging:latest"
+    
+    - name: Run Database Migrations
+      run: |
+        # Install gcloud sql proxy
+        wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy
+        chmod +x cloud_sql_proxy
+        
+        # Start proxy
+        ./cloud_sql_proxy -instances=${{ secrets.CLOUD_SQL_INSTANCE_STAGING }}=tcp:5432 &
+        sleep 5
+        
+        # Run migrations
+        cd backend
+        pip install alembic psycopg2-binary
+        export DATABASE_URL="${{ secrets.DATABASE_URL_STAGING }}"
+        alembic upgrade head
+    
+    - name: Deploy Frontend to Staging
+      run: |
+        cd frontend
+        
+        # Create staging env file
+        cat > .env.production << EOF
+        VITE_API_URL=https://staging-api.luckygas.com.tw
+        VITE_WS_URL=wss://staging-api.luckygas.com.tw
+        VITE_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+        VITE_ENVIRONMENT=staging
+        EOF
+        
+        # Build frontend
+        npm ci
+        npm run build
+        
+        # Deploy to Cloud Storage
+        gsutil -m rsync -r -d dist/ gs://${{ env.FRONTEND_BUCKET }}-staging/
+        
+        # Set cache headers
+        gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ env.FRONTEND_BUCKET }}-staging/assets/**
+        gsutil -m setmeta -h "Cache-Control:no-cache" gs://${{ env.FRONTEND_BUCKET }}-staging/index.html
+    
+    - name: Run Smoke Tests
+      run: |
+        # Wait for deployment to stabilize
+        sleep 30
+        
+        # Check backend health
+        BACKEND_URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE }}-staging --region ${{ env.GCP_REGION }} --format="value(status.url)")
+        curl -f $BACKEND_URL/api/v1/health || exit 1
+        
+        # Run basic API tests
+        npm install -g newman
+        newman run backend/tests/postman/smoke-tests.json \
+          --env-var "baseUrl=$BACKEND_URL" \
+          --reporters cli,json \
+          --reporter-json-export staging-smoke-results.json
+    
+    - name: Notify Deployment Status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          Staging Deployment ${{ job.status }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  production-approval:
+    name: Production Deployment Approval
+    runs-on: ubuntu-latest
+    needs: staging-deployment
+    environment: production-approval
+    
+    steps:
+    - name: Request Approval
+      run: |
+        echo "Staging deployment successful. Awaiting production approval..."
+        echo "Commit: ${{ github.sha }}"
+        echo "Author: ${{ github.actor }}"
+
+  production-deployment:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: production-approval
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY_PRODUCTION }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        export_default_credentials: true
+    
+    - name: Configure Docker for GCR
+      run: |
+        gcloud auth configure-docker gcr.io
+    
+    - name: Create Backup Before Deployment
+      run: |
+        # Backup database
+        gcloud sql backups create \
+          --instance=${{ secrets.CLOUD_SQL_INSTANCE_PRODUCTION }} \
+          --description="Pre-deployment backup $(date +%Y%m%d-%H%M%S)"
+        
+        # Backup current backend image
+        docker pull gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:latest || true
+        docker tag gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:latest \
+          gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:backup-$(date +%Y%m%d-%H%M%S) || true
+        docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:backup-$(date +%Y%m%d-%H%M%S) || true
+    
+    - name: Deploy Backend to Production
+      run: |
+        # Build and push Docker image
+        docker build -t gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }} \
+                     -t gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:latest \
+                     ./backend
+        docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}
+        docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:latest
+        
+        # Deploy to Cloud Run with traffic splitting
+        gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+          --image gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.GCP_REGION }} \
+          --allow-unauthenticated \
+          --service-account luckygas-backend@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+          --add-cloudsql-instances ${{ secrets.CLOUD_SQL_INSTANCE_PRODUCTION }} \
+          --update-env-vars "ENVIRONMENT=production,GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}" \
+          --update-secrets "DATABASE_URL=database-url:latest,REDIS_URL=redis-url:latest,SECRET_KEY=secret-key:latest" \
+          --cpu 2 \
+          --memory 2Gi \
+          --min-instances 2 \
+          --max-instances 100 \
+          --concurrency 100 \
+          --timeout 300 \
+          --tag canary \
+          --no-traffic
+    
+    - name: Run Database Migrations
+      run: |
+        # Install gcloud sql proxy
+        wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy
+        chmod +x cloud_sql_proxy
+        
+        # Start proxy
+        ./cloud_sql_proxy -instances=${{ secrets.CLOUD_SQL_INSTANCE_PRODUCTION }}=tcp:5432 &
+        sleep 5
+        
+        # Run migrations
+        cd backend
+        pip install alembic psycopg2-binary
+        export DATABASE_URL="${{ secrets.DATABASE_URL_PRODUCTION }}"
+        alembic upgrade head
+    
+    - name: Canary Deployment (10% traffic)
+      run: |
+        # Route 10% traffic to new version
+        gcloud run services update-traffic ${{ env.BACKEND_SERVICE }} \
+          --region ${{ env.GCP_REGION }} \
+          --to-tags canary=10
+        
+        # Wait and monitor
+        sleep 300  # 5 minutes
+        
+        # Check error rate (placeholder - implement actual monitoring)
+        echo "Monitoring canary deployment..."
+    
+    - name: Full Production Rollout
+      run: |
+        # Route 100% traffic to new version
+        gcloud run services update-traffic ${{ env.BACKEND_SERVICE }} \
+          --region ${{ env.GCP_REGION }} \
+          --to-latest
+    
+    - name: Deploy Frontend to Production
+      run: |
+        cd frontend
+        
+        # Create production env file
+        cat > .env.production << EOF
+        VITE_API_URL=https://api.luckygas.com.tw
+        VITE_WS_URL=wss://api.luckygas.com.tw
+        VITE_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+        VITE_ENVIRONMENT=production
+        EOF
+        
+        # Build frontend
+        npm ci
+        npm run build
+        
+        # Deploy to Cloud Storage
+        gsutil -m rsync -r -d dist/ gs://${{ env.FRONTEND_BUCKET }}/
+        
+        # Set cache headers
+        gsutil -m setmeta -h "Cache-Control:public, max-age=31536000" gs://${{ env.FRONTEND_BUCKET }}/assets/**
+        gsutil -m setmeta -h "Cache-Control:no-cache" gs://${{ env.FRONTEND_BUCKET }}/index.html
+        
+        # Invalidate CDN cache
+        gcloud compute url-maps invalidate-cdn-cache luckygas-lb --path "/*"
+    
+    - name: Verify Production Deployment
+      run: |
+        # Check backend health
+        curl -f https://api.luckygas.com.tw/api/v1/health || exit 1
+        
+        # Run production smoke tests
+        npm install -g newman
+        newman run backend/tests/postman/production-smoke-tests.json \
+          --env-var "baseUrl=https://api.luckygas.com.tw" \
+          --reporters cli,json \
+          --reporter-json-export production-smoke-results.json
+    
+    - name: Create Deployment Record
+      run: |
+        # Create deployment record
+        cat > deployment-record.json << EOF
+        {
+          "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+          "environment": "production",
+          "commit_sha": "${{ github.sha }}",
+          "backend_image": "gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}",
+          "deployer": "${{ github.actor }}",
+          "status": "success"
+        }
+        EOF
+        
+        # Upload to Cloud Storage
+        gsutil cp deployment-record.json gs://${{ env.GCP_PROJECT_ID }}-deployments/production/$(date +%Y%m%d-%H%M%S).json
+    
+    - name: Update Monitoring Alerts
+      run: |
+        # Update uptime checks
+        gcloud monitoring uptime-checks update luckygas-api \
+          --display-name="Lucky Gas API Health" \
+          --periods=1 \
+          --timeout=10s
+    
+    - name: Notify Deployment Status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          Production Deployment ${{ job.status }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+          Environment: Production
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+
+  rollback:
+    name: Production Rollback
+    runs-on: ubuntu-latest
+    needs: production-deployment
+    if: ${{ failure() }}
+    environment: production
+    
+    steps:
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY_PRODUCTION }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        export_default_credentials: true
+    
+    - name: Rollback Backend
+      run: |
+        # Get previous revision
+        PREVIOUS_REVISION=$(gcloud run revisions list \
+          --service=${{ env.BACKEND_SERVICE }} \
+          --region=${{ env.GCP_REGION }} \
+          --limit=2 \
+          --format="value(name)" | tail -1)
+        
+        # Route traffic to previous revision
+        gcloud run services update-traffic ${{ env.BACKEND_SERVICE }} \
+          --region=${{ env.GCP_REGION }} \
+          --to-revisions=$PREVIOUS_REVISION=100
+    
+    - name: Notify Rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "🚨 Production deployment rolled back",
+            attachments: [{
+              color: 'danger',
+              text: `Commit: ${{ github.sha }}\nAuthor: ${{ github.actor }}`
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}

@@ -1,0 +1,41 @@
+# Practice Environment Configuration
+# Copy this file to .env and update with your values
+
+# Google Maps API Key (required for map features)
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
+# Database Configuration (for practice environment)
+POSTGRES_USER=practice_user
+POSTGRES_PASSWORD=practice_pass
+POSTGRES_DB=luckygas_practice
+
+# Redis Configuration
+REDIS_PASSWORD=practice_redis_pass
+
+# JWT Secret (for practice environment only)
+JWT_SECRET=practice-secret-key-not-for-production
+
+# Frontend Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8002/api/v1
+NEXT_PUBLIC_GOOGLE_MAPS_KEY=${GOOGLE_MAPS_API_KEY}
+
+# Backend Configuration
+DATABASE_URL=postgresql://practice_user:practice_pass@practice-db:5432/luckygas_practice
+REDIS_URL=redis://:practice_redis_pass@practice-redis:6379/0
+
+# Training Video Storage (optional)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_REGION=us-east-1
+S3_BUCKET_NAME=luckygas-training-videos
+
+# Email Configuration (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+EMAIL_FROM=training@luckygas.com.tw
+
+# Monitoring (optional)
+SENTRY_DSN=
+NEW_RELIC_LICENSE_KEY=

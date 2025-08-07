@@ -7,14 +7,17 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.customer import Customer
-from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.order import PaymentStatus
 from app.services.credit_service import CreditService
 from tests.utils.auth import get_test_token
 from tests.utils.customer import create_test_customer
 from tests.utils.order import create_test_order
 
+# Import payment test marker
+from tests.conftest_payment import requires_payment
 
+
+@requires_payment
 @pytest.mark.asyncio
 async def test_credit_limit_check_within_limit(db: AsyncSession):
     """Test credit check when order is within limit"""
@@ -28,11 +31,12 @@ async def test_credit_limit_check_within_limit(db: AsyncSession):
         db=db, customer_id=customer.id, order_amount=5000.0
     )
 
-    assert result["approved"] == True
+    assert result["approved"]
     assert result["reason"] == "Within credit limit"
     assert result["details"]["available_credit"] == 8000.0  # 10000 - 2000
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_credit_limit_check_exceeds_limit(db: AsyncSession):
     """Test credit check when order exceeds limit"""
@@ -46,12 +50,13 @@ async def test_credit_limit_check_exceeds_limit(db: AsyncSession):
         db=db, customer_id=customer.id, order_amount=5000.0
     )
 
-    assert result["approved"] == False
+    assert not result["approved"]
     assert result["reason"] == "Credit limit exceeded"
     assert result["details"]["available_credit"] == 2000.0  # 10000 - 8000
     assert result["details"]["exceeds_by"] == 3000.0  # 5000 - 2000
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_credit_limit_check_blocked_customer(db: AsyncSession):
     """Test credit check for blocked customer"""
@@ -65,10 +70,11 @@ async def test_credit_limit_check_blocked_customer(db: AsyncSession):
         db=db, customer_id=customer.id, order_amount=1000.0
     )
 
-    assert result["approved"] == False
+    assert not result["approved"]
     assert result["reason"] == "Customer credit is blocked"
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_credit_limit_check_manager_override(db: AsyncSession):
     """Test credit check with manager override"""
@@ -82,10 +88,11 @@ async def test_credit_limit_check_manager_override(db: AsyncSession):
         db=db, customer_id=customer.id, order_amount=5000.0, skip_check=True
     )
 
-    assert result["approved"] == True
+    assert result["approved"]
     assert result["reason"] == "Manager override"
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_order_creation_with_credit_check(
     async_client: AsyncClient, db: AsyncSession
@@ -103,7 +110,7 @@ async def test_order_creation_with_credit_check(
     # Try to create order that exceeds credit limit
     order_data = {
         "customer_id": customer.id,
-        "scheduled_date": "2025-07-30T09:00:00",
+        "scheduled_date": "2025 - 07 - 30T09:00:00",
         "qty_20kg": 2,
         "qty_16kg": 0,
         "qty_50kg": 0,
@@ -121,9 +128,10 @@ async def test_order_creation_with_credit_check(
     assert response.status_code == 400
     data = response.json()
     assert "信用額度檢查失敗" in data["detail"]
-    assert "可用額度: NT$1,000" in data["detail"]
+    assert "可用額度: NT$1, 000" in data["detail"]
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_order_creation_with_super_admin_override(
     async_client: AsyncClient, db: AsyncSession
@@ -141,7 +149,7 @@ async def test_order_creation_with_super_admin_override(
     # Create order that would normally exceed credit limit
     order_data = {
         "customer_id": customer.id,
-        "scheduled_date": "2025-07-30T09:00:00",
+        "scheduled_date": "2025 - 07 - 30T09:00:00",
         "qty_20kg": 2,
         "qty_16kg": 0,
         "qty_50kg": 0,
@@ -163,6 +171,7 @@ async def test_order_creation_with_super_admin_override(
     assert data["customer_id"] == customer.id
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_get_credit_summary(async_client: AsyncClient, db: AsyncSession):
     """Test getting customer credit summary"""
@@ -192,7 +201,7 @@ async def test_get_credit_summary(async_client: AsyncClient, db: AsyncSession):
 
     # Get credit summary
     response = await async_client.get(
-        f"{settings.API_V1_STR}/orders/credit/{customer.id}", headers=headers
+        f"{settings.API_V1_STR}/orders / credit/{customer.id}", headers=headers
     )
 
     assert response.status_code == 200
@@ -200,9 +209,10 @@ async def test_get_credit_summary(async_client: AsyncClient, db: AsyncSession):
     assert data["credit_limit"] == 20000.0
     assert data["current_balance"] == 8000.0  # 5000 + 3000
     assert data["available_credit"] == 12000.0  # 20000 - 8000
-    assert data["credit_utilization"] == 40.0  # (8000/20000) * 100
+    assert data["credit_utilization"] == 40.0  # (8000 / 20000) * 100
 
 
+@requires_payment
 @pytest.mark.asyncio
 async def test_block_unblock_credit(async_client: AsyncClient, db: AsyncSession):
     """Test blocking and unblocking customer credit"""
@@ -217,7 +227,7 @@ async def test_block_unblock_credit(async_client: AsyncClient, db: AsyncSession)
 
     # Block credit
     response = await async_client.post(
-        f"{settings.API_V1_STR}/orders/credit/{customer.id}/block",
+        f"{settings.API_V1_STR}/orders / credit/{customer.id}/block",
         params={"reason": "Payment overdue 60 days"},
         headers=headers,
     )
@@ -226,11 +236,11 @@ async def test_block_unblock_credit(async_client: AsyncClient, db: AsyncSession)
 
     # Verify customer is blocked
     await db.refresh(customer)
-    assert customer.is_credit_blocked == True
+    assert customer.is_credit_blocked
 
     # Unblock credit
     response = await async_client.post(
-        f"{settings.API_V1_STR}/orders/credit/{customer.id}/unblock",
+        f"{settings.API_V1_STR}/orders / credit/{customer.id}/unblock",
         params={"reason": "Payment received"},
         headers=headers,
     )
@@ -239,4 +249,4 @@ async def test_block_unblock_credit(async_client: AsyncClient, db: AsyncSession)
 
     # Verify customer is unblocked
     await db.refresh(customer)
-    assert customer.is_credit_blocked == False
+    assert not customer.is_credit_blocked

@@ -1,5 +1,5 @@
 """
-Simple WebSocket endpoint for real-time communication
+Simple WebSocket endpoint for real - time communication
 """
 
 import logging
@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 
 from app.api import deps
-from app.core.auth import decode_token
+from app.core.security import decode_access_token
 from app.services.simple_websocket import websocket_manager
 
 logger = logging.getLogger(__name__)
@@ -19,9 +19,9 @@ router = APIRouter()
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None)):
     """
-    WebSocket endpoint for real-time updates.
+    WebSocket endpoint for real - time updates.
 
-    Connect with: ws://localhost:8000/api/v1/websocket/ws?token=YOUR_JWT_TOKEN
+    Connect with: ws://localhost:8000 / api / v1 / websocket / ws?token=YOUR_JWT_TOKEN
     """
     connection_id = None
 
@@ -30,7 +30,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(
         user_id = "anonymous"
         if token:
             try:
-                payload = decode_token(token)
+                payload = decode_access_token(token)
                 user_id = str(payload.get("sub", "anonymous"))
             except Exception as e:
                 logger.warning(f"Invalid token in WebSocket connection: {e}")

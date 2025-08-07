@@ -8,15 +8,10 @@ import json
 import logging
 import random
 import time
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import httpx
-import kubernetes
-import psutil
-import pytest
-import websockets
 from kubernetes import client, config
 
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +29,7 @@ class ChaosTest:
         # Initialize Kubernetes client
         try:
             config.load_incluster_config()
-        except:
+        except Exception:
             config.load_kube_config()
 
         self.v1 = client.CoreV1Api()
@@ -62,7 +57,7 @@ class ChaosTest:
 
     async def test_pod_failure_recovery(self) -> Dict[str, Any]:
         """Test pod failure and recovery"""
-        start_time = time.time()
+        time.time()
         test_result = {
             "test": "Pod Failure Recovery",
             "status": "PASSED",
@@ -91,7 +86,7 @@ class ChaosTest:
             while True:
                 async with httpx.AsyncClient() as client:
                     try:
-                        response = await client.get(f"{self.base_url}/api/health")
+                        response = await client.get(f"{self.base_url}/api / health")
                         if response.status_code == 200:
                             recovery_time = time.time() - recovery_start
                             test_result["recovery_time"] = recovery_time
@@ -99,7 +94,7 @@ class ChaosTest:
                                 f"Pod recovered in {recovery_time:.2f}s"
                             )
                             break
-                    except:
+                    except Exception:
                         pass
 
                 if time.time() - recovery_start > 300:  # 5 minute timeout
@@ -127,7 +122,7 @@ class ChaosTest:
             # Apply network policy to block traffic
             network_policy = client.V1NetworkPolicy(
                 metadata=client.V1ObjectMeta(
-                    name="chaos-network-partition", namespace=self.k8s_namespace
+                    name="chaos - network - partition", namespace=self.k8s_namespace
                 ),
                 spec=client.V1NetworkPolicySpec(
                     pod_selector=client.V1LabelSelector(
@@ -162,13 +157,13 @@ class ChaosTest:
 
             # Remove network policy
             networking_v1.delete_namespaced_network_policy(
-                name="chaos-network-partition", namespace=self.k8s_namespace
+                name="chaos - network - partition", namespace=self.k8s_namespace
             )
 
             # Verify recovery
             await asyncio.sleep(10)
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.base_url}/api/health")
+                response = await client.get(f"{self.base_url}/api / health")
                 if response.status_code == 200:
                     test_result["details"].append(
                         "System recovered from network partition"
@@ -201,7 +196,7 @@ class ChaosTest:
             # Test API behavior without database
             async with httpx.AsyncClient() as client:
                 # Health check should report unhealthy
-                response = await client.get(f"{self.base_url}/api/health")
+                response = await client.get(f"{self.base_url}/api / health")
                 health_data = response.json()
                 if health_data.get("database") == "disconnected":
                     test_result["details"].append(
@@ -210,7 +205,7 @@ class ChaosTest:
 
                 # API should return appropriate errors
                 response = await client.get(
-                    f"{self.base_url}/api/v1/customers",
+                    f"{self.base_url}/api / v1 / customers",
                     headers={"Authorization": "Bearer test_token"},
                 )
                 if response.status_code in [503, 500]:
@@ -234,7 +229,7 @@ class ChaosTest:
             recovery_start = time.time()
             while time.time() - recovery_start < 120:
                 async with httpx.AsyncClient() as client:
-                    response = await client.get(f"{self.base_url}/api/health")
+                    response = await client.get(f"{self.base_url}/api / health")
                     if response.status_code == 200:
                         health_data = response.json()
                         if health_data.get("database") == "connected":
@@ -268,9 +263,9 @@ class ChaosTest:
                 # Test route optimization with slow external API
                 start_time = time.time()
                 response = await client.post(
-                    f"{self.base_url}/api/v1/routes/optimize",
+                    f"{self.base_url}/api / v1 / routes / optimize",
                     json={
-                        "date": "2024-01-20",
+                        "date": "2024 - 01 - 20",
                         "area": "信義區",
                         "simulate_slow_api": True,  # Flag for testing
                     },
@@ -311,10 +306,10 @@ class ChaosTest:
             async def make_request(session, index):
                 try:
                     response = await session.get(
-                        f"{self.base_url}/api/v1/customers?page={index}&size=100"
+                        f"{self.base_url}/api / v1 / customers?page={index}&size=100"
                     )
                     return response.status_code
-                except:
+                except Exception:
                     return 0
 
             # Send 1000 concurrent requests
@@ -341,13 +336,13 @@ class ChaosTest:
                 else:
                     test_result["status"] = "FAILED"
                     test_result["details"].append(
-                        f"High error rate under load: {errors/10}%"
+                        f"High error rate under load: {errors / 10}%"
                     )
 
             # Check if system recovers
             await asyncio.sleep(10)
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.base_url}/api/health")
+                response = await client.get(f"{self.base_url}/api / health")
                 if response.status_code == 200:
                     test_result["details"].append("System recovered after load spike")
 
@@ -371,22 +366,23 @@ class ChaosTest:
             zone_a_pods = [
                 p
                 for p in pods.items
-                if p.spec.node_selector and p.spec.node_selector.get("zone") == "zone-a"
+                if p.spec.node_selector
+                and p.spec.node_selector.get("zone") == "zone - a"
             ]
 
             if not zone_a_pods:
                 test_result["details"].append(
-                    "No zone-specific pods found, skipping test"
+                    "No zone - specific pods found, skipping test"
                 )
                 return test_result
 
-            # Cordon nodes in zone-a
-            nodes = self.v1.list_node(label_selector="zone=zone-a")
+            # Cordon nodes in zone - a
+            nodes = self.v1.list_node(label_selector="zone=zone - a")
             for node in nodes.items:
                 body = client.V1Node(spec=client.V1NodeSpec(unschedulable=True))
                 self.v1.patch_node(name=node.metadata.name, body=body)
 
-            # Delete pods in zone-a
+            # Delete pods in zone - a
             for pod in zone_a_pods:
                 self.v1.delete_namespaced_pod(
                     name=pod.metadata.name, namespace=self.k8s_namespace
@@ -399,13 +395,13 @@ class ChaosTest:
             for i in range(60):  # Monitor for 5 minutes
                 async with httpx.AsyncClient() as client:
                     try:
-                        response = await client.get(f"{self.base_url}/api/health")
+                        response = await client.get(f"{self.base_url}/api / health")
                         if response.status_code != 200 and downtime_start is None:
                             downtime_start = time.time()
                         elif response.status_code == 200 and downtime_start is not None:
                             recovery_time = time.time() - downtime_start
                             break
-                    except:
+                    except Exception:
                         if downtime_start is None:
                             downtime_start = time.time()
 
@@ -458,8 +454,10 @@ class ChaosTest:
 
             # Check if services degrade gracefully
             async with httpx.AsyncClient() as client:
-                # WebSocket service should fall back to in-memory
-                ws_health = await client.get(f"{self.base_url}/api/v1/websocket/health")
+                # WebSocket service should fall back to in - memory
+                ws_health = await client.get(
+                    f"{self.base_url}/api / v1 / websocket / health"
+                )
                 if ws_health.status_code == 200:
                     test_result["details"].append(
                         "WebSocket service degraded gracefully without Redis"
@@ -467,7 +465,7 @@ class ChaosTest:
 
                 # Session management should fall back
                 login_response = await client.post(
-                    f"{self.base_url}/api/v1/auth/login",
+                    f"{self.base_url}/api / v1 / auth / login",
                     json={"username": "test@luckygas.com", "password": "password123"},
                 )
                 if login_response.status_code == 200:
@@ -497,11 +495,11 @@ class ChaosTest:
                 for i in range(total_requests):
                     try:
                         response = await client.get(
-                            f"{self.base_url}/api/v1/customers", timeout=5.0
+                            f"{self.base_url}/api / v1 / customers", timeout=5.0
                         )
                         if response.status_code == 200:
                             success_count += 1
-                    except:
+                    except Exception:
                         pass
 
             success_rate = success_count / total_requests
@@ -543,7 +541,7 @@ class ChaosTest:
             async with httpx.AsyncClient() as client:
                 # Create customer with specific data
                 create_response = await client.post(
-                    f"{self.base_url}/api/v1/customers",
+                    f"{self.base_url}/api / v1 / customers",
                     json={
                         "code": "CORRUPT_TEST",
                         "name": "測試客戶",
@@ -561,7 +559,7 @@ class ChaosTest:
 
                     # Try to read corrupted data
                     read_response = await client.get(
-                        f"{self.base_url}/api/v1/customers/{customer_id}",
+                        f"{self.base_url}/api / v1 / customers/{customer_id}",
                         headers={"Authorization": "Bearer test_token"},
                     )
 
@@ -572,9 +570,9 @@ class ChaosTest:
                                 "System detected data corruption"
                             )
 
-                    # Check if backup/recovery mechanism works
+                    # Check if backup / recovery mechanism works
                     recovery_response = await client.post(
-                        f"{self.base_url}/api/v1/admin/recover-customer/{customer_id}",
+                        f"{self.base_url}/api / v1 / admin / recover - customer/{customer_id}",
                         headers={"Authorization": "Bearer admin_token"},
                     )
 
@@ -601,7 +599,7 @@ class ChaosTest:
                 "total_tests": total_tests,
                 "passed": passed_tests,
                 "failed": total_tests - passed_tests,
-                "success_rate": f"{(passed_tests/total_tests)*100:.1f}%",
+                "success_rate": f"{(passed_tests / total_tests)*100:.1f}%",
             },
             "test_results": self.results,
             "recommendations": [],
@@ -624,7 +622,7 @@ class ChaosTest:
                     )
                 elif "Zone" in result["test"]:
                     report["recommendations"].append(
-                        "Ensure proper multi-zone deployment and pod anti-affinity"
+                        "Ensure proper multi - zone deployment and pod anti - affinity"
                     )
 
         return report
@@ -636,10 +634,10 @@ async def main():
     report = await chaos_tester.run_all_tests()
 
     # Save report
-    with open("chaos-test-report.json", "w") as f:
+    with open("chaos - test - report.json", "w") as f:
         json.dump(report, f, indent=2)
 
-    print(f"\nChaos Engineering Test Summary:")
+    print("\nChaos Engineering Test Summary:")
     print(f"Total Tests: {report['summary']['total_tests']}")
     print(f"Passed: {report['summary']['passed']}")
     print(f"Failed: {report['summary']['failed']}")

@@ -2,16 +2,14 @@
 Google Cloud Vertex AI Service for demand prediction
 """
 
-import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 from google.cloud import aiplatform, storage
-from google.cloud.aiplatform import AutoMLTabularTrainingJob, Model, TabularDataset
+from google.cloud.aiplatform import AutoMLTabularTrainingJob, TabularDataset
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +17,6 @@ from app.core.database import get_async_session
 from app.core.google_cloud_config import get_gcp_config
 from app.models.customer import Customer
 from app.models.delivery import DeliveryPrediction
-from app.models.delivery_history import DeliveryHistory
 from app.models.order import Order
 
 logger = logging.getLogger(__name__)
@@ -68,7 +65,7 @@ class VertexAIDemandPredictionService:
 
             # Create dataset
             dataset = TabularDataset.create(
-                display_name=f"lucky_gas_demand_{datetime.now().strftime('%Y%m%d')}",
+                display_name=f"lucky_gas_demand_{datetime.now().strftime('%Y % m % d')}",
                 gcs_source=training_data_path,
             )
 
@@ -76,7 +73,7 @@ class VertexAIDemandPredictionService:
             job = AutoMLTabularTrainingJob(
                 display_name="demand_prediction_model",
                 optimization_prediction_type="regression",
-                optimization_objective="minimize-mae",  # Minimize Mean Absolute Error
+                optimization_objective="minimize - mae",  # Minimize Mean Absolute Error
                 column_transformations=[
                     {"numeric": {"column_name": "avg_daily_usage"}},
                     {"numeric": {"column_name": "days_since_last_order"}},
@@ -97,7 +94,7 @@ class VertexAIDemandPredictionService:
                 training_fraction_split=0.8,
                 validation_fraction_split=0.1,
                 test_fraction_split=0.1,
-                model_display_name=f"demand_predictor_v{datetime.now().strftime('%Y%m%d')}",
+                model_display_name=f"demand_predictor_v{datetime.now().strftime('%Y % m % d')}",
                 disable_early_stopping=False,
                 budget_milli_node_hours=3000,  # 3 node hours budget
             )
@@ -105,7 +102,7 @@ class VertexAIDemandPredictionService:
             # Deploy model to endpoint
             endpoint = model.deploy(
                 deployed_model_display_name="demand_predictor_endpoint",
-                machine_type="n1-standard-4",
+                machine_type="n1 - standard - 4",
                 min_replica_count=1,
                 max_replica_count=3,
                 traffic_split={"0": 100},
@@ -201,7 +198,7 @@ class VertexAIDemandPredictionService:
         df = pd.DataFrame(training_data)
 
         # Upload to Google Cloud Storage
-        gcs_path = f"gs://{self.gcp_config.bucket_name}/training_data/demand_prediction_{datetime.now().strftime('%Y%m%d')}.csv"
+        gcs_path = f"gs://{self.gcp_config.bucket_name}/training_data / demand_prediction_{datetime.now().strftime('%Y % m % d')}.csv"
         df.to_csv(gcs_path, index=False)
 
         return gcs_path
@@ -227,7 +224,7 @@ class VertexAIDemandPredictionService:
             async for session in get_async_session():
                 # Get all active customers
                 result = await session.execute(
-                    select(Customer).where(Customer.is_active == True)
+                    select(Customer).where(Customer.is_active)
                 )
                 customers = result.scalars().all()
 
@@ -243,11 +240,11 @@ class VertexAIDemandPredictionService:
                 elif self.model:
                     # Use batch prediction job for model without endpoint
                     job = self.model.batch_predict(
-                        job_display_name=f"demand_prediction_{datetime.now().strftime('%Y%m%d')}",
+                        job_display_name=f"demand_prediction_{datetime.now().strftime('%Y % m % d')}",
                         instances_format="jsonl",
                         gcs_source=await self._save_instances_to_gcs(instances),
                         gcs_destination_prefix=f"gs://{self.gcp_config.bucket_name}/predictions/",
-                        machine_type="n1-standard-4",
+                        machine_type="n1 - standard - 4",
                         sync=False,
                     )
                     # For async, we'll process results later
@@ -307,7 +304,7 @@ class VertexAIDemandPredictionService:
                 await session.commit()
 
             return {
-                "batch_id": f"batch-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                "batch_id": f"batch-{datetime.now().strftime('%Y % m % d-%H % M % S')}",
                 "predictions_count": predictions_created,
                 "model_version": self.gcp_config.vertex_model_id,
                 "execution_time_seconds": 10.5,
@@ -420,9 +417,7 @@ class VertexAIDemandPredictionService:
         client = storage.Client(project=self.gcp_config.project_id)
         bucket = client.bucket(self.gcp_config.bucket_name)
 
-        blob_name = (
-            f"batch_predictions/input_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
-        )
+        blob_name = f"batch_predictions / input_{datetime.now().strftime('%Y % m % d_ % H % M % S')}.jsonl"
         blob = bucket.blob(blob_name)
         blob.upload_from_string(jsonl_data)
 

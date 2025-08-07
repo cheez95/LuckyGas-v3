@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """Simple load test for production readiness validation."""
 import asyncio
 import statistics
@@ -61,12 +61,12 @@ async def run_load_test(
     p95 = latencies[int(len(latencies) * 0.95)]
     p99 = latencies[int(len(latencies) * 0.99)]
 
-    print(f"\n=== Load Test Results ===")
+    print("\n=== Load Test Results ===")
     print(f"Total requests: {len(latencies)}")
     print(f"Total time: {total_time:.2f}s")
-    print(f"Requests/sec: {len(latencies) / total_time:.2f}")
+    print(f"Requests / sec: {len(latencies) / total_time:.2f}")
     print(f"Errors: {errors} ({errors / len(latencies) * 100:.2f}%)")
-    print(f"\nLatency metrics:")
+    print("\nLatency metrics:")
     print(f"  p50: {p50 * 1000:.2f}ms")
     print(f"  p95: {p95 * 1000:.2f}ms")
     print(f"  p99: {p99 * 1000:.2f}ms")
@@ -74,13 +74,17 @@ async def run_load_test(
 
     # Check if p95 < 200ms
     if p95 * 1000 < 200:
-        print(f"\n✅ PASS: p95 latency < 200ms")
+        print("\n✅ PASS: p95 latency < 200ms")
     else:
-        print(f"\n❌ FAIL: p95 latency >= 200ms")
+        print("\n❌ FAIL: p95 latency >= 200ms")
 
     return p95 * 1000 < 200, errors / len(latencies) < 0.01
 
 
 if __name__ == "__main__":
-    url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000/api/v1/health"
+    url = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else "http://localhost:8000 / api / v1 / health"
+    )
     asyncio.run(run_load_test(url))

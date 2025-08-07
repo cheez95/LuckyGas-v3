@@ -27,8 +27,8 @@ api_router.include_router(routes.router, prefix="/routes", tags=["routes"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(websocket.router, prefix="/websocket", tags=["websocket"])
 api_router.include_router(
-    websocket_simple.router, prefix="/websocket-simple", tags=["websocket-simple"]
+    websocket_simple.router, prefix="/websocket - simple", tags=["websocket - simple"]
 )
 api_router.include_router(
-    health_simple.router, prefix="/health-simple", tags=["health"]
+    health_simple.router, prefix="/health - simple", tags=["health"]
 )

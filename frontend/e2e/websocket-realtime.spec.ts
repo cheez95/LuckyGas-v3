@@ -23,7 +23,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('WebSocket Connection', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       // Check for WebSocket connection indicator
       const connectionIndicator = page.locator('.ws-connection-status, [data-testid="ws-status"]');
       
@@ -44,7 +44,7 @@ test.describe('Real-time WebSocket Communication', () => {
       expect(hasConnectionLog).toBe(true);
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       // Simulate network interruption
       await page.context().setOffline(true);
       
@@ -62,7 +62,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await expect(connectionIndicator).toHaveAttribute('data-status', 'connected', { timeout: 10000 });
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       // Navigate to different pages
       await dashboardPage.navigateToCustomers();
       await page.waitForTimeout(1000);
@@ -80,7 +80,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('Real-time Notifications', () => {
-    test($1, async ({ page, context }) => {
+    test('should complete the test', async ({ page, context }) => {
       // Open a second browser page to simulate another user
       const page2 = await context.newPage();
       const loginPage2 = new LoginPage(page2);
@@ -109,7 +109,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await page2.close();
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       // Simulate high-priority notification
       await page.evaluate(() => {
         window.dispatchEvent(new CustomEvent('ws-message', {
@@ -132,7 +132,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await expect(urgentIcon).toBeVisible();
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       // Simulate multiple notifications
       for (let i = 0; i < 3; i++) {
         await page.evaluate((index) => {
@@ -160,7 +160,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('Real-time Order Updates', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       await orderPage.navigateToOrders();
       
       // Get first order
@@ -185,7 +185,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await expect(statusBadge).toContainText('配送中', { timeout: 3000 });
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       await orderPage.navigateToOrders();
       
       // Click on an order to view details
@@ -214,7 +214,7 @@ test.describe('Real-time WebSocket Communication', () => {
       }
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       // Check initial order count
       const orderMenuItem = page.locator('.ant-menu-item').filter({ hasText: '訂單管理' });
       const initialBadge = orderMenuItem.locator('.ant-badge-count');
@@ -239,7 +239,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('Real-time Route Updates', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Simulate route status update
@@ -261,7 +261,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await expect(statusIndicator).toContainText('進行中', { timeout: 3000 });
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Check if map is visible
@@ -286,7 +286,7 @@ test.describe('Real-time WebSocket Communication', () => {
       }
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       await routePage.navigateToRoutes();
       
       // Simulate route optimization complete
@@ -314,7 +314,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('Real-time Dashboard Updates', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       // Get initial order count
       const todayOrdersCard = dashboardPage.todayOrdersCard;
       const initialCount = await todayOrdersCard.locator('.ant-statistic-content-value').textContent();
@@ -337,7 +337,7 @@ test.describe('Real-time WebSocket Communication', () => {
       expect(parseInt(newCount || '0')).toBeGreaterThan(parseInt(initialCount || '0'));
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       // Check for activity feed
       const activityFeed = page.locator('.activity-feed, [data-testid="activity-feed"]');
       if (await activityFeed.isVisible()) {
@@ -358,7 +358,7 @@ test.describe('Real-time WebSocket Communication', () => {
       }
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
       // Get initial revenue
       const revenueCard = dashboardPage.todayRevenueCard;
       const initialRevenue = await revenueCard.locator('.ant-statistic-content-value').textContent();
@@ -387,7 +387,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('Real-time Prediction Updates', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       // Navigate to predictions page
       await page.goto('/office/predictions');
       
@@ -418,7 +418,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('WebSocket Error Handling', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       // Simulate WebSocket error
       await page.evaluate(() => {
         const ws = (window as any).websocketService;
@@ -432,7 +432,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await expect(errorIndicator).toBeVisible({ timeout: 3000 });
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       // Disconnect WebSocket
       await page.context().setOffline(true);
       
@@ -460,7 +460,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('Multi-user Real-time Collaboration', () => {
-    test($1, async ({ page, context }) => {
+    test('should complete the test', async ({ page, context }) => {
       // Open second user session
       const page2 = await context.newPage();
       const loginPage2 = new LoginPage(page2);
@@ -492,7 +492,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await page2.close();
     });
 
-    test($1, async ({ page, context }) => {
+  test('should complete the test - 2', async ({ page, context }) => {
       // Two managers assigning routes simultaneously
       const page2 = await context.newPage();
       const loginPage2 = new LoginPage(page2);
@@ -515,7 +515,7 @@ test.describe('Real-time WebSocket Communication', () => {
   });
 
   test.describe('WebSocket Performance', () => {
-    test($1, async ({ page }) => {
+    test('should complete the test', async ({ page }) => {
       // Monitor performance
       const startTime = Date.now();
       let updateCount = 0;
@@ -547,7 +547,7 @@ test.describe('Real-time WebSocket Communication', () => {
       await expect(testButton).toBeEnabled();
     });
 
-    test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
       // Check if throttling is implemented
       let renderCount = 0;
       

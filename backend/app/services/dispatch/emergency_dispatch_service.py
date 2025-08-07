@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException, ValidationException
@@ -155,7 +155,7 @@ class EmergencyDispatchService:
         query = (
             select(Order)
             .join(Customer)
-            .where(Order.is_urgent == True, Order.delivery_notes.like("EMERGENCY:%"))
+            .where(Order.is_urgent, Order.delivery_notes.like("EMERGENCY:%"))
         )
 
         if status:
@@ -232,7 +232,7 @@ class EmergencyDispatchService:
 
         Args:
             db: Database session
-            emergency_id: Emergency ID (format: em-XXX)
+            emergency_id: Emergency ID (format: em - XXX)
             status: New status
             notes: Optional status notes
 
@@ -297,7 +297,7 @@ class EmergencyDispatchService:
 
         # Total emergencies
         total_query = select(func.count(Order.id)).where(
-            Order.is_urgent == True,
+            Order.is_urgent,
             Order.delivery_notes.like("EMERGENCY:%"),
             Order.created_at >= date_from,
             Order.created_at <= date_to,
@@ -307,7 +307,7 @@ class EmergencyDispatchService:
 
         # Active emergencies
         active_query = select(func.count(Order.id)).where(
-            Order.is_urgent == True,
+            Order.is_urgent,
             Order.delivery_notes.like("EMERGENCY:%"),
             Order.status.in_(["pending", "confirmed", "assigned", "in_delivery"]),
         )
@@ -325,7 +325,7 @@ class EmergencyDispatchService:
             .join(RouteStop, Order.id == RouteStop.order_id)
             .join(RoutePlan, RouteStop.route_plan_id == RoutePlan.id)
             .where(
-                Order.is_urgent == True,
+                Order.is_urgent,
                 Order.delivery_notes.like("EMERGENCY:%"),
                 Order.created_at >= date_from,
                 Order.created_at <= date_to,
@@ -336,7 +336,7 @@ class EmergencyDispatchService:
 
         # Resolved today
         resolved_query = select(func.count(Order.id)).where(
-            Order.is_urgent == True,
+            Order.is_urgent,
             Order.delivery_notes.like("EMERGENCY:%"),
             Order.status == "delivered",
             func.date(Order.updated_at) == datetime.now().date(),

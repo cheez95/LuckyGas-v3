@@ -2,7 +2,6 @@
 Redis caching service for performance optimization
 """
 
-import asyncio
 import json
 import logging
 from datetime import timedelta
@@ -33,7 +32,7 @@ class CacheService:
         try:
             self.redis = await aioredis.from_url(
                 settings.REDIS_URL,
-                encoding="utf-8",
+                encoding="utf - 8",
                 decode_responses=True,
                 socket_connect_timeout=5,
                 socket_timeout=5,
@@ -261,6 +260,8 @@ def invalidate_cache(pattern: str):
 
 
 # Cache key patterns for different entities
+
+
 class CacheKeys:
     """Standardized cache key patterns"""
 

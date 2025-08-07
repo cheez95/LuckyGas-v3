@@ -33,7 +33,7 @@ async def create_order_template(
     - 每個客戶可以建立多個模板
     - 支援定期訂單設定
     """
-    verify_user_role(current_user, ["super_admin", "manager", "office_staff"])
+    verify_user_role(current_user, ["super_admin", "manager", "office_staf"])
 
     try:
         template = await OrderTemplateService.create_template(
@@ -42,7 +42,7 @@ async def create_order_template(
         return template
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="建立模板失敗")
 
 
@@ -100,7 +100,7 @@ async def update_order_template(
     - 需要 office_staff 以上權限
     - 記錄更新歷程
     """
-    verify_user_role(current_user, ["super_admin", "manager", "office_staff"])
+    verify_user_role(current_user, ["super_admin", "manager", "office_staf"])
 
     template = await OrderTemplateService.update_template(
         db, template_id, template_data, current_user
@@ -131,7 +131,7 @@ async def delete_order_template(
     return {"message": "模板已停用"}
 
 
-@router.post("/create-order", response_model=OrderV2)
+@router.post("/create - order", response_model=OrderV2)
 async def create_order_from_template(
     request: CreateOrderFromTemplate,
     db: AsyncSession = Depends(get_db),
@@ -144,7 +144,7 @@ async def create_order_from_template(
     - 可覆寫模板中的部分設定
     - 自動更新模板使用次數
     """
-    verify_user_role(current_user, ["super_admin", "manager", "office_staff"])
+    verify_user_role(current_user, ["super_admin", "manager", "office_staf"])
 
     try:
         order = await OrderTemplateService.create_order_from_template(
@@ -153,7 +153,7 @@ async def create_order_from_template(
         return order
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="建立訂單失敗")
 
 

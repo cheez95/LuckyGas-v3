@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr / bin / env python
 """
 Run integration tests with proper test environment setup
 """
@@ -22,7 +22,7 @@ def check_docker_services():
         ("Redis", "6380"),
         ("Mock GCP", "8080"),
         ("Mock SMS", "8001"),
-        ("Mock E-Invoice", "8002"),
+        ("Mock E - Invoice", "8002"),
         ("Mock Banking", "8003"),
     ]
 
@@ -42,15 +42,15 @@ def start_docker_services():
     """Start Docker test services"""
     print("\nStarting Docker test services...")
 
-    docker_compose_path = Path(__file__).parent / "docker-compose.test.yml"
+    docker_compose_path = Path(__file__).parent / "docker - compose.test.yml"
 
-    # Check if docker-compose file exists
+    # Check if docker - compose file exists
     if not docker_compose_path.exists():
         print(f"❌ Docker compose file not found at {docker_compose_path}")
         return False
 
     # Start services
-    cmd = ["docker-compose", "-f", str(docker_compose_path), "up", "-d"]
+    cmd = ["docker - compose", "-", str(docker_compose_path), "up", "-d"]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -118,7 +118,7 @@ def run_integration_tests(test_path=None, verbose=False):
     else:
         cmd.extend(
             [
-                "tests/integration/",
+                "tests / integration/",
                 "-m",
                 "not slow",  # Skip slow tests by default
                 "--tb=short",
@@ -128,9 +128,9 @@ def run_integration_tests(test_path=None, verbose=False):
 
     # Add coverage if available
     try:
-        import pytest_cov
+        pass
 
-        cmd.extend(["--cov=app", "--cov-report=term-missing"])
+        cmd.extend(["--cov=app", "--cov - report=term - missing"])
     except ImportError:
         pass
 
@@ -148,17 +148,19 @@ def main():
     parser.add_argument("test_path", nargs="?", help="Specific test file or directory")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument(
-        "--no-docker", action="store_true", help="Skip Docker service check"
+        "--no - docker", action="store_true", help="Skip Docker service check"
     )
-    parser.add_argument("--skip-setup", action="store_true", help="Skip database setup")
+    parser.add_argument(
+        "--skip - setup", action="store_true", help="Skip database setup"
+    )
 
     args = parser.parse_args()
 
-    # Check/start Docker services
+    # Check / start Docker services
     if not args.no_docker:
         if not check_docker_services():
             print("\n⚠️  Some Docker services are not running.")
-            response = input("Start Docker services? (y/n): ")
+            response = input("Start Docker services? (y / n): ")
             if response.lower() == "y":
                 if not start_docker_services():
                     print("❌ Failed to start Docker services")

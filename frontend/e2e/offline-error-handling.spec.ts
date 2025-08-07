@@ -13,7 +13,7 @@ test.describe('Offline Functionality', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test($1, async ({ page, context }) => {
+  test('should complete the test', async ({ page, context }) => {
     // Navigate to any page
     await page.goto('/customers');
     
@@ -31,7 +31,7 @@ test.describe('Offline Functionality', () => {
     await expect(offlineIndicator).toBeHidden({ timeout: 5000 });
   });
 
-  test($1, async ({ page, context }) => {
+  test('should complete the test - 2', async ({ page, context }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -66,7 +66,7 @@ test.describe('Offline Functionality', () => {
     expect(customerCount).toBeGreaterThan(0);
   });
 
-  test($1, async ({ page, context }) => {
+  test('should complete the test - 3', async ({ page, context }) => {
     const orderPage = new OrderPage(page);
     await orderPage.navigateToOrders();
     
@@ -94,7 +94,7 @@ test.describe('Offline Functionality', () => {
     expect(queueCountAfterReload).toBe('1');
   });
 
-  test($1, async ({ page, context }) => {
+  test('should complete the test - 4', async ({ page, context }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
     
@@ -152,7 +152,7 @@ test.describe('Offline Functionality', () => {
     expect(syncCount).toBeGreaterThan(0);
   });
 
-  test($1, async ({ page, context }) => {
+  test('should complete the test - 5', async ({ page, context }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -199,7 +199,7 @@ test.describe('Error Handling', () => {
     await loginPage.waitForLoginSuccess();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test', async ({ page }) => {
     // Navigate to non-existent page
     await page.goto('/non-existent-page');
     
@@ -211,7 +211,7 @@ test.describe('Error Handling', () => {
     await expect(backLink).toBeVisible();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -233,7 +233,7 @@ test.describe('Error Handling', () => {
     await expect(errorMessage).toContainText(/伺服器錯誤|系統錯誤/);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 3', async ({ page }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -260,7 +260,7 @@ test.describe('Error Handling', () => {
     await expect(phoneError).toContainText(/[\u4e00-\u9fa5]/);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 4', async ({ page }) => {
     // Navigate to protected page
     await page.goto('/customers');
     
@@ -281,7 +281,7 @@ test.describe('Error Handling', () => {
     await expect(sessionMessage).toBeVisible();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 5', async ({ page }) => {
     const customerPage = new CustomerPage(page);
     await customerPage.navigateToCustomers();
     
@@ -301,7 +301,7 @@ test.describe('Error Handling', () => {
     await expect(timeoutError).toContainText(/請求超時|連線逾時/);
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 6', async ({ page }) => {
     const orderPage = new OrderPage(page);
     await orderPage.navigateToOrders();
     
@@ -325,7 +325,7 @@ test.describe('Error Handling', () => {
     expect(orderCount).toBeGreaterThanOrEqual(0);
   });
 
-  test($1, async ({ page, context }) => {
+  test('should complete the test - 7', async ({ page, context }) => {
     const customerPage = new CustomerPage(page);
     
     // Open two tabs
@@ -370,7 +370,7 @@ test.describe('Error Handling', () => {
     await page2.close();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 8', async ({ page }) => {
     // Mock Google APIs being unavailable
     await page.route('**/predictions/generate', route => {
       route.fulfill({
@@ -390,7 +390,7 @@ test.describe('Error Handling', () => {
     await expect(manualPredictionButton).toBeVisible();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 9', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
     
@@ -433,7 +433,7 @@ test.describe('Error Handling', () => {
 });
 
 test.describe('Error Boundaries', () => {
-  test($1, async ({ page }) => {
+  test('should complete the test', async ({ page }) => {
     // Navigate to any page
     await page.goto('/dashboard');
     
@@ -456,7 +456,7 @@ test.describe('Error Boundaries', () => {
     await expect(reloadButton).toBeVisible();
   });
 
-  test($1, async ({ page }) => {
+  test('should complete the test - 2', async ({ page }) => {
     const errors: string[] = [];
     
     // Capture console errors

@@ -22,7 +22,7 @@ interface OrderQueryParams {
 export const orderService = {
   async getOrders(params?: OrderQueryParams): Promise<Order[]> {
     try {
-      const response = await api.get<Order[]>('/orders', { params });
+      const response = await api.get<Order[]>('/orders/', { params });
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -31,7 +31,7 @@ export const orderService = {
   
   async getOrder(id: number): Promise<Order> {
     try {
-      const response = await api.get<Order>(`/orders/${id}`);
+      const response = await api.get<Order>(`/orders/${id}/`);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -40,7 +40,7 @@ export const orderService = {
   
   async createOrder(data: OrderCreate): Promise<Order> {
     try {
-      const response = await api.post<Order>('/orders', data);
+      const response = await api.post<Order>('/orders/', data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -49,7 +49,7 @@ export const orderService = {
   
   async updateOrder(id: number, data: OrderUpdate): Promise<Order> {
     try {
-      const response = await api.put<Order>(`/orders/${id}`, data);
+      const response = await api.put<Order>(`/orders/${id}/`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -58,7 +58,7 @@ export const orderService = {
   
   async cancelOrder(id: number, reason?: string): Promise<void> {
     try {
-      await api.delete(`/orders/${id}`, { 
+      await api.delete(`/orders/${id}/`, { 
         params: { reason } 
       });
     } catch (error) {
@@ -68,7 +68,7 @@ export const orderService = {
   
   async getOrderStats(dateFrom?: string, dateTo?: string): Promise<OrderStats> {
     try {
-      const response = await api.get<OrderStats>('/orders/stats/summary', {
+      const response = await api.get<OrderStats>('/orders/stats/summary/', {
         params: {
           date_from: dateFrom,
           date_to: dateTo,
@@ -83,7 +83,7 @@ export const orderService = {
   // V2 methods for flexible product system
   async getOrderV2(id: number): Promise<OrderV2> {
     try {
-      const response = await api.get<OrderV2>(`/orders/v2/${id}`);
+      const response = await api.get<OrderV2>(`/orders/v2/${id}/`);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -101,7 +101,7 @@ export const orderService = {
 
   async updateOrderV2(id: number, data: OrderUpdateV2): Promise<OrderV2> {
     try {
-      const response = await api.put<OrderV2>(`/orders/v2/${id}`, data);
+      const response = await api.put<OrderV2>(`/orders/v2/${id}/`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

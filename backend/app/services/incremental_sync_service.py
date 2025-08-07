@@ -1,6 +1,6 @@
 """
 Incremental sync service for Lucky Gas data migration
-Handles real-time synchronization between legacy and new systems
+Handles real - time synchronization between legacy and new systems
 """
 
 import asyncio
@@ -8,16 +8,15 @@ import json
 import logging
 import sqlite3
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import redis.asyncio as redis
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
-from app.models import Customer, GasProduct, Order, OrderItem, User, Vehicle
-from app.models.order import OrderStatus, PaymentStatus
+from app.models import Customer, Order, User, Vehicle
 from app.models.user import UserRole
 from app.utils.encoding_converter import Big5ToUTF8Converter
 
@@ -49,7 +48,7 @@ class IncrementalSyncService:
         self.sync_config = {
             "clients": {
                 "legacy_to_new": True,
-                "new_to_legacy": False,  # One-way for customers
+                "new_to_legacy": False,  # One - way for customers
                 "id_mapping_key": "sync:id_map:customers",
                 "timestamp_key": "sync:timestamp:clients",
                 "text_fields": [
@@ -228,7 +227,7 @@ class IncrementalSyncService:
     ):
         """Sync changes from new system to legacy (for bidirectional tables)."""
         if table_name != "deliveries":
-            return  # Currently only orders/deliveries are bidirectional
+            return  # Currently only orders / deliveries are bidirectional
 
         # Get last sync timestamp
         last_sync = await self.get_last_sync_time(f"{config['timestamp_key']}:reverse")
@@ -258,7 +257,7 @@ class IncrementalSyncService:
                     # Update existing legacy record
                     cursor.execute(
                         """
-                        UPDATE deliveries 
+                        UPDATE deliveries
                         SET status = ?, actual_delivery_time = ?, notes = ?, updated_at = ?
                         WHERE id = ?
                     """,
@@ -302,7 +301,7 @@ class IncrementalSyncService:
         columns = {col[1] for col in cursor.fetchall()}
 
         if "updated_at" in columns:
-            query = f"""
+            query = """
             SELECT * FROM {table_name}
             WHERE updated_at > ?
             ORDER BY updated_at ASC
@@ -312,7 +311,7 @@ class IncrementalSyncService:
         else:
             # For tables without updated_at, use created_at or id
             if "created_at" in columns:
-                query = f"""
+                query = """
                 SELECT * FROM {table_name}
                 WHERE created_at > ?
                 ORDER BY created_at ASC
@@ -441,10 +440,9 @@ class IncrementalSyncService:
     async def sync_order_record(
         self, record: pd.Series, config: Dict[str, Any], session: AsyncSession
     ):
-        """Sync an order/delivery record."""
+        """Sync an order / delivery record."""
         # Similar implementation to sync_customer_record
         # but for orders with order items
-        pass
 
     async def sync_driver_record(
         self, record: pd.Series, config: Dict[str, Any], session: AsyncSession
@@ -630,7 +628,9 @@ class IncrementalSyncService:
 
         import re
 
-        phone_pattern = r"(09\d{2}[-\s]?\d{3}[-\s]?\d{3}|0[2-8][-\s]?\d{4}[-\s]?\d{4})"
+        phone_pattern = (
+            r"(09\d{2}[-\s]?\d{3}[-\s]?\d{3}|0[2 - 8][-\s]?\d{4}[-\s]?\d{4})"
+        )
         match = re.search(phone_pattern, contact_info)
         return match.group(1).replace(" ", "").replace("-", "") if match else None
 
@@ -650,15 +650,17 @@ class IncrementalSyncService:
         return mapping.get(str(legacy_method).lower(), "cash")
 
     def _parse_familiar_areas(self, areas_str: str) -> List[str]:
-        """Parse comma-separated areas into list."""
+        """Parse comma - separated areas into list."""
         if pd.isna(areas_str) or not areas_str:
             return []
 
-        areas = [area.strip() for area in str(areas_str).split(",")]
+        areas = [area.strip() for area in str(areas_str).split(", ")]
         return [area for area in areas if area]
 
 
 # Conflict resolution strategies
+
+
 class ConflictResolver:
     """Handles conflicts during bidirectional sync."""
 

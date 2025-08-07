@@ -1,5 +1,5 @@
 """
-Simple WebSocket manager for real-time updates
+Simple WebSocket manager for real - time updates
 Replaces complex websocket_service.py with message queuing
 """
 
@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import redis.asyncio as redis
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 
 from app.core.config import settings
 
@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 class SimpleWebSocketManager:
     """
-    Minimal WebSocket manager for real-time updates.
+    Minimal WebSocket manager for real - time updates.
 
     Features:
     - Direct WebSocket connections without complex routing
-    - Optional Redis pub/sub for multi-instance support
+    - Optional Redis pub / sub for multi - instance support
     - Simple event broadcasting
     - No message queuing or priorities
     """
@@ -34,10 +34,10 @@ class SimpleWebSocketManager:
         self._pubsub_task: Optional[asyncio.Task] = None
 
     async def initialize(self):
-        """Initialize Redis for cross-instance communication"""
+        """Initialize Redis for cross - instance communication"""
         try:
             self.redis_client = await redis.from_url(
-                settings.REDIS_URL, encoding="utf-8", decode_responses=True
+                settings.REDIS_URL, encoding="utf - 8", decode_responses=True
             )
 
             # Test connection
@@ -50,10 +50,12 @@ class SimpleWebSocketManager:
             # Start listener in background
             self._pubsub_task = asyncio.create_task(self._redis_listener(pubsub))
 
-            logger.info("WebSocket manager initialized with Redis pub/sub")
+            logger.info("WebSocket manager initialized with Redis pub / sub")
 
         except Exception as e:
-            logger.warning(f"Redis not available, running in single-instance mode: {e}")
+            logger.warning(
+                f"Redis not available, running in single - instance mode: {e}"
+            )
             self.redis_client = None
 
     async def connect(self, websocket: WebSocket, user_id: str) -> str:
@@ -147,7 +149,7 @@ class SimpleWebSocketManager:
                 await self.disconnect(conn_id)
 
     async def _redis_listener(self, pubsub):
-        """Listen for Redis pub/sub events"""
+        """Listen for Redis pub / sub events"""
         try:
             async for message in pubsub.listen():
                 if message["type"] == "message":
@@ -160,7 +162,7 @@ class SimpleWebSocketManager:
                         for conn_id, websocket in self.connections.items():
                             try:
                                 await websocket.send_json(event_data)
-                            except:
+                            except Exception:
                                 disconnected.append(conn_id)
 
                         # Clean up disconnected

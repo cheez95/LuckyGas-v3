@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Test Infrastructure Validation Script
 Validates that all test infrastructure is properly configured
@@ -28,10 +28,10 @@ class TestInfrastructureValidator:
 
         required_packages = [
             "pytest",
-            "pytest-asyncio",
-            "pytest-cov",
-            "pytest-mock",
-            "pytest-json-report",
+            "pytest - asyncio",
+            "pytest - cov",
+            "pytest - mock",
+            "pytest - json - report",
             "httpx",
             "faker",
             "playwright",
@@ -98,7 +98,7 @@ class TestInfrastructureValidator:
             async def test_connection():
                 db_url = os.getenv(
                     "DATABASE_URL",
-                    "postgresql://test:test@localhost:5432/luckygas_test",
+                    "postgresql://test:test@localhost:5432 / luckygas_test",
                 )
                 engine = create_async_engine(db_url)
                 try:
@@ -134,7 +134,7 @@ class TestInfrastructureValidator:
             import redis.asyncio as redis
 
             async def test_redis():
-                redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+                redis_url = os.getenv("REDIS_URL", "redis://localhost:6379 / 1")
                 client = await redis.from_url(redis_url)
                 try:
                     await client.ping()
@@ -163,10 +163,10 @@ class TestInfrastructureValidator:
         print("\n🔍 Checking test files...")
 
         required_files = [
-            "tests/conftest.py",
-            "tests/e2e/conftest.py",
-            "tests/chaos/__init__.py",
-            "tests/fixtures/test_data.py",
+            "tests / conftest.py",
+            "tests / e2e / conftest.py",
+            "tests / chaos / __init__.py",
+            "tests / fixtures / test_data.py",
             "pytest.ini",
             "setup_tests.sh",
         ]
@@ -188,21 +188,21 @@ class TestInfrastructureValidator:
             "e2e": len(
                 [
                     f
-                    for f in os.listdir("tests/e2e")
+                    for f in os.listdir("tests / e2e")
                     if f.startswith("test_") and f.endswith(".py")
                 ]
             ),
             "chaos": len(
                 [
                     f
-                    for f in os.listdir("tests/chaos")
+                    for f in os.listdir("tests / chaos")
                     if f.startswith("test_") and f.endswith(".py")
                 ]
             ),
             "integration": len(
                 [
                     f
-                    for f in os.listdir("tests/integration")
+                    for f in os.listdir("tests / integration")
                     if f.startswith("test_") and f.endswith(".py")
                 ]
             ),
@@ -240,7 +240,7 @@ class TestInfrastructureValidator:
                     "uv",
                     "run",
                     "pytest",
-                    "tests/test_main.py",
+                    "tests / test_main.py",
                     "-v",
                     "-k",
                     "test_health_check",
@@ -329,7 +329,7 @@ class TestInfrastructureValidator:
                 f.write("2. Run `./setup_tests.sh` to set up environment\n")
                 f.write("3. Install missing dependencies with `uv sync`\n")
                 f.write("4. Ensure Docker containers are running\n")
-                f.write("5. Re-run this validation script\n")
+                f.write("5. Re - run this validation script\n")
 
 
 def main():

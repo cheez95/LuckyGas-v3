@@ -48,7 +48,7 @@ class TestResourceExhaustion:
 
                     # Test API response under memory pressure
                     start_time = time.time()
-                    response = await client.get("/api/v1/health", timeout=5.0)
+                    response = await client.get("/api / v1 / health", timeout=5.0)
                     response_time = time.time() - start_time
 
                     allocation_results.append(
@@ -140,7 +140,7 @@ class TestResourceExhaustion:
 
         # Baseline performance
         baseline_start = time.time()
-        baseline_response = await client.get("/api/v1/health")
+        await client.get("/api / v1 / health")
         baseline_time = time.time() - baseline_start
 
         # Start CPU intensive tasks in background
@@ -159,7 +159,7 @@ class TestResourceExhaustion:
             while (time.time() - start_time) < test_duration:
                 request_start = time.time()
                 try:
-                    response = await client.get("/api/v1/health", timeout=2.0)
+                    response = await client.get("/api / v1 / health", timeout=2.0)
                     request_time = time.time() - request_start
 
                     performance_metrics.append(
@@ -259,18 +259,18 @@ class TestResourceExhaustion:
 
                             # Test logging capability
                             log_response = await client.post(
-                                "/api/v1/admin/logs",
+                                "/api / v1 / admin / logs",
                                 json={"message": f"Disk test {i}", "level": "info"},
-                                headers={"Authorization": "Bearer test-token"},
+                                headers={"Authorization": "Bearer test - token"},
                             )
 
                             # Test file upload capability
                             upload_response = await client.post(
-                                "/api/v1/upload/test",
+                                "/api / v1 / upload / test",
                                 files={
-                                    "file": ("test.txt", b"test data", "text/plain")
+                                    "file": ("test.txt", b"test data", "text / plain")
                                 },
-                                headers={"Authorization": "Bearer test-token"},
+                                headers={"Authorization": "Bearer test - token"},
                             )
 
                             disk_fill_results.append(
@@ -365,12 +365,12 @@ class TestResourceExhaustion:
                         current_fds = len(process.open_files())
 
                         # Test API functionality
-                        response = await client.get("/api/v1/health")
+                        response = await client.get("/api / v1 / health")
 
                         # Test database query
                         db_response = await client.get(
-                            "/api/v1/customers",
-                            headers={"Authorization": "Bearer test-token"},
+                            "/api / v1 / customers",
+                            headers={"Authorization": "Bearer test - token"},
                         )
 
                         fd_exhaustion_results.append(
@@ -387,7 +387,7 @@ class TestResourceExhaustion:
                         print(f"Hit file descriptor limit at {i} files")
 
                         # System should still respond to health checks
-                        health_response = await client.get("/api/v1/health")
+                        health_response = await client.get("/api / v1 / health")
                         assert (
                             health_response.status_code == 200
                         ), "Health check should work even with FD exhaustion"
@@ -418,7 +418,7 @@ class TestResourceExhaustion:
             for f in opened_files:
                 try:
                     f.close()
-                except:
+                except Exception:
                     pass
 
             # Remove temp directory
@@ -470,7 +470,7 @@ class TestResourceExhaustion:
 
                         # Make API requests
                         start_time = time.time()
-                        response = await client.get("/api/v1/health")
+                        response = await client.get("/api / v1 / health")
                         response_time = time.time() - start_time
 
                         print(
@@ -500,7 +500,7 @@ class TestResourceExhaustion:
             request_tasks = []
 
             for i in range(concurrent_requests):
-                task = client.get("/api/v1/health")
+                task = client.get("/api / v1 / health")
                 request_tasks.append(task)
 
             # All requests should complete
@@ -535,7 +535,6 @@ class TestResourceExhaustion:
     async def test_connection_pool_exhaustion(self, client: AsyncClient):
         """Test behavior when connection pools (HTTP, DB, Redis) are exhausted"""
         # Test HTTP connection pool exhaustion
-        connection_metrics = []
 
         # Make many concurrent requests
         concurrent_count = 50
@@ -545,10 +544,10 @@ class TestResourceExhaustion:
             try:
                 # Don't close connection immediately
                 response = await client.get(
-                    "/api/v1/customers",
+                    "/api / v1 / customers",
                     headers={
-                        "Authorization": "Bearer test-token",
-                        "Connection": "keep-alive",
+                        "Authorization": "Bearer test - token",
+                        "Connection": "keep - alive",
                     },
                 )
                 return {

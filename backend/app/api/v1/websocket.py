@@ -61,9 +61,9 @@ async def websocket_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Main WebSocket endpoint for real-time communication
+    Main WebSocket endpoint for real - time communication
 
-    Connection URL: ws://localhost:8000/api/v1/websocket/ws?token=<JWT_TOKEN>
+    Connection URL: ws://localhost:8000 / api / v1 / websocket / ws?token=<JWT_TOKEN>
     """
     # Authenticate user
     user = await get_current_user_ws(websocket, token, db)
@@ -102,7 +102,7 @@ async def websocket_endpoint(
         await websocket_manager.disconnect(connection_id)
 
 
-@router.websocket("/ws/driver")
+@router.websocket("/ws / driver")
 async def driver_websocket_endpoint(
     websocket: WebSocket,
     token: Optional[str] = Query(None),
@@ -139,7 +139,7 @@ async def driver_websocket_endpoint(
             try:
                 message = await websocket.receive_json()
 
-                # Handle driver-specific messages
+                # Handle driver - specific messages
                 if message.get("type") == "location.update":
                     # Validate location data
                     if "latitude" in message and "longitude" in message:
@@ -159,7 +159,7 @@ async def driver_websocket_endpoint(
         await websocket_manager.disconnect(connection_id)
 
 
-@router.websocket("/ws/office")
+@router.websocket("/ws / office")
 async def office_websocket_endpoint(
     websocket: WebSocket,
     token: Optional[str] = Query(None),
@@ -170,7 +170,7 @@ async def office_websocket_endpoint(
     """
     # Authenticate office staff
     user = await get_current_user_ws(websocket, token, db)
-    if not user or user["role"] not in ["office_staff", "manager", "super_admin"]:
+    if not user or user["role"] not in ["office_staf", "manager", "super_admin"]:
         await websocket.close(code=4003, reason="Office access only")
         return
 
@@ -187,7 +187,7 @@ async def office_websocket_endpoint(
                 "type": "office.init",
                 "user_id": user["user_id"],
                 "role": user["role"],
-                "active_drivers": [],  # TODO: Get from Redis/database
+                "active_drivers": [],  # TODO: Get from Redis / database
                 "pending_orders": [],  # TODO: Get from database
                 "today_routes": [],  # TODO: Get from database
             }
@@ -211,7 +211,7 @@ async def office_websocket_endpoint(
 async def broadcast_event(event_type: str, data: dict, channel: Optional[str] = None):
     """
     HTTP endpoint to broadcast events via WebSocket
-    Used by other services to send real-time updates
+    Used by other services to send real - time updates
     """
     await websocket_manager.publish_event(
         channel or "system", {"type": event_type, **data}

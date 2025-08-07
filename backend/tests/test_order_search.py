@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.schemas.order_search import OrderSearchCriteria
-
 
 @pytest.mark.asyncio
 async def test_order_search_keyword(
@@ -13,7 +11,7 @@ async def test_order_search_keyword(
     # Search by order number
     criteria = {"keyword": test_orders[0].order_number}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -25,7 +23,7 @@ async def test_order_search_keyword(
     # Search by customer name
     criteria = {"keyword": "測試客戶"}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -43,7 +41,7 @@ async def test_order_search_date_range(
 
     criteria = {"date_from": yesterday.isoformat(), "date_to": tomorrow.isoformat()}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -64,7 +62,7 @@ async def test_order_search_multiple_filters(
         "max_amount": 10000,
     }
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -87,7 +85,7 @@ async def test_order_search_cylinder_type(
     """Test cylinder type filtering"""
     criteria = {"cylinder_type": ["20kg", "16kg"]}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -102,7 +100,7 @@ async def test_order_search_pagination(
     """Test search with pagination"""
     criteria = {"skip": 0, "limit": 5}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -113,7 +111,7 @@ async def test_order_search_pagination(
     # Test second page
     criteria = {"skip": 5, "limit": 5}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -124,7 +122,7 @@ async def test_order_search_pagination(
 async def test_order_search_unauthorized(async_client):
     """Test search requires authentication"""
     criteria = {"keyword": "test"}
-    response = await async_client.post("/api/v1/orders/search", json=criteria)
+    response = await async_client.post("/api / v1 / orders / search", json=criteria)
     assert response.status_code == 401
 
 
@@ -135,7 +133,7 @@ async def test_order_search_customer_type(
     """Test customer type filtering"""
     criteria = {"customer_type": "household"}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()
@@ -147,7 +145,7 @@ async def test_order_search_region(async_client, test_orders, test_user_headers_
     """Test region filtering"""
     criteria = {"region": "north"}
     response = await async_client.post(
-        "/api/v1/orders/search", json=criteria, headers=test_user_headers_office
+        "/api / v1 / orders / search", json=criteria, headers=test_user_headers_office
     )
     assert response.status_code == 200
     data = response.json()

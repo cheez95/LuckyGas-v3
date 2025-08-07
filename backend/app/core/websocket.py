@@ -1,17 +1,16 @@
 """
-WebSocket connection manager for real-time features.
+WebSocket connection manager for real - time features.
 """
 
 import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from redis.asyncio import Redis
 
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +95,7 @@ class ConnectionManager:
             for websocket in self.active_connections[user_id]:
                 try:
                     await websocket.send_json(message)
-                except:
+                except Exception:
                     disconnected.append(websocket)
 
             # Clean up disconnected websockets
@@ -115,7 +114,7 @@ class ConnectionManager:
             for websocket in connections:
                 try:
                     await websocket.send_json(message)
-                except:
+                except Exception:
                     disconnected.append(websocket)
 
             # Clean up disconnected websockets
@@ -146,7 +145,7 @@ class ConnectionManager:
                 await self.send_personal_message(message, user_id.decode())
 
     async def _broadcast_user_status(self, user_id: str, status: str):
-        """Broadcast user online/offline status."""
+        """Broadcast user online / offline status."""
         message = {
             "type": "user_status",
             "user_id": user_id,
@@ -156,7 +155,7 @@ class ConnectionManager:
         await self.broadcast(message, exclude_user=user_id)
 
     async def _pubsub_listener(self):
-        """Listen for Redis pub/sub messages."""
+        """Listen for Redis pub / sub messages."""
         if not self.redis:
             return
 
@@ -180,7 +179,7 @@ class ConnectionManager:
             await pubsub.close()
 
     async def publish_message(self, channel: str, message: dict):
-        """Publish a message to Redis for cross-instance broadcasting."""
+        """Publish a message to Redis for cross - instance broadcasting."""
         if self.redis:
             await self.redis.publish(channel, json.dumps(message))
 
@@ -195,7 +194,7 @@ class ConnectionManager:
             for websocket in connections:
                 try:
                     await websocket.close()
-                except:
+                except Exception:
                     pass
 
         self.active_connections.clear()

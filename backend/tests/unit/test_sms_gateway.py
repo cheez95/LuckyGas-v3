@@ -1,12 +1,13 @@
 """Unit tests for SMS Gateway functionality."""
 
-
 import pytest
 
 from app.models.notification import NotificationStatus, SMSProvider
 from app.services.sms_gateway import SMSGateway
 from app.services.sms_providers.chunghwa import ChunghwaProvider
 from app.services.sms_providers.twilio import TwilioProvider
+from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 
 @pytest.fixture
@@ -238,7 +239,7 @@ class TestChunghwaProvider:
 
         # Should be MD5 hash
         assert len(signature) == 32
-        assert all(c in "0123456789abcdef" for c in signature)
+        assert all(c in "0123456789abcde" for c in signature)
 
     def test_error_message_mapping(self):
         """Test error message mapping"""

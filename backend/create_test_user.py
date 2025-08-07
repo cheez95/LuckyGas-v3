@@ -1,33 +1,38 @@
-#!/usr/bin/env python3
-"""Create test user with known password"""
-import asyncio
-import asyncpg
-import bcrypt
+#\!/usr/bin/env python3
+"""Create a simple test user for login testing."""
 
-DATABASE_URL = "postgresql://luckygas:staging-password-2025@35.194.143.37/luckygas"
+import asyncio
+from sqlalchemy import select
+from app.core.database import async_session_maker
+from app.models.user import User
+from app.core.security import get_password_hash
 
 async def create_test_user():
-    conn = await asyncpg.connect(DATABASE_URL)
-    try:
-        # Create password hash
-        password = "test123"
-        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    """Create a test staff user."""
+    async with async_session_maker() as session:
+        # Check if user already exists
+        result = await session.execute(
+            select(User).where(User.email == "staff@luckygas.com")
+        )
+        existing_user = result.scalar_one_or_none()
         
-        # Insert test user
-        await conn.execute("""
-            INSERT INTO users (username, email, hashed_password, full_name, role, is_active)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            ON CONFLICT (email) DO UPDATE
-            SET hashed_password = $3, is_active = true
-        """, "test@example.com", "test@example.com", hashed, "Test User", "MANAGER", True)
+        if existing_user:
+            print("Test user already exists")
+            return
         
-        print(f"Created/updated test user:")
-        print(f"Email: test@example.com")
-        print(f"Password: test123")
-        print(f"Role: MANAGER")
+        # Create new test user
+        test_user = User(
+            email="staff@luckygas.com",
+            hashed_password=get_password_hash("staff123"),
+            full_name="Test Staff User",
+            is_active=True,
+            is_superuser=False,
+            role="office_staff"
+        )
         
-    finally:
-        await conn.close()
+        session.add(test_user)
+        await session.commit()
+        print("Test user created successfully")
 
 if __name__ == "__main__":
     asyncio.run(create_test_user())

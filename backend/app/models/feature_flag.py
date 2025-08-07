@@ -5,9 +5,8 @@ Provides persistent storage for feature flags, customer assignments,
 and complete audit history of all changes.
 """
 
-from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import (
     JSON,
@@ -148,7 +147,9 @@ class FeatureFlag(Base):
         cascade="all, delete-orphan",
     )
     audit_logs = relationship(
-        "FeatureFlagAudit", back_populates="feature_flag", cascade="all, delete-orphan"
+        "FeatureFlagAudit",
+        back_populates="feature_flag",
+        cascade="all, delete-orphan",
     )
 
     creator = relationship("User", foreign_keys=[created_by])
@@ -199,7 +200,7 @@ class FeatureFlag(Base):
 
 
 class FeatureFlagVariant(Base):
-    """A/B test variants for feature flags."""
+    """A / B test variants for feature flags."""
 
     __tablename__ = "feature_flag_variants"
 
@@ -318,7 +319,7 @@ class FeatureFlagEvaluation(Base):
     # Result
     enabled = Column(Boolean, nullable=False)
     variant = Column(String)
-    reason = Column(String)  # Why it was enabled/disabled
+    reason = Column(String)  # Why it was enabled / disabled
 
     # Context
     attributes = Column(JSON)  # Additional attributes used in evaluation

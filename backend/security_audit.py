@@ -215,7 +215,7 @@ class SecurityAuditor:
                     )
                     if response.status_code == 429:  # Too Many Requests
                         failures += 1
-                except:
+                except Exception:
                     pass
             
             if failures == 0:

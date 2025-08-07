@@ -6,7 +6,7 @@ Tests system behavior under database stress and failures
 import asyncio
 import os
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import psutil
 import pytest
@@ -14,7 +14,6 @@ from httpx import AsyncClient
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as SQLTimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.pool import NullPool, QueuePool
 
 
 class TestDatabaseChaos:
@@ -34,7 +33,6 @@ class TestDatabaseChaos:
         )
 
         # Track metrics
-        connection_attempts = []
         successful_connections = 0
 
         # Simulate many concurrent database operations
@@ -45,13 +43,12 @@ class TestDatabaseChaos:
                     # Hold connection for a bit to simulate work
                     await asyncio.sleep(0.5)
                     await conn.execute("SELECT 1")
-                    successful_connections_count = 1
                     return {
                         "conn_id": conn_id,
                         "success": True,
                         "acquisition_time": time.time() - start_time,
                     }
-            except (TimeoutError, SQLTimeoutError) as e:
+            except (TimeoutError, SQLTimeoutError):
                 return {
                     "conn_id": conn_id,
                     "success": False,
@@ -108,7 +105,7 @@ class TestDatabaseChaos:
         health_checks = []
 
         # Baseline health check
-        response = await client.get("/api/v1/health/db")
+        response = await client.get("/api / v1 / health / db")
         baseline_healthy = response.status_code == 200
 
         # Simulate database becoming unavailable
@@ -119,7 +116,7 @@ class TestDatabaseChaos:
             # Test health check during outage
             for i in range(5):
                 try:
-                    response = await client.get("/api/v1/health/db")
+                    response = await client.get("/api / v1 / health / db")
                     health_checks.append(
                         {
                             "attempt": i,
@@ -142,7 +139,7 @@ class TestDatabaseChaos:
         # Test recovery after database comes back
         recovery_checks = []
         for i in range(5):
-            response = await client.get("/api/v1/health/db")
+            response = await client.get("/api / v1 / health / db")
             recovery_checks.append(
                 {
                     "attempt": i,
@@ -192,9 +189,9 @@ class TestDatabaseChaos:
 
         start_time = time.time()
         response = await client.get(
-            "/api/v1/customers",
+            "/api / v1 / customers",
             params=slow_query_params,
-            headers={"Authorization": "Bearer test-token"},
+            headers={"Authorization": "Bearer test - token"},
             timeout=10.0,  # Generous timeout
         )
         query_time = time.time() - start_time
@@ -224,7 +221,7 @@ class TestDatabaseChaos:
         # Create a complex transaction that might fail
         order_data = {
             "customer_id": 1,
-            "scheduled_date": "2024-12-25T10:00:00",
+            "scheduled_date": "2024 - 12 - 25T10:00:00",
             "qty_50kg": 5,
             "qty_20kg": 3,
             "payment_method": "cash",
@@ -232,7 +229,6 @@ class TestDatabaseChaos:
         }
 
         # Track order count before transaction
-        from app.models.order import Order
 
         initial_count = await db_session.execute("SELECT COUNT(*) FROM orders")
         initial_order_count = initial_count.scalar()
@@ -244,9 +240,9 @@ class TestDatabaseChaos:
         ):
             try:
                 response = await client.post(
-                    "/api/v1/orders",
+                    "/api / v1 / orders",
                     json=order_data,
-                    headers={"Authorization": "Bearer test-token"},
+                    headers={"Authorization": "Bearer test - token"},
                 )
             except Exception:
                 pass  # Expected to fail
@@ -274,9 +270,9 @@ class TestDatabaseChaos:
             try:
                 # Various operations that use database
                 tasks = [
-                    client.get("/api/v1/customers"),
-                    client.get("/api/v1/orders"),
-                    client.get("/api/v1/health/db"),
+                    client.get("/api / v1 / customers"),
+                    client.get("/api / v1 / orders"),
+                    client.get("/api / v1 / health / db"),
                 ]
 
                 # Don't wait for all to complete (simulating interrupted requests)
@@ -348,7 +344,6 @@ class TestDatabaseChaos:
                 return {"success": False, "error": str(e)}
 
         # Run transactions concurrently
-        from app.core.database import get_async_session
 
         results = await asyncio.gather(
             transaction_a(db_session), transaction_b(db_session), return_exceptions=True
@@ -402,7 +397,7 @@ class TestDatabaseChaos:
                     mock_session.side_effect = None
 
                 try:
-                    response = await client.get("/api/v1/health")
+                    response = await client.get("/api / v1 / health")
                     availability_timeline.append(
                         {
                             "time": elapsed,

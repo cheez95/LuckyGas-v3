@@ -3,7 +3,7 @@ Credit limit management and validation service
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr / bin / env python3
 """
 Chaos Engineering Test Runner
 Orchestrates the execution of chaos tests with proper setup and reporting
@@ -57,7 +57,7 @@ class ChaosTestRunner:
         print(f"\n🧪 Running {suite} chaos tests...")
 
         suite_start = time.time()
-        test_file = f"tests/chaos/test_{suite}.py"
+        test_file = f"tests / chaos / test_{suite}.py"
 
         # Build pytest command
         cmd = ["uv", "run", "pytest", test_file, "-v", "--tb=short"]
@@ -72,7 +72,7 @@ class ChaosTestRunner:
 
         # Add JSON report
         report_file = os.path.join(self.output_dir, f"{suite}_report.json")
-        cmd.extend(["--json-report", f"--json-report-file={report_file}"])
+        cmd.extend(["--json - report", f"--json - report - file={report_file}"])
 
         # Run tests
         try:
@@ -199,7 +199,7 @@ class ChaosTestRunner:
         print(f"✅ Reports generated in {self.output_dir}/")
 
     def generate_markdown_report(self) -> None:
-        """Generate human-readable markdown report"""
+        """Generate human - readable markdown report"""
         md_path = os.path.join(self.output_dir, "CHAOS_TEST_REPORT.md")
 
         with open(md_path, "w") as f:
@@ -243,7 +243,7 @@ class ChaosTestRunner:
                         if t.get("outcome") != "passed"
                     ]
                     if failed_tests:
-                        f.write("\n**Failed Tests**:\n")
+                        f.write("\n ** Failed Tests**:\n")
                         for test in failed_tests:
                             f.write(f"- `{test['nodeid']}`: {test.get('outcome')}\n")
 
@@ -279,7 +279,7 @@ def main():
     parser.add_argument("--suite", help="Run specific test suite")
     parser.add_argument("--output", default="chaos_results", help="Output directory")
     parser.add_argument(
-        "--no-setup", action="store_true", help="Skip environment setup"
+        "--no - setup", action="store_true", help="Skip environment setup"
     )
 
     args = parser.parse_args()

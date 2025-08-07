@@ -43,12 +43,12 @@ class SMSResponse(BaseModel):
 async def health_check():
     return {
         "status": "healthy",
-        "service": "mock-sms",
+        "service": "mock - sms",
         "timestamp": datetime.now().isoformat(),
     }
 
 
-@app.post("/api/sms/send", response_model=SMSResponse)
+@app.post("/api / sms / send", response_model=SMSResponse)
 async def send_sms(request: SMSRequest, authorization: Optional[str] = Header(None)):
     """Mock SMS send endpoint"""
     logger.info(f"SMS send request to: {request.to}")
@@ -57,7 +57,6 @@ async def send_sms(request: SMSRequest, authorization: Optional[str] = Header(No
     if authorization != "Bearer test_token":
         logger.warning("Invalid authorization token")
         # Allow for testing without auth in test environment
-        pass
 
     # Validate phone number (Taiwan format)
     if not (request.to.startswith("09") or request.to.startswith("+8869")):
@@ -106,7 +105,7 @@ async def send_sms(request: SMSRequest, authorization: Optional[str] = Header(No
     return response
 
 
-@app.get("/api/sms/status/{message_id}")
+@app.get("/api / sms / status/{message_id}")
 async def get_sms_status(message_id: str):
     """Get SMS delivery status"""
     logger.info(f"Status request for message: {message_id}")
@@ -140,7 +139,7 @@ async def get_sms_status(message_id: str):
     }
 
 
-@app.post("/api/sms/bulk")
+@app.post("/api / sms / bulk")
 async def send_bulk_sms(messages: List[SMSRequest]):
     """Send multiple SMS messages"""
     logger.info(f"Bulk SMS request for {len(messages)} messages")
@@ -163,13 +162,13 @@ async def send_bulk_sms(messages: List[SMSRequest]):
     }
 
 
-@app.get("/api/sms/sent")
+@app.get("/api / sms / sent")
 async def get_sent_messages(limit: int = 100):
     """Get list of sent messages for testing"""
     return {"total": len(sent_messages), "messages": sent_messages[-limit:]}
 
 
-@app.delete("/api/sms/clear")
+@app.delete("/api / sms / clear")
 async def clear_messages():
     """Clear sent messages (for testing)"""
     sent_messages.clear()
@@ -177,7 +176,9 @@ async def clear_messages():
 
 
 # Mock webhook endpoint for testing callbacks
-@app.post("/mock-webhook")
+
+
+@app.post("/mock - webhook")
 async def mock_webhook(data: dict):
     """Mock webhook receiver for testing SMS callbacks"""
     logger.info(f"Webhook received: {data}")

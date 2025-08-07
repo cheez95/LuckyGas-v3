@@ -17,7 +17,7 @@ T = TypeVar("T")
 # Metrics
 circuit_state_gauge = Gauge(
     "google_api_circuit_breaker_state",
-    "Circuit breaker state (0=closed, 1=open, 2=half-open)",
+    "Circuit breaker state (0=closed, 1=open, 2=half - open)",
     ["api_type"],
 )
 
@@ -56,9 +56,9 @@ class CircuitBreaker:
         Initialize circuit breaker
 
         Args:
-            api_type: API type for metrics/logging
+            api_type: API type for metrics / logging
             failure_threshold: Number of failures before opening circuit
-            success_threshold: Number of successes in half-open before closing
+            success_threshold: Number of successes in half - open before closing
             timeout: Seconds to wait before attempting recovery
             expected_exception: Exception type to catch
         """
@@ -111,7 +111,7 @@ class CircuitBreaker:
                 else:
                     raise Exception(
                         f"Circuit breaker is OPEN for {self.api_type}. "
-                        f"Service unavailable."
+                        "Service unavailable."
                     )
 
         # Execute the function
@@ -168,13 +168,13 @@ class CircuitBreaker:
                     )
 
             elif self.state == CircuitState.HALF_OPEN:
-                # Failure in half-open state, reopen the circuit
+                # Failure in half - open state, reopen the circuit
                 self.state = CircuitState.OPEN
                 self.success_count = 0
                 self._update_state_metric()
                 logger.warning(
                     f"Circuit breaker REOPENED for {self.api_type} after "
-                    f"failure in HALF_OPEN state"
+                    "failure in HALF_OPEN state"
                 )
 
     def _should_attempt_reset(self) -> bool:
@@ -227,7 +227,7 @@ class CircuitBreaker:
         return self.state == CircuitState.CLOSED
 
     def is_half_open(self) -> bool:
-        """Check if circuit is half-open"""
+        """Check if circuit is half - open"""
         return self.state == CircuitState.HALF_OPEN
 
     def can_execute(self) -> bool:

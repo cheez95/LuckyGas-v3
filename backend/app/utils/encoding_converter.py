@@ -1,9 +1,8 @@
 """
-Big5 to UTF-8 encoding converter for Taiwan data migration
+Big5 to UTF - 8 encoding converter for Taiwan data migration
 Handles Traditional Chinese character conversion with proper error handling
 """
 
-import codecs
 import logging
 import sqlite3
 from pathlib import Path
@@ -17,19 +16,19 @@ logger = logging.getLogger(__name__)
 
 class Big5ToUTF8Converter:
     """
-    Converter for Big5 (Traditional Chinese) to UTF-8 encoding.
+    Converter for Big5 (Traditional Chinese) to UTF - 8 encoding.
     Handles various data types and provides detailed error reporting.
     """
 
     # Common Big5 characters that may have issues
     SPECIAL_CHARS_MAP = {
         # Common problematic mappings
-        "\uff0c": "，",  # Full-width comma
-        "\uff08": "（",  # Full-width left parenthesis
-        "\uff09": "）",  # Full-width right parenthesis
+        "\uff0c": "，",  # Full - width comma
+        "\uff08": "（",  # Full - width left parenthesis
+        "\uff09": "）",  # Full - width right parenthesis
         "\u3000": "　",  # Ideographic space
-        "\uff1a": "：",  # Full-width colon
-        "\uff1b": "；",  # Full-width semicolon
+        "\uff1a": "：",  # Full - width colon
+        "\uff1b": "；",  # Full - width semicolon
         "\u2013": "–",  # En dash
         "\u2014": "—",  # Em dash
     }
@@ -42,8 +41,8 @@ class Big5ToUTF8Converter:
         b"\xa1\x43": "。",  # Ideographic full stop
         b"\xa1\x44": "．",  # Middle dot
         b"\xa1\x45": "‧",  # Hyphenation point
-        b"\xa1\x48": "？",  # Full-width question mark
-        b"\xa1\x49": "！",  # Full-width exclamation mark
+        b"\xa1\x48": "？",  # Full - width question mark
+        b"\xa1\x49": "！",  # Full - width exclamation mark
     }
 
     def __init__(self, fallback_errors: str = "replace"):
@@ -81,7 +80,7 @@ class Big5ToUTF8Converter:
         logger.debug(f"Detected encoding: {encoding} (confidence: {confidence:.2%})")
 
         # Common aliases for Big5
-        if encoding and encoding.lower() in ["big5", "big5-tw", "big5hkscs", "cp950"]:
+        if encoding and encoding.lower() in ["big5", "big5 - tw", "big5hkscs", "cp950"]:
             return "big5"
 
         return encoding or "big5"
@@ -90,14 +89,14 @@ class Big5ToUTF8Converter:
         self, text: Union[str, bytes], source_encoding: str = None
     ) -> str:
         """
-        Convert a single string from Big5 to UTF-8.
+        Convert a single string from Big5 to UTF - 8.
 
         Args:
             text: Text to convert
-            source_encoding: Force specific encoding (default: auto-detect)
+            source_encoding: Force specific encoding (default: auto - detect)
 
         Returns:
-            UTF-8 encoded string
+            UTF - 8 encoded string
         """
         self.conversion_stats["total_processed"] += 1
 
@@ -106,13 +105,13 @@ class Big5ToUTF8Converter:
 
         # If already string, check if needs conversion
         if isinstance(text, str):
-            # Try to encode/decode to verify it's valid UTF-8
+            # Try to encode / decode to verify it's valid UTF - 8
             try:
-                text.encode("utf-8")
+                text.encode("utf - 8")
                 self.conversion_stats["successful"] += 1
                 return text
             except UnicodeEncodeError:
-                # Contains non-UTF-8 characters, needs conversion
+                # Contains non - UTF - 8 characters, needs conversion
                 text = text.encode("big5", errors="ignore")
 
         # Convert bytes to string
@@ -179,20 +178,20 @@ class Big5ToUTF8Converter:
             for problem_bytes, replacement in self.PROBLEM_CHARS.items():
                 if problem_bytes in modified_text:
                     modified_text = modified_text.replace(
-                        problem_bytes, replacement.encode("utf-8")
+                        problem_bytes, replacement.encode("utf - 8")
                     )
                     self.conversion_stats["replaced_chars"] += 1
 
             # Try decoding again
-            return modified_text.decode("utf-8", errors="strict")
-        except:
+            return modified_text.decode("utf - 8", errors="strict")
+        except Exception:
             return None
 
     def convert_dict(
         self, data: Dict[str, Any], fields_to_convert: List[str] = None
     ) -> Dict[str, Any]:
         """
-        Convert dictionary values from Big5 to UTF-8.
+        Convert dictionary values from Big5 to UTF - 8.
 
         Args:
             data: Dictionary to convert
@@ -228,7 +227,7 @@ class Big5ToUTF8Converter:
         self, df: pd.DataFrame, columns: List[str] = None
     ) -> pd.DataFrame:
         """
-        Convert pandas DataFrame columns from Big5 to UTF-8.
+        Convert pandas DataFrame columns from Big5 to UTF - 8.
 
         Args:
             df: DataFrame to convert
@@ -260,7 +259,7 @@ class Big5ToUTF8Converter:
         output_path: str = None,
     ) -> pd.DataFrame:
         """
-        Convert SQLite table from Big5 to UTF-8.
+        Convert SQLite table from Big5 to UTF - 8.
 
         Args:
             db_path: Path to SQLite database
@@ -285,7 +284,7 @@ class Big5ToUTF8Converter:
         # Save if output path provided
         if output_path:
             if output_path.endswith(".csv"):
-                df_converted.to_csv(output_path, index=False, encoding="utf-8")
+                df_converted.to_csv(output_path, index=False, encoding="utf - 8")
             elif output_path.endswith(".xlsx"):
                 df_converted.to_excel(output_path, index=False)
             else:
@@ -302,7 +301,7 @@ class Big5ToUTF8Converter:
         self, input_path: str, output_path: str, source_encoding: str = "big5"
     ):
         """
-        Convert entire file from Big5 to UTF-8.
+        Convert entire file from Big5 to UTF - 8.
 
         Args:
             input_path: Input file path
@@ -321,8 +320,8 @@ class Big5ToUTF8Converter:
             # Convert content
             converted_content = self.convert_string(content, source_encoding)
 
-            # Write UTF-8 file
-            with open(output_path, "w", encoding="utf-8") as f:
+            # Write UTF - 8 file
+            with open(output_path, "w", encoding="utf - 8") as f:
                 f.write(converted_content)
 
             logger.info(f"Successfully converted {input_path} to {output_path}")
@@ -367,7 +366,7 @@ class Big5ToUTF8Converter:
 
 def convert_customer_data(db_path: str, output_dir: str) -> Dict[str, pd.DataFrame]:
     """
-    Convert all customer-related tables from Big5 to UTF-8.
+    Convert all customer - related tables from Big5 to UTF - 8.
 
     Args:
         db_path: Path to legacy SQLite database
@@ -444,8 +443,8 @@ def convert_customer_data(db_path: str, output_dir: str) -> Dict[str, pd.DataFra
 
     # Generate summary report
     report_path = output_dir / "conversion_report.txt"
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write("Big5 to UTF-8 Conversion Report\n")
+    with open(report_path, "w", encoding="utf - 8") as f:
+        f.write("Big5 to UTF - 8 Conversion Report\n")
         f.write("=" * 50 + "\n\n")
 
         for table_name, df in results.items():
@@ -462,7 +461,7 @@ def convert_customer_data(db_path: str, output_dir: str) -> Dict[str, pd.DataFra
 
 def validate_taiwan_data(text: str, data_type: str) -> bool:
     """
-    Validate Taiwan-specific data after conversion.
+    Validate Taiwan - specific data after conversion.
 
     Args:
         text: Converted text to validate
@@ -475,14 +474,14 @@ def validate_taiwan_data(text: str, data_type: str) -> bool:
         return False
 
     if data_type == "phone":
-        # Taiwan phone: 09XX-XXX-XXX or 0X-XXXX-XXXX
+        # Taiwan phone: 09XX - XXX - XXX or 0X - XXXX - XXXX
         import re
 
-        pattern = r"^(09\d{2}-?\d{3}-?\d{3}|0[2-8]-?\d{4}-?\d{4})$"
+        pattern = r"^(09\d{2}-?\d{3}-?\d{3}|0[2 - 8]-?\d{4}-?\d{4})$"
         return bool(re.match(pattern, text.replace(" ", "")))
 
     elif data_type == "address":
-        # Must contain county/city and common address components
+        # Must contain county / city and common address components
         required_chars = ["縣", "市", "區", "鄉", "鎮", "路", "街", "號"]
         return any(char in text for char in required_chars[:3]) and any(
             char in text for char in required_chars[5:]

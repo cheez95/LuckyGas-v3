@@ -1,0 +1,191 @@
+{
+  "id": "office-training-basic",
+  "name": "辦公室人員基礎培訓",
+  "description": "學習基本的訂單管理、客戶資料維護和報表生成",
+  "difficulty": "beginner",
+  "estimatedTime": 60,
+  "objectives": [
+    "建立新客戶資料",
+    "建立訂單並指派司機",
+    "查詢客戶歷史訂單",
+    "生成每日配送報表",
+    "處理客戶投訴"
+  ],
+  "setup": {
+    "database": {
+      "customers": 50,
+      "orders": 200,
+      "drivers": 10,
+      "vehicles": 8
+    },
+    "scenarios": [
+      {
+        "type": "new_customer",
+        "data": {
+          "name": "王小明",
+          "phone": "0912-345-678",
+          "address": "台北市大安區信義路四段123號5樓",
+          "notes": "週末才有人在家"
+        }
+      },
+      {
+        "type": "urgent_order",
+        "data": {
+          "customerId": "CUST001",
+          "quantity": 2,
+          "deliveryTime": "14:00",
+          "notes": "客戶急需，請優先配送"
+        }
+      },
+      {
+        "type": "route_conflict",
+        "data": {
+          "driverId": "DRV003",
+          "conflictingOrders": ["ORD101", "ORD102"],
+          "reason": "配送時間重疊"
+        }
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "建立新客戶資料",
+      "description": "為王小明建立客戶資料，包含完整的聯絡資訊和配送地址",
+      "steps": [
+        "點擊「客戶管理」",
+        "點擊「新增客戶」",
+        "填寫客戶基本資料",
+        "設定配送偏好",
+        "儲存客戶資料"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "customer_exists",
+            "field": "phone",
+            "value": "0912-345-678"
+          },
+          {
+            "type": "field_filled",
+            "fields": ["name", "phone", "address"]
+          }
+        ]
+      },
+      "hints": [
+        "記得選擇正確的地區分類",
+        "配送備註很重要，司機會參考"
+      ]
+    },
+    {
+      "id": "task-2",
+      "title": "處理緊急訂單",
+      "description": "客戶需要緊急配送2桶瓦斯，請在下午2點前完成配送",
+      "steps": [
+        "進入「訂單管理」",
+        "點擊「新增訂單」",
+        "選擇客戶（使用搜尋功能）",
+        "設定配送時間為今天14:00前",
+        "標記為「緊急」",
+        "指派給最近的司機"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "order_created",
+            "priority": "urgent"
+          },
+          {
+            "type": "driver_assigned",
+            "deliveryTime": "14:00"
+          }
+        ]
+      },
+      "hints": [
+        "使用地圖功能查看司機位置",
+        "檢查司機的現有路線避免衝突"
+      ]
+    },
+    {
+      "id": "task-3",
+      "title": "解決路線衝突",
+      "description": "司機陳大華有兩個訂單時間重疊，需要重新安排",
+      "steps": [
+        "開啟「路線管理」",
+        "找到陳大華的路線",
+        "識別衝突的訂單",
+        "重新調整配送順序或時間",
+        "通知受影響的客戶"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "no_conflicts",
+            "driverId": "DRV003"
+          },
+          {
+            "type": "notification_sent",
+            "recipients": ["CUST001", "CUST002"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-4",
+      "title": "生成每日報表",
+      "description": "生成今日的配送完成報表並匯出",
+      "steps": [
+        "進入「報表中心」",
+        "選擇「每日配送報表」",
+        "設定日期為今天",
+        "選擇包含的資料欄位",
+        "預覽報表",
+        "匯出為 Excel 格式"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "report_generated",
+            "reportType": "daily_delivery"
+          },
+          {
+            "type": "file_exported",
+            "format": "xlsx"
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-5",
+      "title": "處理客戶投訴",
+      "description": "客戶反映昨天的配送延遲，需要記錄並處理",
+      "steps": [
+        "開啟「客服管理」",
+        "建立新的投訴記錄",
+        "填寫投訴內容和客戶資訊",
+        "查詢相關訂單記錄",
+        "提出解決方案",
+        "更新投訴狀態"
+      ],
+      "validation": {
+        "checkpoints": [
+          {
+            "type": "complaint_recorded"
+          },
+          {
+            "type": "solution_provided"
+          },
+          {
+            "type": "status_updated",
+            "status": "resolved"
+          }
+        ]
+      }
+    }
+  ],
+  "completion": {
+    "message": "恭喜！您已完成辦公室人員基礎培訓。",
+    "certificate": true,
+    "nextScenario": "office-training-advanced"
+  }
+}

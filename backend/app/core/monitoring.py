@@ -13,6 +13,8 @@ from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.models.audit import AuditAction, AuditLog
+from app.models.webhook import WebhookLog
+from app.api.deps import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +160,7 @@ async def track_webhook_event(
             security_monitor.track_webhook_failure(provider)
 
         # Log to database for audit trail
-        async with get_db_session() as db:
+        async for db in get_db():
             audit_log = AuditLog(
                 action=AuditAction.WEBHOOK_RECEIVED,
                 resource_type="webhook",
@@ -190,7 +192,7 @@ async def track_api_usage(
         security_monitor.track_api_usage(user_id, f"{api_name}:{endpoint}")
 
         # Log to database for usage tracking
-        async with get_db_session() as db:
+        async for db in get_db():
             # TODO: Create APIUsageLog model
             audit_log = AuditLog(
                 action=AuditAction.API_CALL,
@@ -220,7 +222,7 @@ async def track_failed_authentication(
         security_monitor.track_failed_auth(ip_address)
 
         # Log to database
-        async with get_db_session() as db:
+        async for db in get_db():
             audit_log = AuditLog(
                 action=AuditAction.LOGIN_FAILED,
                 resource_type="auth",
@@ -239,7 +241,7 @@ async def get_security_metrics(hours: int = 24) -> dict:
     try:
         since = datetime.utcnow() - timedelta(hours=hours)
 
-        async with get_db_session() as db:
+        async for db in get_db():
             # Count webhook events
             webhook_stats = await db.execute(
                 select(

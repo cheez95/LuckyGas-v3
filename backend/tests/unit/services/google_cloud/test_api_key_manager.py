@@ -3,11 +3,11 @@ Unit tests for API Key Manager
 """
 
 import os
+from unittest.mock import Mock, patch
 
 import pytest
 
 from app.core.api_key_manager import (
-    APIKeyManager,
     GCPSecretManager,
     LocalEncryptedKeyManager,
     get_api_key_manager,
@@ -80,7 +80,7 @@ class TestLocalEncryptedKeyManager:
     async def test_delete_nonexistent_key(self, manager):
         """Test deleting a key that doesn't exist"""
         success = await manager.delete_key("nonexistent")
-        # LocalEncryptedKeyManager returns True for non-existent keys (idempotent delete)
+        # LocalEncryptedKeyManager returns True for non - existent keys (idempotent delete)
         assert success is True
 
     @pytest.mark.asyncio
@@ -165,8 +165,8 @@ class TestGCPSecretManager:
         mock_client_instance = Mock()
         mock_secret_client.return_value = mock_client_instance
 
-        with patch.dict(os.environ, {"GCP_PROJECT_ID": "test-project"}):
-            return GCPSecretManager(project_id="test-project")
+        with patch.dict(os.environ, {"GCP_PROJECT_ID": "test - project"}):
+            return GCPSecretManager(project_id="test - project")
 
     @pytest.mark.asyncio
     async def test_get_key_success(self, manager, mock_secret_client):
@@ -211,7 +211,7 @@ class TestGCPSecretManager:
 
         # Mock client responses
         mock_client_instance.create_secret.return_value = Mock(
-            name="projects/test-project/secrets/test_api"
+            name="projects / test - project / secrets / test_api"
         )
         mock_client_instance.add_secret_version.return_value = Mock()
 
@@ -266,11 +266,11 @@ class TestGCPSecretManager:
 
         # Mock secrets
         mock_secret1 = Mock()
-        mock_secret1.name = "projects/test-project/secrets/api-key-1"
+        mock_secret1.name = "projects / test - project / secrets / api - key - 1"
         mock_secret2 = Mock()
-        mock_secret2.name = "projects/test-project/secrets/api-key-2"
+        mock_secret2.name = "projects / test - project / secrets / api - key - 2"
         mock_secret3 = Mock()
-        mock_secret3.name = "projects/test-project/secrets/other-secret"
+        mock_secret3.name = "projects / test - project / secrets / other - secret"
 
         # Mock client response
         mock_client_instance.list_secrets.return_value = [
@@ -282,7 +282,7 @@ class TestGCPSecretManager:
         # List keys
         keys = await manager.list_keys()
 
-        # Verify - only api-key- prefixed secrets
+        # Verify - only api - key- prefixed secrets
         assert set(keys) == {"1", "2"}
 
 
@@ -310,7 +310,7 @@ class TestGetAPIKeyManager:
         """Test that GCP manager is returned when GCP is configured"""
         # Create a mock settings object with GCP_PROJECT_ID attribute
         mock_settings = Mock()
-        mock_settings.GCP_PROJECT_ID = "test-project"
+        mock_settings.GCP_PROJECT_ID = "test - project"
 
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             with patch("app.core.config.settings", mock_settings):

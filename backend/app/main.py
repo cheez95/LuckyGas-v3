@@ -13,34 +13,39 @@ from app.api.v1 import (
     analytics,
     api_keys,
     auth,
-    banking,
     communications,
     customers,
     delivery_history,
     driver,
-    financial_reports,
     health,
-    invoices,
     maps_proxy,
     monitoring,
     notifications,
     order_templates,
     orders,
-    payments,
     predictions,
     products,
     routes,
     sms,
     websocket,
 )
-from app.api.v1.admin import migration
+# from app.api.v1.admin import migration  # Temporarily disabled due to missing dependencies
 
 # Socket.IO handler removed during compaction
 from app.core.config import settings
-from app.core.database import create_db_and_tables, engine
+
+# Conditionally import payment-related modules based on feature flags
+if settings.ENABLE_INVOICE_SYSTEM:
+    from app.api.v1 import invoices
+if settings.ENABLE_PAYMENT_SYSTEM:
+    from app.api.v1 import payments
+if settings.ENABLE_BANKING_SYSTEM:
+    from app.api.v1 import banking
+if settings.ENABLE_FINANCIAL_REPORTS:
+    from app.api.v1 import financial_reports
+from app.core.database import create_db_and_tables
 
 # from app.core.db_metrics import DatabaseMetricsCollector  # Removed during compaction
-from app.core.env_validation import validate_environment
 from app.core.logging import get_logger, setup_logging
 from app.middleware.enhanced_rate_limiting import (
     RateLimitExceeded,
@@ -51,7 +56,6 @@ from app.middleware.logging import CorrelationIdMiddleware, LoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 
 # from app.core.api_security import APISecurityMiddleware, api_validator, rate_limiter  # TODO: Fix missing dependencies
-from app.middleware.performance import PerformanceMiddleware
 from app.middleware.security import SecurityMiddleware
 from app.services.websocket_service import websocket_manager
 
@@ -75,7 +79,7 @@ async def lifespan(app: FastAPI):
 
     # Create database tables
     await create_db_and_tables()
-    logger.info("Database tables created/verified")
+    logger.info("Database tables created / verified")
 
     # Initialize custom cache service
     from app.core.cache import cache
@@ -171,7 +175,7 @@ app = FastAPI(
 # Configure CORS with enhanced settings
 cors_origins = settings.get_all_cors_origins()
 
-# Add environment-specific CORS origins
+# Add environment - specific CORS origins
 if settings.is_development():
     # Additional development origins
     cors_origins.extend(["http://localhost:*", "http://127.0.0.1:*"])
@@ -238,6 +242,8 @@ if settings.ENVIRONMENT.value == "production":
 
 
 # Add timing middleware
+
+
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
@@ -248,6 +254,8 @@ async def add_process_time_header(request: Request, call_next):
 
 
 # Exception handlers
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.warning(
@@ -296,7 +304,9 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
 app.include_router(
-    order_templates.router, prefix="/api/v1/order-templates", tags=["order_templates"]
+    order_templates.router,
+    prefix="/api/v1/order-templates",
+    tags=["order_templates"],
 )
 # Consolidated routes router
 app.include_router(routes.router, prefix="/api/v1/routes", tags=["routes"])
@@ -315,14 +325,20 @@ app.include_router(
     communications.router, prefix="/api/v1/communications", tags=["communications"]
 )
 app.include_router(websocket.router, prefix="/api/v1/websocket", tags=["websocket"])
-app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])
-app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
-app.include_router(
-    financial_reports.router,
-    prefix="/api/v1/financial-reports",
-    tags=["financial_reports"],
-)
-app.include_router(banking.router, prefix="/api/v1/banking", tags=["banking"])
+
+# Conditionally include payment-related routers based on feature flags
+if settings.ENABLE_INVOICE_SYSTEM:
+    app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["invoices"])
+if settings.ENABLE_PAYMENT_SYSTEM:
+    app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+if settings.ENABLE_FINANCIAL_REPORTS:
+    app.include_router(
+        financial_reports.router,
+        prefix="/api/v1/financial-reports",
+        tags=["financial_reports"],
+    )
+if settings.ENABLE_BANKING_SYSTEM:
+    app.include_router(banking.router, prefix="/api/v1/banking", tags=["banking"])
 # Removed banking_monitor during compaction
 app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"])
 # Removed webhooks during compaction
@@ -330,7 +346,7 @@ app.include_router(sms.router, prefix="/api/v1", tags=["sms"])
 # Removed sms_webhooks during compaction
 app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 app.include_router(monitoring.router, prefix="/api/v1", tags=["monitoring"])
-app.include_router(migration.router, prefix="/api/v1", tags=["admin", "migration"])
+# app.include_router(migration.router, prefix="/api/v1", tags=["admin", "migration"])  # Temporarily disabled
 # Removed sync_operations during compaction
 # Removed feature_flags during compaction
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
@@ -341,7 +357,7 @@ app.include_router(maps_proxy.router, prefix="/api/v1/maps", tags=["maps_proxy"]
 # import os
 # if os.getenv("ENVIRONMENT") in ["test", "development"]:
 #     from app.api.v1.test_utils import router as test_utils_router
-#     app.include_router(test_utils_router, prefix="/api/v1/test", tags=["test"])
+#     app.include_router(test_utils_router, prefix="/api/v1 / test", tags=["test"])
 
 
 @app.get("/")

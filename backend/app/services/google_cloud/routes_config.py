@@ -5,7 +5,7 @@ This module contains configuration constants and parameters for the Google Route
 """
 
 from datetime import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -15,13 +15,13 @@ class RoutesAPIConfig(BaseModel):
 
     # API Endpoints
     compute_routes_url: str = (
-        "https://routes.googleapis.com/directions/v2:computeRoutes"
+        "https://routes.googleapis.com / directions / v2:computeRoutes"
     )
     compute_matrix_url: str = (
-        "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix"
+        "https://routes.googleapis.com / distanceMatrix / v2:computeRouteMatrix"
     )
     optimization_url_template: str = (
-        "https://routes.googleapis.com/v1/projects/{project}/locations/{location}/routeOptimization:optimizeTours"
+        "https://routes.googleapis.com / v1 / projects/{project}/locations/{location}/routeOptimization:optimizeTours"
     )
 
     # Rate Limiting
@@ -39,11 +39,11 @@ class RoutesAPIConfig(BaseModel):
     # Request Configuration
     default_travel_mode: str = "DRIVE"
     default_routing_preference: str = "TRAFFIC_AWARE_OPTIMAL"
-    default_language: str = "zh-TW"
+    default_language: str = "zh - TW"
     default_region: str = "TW"
     default_units: str = "METRIC"
 
-    # Taiwan-specific Configuration
+    # Taiwan - specific Configuration
     avoid_tolls: bool = Field(False, description="Taiwan has limited toll roads")
     avoid_highways: bool = Field(
         False, description="Highways are often faster in Taiwan"
@@ -65,11 +65,11 @@ class RoutesAPIConfig(BaseModel):
 
     # Field Masks (to reduce response size and costs)
     default_field_mask: str = Field(
-        default="routes.duration,routes.distanceMeters,routes.polyline,routes.optimizedIntermediateWaypointIndex,routes.legs",
+        default="routes.duration, routes.distanceMeters, routes.polyline, routes.optimizedIntermediateWaypointIndex, routes.legs",
         description="Default fields to request",
     )
     matrix_field_mask: str = Field(
-        default="originIndex,destinationIndex,distanceMeters,duration,status",
+        default="originIndex, destinationIndex, distanceMeters, duration, status",
         description="Fields for distance matrix",
     )
 
@@ -81,7 +81,9 @@ class RoutesAPIConfig(BaseModel):
     monthly_budget_usd: float = Field(1000.0, description="Monthly budget limit in USD")
 
     # Cache Configuration
-    cache_ttl_seconds: int = Field(3600, description="Cache time-to-live in seconds")
+    cache_ttl_seconds: int = Field(
+        3600, description="Cache time - to - live in seconds"
+    )
     max_cache_size_mb: int = Field(100, description="Maximum cache size in MB")
 
     # Business Hours (Taiwan time)
@@ -114,7 +116,7 @@ class RoutesAPIConfig(BaseModel):
             "example": {
                 "requests_per_second": 10,
                 "max_retries": 3,
-                "default_language": "zh-TW",
+                "default_language": "zh - TW",
                 "daily_budget_usd": 50.0,
             }
         }
@@ -172,7 +174,7 @@ GOOGLE_API_ERROR_CODES = {
 }
 
 
-# Taiwan-specific constants
+# Taiwan - specific constants
 TAIWAN_REGIONS = {
     "台北市": {"lat": 25.0330, "lng": 121.5654},
     "新北市": {"lat": 25.0170, "lng": 121.4627},

@@ -20,7 +20,7 @@ class TestCustomers:
     ):
         """Test creating a new customer"""
         response = await client.post(
-            "/api/v1/customers/", json=sample_customer_data, headers=auth_headers
+            "/api / v1 / customers/", json=sample_customer_data, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -42,12 +42,12 @@ class TestCustomers:
         """Test creating a customer with existing code"""
         # Create first customer
         await client.post(
-            "/api/v1/customers/", json=sample_customer_data, headers=auth_headers
+            "/api / v1 / customers/", json=sample_customer_data, headers=auth_headers
         )
 
         # Try to create duplicate
         response = await client.post(
-            "/api/v1/customers/", json=sample_customer_data, headers=auth_headers
+            "/api / v1 / customers/", json=sample_customer_data, headers=auth_headers
         )
         assert response.status_code == 400
         assert "已存在" in response.json()["detail"]
@@ -73,7 +73,7 @@ class TestCustomers:
         await db_session.commit()
 
         # Test listing all customers
-        response = await client.get("/api/v1/customers/", headers=auth_headers)
+        response = await client.get("/api / v1 / customers/", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] >= 5
@@ -81,7 +81,7 @@ class TestCustomers:
 
         # Test with area filter
         response = await client.get(
-            "/api/v1/customers/", params={"area": "信義區"}, headers=auth_headers
+            "/api / v1 / customers/", params={"area": "信義區"}, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -93,7 +93,7 @@ class TestCustomers:
 
         # Test with search
         response = await client.get(
-            "/api/v1/customers/", params={"search": "C001"}, headers=auth_headers
+            "/api / v1 / customers/", params={"search": "C001"}, headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -105,7 +105,9 @@ class TestCustomers:
 
         # Test pagination
         response = await client.get(
-            "/api/v1/customers/", params={"skip": 2, "limit": 2}, headers=auth_headers
+            "/api / v1 / customers/",
+            params={"skip": 2, "limit": 2},
+            headers=auth_headers,
         )
         assert response.status_code == 200
         data = response.json()
@@ -131,7 +133,7 @@ class TestCustomers:
         await db_session.refresh(customer)
 
         response = await client.get(
-            f"/api/v1/customers/{customer.id}", headers=auth_headers
+            f"/api / v1 / customers/{customer.id}", headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -145,8 +147,10 @@ class TestCustomers:
     async def test_get_nonexistent_customer(
         self, client: AsyncClient, auth_headers: dict
     ):
-        """Test getting a non-existent customer"""
-        response = await client.get("/api/v1/customers/99999", headers=auth_headers)
+        """Test getting a non - existent customer"""
+        response = await client.get(
+            "/api / v1 / customers / 99999", headers=auth_headers
+        )
         assert response.status_code == 404
         assert "客戶不存在" in response.json()["detail"]
 
@@ -169,12 +173,14 @@ class TestCustomers:
 
         update_data = {
             "short_name": "更新後的客戶",
-            "phone": "0912-345-678",
+            "phone": "0912 - 345 - 678",
             "area": "大安區",
         }
 
         response = await client.put(
-            f"/api/v1/customers/{customer.id}", json=update_data, headers=auth_headers
+            f"/api / v1 / customers/{customer.id}",
+            json=update_data,
+            headers=auth_headers,
         )
         assert response.status_code == 200
         data = response.json()
@@ -204,7 +210,7 @@ class TestCustomers:
         await db_session.refresh(customer)
 
         response = await client.delete(
-            f"/api/v1/customers/{customer.id}", headers=admin_auth_headers
+            f"/api / v1 / customers/{customer.id}", headers=admin_auth_headers
         )
         assert response.status_code == 200
         assert "客戶已停用" in response.json()["message"]
@@ -231,7 +237,7 @@ class TestCustomers:
         await db_session.refresh(customer)
 
         response = await client.delete(
-            f"/api/v1/customers/{customer.id}", headers=auth_headers
+            f"/api / v1 / customers/{customer.id}", headers=auth_headers
         )
         assert response.status_code == 403
         assert "權限不足" in response.json()["detail"]
@@ -258,7 +264,7 @@ class TestCustomerInventory:
 
         # Create gas products
         product_50kg = GasProduct(
-            sku="CYL-50-REG",
+            sku="CYL - 50 - REG",
             name_zh="50公斤桶裝瓦斯",
             delivery_method=DeliveryMethod.CYLINDER,
             size_kg=50,
@@ -268,7 +274,7 @@ class TestCustomerInventory:
             is_available=True,
         )
         product_20kg = GasProduct(
-            sku="CYL-20-REG",
+            sku="CYL - 20 - REG",
             name_zh="20公斤桶裝瓦斯",
             delivery_method=DeliveryMethod.CYLINDER,
             size_kg=20,
@@ -305,7 +311,7 @@ class TestCustomerInventory:
         await db_session.commit()
 
         response = await client.get(
-            f"/api/v1/customers/{customer.id}/inventory", headers=auth_headers
+            f"/api / v1 / customers/{customer.id}/inventory", headers=auth_headers
         )
         assert response.status_code == 200
         data = response.json()
@@ -339,7 +345,7 @@ class TestCustomerInventory:
         db_session.add(customer)
 
         product = GasProduct(
-            sku="CYL-50-REG",
+            sku="CYL - 50 - REG",
             name_zh="50公斤桶裝瓦斯",
             delivery_method=DeliveryMethod.CYLINDER,
             size_kg=50,
@@ -357,7 +363,7 @@ class TestCustomerInventory:
         update_data = {"quantity_owned": 10, "quantity_rented": 5, "is_active": True}
 
         response = await client.put(
-            f"/api/v1/customers/{customer.id}/inventory/{product.id}",
+            f"/api / v1 / customers/{customer.id}/inventory/{product.id}",
             json=update_data,
             headers=auth_headers,
         )

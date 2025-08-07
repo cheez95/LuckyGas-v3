@@ -9,12 +9,8 @@ import random
 from datetime import datetime, time, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
-from app.core.database import get_async_session
 from app.models.order import Order
-from app.models.route import Route
 from app.models.vehicle import Vehicle
 
 logger = logging.getLogger(__name__)
@@ -27,7 +23,7 @@ class RouteOptimizationService:
     """
 
     def __init__(self):
-        self.api_key = "placeholder-api-key"
+        self.api_key = "placeholder - api - key"
         # Lucky Gas depot location (placeholder coordinates in Taipei)
         self.depot_location = {
             "lat": 25.0330,
@@ -80,7 +76,7 @@ class RouteOptimizationService:
         )
 
         return {
-            "optimization_id": f"opt-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}",
+            "optimization_id": f"opt-{datetime.utcnow().strftime('%Y % m % d-%H % M % S')}",
             "routes": route_assignments,
             "unassigned_orders": [
                 {"order_id": o.id, "reason": "no_vehicle_available"}
@@ -172,7 +168,7 @@ class RouteOptimizationService:
         total_duration += return_distance * 2
 
         return {
-            "route_id": f"R-{route_date.strftime('%Y%m%d')}-{vehicle.id:03d}",
+            "route_id": f"R-{route_date.strftime('%Y % m % d')}-{vehicle.id:03d}",
             "vehicle_id": vehicle.id,
             "vehicle_plate": vehicle.plate_number,
             "driver_id": vehicle.driver_id if hasattr(vehicle, "driver_id") else None,
@@ -230,7 +226,7 @@ class RouteOptimizationService:
         while remaining:
             # Find nearest unvisited order
             nearest_idx = 0
-            nearest_distance = float("inf")
+            nearest_distance = float("in")
 
             for idx, order in enumerate(remaining):
                 distance = self._calculate_distance(
@@ -346,7 +342,7 @@ class RouteOptimizationService:
 
     async def get_route_navigation(self, route_id: int) -> Optional[Dict[str, Any]]:
         """
-        Get turn-by-turn navigation for a route
+        Get turn - by - turn navigation for a route
         In production, this would use Google Maps Directions API
         """
         # Mock navigation data
@@ -381,7 +377,7 @@ class RouteOptimizationService:
     ) -> Dict[str, Any]:
         """
         Update driver's current location
-        In production, this would update real-time tracking
+        In production, this would update real - time tracking
         """
         return {
             "driver_id": driver_id,

@@ -1,5 +1,9 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Result, Button } from 'antd';
+import { Result, Button, Typography, Space } from 'antd';
+import { CloseCircleOutlined, ReloadOutlined, HomeOutlined } from '@ant-design/icons';
+import { logReactError } from '../../services/errorMonitoring';
+
+const { Paragraph, Text } = Typography;
 
 interface Props {
   children: ReactNode;
@@ -9,6 +13,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId?: string;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -18,49 +23,146 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true, error, errorInfo: null };
+    // Generate error ID for tracking
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return { hasError: true, error, errorInfo: null, errorId };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // You can also log the error to an error reporting service
-    console.error('ErrorBoundary caught error:', error, errorInfo);
+    const { errorId } = this.state;
+    
+    // Log error with context
+    console.error('ErrorBoundary caught error:', {
+      errorId,
+      error: error.toString(),
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+    });
+    
+    // Log to error monitoring service
+    logReactError(error, errorInfo);
+    
+    // Send to error reporting service if available (legacy support)
+    this.reportError(error, errorInfo);
+    
     this.setState({
       error,
       errorInfo
     });
   }
 
+  private reportError = (error: Error, errorInfo: ErrorInfo) => {
+    // Integration point for error reporting services (e.g., Sentry, LogRocket)
+    if (window.errorReporting?.logError) {
+      window.errorReporting.logError(error, {
+        ...errorInfo,
+        errorId: this.state.errorId,
+        context: 'ErrorBoundary',
+      });
+    }
+  }
+
   handleReset = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({ hasError: false, error: null, errorInfo: null, errorId: undefined });
+  };
+
+  handleReload = () => {
     window.location.reload();
+  };
+
+  handleHome = () => {
+    window.location.href = '/';
   };
 
   render() {
     if (this.state.hasError) {
+      const isDevelopment = import.meta.env.DEV;
+      const { error, errorInfo, errorId } = this.state;
+
       return (
-        <div data-testid="error-boundary">
+        <div data-testid="error-boundary" style={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          padding: '20px',
+          backgroundColor: '#f0f2f5'
+        }}>
           <Result
             status="error"
-            title="發生錯誤"
-            subTitle="很抱歉，應用程式發生錯誤。請重新載入頁面。"
+            icon={<CloseCircleOutlined style={{ fontSize: 72, color: '#ff4d4f' }} />}
+            title="系統發生錯誤"
+            subTitle={
+              <Space direction="vertical" align="center">
+                <Text>很抱歉，系統遇到了預期之外的錯誤。</Text>
+                <Text type="secondary">錯誤代碼：{errorId}</Text>
+              </Space>
+            }
             extra={
-              <Button 
-                type="primary" 
-                onClick={this.handleReset}
-                data-testid="reload-page-btn"
-              >
-                重新載入頁面
-              </Button>
+              <Space>
+                <Button 
+                  type="primary" 
+                  icon={<ReloadOutlined />}
+                  onClick={this.handleReload}
+                  data-testid="reload-page-btn"
+                >
+                  重新整理頁面
+                </Button>
+                <Button 
+                  icon={<HomeOutlined />}
+                  onClick={this.handleHome}
+                  data-testid="go-home-btn"
+                >
+                  返回首頁
+                </Button>
+                <Button 
+                  onClick={this.handleReset}
+                  data-testid="retry-btn"
+                >
+                  重試
+                </Button>
+              </Space>
             }
           >
-            {import.meta.env.DEV && this.state.error && (
+            {errorId && (
+              <Paragraph type="secondary" style={{ marginTop: 20 }}>
+                請將錯誤代碼 <Text code copyable>{errorId}</Text> 提供給技術支援人員
+              </Paragraph>
+            )}
+            
+            {isDevelopment && error && (
               <div className="error-details" style={{ marginTop: 24, textAlign: 'left' }}>
                 <details style={{ whiteSpace: 'pre-wrap' }}>
-                  <summary>錯誤詳情</summary>
-                  {this.state.error.toString()}
-                  <br />
-                  {this.state.errorInfo?.componentStack}
+                  <summary style={{ cursor: 'pointer', marginBottom: 10 }}>
+                    <Text strong>錯誤詳情（開發模式）</Text>
+                  </summary>
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <div>
+                      <Text type="secondary">錯誤訊息：</Text>
+                      <Paragraph code style={{ marginTop: 5 }}>
+                        {error.toString()}
+                      </Paragraph>
+                    </div>
+                    {error.stack && (
+                      <div>
+                        <Text type="secondary">堆疊追蹤：</Text>
+                        <Paragraph code style={{ marginTop: 5, fontSize: 12 }}>
+                          {error.stack}
+                        </Paragraph>
+                      </div>
+                    )}
+                    {errorInfo?.componentStack && (
+                      <div>
+                        <Text type="secondary">元件堆疊：</Text>
+                        <Paragraph code style={{ marginTop: 5, fontSize: 12 }}>
+                          {errorInfo.componentStack}
+                        </Paragraph>
+                      </div>
+                    )}
+                  </Space>
                 </details>
               </div>
             )}
@@ -70,6 +172,15 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     return this.props.children;
+  }
+}
+
+// Type declaration for error reporting service
+declare global {
+  interface Window {
+    errorReporting?: {
+      logError: (error: Error, context?: any) => void;
+    };
   }
 }
 

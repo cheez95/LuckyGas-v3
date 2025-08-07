@@ -4,8 +4,8 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
-
 from app.core.config import settings
+from app.models.notification import SMSProvider
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +190,7 @@ class SMSGateway:
 
     def _format_phone_number(self, phone: str) -> str:
         """Format phone number for Taiwan"""
-        # Remove any non-numeric characters
+        # Remove any non - numeric characters
         phone = "".join(filter(str.isdigit, phone))
 
         # Handle Taiwan mobile numbers
@@ -201,7 +201,7 @@ class SMSGateway:
         elif phone.startswith("9") and len(phone) == 9:
             return "886" + phone  # Missing leading 0
 
-        # Return as-is if format unknown
+        # Return as - is if format unknown
         return phone
 
     async def _render_template(

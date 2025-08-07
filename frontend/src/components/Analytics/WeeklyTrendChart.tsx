@@ -36,7 +36,7 @@ interface WeeklyTrendChartProps {
   detailed?: boolean;
 }
 
-const { Title, Text } = Typography;
+const { Title: TypographyTitle, Text } = Typography;
 
 const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({ detailed = false }) => {
   const [loading, setLoading] = useState(true);
@@ -128,9 +128,9 @@ const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({ detailed = false })
     <Card>
       <div style={{ padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <Title level={5} style={{ margin: 0 }}>
+          <TypographyTitle level={5} style={{ margin: 0 }}>
             週趨勢分析
-          </Title>
+          </TypographyTitle>
           
           <Radio.Group
             value={selectedMetric}

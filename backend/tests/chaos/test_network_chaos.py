@@ -5,8 +5,8 @@ Tests system behavior under various network conditions
 
 import asyncio
 import time
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient, ConnectError, ReadTimeout
@@ -26,7 +26,11 @@ class TestNetworkChaos:
             return await client.get(url, **kwargs)
 
         # Test critical endpoints with latency
-        endpoints = ["/api/v1/health", "/api/v1/orders", "/api/v1/customers"]
+        endpoints = [
+            "/api / v1 / health",
+            "/api / v1 / orders",
+            "/api / v1 / customers",
+        ]
 
         results = []
         for endpoint in endpoints:
@@ -93,7 +97,7 @@ class TestNetworkChaos:
                 }
 
         # Test multiple requests to trigger circuit breaker
-        test_endpoints = ["/api/v1/orders"] * 5  # Same endpoint multiple times
+        test_endpoints = ["/api / v1 / orders"] * 5  # Same endpoint multiple times
         results = []
 
         for endpoint in test_endpoints:
@@ -122,8 +126,14 @@ class TestNetworkChaos:
         """Test API behavior with 1 second network latency"""
         # Test degraded mode activation
         high_latency_endpoints = {
-            "/api/v1/routes/optimize": {"timeout": 10.0, "degraded_threshold": 2.0},
-            "/api/v1/predictions/daily": {"timeout": 15.0, "degraded_threshold": 3.0},
+            "/api / v1 / routes / optimize": {
+                "timeout": 10.0,
+                "degraded_threshold": 2.0,
+            },
+            "/api / v1 / predictions / daily": {
+                "timeout": 15.0,
+                "degraded_threshold": 3.0,
+            },
         }
 
         for endpoint, config in high_latency_endpoints.items():
@@ -152,8 +162,8 @@ class TestNetworkChaos:
                         ), f"{endpoint} should indicate degraded mode with high latency"
 
             except ReadTimeout:
-                # Timeout is acceptable for non-critical endpoints under extreme latency
-                if endpoint not in ["/api/v1/health", "/api/v1/auth/login"]:
+                # Timeout is acceptable for non - critical endpoints under extreme latency
+                if endpoint not in ["/api / v1 / health", "/api / v1 / auth / login"]:
                     pass  # Expected for some endpoints
                 else:
                     pytest.fail(
@@ -180,7 +190,7 @@ class TestNetworkChaos:
                     # Simulate network failure
                     raise ConnectError("Simulated network failure")
 
-                response = await client.get("/api/v1/health")
+                response = await client.get("/api / v1 / health")
                 if response.status_code == 200:
                     successful_requests += 1
             except ConnectError:
@@ -191,7 +201,7 @@ class TestNetworkChaos:
         print(f"Total requests: {total_requests}")
         print(f"Successful: {successful_requests}")
         print(f"Failed: {failed_requests}")
-        print(f"Actual failure rate: {failed_requests/total_requests:.2%}")
+        print(f"Actual failure rate: {failed_requests / total_requests:.2%}")
 
         # System should handle intermittent failures gracefully
         # Success rate should be close to (1 - failure_rate)
@@ -247,7 +257,7 @@ class TestNetworkChaos:
         # Simulate network recovery
         recovery_successful = False
         try:
-            response = await client.get("/api/v1/health")
+            response = await client.get("/api / v1 / health")
             if response.status_code == 200:
                 recovery_successful = True
 
@@ -281,11 +291,11 @@ class TestNetworkChaos:
                 if layer == "database":
                     # Simulate slow database query
                     response = await client.get(
-                        "/api/v1/orders?page_size=1000", timeout=timeout
+                        "/api / v1 / orders?page_size=1000", timeout=timeout
                     )
                 else:
                     response = await client.get(
-                        f"/api/v1/health/{layer}", timeout=timeout
+                        f"/api / v1 / health/{layer}", timeout=timeout
                     )
 
                 results[layer] = {
@@ -321,7 +331,7 @@ class TestNetworkChaos:
     @pytest.mark.chaos
     @pytest.mark.asyncio
     async def test_retry_with_backoff(self, client: AsyncClient):
-        """Test retry mechanism with exponential backoff"""
+        """Test retry mechanism with exponential backof"""
         retry_attempts = []
         max_retries = 3
 

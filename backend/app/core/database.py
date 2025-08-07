@@ -7,7 +7,9 @@ from app.core.config import settings
 
 # Create async engine with connection pooling
 engine = create_async_engine(
-    settings.DATABASE_URL.replace("postgresql+psycopg2://", "postgresql+asyncpg://"),
+    settings.DATABASE_URL.replace(
+        "postgresql + psycopg2://", "postgresql + asyncpg://"
+    ),
     echo=False,
     future=True,
     # Connection pool settings from config
@@ -20,7 +22,7 @@ engine = create_async_engine(
     connect_args={
         "server_settings": {
             "application_name": settings.PROJECT_NAME.lower().replace(" ", "_"),
-            "jit": "off",
+            "jit": "of",
             "statement_timeout": str(settings.database.statement_timeout),
         },
         "command_timeout": settings.database.command_timeout,
@@ -28,7 +30,7 @@ engine = create_async_engine(
         # Prepared statement cache
         "prepared_statement_cache_size": 0,  # Disable for better compatibility
         # Note: keepalives parameters are not supported by asyncpg
-        # They are only for psycopg2/libpq connections
+        # They are only for psycopg2 / libpq connections
     },
 )
 

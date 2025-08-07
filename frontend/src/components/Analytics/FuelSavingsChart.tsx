@@ -45,7 +45,7 @@ interface FuelSavingsData {
   total_cost_saved: number;
 }
 
-const { Title, Text } = Typography;
+const { Title: TypographyTitle, Text } = Typography;
 
 const FuelSavingsChart: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -186,9 +186,9 @@ const FuelSavingsChart: React.FC = () => {
   return (
     <Card>
       <div style={{ padding: 16 }}>
-        <Title level={5} style={{ marginBottom: 16 }}>
+        <TypographyTitle level={5} style={{ marginBottom: 16 }}>
           週燃料節省分析
-        </Title>
+        </TypographyTitle>
         
         <div style={{ marginBottom: 24 }}>
           <Bar data={chartData} options={options} height={100} />
@@ -196,27 +196,27 @@ const FuelSavingsChart: React.FC = () => {
         
         <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 24 }}>
           <div style={{ textAlign: 'center' }}>
-            <Title level={2} style={{ color: '#52c41a', margin: 0 }}>
+            <TypographyTitle level={2} style={{ color: '#52c41a', margin: 0 }}>
               {data.total_fuel_saved.toFixed(1)}
-            </Title>
+            </TypographyTitle>
             <Text type="secondary">
               總節省燃料 (公升)
             </Text>
           </div>
           
           <div style={{ textAlign: 'center' }}>
-            <Title level={2} style={{ color: '#1890ff', margin: 0 }}>
+            <TypographyTitle level={2} style={{ color: '#1890ff', margin: 0 }}>
               ${data.total_cost_saved.toLocaleString()}
-            </Title>
+            </TypographyTitle>
             <Text type="secondary">
               總節省成本 (TWD)
             </Text>
           </div>
           
           <div style={{ textAlign: 'center' }}>
-            <Title level={2} style={{ color: '#722ed1', margin: 0 }}>
+            <TypographyTitle level={2} style={{ color: '#722ed1', margin: 0 }}>
               {(data.total_fuel_saved * 2.31).toFixed(1)}
-            </Title>
+            </TypographyTitle>
             <Text type="secondary">
               減少 CO₂ (公斤)
             </Text>
