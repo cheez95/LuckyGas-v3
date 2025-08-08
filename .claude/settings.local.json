@@ -152,7 +152,8 @@
       "Bash(gh pr view:*)",
       "Bash(gh pr edit:*)",
       "Bash(gh pr:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(git stash:*)"
     ],
     "deny": []
   }

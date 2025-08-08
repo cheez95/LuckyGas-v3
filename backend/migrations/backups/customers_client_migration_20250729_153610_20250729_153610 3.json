@@ -1,0 +1,11 @@
+{
+  "backup_info": {
+    "migration_id": "client_migration_20250729_153610",
+    "table_name": "customers",
+    "timestamp": "2025-07-29T15:36:10.653930",
+    "row_count": 0,
+    "checksum": "",
+    "file_path": ""
+  },
+  "data": []
+}

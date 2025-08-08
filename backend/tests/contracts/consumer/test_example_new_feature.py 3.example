@@ -1,0 +1,264 @@
+"""
+Example: How to Add Contract Tests for New Features
+
+This is a template showing how to add contract tests when implementing
+new API endpoints. Copy this file and modify for your specific use case.
+
+Example scenario: Adding a new "Promotions" API
+"""
+
+import pytest
+import requests
+from datetime import datetime
+from typing import Any
+
+from tests.contracts.conftest import auth_headers
+
+
+class TestPromotionsAPIContract:
+    """
+    Example contract tests for a new Promotions API.
+    
+    Replace 'Promotions' with your feature name and update
+    the tests to match your API design.
+    """
+    
+    def test_get_active_promotions(self, pact: Any, mock_provider_url: str) -> None:
+        """
+        Example: Test getting a list of active promotions.
+        
+        Steps to adapt:
+        1. Update the endpoint path
+        2. Define your expected response structure
+        3. Set appropriate provider state
+        4. Add query parameters if needed
+        """
+        # Define what the frontend expects to receive
+        expected_promotions = [
+            {
+                "id": 1,
+                "name": "新年優惠",
+                "description": "新年期間瓦斯九折優惠",
+                "discount_percentage": 10,
+                "start_date": "2024-02-01T00:00:00Z",
+                "end_date": "2024-02-29T23:59:59Z",
+                "is_active": True,
+                "applicable_products": [1, 2, 3]
+            }
+        ]
+        
+        # Define the contract
+        (pact
+         .given("active promotions exist in the system")  # Provider state
+         .upon_receiving("a request to get active promotions")
+         .with_request(
+             method="GET",
+             path="/api/v1/promotions",
+             headers=auth_headers(),
+             query={
+                 "active_only": ["true"],
+                 "skip": ["0"],
+                 "limit": ["10"]
+             }
+         )
+         .will_respond_with(
+             status=200,
+             headers={"Content-Type": "application/json"},
+             body={
+                 "items": expected_promotions,
+                 "total": 1
+             }
+         ))
+        
+        # Test the contract
+        with pact:
+            response = requests.get(
+                f"{mock_provider_url}/api/v1/promotions",
+                headers=auth_headers(),
+                params={"active_only": "true", "skip": 0, "limit": 10}
+            )
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["items"]) > 0
+            assert data["items"][0]["is_active"] is True
+    
+    def test_create_promotion(self, pact: Any, mock_provider_url: str) -> None:
+        """
+        Example: Test creating a new promotion.
+        
+        Shows how to test POST endpoints with request body.
+        """
+        # Request body
+        new_promotion = {
+            "name": "中秋節特惠",
+            "description": "中秋節期間新客戶首次訂購享85折",
+            "discount_percentage": 15,
+            "start_date": "2024-09-15T00:00:00Z",
+            "end_date": "2024-09-17T23:59:59Z",
+            "applicable_products": [1, 2],
+            "customer_type": "new",
+            "max_uses": 100
+        }
+        
+        # Expected response
+        expected_response = {
+            **new_promotion,
+            "id": 2,
+            "is_active": True,
+            "current_uses": 0,
+            "created_at": datetime.now().isoformat() + "Z",
+            "created_by": "admin@luckygas.com"
+        }
+        
+        (pact
+         .given("the system is ready to create promotions")
+         .upon_receiving("a request to create a new promotion")
+         .with_request(
+             method="POST",
+             path="/api/v1/promotions",
+             headers=auth_headers(),
+             body=new_promotion
+         )
+         .will_respond_with(
+             status=201,
+             headers={"Content-Type": "application/json"},
+             body=expected_response
+         ))
+        
+        with pact:
+            response = requests.post(
+                f"{mock_provider_url}/api/v1/promotions",
+                headers=auth_headers(),
+                json=new_promotion
+            )
+            
+            assert response.status_code == 201
+            data = response.json()
+            assert data["name"] == new_promotion["name"]
+            assert "id" in data
+    
+    def test_apply_promotion_to_order(self, pact: Any, mock_provider_url: str) -> None:
+        """
+        Example: Test applying a promotion code to an order.
+        
+        Shows how to test business logic endpoints.
+        """
+        order_id = 123
+        promotion_code = "NEWYEAR2024"
+        
+        expected_response = {
+            "order_id": order_id,
+            "original_amount": 1600.0,
+            "discount_amount": 160.0,
+            "final_amount": 1440.0,
+            "promotion_applied": {
+                "code": promotion_code,
+                "name": "新年優惠",
+                "discount_percentage": 10
+            }
+        }
+        
+        (pact
+         .given(f"order {order_id} exists and promotion {promotion_code} is valid")
+         .upon_receiving("a request to apply promotion to order")
+         .with_request(
+             method="POST",
+             path=f"/api/v1/orders/{order_id}/apply-promotion",
+             headers=auth_headers(),
+             body={"promotion_code": promotion_code}
+         )
+         .will_respond_with(
+             status=200,
+             headers={"Content-Type": "application/json"},
+             body=expected_response
+         ))
+        
+        with pact:
+            response = requests.post(
+                f"{mock_provider_url}/api/v1/orders/{order_id}/apply-promotion",
+                headers=auth_headers(),
+                json={"promotion_code": promotion_code}
+            )
+            
+            assert response.status_code == 200
+            data = response.json()
+            assert data["discount_amount"] == 160.0
+            assert data["promotion_applied"]["code"] == promotion_code
+    
+    def test_promotion_validation_error(self, pact: Any, mock_provider_url: str) -> None:
+        """
+        Example: Test error scenarios.
+        
+        Always include tests for error cases in your contracts.
+        """
+        invalid_promotion = {
+            "name": "",  # Invalid: empty name
+            "discount_percentage": 150  # Invalid: > 100%
+        }
+        
+        (pact
+         .given("the system validates promotion data")
+         .upon_receiving("a request with invalid promotion data")
+         .with_request(
+             method="POST",
+             path="/api/v1/promotions",
+             headers=auth_headers(),
+             body=invalid_promotion
+         )
+         .will_respond_with(
+             status=422,
+             headers={"Content-Type": "application/json"},
+             body={
+                 "detail": "資料驗證失敗",
+                 "errors": [
+                     {
+                         "loc": ["body", "name"],
+                         "msg": "名稱不可為空",
+                         "type": "value_error"
+                     },
+                     {
+                         "loc": ["body", "discount_percentage"],
+                         "msg": "折扣百分比必須在0-100之間",
+                         "type": "value_error"
+                     }
+                 ]
+             }
+         ))
+        
+        with pact:
+            response = requests.post(
+                f"{mock_provider_url}/api/v1/promotions",
+                headers=auth_headers(),
+                json=invalid_promotion
+            )
+            
+            assert response.status_code == 422
+            data = response.json()
+            assert "errors" in data
+            assert len(data["errors"]) == 2
+
+
+# IMPORTANT: Provider State Setup
+# 
+# For each provider state used above, you need to add a corresponding
+# state handler in tests/contracts/provider/test_provider_verification.py
+#
+# Example:
+#
+# @self.verifier.provider_state("active promotions exist in the system")
+# async def active_promotions_exist():
+#     # Create test promotion in database
+#     promotion = Promotion(
+#         name="新年優惠",
+#         discount_percentage=10,
+#         is_active=True,
+#         # ... other fields
+#     )
+#     self.db.add(promotion)
+#     await self.db.commit()
+#
+# @self.verifier.provider_state("order {order_id} exists and promotion {code} is valid")
+# async def order_and_promotion_exist(order_id: int, code: str):
+#     # Create test order and promotion
+#     pass
