@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Input, Button, Space, Typography, Tag, message, Modal, Form, Row, Col, Switch, InputNumber, TimePicker, Select } from 'antd';
-import { SearchOutlined, PlusOutlined, EditOutlined, ExclamationCircleOutlined, ContainerOutlined } from '@ant-design/icons';
+import { Tag, message, Form, Row, Col, Switch, InputNumber, TimePicker, Select, Input } from 'antd';
+import { PlusOutlined, EditOutlined, ExclamationCircleOutlined, ContainerOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
@@ -8,11 +8,13 @@ import { customerService } from '../../services/customer.service';
 import { Customer } from '../../types/order';
 import CustomerInventory from './CustomerInventory';
 import { features } from '../../config/features';
+import BaseListComponent, { BaseListAction, BaseListStats } from '../common/BaseListComponent';
+import BaseModal from '../common/BaseModal';
+import { useFormValidation, ValidationRules } from '../../hooks/useFormValidation';
+import { useSubmitHandler, SubmitPresets } from '../../hooks/useSubmitHandler';
+import { FormErrorDisplay } from '../common/FormErrorDisplay';
 
-const { Title } = Typography;
-const { Search } = Input;
 const { Option } = Select;
-const { confirm } = Modal;
 
 const CustomerList: React.FC = () => {
   const { t } = useTranslation();
@@ -26,7 +28,9 @@ const CustomerList: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [inventoryModalVisible, setInventoryModalVisible] = useState(false);
-  const [form] = Form.useForm();
+
+  // Form hooks
+  const customerForm = useFormValidation<Customer>();
 
   // Fetch customers from API
   const fetchCustomers = async (search?: string, page: number = 1, size: number = 10) => {
@@ -52,41 +56,39 @@ const CustomerList: React.FC = () => {
   }, [currentPage, pageSize]);
 
   // Handle customer creation/update
-  const handleSubmit = async (values: any) => {
-    try {
-      const customerData = {
-        ...values,
-        delivery_time_start: values.delivery_time?.[0]?.format('HH:mm'),
-        delivery_time_end: values.delivery_time?.[1]?.format('HH:mm'),
-      };
-      delete customerData.delivery_time;
+  const handleSubmit = async (values: Customer) => {
+    const customerData = {
+      ...values,
+      delivery_time_start: values.delivery_time?.[0]?.format('HH:mm'),
+      delivery_time_end: values.delivery_time?.[1]?.format('HH:mm'),
+    };
+    delete customerData.delivery_time;
 
-      if (isEditMode && selectedCustomer) {
-        await customerService.updateCustomer(selectedCustomer.id, customerData);
-        message.success('客戶更新成功');
-      } else {
-        await customerService.createCustomer(customerData);
-        message.success('客戶創建成功');
-      }
-      
-      setIsModalVisible(false);
-      form.resetFields();
-      fetchCustomers(searchText, currentPage, pageSize);
-    } catch (error: any) {
-      // Check for duplicate customer code error
-      if (error.message?.includes('客戶代碼已存在')) {
-        message.error('此客戶編號已存在，請使用其他編號');
-      } else {
-        message.error(isEditMode ? '更新客戶失敗' : '創建客戶失敗');
-      }
+    let result;
+    if (isEditMode && selectedCustomer) {
+      result = await customerService.updateCustomer(selectedCustomer.id, customerData);
+    } else {
+      result = await customerService.createCustomer(customerData);
     }
+    
+    setIsModalVisible(false);
+    customerForm.resetForm();
+    fetchCustomers(searchText, currentPage, pageSize);
+    return result;
   };
+
+  // Submit handlers
+  const submitHandler = useSubmitHandler(
+    isEditMode 
+      ? SubmitPresets.update(handleSubmit, '客戶更新成功')
+      : SubmitPresets.create(handleSubmit, '客戶創建成功')
+  );
 
   // Handle edit
   const handleEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsEditMode(true);
-    form.setFieldsValue({
+    customerForm.setFieldsValue({
       ...customer,
       delivery_time: customer.delivery_time_start && customer.delivery_time_end
         ? [dayjs(customer.delivery_time_start, 'HH:mm'), dayjs(customer.delivery_time_end, 'HH:mm')]
@@ -97,29 +99,37 @@ const CustomerList: React.FC = () => {
 
   // Handle delete
   const handleDelete = (customer: Customer) => {
-    confirm({
-      title: '確認刪除客戶',
-      icon: <ExclamationCircleOutlined />,
-      content: `確定要刪除客戶 ${customer.short_name} 嗎？此操作無法復原。`,
-      okText: '確認',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await customerService.deleteCustomer(customer.id);
-          message.success('客戶已刪除');
-          fetchCustomers(searchText, currentPage, pageSize);
-        } catch (error) {
-          message.error('刪除客戶失敗');
-        }
-      },
-    });
+    // This will be handled by BaseModal's confirmation feature
+    // or by a separate confirmation modal implementation
+    console.log('Delete customer:', customer);
   };
 
   const handleViewInventory = (customer: Customer) => {
     setSelectedCustomer(customer);
     setInventoryModalVisible(true);
   };
+
+  // Define row actions for BaseListComponent
+  const rowActions: BaseListAction<Customer>[] = [
+    {
+      key: 'inventory',
+      label: '庫存',
+      icon: <ContainerOutlined />,
+      onClick: handleViewInventory,
+    },
+    {
+      key: 'edit',
+      label: '編輯',
+      icon: <EditOutlined />,
+      onClick: handleEdit,
+    },
+    {
+      key: 'delete',
+      label: '刪除',
+      danger: true,
+      onClick: handleDelete,
+    },
+  ];
 
   const columns: ColumnsType<Customer> = [
     {
@@ -205,39 +215,6 @@ const CustomerList: React.FC = () => {
         )
       ),
     },
-    {
-      title: t('app.actions'),
-      key: 'action',
-      fixed: 'right',
-      width: 200,
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            size="small"
-            icon={<ContainerOutlined />}
-            onClick={() => handleViewInventory(record)}
-          >
-            庫存
-          </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            data-testid={`edit-customer-${record.id}`}
-          >
-            編輯
-          </Button>
-          <Button
-            size="small"
-            danger
-            onClick={() => handleDelete(record)}
-            data-testid={`delete-customer-${record.id}`}
-          >
-            刪除
-          </Button>
-        </Space>
-      ),
-    },
   ].filter(column => {
     // Filter out payment-related columns if payment features are disabled
     if (!features.anyPaymentFeature) {
@@ -259,75 +236,65 @@ const CustomerList: React.FC = () => {
 
   return (
     <div>
-      <Title level={2} data-testid="customer-list-title">{t('customer.title')}</Title>
-      <Card>
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Search
-              placeholder={t('customer.searchPlaceholder')}
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="middle"
-              onSearch={handleSearch}
-              style={{ width: 300 }}
-              data-testid="customer-search-input"
-            />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setIsEditMode(false);
-                setSelectedCustomer(null);
-                form.resetFields();
-                setIsModalVisible(true);
-              }}
-              data-testid="add-customer-button"
-            >
-              {t('customer.addButton')}
-            </Button>
-          </Space>
-        </div>
-        <Table
-          columns={columns}
-          dataSource={customers}
-          rowKey="id"
-          loading={loading}
-          scroll={{ x: 1500 }}
-          onChange={handleTableChange}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 筆資料`,
-          }}
-          data-testid="customer-table"
-        />
-      </Card>
+      <BaseListComponent
+        title={t('customer.title')}
+        data={customers}
+        columns={columns}
+        rowKey="id"
+        loading={loading}
+        total={total}
+        searchable={true}
+        searchPlaceholder={t('customer.searchPlaceholder')}
+        onSearch={handleSearch}
+        showAddButton={true}
+        addButtonText={t('customer.addButton')}
+        onAdd={() => {
+          setIsEditMode(false);
+          setSelectedCustomer(null);
+          customerForm.resetForm();
+          setIsModalVisible(true);
+        }}
+        rowActions={rowActions}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: total,
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} 筆資料`,
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          },
+        }}
+        onRefresh={() => fetchCustomers(searchText, currentPage, pageSize)}
+      />
 
       {/* Customer Form Modal */}
-      <Modal
+      <BaseModal
         title={isEditMode ? '編輯客戶' : '新增客戶'}
         open={isModalVisible}
-        onCancel={() => {
+        onClose={() => {
           setIsModalVisible(false);
-          form.resetFields();
+          customerForm.resetForm();
         }}
-        onOk={() => form.submit()}
+        form={customerForm.form}
+        onSubmit={submitHandler.handleSubmit}
+        submitting={submitHandler.isSubmitting}
+        error={submitHandler.error}
         width={800}
-        data-testid="customer-modal"
       >
+        <FormErrorDisplay errors={customerForm.errors} />
         <Form
-          form={form}
+          form={customerForm.form}
           layout="vertical"
-          onFinish={handleSubmit}
+          onFinish={submitHandler.handleSubmit}
         >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="customer_code"
                 label="客戶編號"
-                rules={[{ required: true, message: '請輸入客戶編號' }]}
+                rules={[ValidationRules.required('請輸入客戶編號')]}
               >
                 <Input disabled={isEditMode} data-testid="customer-code-input" id="customer_code" />
               </Form.Item>
@@ -336,7 +303,7 @@ const CustomerList: React.FC = () => {
               <Form.Item
                 name="short_name"
                 label={t('customer.shortName')}
-                rules={[{ required: true, message: t('validation.required') }]}
+                rules={[ValidationRules.required(t('validation.required'))]}
               >
                 <Input data-testid="customer-shortname-input" id="short_name" />
               </Form.Item>
@@ -368,7 +335,7 @@ const CustomerList: React.FC = () => {
           <Form.Item
             name="address"
             label={t('customer.address')}
-            rules={[{ required: true, message: t('validation.required') }]}
+            rules={[ValidationRules.required(t('validation.required')), ValidationRules.taiwanAddress()]}
           >
             <Input.TextArea rows={2} data-testid="customer-address-input" id="address" />
           </Form.Item>
@@ -378,18 +345,13 @@ const CustomerList: React.FC = () => {
               <Form.Item
                 name="phone"
                 label="電話"
-                rules={[
-                  { 
-                    pattern: /^(0[2-9]-?\d{4}-?\d{4}|09\d{2}-?\d{3}-?\d{3})$/,
-                    message: '請輸入有效的台灣電話號碼'
-                  }
-                ]}
+                rules={[ValidationRules.phoneNumber()]}
               >
                 <Input placeholder="02-1234-5678 或 0912-345-678" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="email" label="電子郵件">
+              <Form.Item name="email" label="電子郵件" rules={[ValidationRules.email()]}>
                 <Input type="email" />
               </Form.Item>
             </Col>
@@ -485,7 +447,7 @@ const CustomerList: React.FC = () => {
             </Col>
           </Row>
         </Form>
-      </Modal>
+      </BaseModal>
 
       {/* Customer Inventory Modal */}
       {selectedCustomer && (

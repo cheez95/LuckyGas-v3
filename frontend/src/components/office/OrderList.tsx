@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Table,
-  Card,
-  Button,
   Tag,
   Space,
   DatePicker,
   Select,
-  Input,
   message,
   Modal,
   Descriptions,
   Divider,
   Row,
   Col,
-  Statistic,
   Tooltip,
   Form,
   InputNumber,
@@ -22,7 +17,6 @@ import {
 } from 'antd';
 import {
   PlusOutlined,
-  ReloadOutlined,
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
@@ -53,6 +47,11 @@ import {
   Customer,
 } from '../../types/order';
 import { OrderItemCreate } from '../../types/product';
+import BaseListComponent, { BaseListAction, BaseBulkAction, BaseListStats } from '../common/BaseListComponent';
+import BaseModal from '../common/BaseModal';
+import { useFormValidation, ValidationRules } from '../../hooks/useFormValidation';
+import { useSubmitHandler, SubmitPresets } from '../../hooks/useSubmitHandler';
+import { FormErrorDisplay } from '../common/FormErrorDisplay';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -71,8 +70,10 @@ const OrderList: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [selectedOrderItems, setSelectedOrderItems] = useState<OrderItemCreate[]>([]);
-  const [form] = Form.useForm();
-  const [editForm] = Form.useForm();
+
+  // Form hooks
+  const createForm = useFormValidation<OrderCreateV2>();
+  const editForm = useFormValidation<OrderUpdate>();
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -195,36 +196,30 @@ const OrderList: React.FC = () => {
   };
 
   // Create order
-  const handleCreateOrder = async (values: any) => {
-    try {
-      if (selectedOrderItems.length === 0) {
-        message.error('請至少選擇一個產品');
-        return;
-      }
-
-      const orderData: OrderCreateV2 = {
-        customer_id: values.customer_id,
-        scheduled_date: values.scheduled_date.toISOString(),
-        delivery_time_start: values.delivery_time_start,
-        delivery_time_end: values.delivery_time_end,
-        order_items: selectedOrderItems,
-        delivery_address: values.delivery_address,
-        delivery_notes: values.delivery_notes,
-        is_urgent: values.is_urgent || false,
-        payment_method: values.payment_method,
-      };
-
-      await orderService.createOrderV2(orderData);
-      message.success('訂單創建成功');
-      setIsCreateModalVisible(false);
-      form.resetFields();
-      setSelectedOrderItems([]);
-      fetchOrders();
-      fetchStats();
-    } catch (error) {
-      message.error('創建訂單失敗');
+  const handleCreateOrder = async (values: OrderCreateV2) => {
+    if (selectedOrderItems.length === 0) {
+      throw new Error('請至少選擇一個產品');
     }
+
+    const orderData: OrderCreateV2 = {
+      ...values,
+      scheduled_date: values.scheduled_date.toISOString(),
+      order_items: selectedOrderItems,
+      is_urgent: values.is_urgent || false,
+    };
+
+    const result = await orderService.createOrderV2(orderData);
+    setIsCreateModalVisible(false);
+    createForm.resetForm();
+    setSelectedOrderItems([]);
+    fetchOrders();
+    fetchStats();
+    return result;
   };
+
+  // Submit handlers
+  const createSubmit = useSubmitHandler(SubmitPresets.create(handleCreateOrder, '訂單創建成功'));
+  const updateSubmit = useSubmitHandler(SubmitPresets.update(handleUpdateOrder, '訂單更新成功'));
 
   // Edit order
   const handleEditOrder = (order: Order) => {
@@ -237,34 +232,19 @@ const OrderList: React.FC = () => {
   };
 
   // Update order
-  const handleUpdateOrder = async (values: any) => {
-    if (!selectedOrder) return;
+  const handleUpdateOrder = async (values: OrderUpdate) => {
+    if (!selectedOrder) throw new Error('未選擇訂單');
 
-    try {
-      const updateData: OrderUpdate = {
-        scheduled_date: values.scheduled_date.toISOString(),
-        delivery_time_start: values.delivery_time_start,
-        delivery_time_end: values.delivery_time_end,
-        qty_50kg: values.qty_50kg,
-        qty_20kg: values.qty_20kg,
-        qty_16kg: values.qty_16kg,
-        qty_10kg: values.qty_10kg,
-        qty_4kg: values.qty_4kg,
-        delivery_address: values.delivery_address,
-        delivery_notes: values.delivery_notes,
-        is_urgent: values.is_urgent,
-        status: values.status,
-        payment_status: values.payment_status,
-      };
+    const updateData: OrderUpdate = {
+      ...values,
+      scheduled_date: values.scheduled_date.toISOString(),
+    };
 
-      await orderService.updateOrder(selectedOrder.id, updateData);
-      message.success('訂單更新成功');
-      setIsEditModalVisible(false);
-      fetchOrders();
-      fetchStats();
-    } catch (error) {
-      message.error('更新訂單失敗');
-    }
+    const result = await orderService.updateOrder(selectedOrder.id, updateData);
+    setIsEditModalVisible(false);
+    fetchOrders();
+    fetchStats();
+    return result;
   };
 
   // Cancel order
@@ -287,6 +267,71 @@ const OrderList: React.FC = () => {
       },
     });
   };
+
+  // Define row actions for BaseListComponent
+  const rowActions: BaseListAction<Order>[] = [
+    {
+      key: 'view',
+      label: '查看',
+      icon: <EyeOutlined />,
+      onClick: handleViewDetails,
+    },
+    {
+      key: 'edit',
+      label: '編輯',
+      icon: <EditOutlined />,
+      onClick: handleEditOrder,
+      disabled: (record) => record.status === 'delivered' || record.status === 'cancelled',
+    },
+    {
+      key: 'cancel',
+      label: '取消',
+      icon: <DeleteOutlined />,
+      onClick: handleCancelOrder,
+      danger: true,
+      disabled: (record) => record.status === 'delivered' || record.status === 'cancelled',
+    },
+  ];
+
+  // Define bulk actions
+  const bulkActions: BaseBulkAction<Order>[] = [
+    {
+      key: 'bulk-cancel',
+      label: '批量取消',
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: (selectedRows) => {
+        // Implement bulk cancel logic
+        console.log('Bulk cancel:', selectedRows);
+      },
+    },
+  ];
+
+  // Define stats for BaseListComponent
+  const listStats: BaseListStats = stats ? {
+    total_orders: {
+      title: '總訂單數',
+      value: stats.total_orders,
+      prefix: <CalendarOutlined />,
+    },
+    total_revenue: {
+      title: '總收入',
+      value: stats.total_revenue,
+      prefix: <DollarOutlined />,
+      suffix: 'NT$',
+    },
+    urgent_orders: {
+      title: '緊急訂單',
+      value: stats.urgent_orders,
+      prefix: <ThunderboltOutlined />,
+      color: '#cf1322',
+    },
+    unique_customers: {
+      title: '客戶數',
+      value: stats.unique_customers,
+      prefix: <UserOutlined />,
+    },
+  } : undefined;
 
   // Table columns
   const columns: ColumnsType<Order> = [
@@ -376,187 +421,111 @@ const OrderList: React.FC = () => {
       key: 'is_urgent',
       render: (urgent) => urgent && <Tag color="red" icon={<ThunderboltOutlined />}>緊急</Tag>,
     },
-    {
-      title: '操作',
-      key: 'actions',
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="查看詳情">
-            <Button
-              type="text"
-              icon={<EyeOutlined />}
-              onClick={() => handleViewDetails(record)}
-            />
-          </Tooltip>
-          <Tooltip title="編輯">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => handleEditOrder(record)}
-              disabled={record.status === 'delivered' || record.status === 'cancelled'}
-            />
-          </Tooltip>
-          <Tooltip title="取消訂單">
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleCancelOrder(record)}
-              disabled={record.status === 'delivered' || record.status === 'cancelled'}
-            />
-          </Tooltip>
-        </Space>
-      ),
-    },
   ];
+
+  // Define filter components
+  const filterComponents = (
+    <Space wrap>
+      <Select
+        placeholder="訂單狀態"
+        style={{ width: 120 }}
+        allowClear
+        value={filters.status}
+        onChange={(value) => setFilters({ ...filters, status: value })}
+      >
+        <Option value="pending">待確認</Option>
+        <Option value="confirmed">已確認</Option>
+        <Option value="assigned">已分配</Option>
+        <Option value="in_delivery">配送中</Option>
+        <Option value="delivered">已送達</Option>
+        <Option value="cancelled">已取消</Option>
+      </Select>
+
+      <Select
+        placeholder="選擇客戶"
+        style={{ width: 200 }}
+        showSearch
+        allowClear
+        value={filters.customer_id}
+        onChange={(value) => setFilters({ ...filters, customer_id: value })}
+        filterOption={(input, option) => {
+          const label = String(option?.label || option?.value || '');
+          return label.toLowerCase().includes(input.toLowerCase());
+        }}
+      >
+        {customers.map((customer) => (
+          <Option key={customer.id} value={customer.id}>
+            {customer.short_name}
+          </Option>
+        ))}
+      </Select>
+
+      <RangePicker
+        value={filters.date_range as any}
+        onChange={(dates) => setFilters({ ...filters, date_range: dates as any || [] })}
+      />
+
+      <Select
+        placeholder="緊急狀態"
+        style={{ width: 120 }}
+        allowClear
+        value={filters.is_urgent}
+        onChange={(value) => setFilters({ ...filters, is_urgent: value })}
+      >
+        <Option value={true}>緊急</Option>
+        <Option value={false}>一般</Option>
+      </Select>
+    </Space>
+  );
 
   return (
     <div className="order-list">
-      {/* Statistics */}
-      {stats && (
-        <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="總訂單數"
-                value={stats.total_orders}
-                prefix={<CalendarOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="總收入"
-                value={stats.total_revenue}
-                prefix={<DollarOutlined />}
-                suffix="NT$"
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="緊急訂單"
-                value={stats.urgent_orders}
-                prefix={<ThunderboltOutlined />}
-                valueStyle={{ color: '#cf1322' }}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title="客戶數"
-                value={stats.unique_customers}
-                prefix={<UserOutlined />}
-              />
-            </Card>
-          </Col>
-        </Row>
-      )}
-
-      {/* Main Card */}
-      <Card
+      <BaseListComponent
         title={t('order.title')}
-        extra={
-          <Space>
-            <Tag color="green" icon={<ThunderboltOutlined />}>
-              即時更新
-            </Tag>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setIsCreateModalVisible(true)}
-            >
-              {t('order.addButton')}
-            </Button>
-            <Button icon={<ReloadOutlined />} onClick={fetchOrders}>
-              刷新
-            </Button>
-          </Space>
+        data={orders}
+        columns={columns}
+        rowKey="id"
+        loading={loading}
+        stats={listStats}
+        searchable={false}
+        showAddButton={true}
+        addButtonText={t('order.addButton')}
+        onAdd={() => setIsCreateModalVisible(true)}
+        onRefresh={fetchOrders}
+        rowActions={rowActions}
+        enableBulkActions={true}
+        bulkActions={bulkActions}
+        filterComponents={filterComponents}
+        realTimeUpdateTag={
+          <Tag color="green" icon={<ThunderboltOutlined />}>
+            即時更新
+          </Tag>
         }
-      >
-        {/* Filters */}
-        <Space style={{ marginBottom: 16 }} wrap>
-          <Select
-            placeholder="訂單狀態"
-            style={{ width: 120 }}
-            allowClear
-            value={filters.status}
-            onChange={(value) => setFilters({ ...filters, status: value })}
-          >
-            <Option value="pending">待確認</Option>
-            <Option value="confirmed">已確認</Option>
-            <Option value="assigned">已分配</Option>
-            <Option value="in_delivery">配送中</Option>
-            <Option value="delivered">已送達</Option>
-            <Option value="cancelled">已取消</Option>
-          </Select>
-
-          <Select
-            placeholder="選擇客戶"
-            style={{ width: 200 }}
-            showSearch
-            allowClear
-            value={filters.customer_id}
-            onChange={(value) => setFilters({ ...filters, customer_id: value })}
-            filterOption={(input, option) => {
-              const label = String(option?.label || option?.value || '');
-              return label.toLowerCase().includes(input.toLowerCase());
-            }}
-          >
-            {customers.map((customer) => (
-              <Option key={customer.id} value={customer.id}>
-                {customer.short_name}
-              </Option>
-            ))}
-          </Select>
-
-          <RangePicker
-            value={filters.date_range as any}
-            onChange={(dates) => setFilters({ ...filters, date_range: dates as any || [] })}
-          />
-
-          <Select
-            placeholder="緊急狀態"
-            style={{ width: 120 }}
-            allowClear
-            value={filters.is_urgent}
-            onChange={(value) => setFilters({ ...filters, is_urgent: value })}
-          >
-            <Option value={true}>緊急</Option>
-            <Option value={false}>一般</Option>
-          </Select>
-        </Space>
-
-        {/* Table */}
-        <Table
-          columns={columns}
-          dataSource={orders}
-          rowKey="id"
-          loading={loading}
-          scroll={{ x: 1500 }}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 筆`,
-          }}
-          rowClassName={(record) => {
+        exportable={true}
+        onExport={() => {
+          // Implement export functionality
+          console.log('Export orders');
+        }}
+        pagination={{
+          showSizeChanger: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} 筆`,
+        }}
+        tableProps={{
+          rowClassName: (record: Order) => {
             // Add animation class for recently updated orders
             const isRecent = record.updated_at && 
               dayjs().diff(dayjs(record.updated_at), 'second') < 5;
             return isRecent ? 'order-row-updated' : '';
-          }}
-        />
-      </Card>
+          }
+        }}
+      />
 
       {/* Detail Modal */}
-      <Modal
+      <BaseModal
         title="訂單詳情"
         open={isDetailModalVisible}
-        onCancel={() => setIsDetailModalVisible(false)}
-        footer={null}
+        onClose={() => setIsDetailModalVisible(false)}
+        showFooter={false}
         width={800}
       >
         {selectedOrder && (
@@ -639,31 +608,35 @@ const OrderList: React.FC = () => {
             </Descriptions.Item>
           </Descriptions>
         )}
-      </Modal>
+      </BaseModal>
 
       {/* Create Modal */}
-      <Modal
+      <BaseModal
         title="新增訂單"
         open={isCreateModalVisible}
-        onCancel={() => {
+        onClose={() => {
           setIsCreateModalVisible(false);
-          form.resetFields();
+          createForm.resetForm();
           setSelectedOrderItems([]);
         }}
-        onOk={() => form.submit()}
+        form={createForm.form}
+        onSubmit={createSubmit.handleSubmit}
+        submitting={createSubmit.isSubmitting}
+        error={createSubmit.error}
         width={900}
       >
+        <FormErrorDisplay errors={createForm.errors} />
         <Form
-          form={form}
+          form={createForm.form}
           layout="vertical"
-          onFinish={handleCreateOrder}
+          onFinish={createSubmit.handleSubmit}
         >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="customer_id"
                 label="客戶"
-                rules={[{ required: true, message: '請選擇客戶' }]}
+                rules={[ValidationRules.required('請選擇客戶')]}
               >
                 <Select
                   placeholder="選擇客戶"
@@ -685,7 +658,7 @@ const OrderList: React.FC = () => {
               <Form.Item
                 name="scheduled_date"
                 label="配送日期"
-                rules={[{ required: true, message: '請選擇配送日期' }]}
+                rules={[ValidationRules.required('請選擇配送日期'), ValidationRules.futureDate()]}
               >
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
@@ -733,30 +706,34 @@ const OrderList: React.FC = () => {
             </Select>
           </Form.Item>
         </Form>
-      </Modal>
+      </BaseModal>
 
       {/* Edit Modal */}
-      <Modal
+      <BaseModal
         title="編輯訂單"
         open={isEditModalVisible}
-        onCancel={() => {
+        onClose={() => {
           setIsEditModalVisible(false);
-          editForm.resetFields();
+          editForm.resetForm();
         }}
-        onOk={() => editForm.submit()}
+        form={editForm.form}
+        onSubmit={updateSubmit.handleSubmit}
+        submitting={updateSubmit.isSubmitting}
+        error={updateSubmit.error}
         width={800}
       >
+        <FormErrorDisplay errors={editForm.errors} />
         <Form
-          form={editForm}
+          form={editForm.form}
           layout="vertical"
-          onFinish={handleUpdateOrder}
+          onFinish={updateSubmit.handleSubmit}
         >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="scheduled_date"
                 label="配送日期"
-                rules={[{ required: true, message: '請選擇配送日期' }]}
+                rules={[ValidationRules.required('請選擇配送日期')]}
               >
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
@@ -841,7 +818,7 @@ const OrderList: React.FC = () => {
             </Select>
           </Form.Item>
         </Form>
-      </Modal>
+      </BaseModal>
     </div>
   );
 };

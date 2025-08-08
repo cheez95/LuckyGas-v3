@@ -8,9 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.api_utils import handle_api_errors, require_roles, success_response
 from app.models.delivery_photo import DeliveryPhoto
 from app.models.order import Order, OrderStatus
 from app.models.user import User
+from app.schemas.user import UserRole
 from app.schemas.delivery import (
     DeliveryLocationUpdate,
     DeliveryResponse,
@@ -26,16 +28,17 @@ router = APIRouter()
 
 
 @router.post("/location")
+@handle_api_errors({
+    ValueError: "無效的位置資料",
+    KeyError: "缺少必要的位置參數"
+})
+@require_roles(UserRole.DRIVER)
 async def update_driver_location(
     location_update: DeliveryLocationUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, str]:
     """Update driver location (for driver app)"""
-    if current_user.role != "driver":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="只有司機可以更新位置"
-        )
 
     # Broadcast location update via WebSocket
     await websocket_manager.handle_driver_location(
@@ -50,10 +53,15 @@ async def update_driver_location(
         },
     )
 
-    return {"message": "位置更新成功"}
+    return success_response(message="位置更新成功")
 
 
 @router.post("/status/{order_id}")
+@handle_api_errors({
+    ValueError: "無效的狀態更新",
+    KeyError: "缺少必要的狀態資訊"
+})
+@require_roles(UserRole.DRIVER)
 async def update_delivery_status(
     order_id: int,
     status_update: DeliveryStatusUpdate,
@@ -61,10 +69,6 @@ async def update_delivery_status(
     db: AsyncSession = Depends(get_db),
 ) -> DeliveryResponse:
     """Update delivery status (for driver app)"""
-    if current_user.role != "driver":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="只有司機可以更新配送狀態"
-        )
 
     # Get order
     stmt = select(Order).where(Order.id == order_id)
@@ -131,6 +135,11 @@ async def update_delivery_status(
 
 
 @router.post("/confirm/{order_id}")
+@handle_api_errors({
+    ValueError: "無效的確認資料",
+    KeyError: "缺少必要的確認資訊"
+})
+@require_roles(UserRole.DRIVER)
 async def confirm_delivery(
     order_id: int,
     signature: Optional[str] = Form(None),
@@ -143,10 +152,6 @@ async def confirm_delivery(
     db: AsyncSession = Depends(get_db),
 ) -> DeliveryResponse:
     """Confirm delivery completion with signature and photo"""
-    if current_user.role != "driver":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="只有司機可以確認配送"
-        )
 
     # Get order
     stmt = select(Order).where(Order.id == order_id)
@@ -251,6 +256,11 @@ async def confirm_delivery(
 
 
 @router.post("/cancel/{order_id}")
+@handle_api_errors({
+    ValueError: "無效的取消原因",
+    KeyError: "缺少必要的取消資訊"
+})
+@require_roles([UserRole.DRIVER, UserRole.OFFICE_STAFF, UserRole.MANAGER, UserRole.SUPER_ADMIN])
 async def cancel_delivery(
     order_id: int,
     reason: str = Form(...),
@@ -258,8 +268,6 @@ async def cancel_delivery(
     db: AsyncSession = Depends(get_db),
 ) -> DeliveryResponse:
     """Cancel delivery with reason"""
-    if current_user.role not in ["driver", "office_sta", "manager", "super_admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="權限不足")
 
     # Get order
     stmt = select(Order).where(Order.id == order_id)
@@ -270,7 +278,7 @@ async def cancel_delivery(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="訂單不存在")
 
     # For drivers, verify assignment
-    if current_user.role == "driver" and order.driver_id != current_user.id:
+    if current_user.role == UserRole.DRIVER and order.driver_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="您未被指派此訂單"
         )

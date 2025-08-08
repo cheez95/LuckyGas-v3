@@ -7,6 +7,13 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.core.api_utils import (
+    handle_api_errors,
+    require_roles,
+    paginate_response,
+    success_response,
+    error_response,
+)
 from app.core.decorators import rate_limit
 from app.models.order import Order, OrderStatus
 from app.models.route import Route, RouteStatus, RouteStop
@@ -27,106 +34,95 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=Dict[str, Any])
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors()
 async def create_route(
     route_data: Dict[str, Any],
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Create a new route"""
-    try:
-        # Check permissions
-        if current_user.role not in [
-            UserRole.SUPER_ADMIN,
-            UserRole.MANAGER,
-            UserRole.OFFICE_STAFF,
-        ]:
-            raise HTTPException(status_code=403, detail="沒有權限創建路線")
-
-        # Create route
-        # Note: driver_id is skipped due to foreign key constraint issue
-        # Handle route_date - use it for both date and route_date fields
-        route_date_value = None
-        if route_data.get("route_date"):
-            route_date_value = (
-                datetime.fromisoformat(route_data["route_date"])
-                if isinstance(route_data["route_date"], str)
-                else route_data["route_date"]
-            )
-
-        route = Route(
-            route_number=route_data.get(
-                "route_number",
-                f"R{datetime.now().strftime('%Y % m % d')}-{datetime.now().microsecond:03d}",
-            ),
-            route_name=route_data.get("route_name"),
-            date=(
-                route_date_value if route_date_value else datetime.now()
-            ),  # Use route_date for date field
-            route_date=route_date_value,
-            driver_id=None,  # Skip driver_id due to foreign key constraint issue with 'drivers' table
-            vehicle_id=route_data.get("vehicle_id"),
-            area=route_data.get("area"),
-            status=RouteStatus.PLANNED.value,
-            total_stops=len(route_data.get("stops", [])),
+    # Create route
+    # Note: driver_id is skipped due to foreign key constraint issue
+    # Handle route_date - use it for both date and route_date fields
+    route_date_value = None
+    if route_data.get("route_date"):
+        route_date_value = (
+            datetime.fromisoformat(route_data["route_date"])
+            if isinstance(route_data["route_date"], str)
+            else route_data["route_date"]
         )
 
-        db.add(route)
-        await db.flush()
+    route = Route(
+        route_number=route_data.get(
+            "route_number",
+            f"R{datetime.now().strftime('%Y % m % d')}-{datetime.now().microsecond:03d}",
+        ),
+        route_name=route_data.get("route_name"),
+        date=(
+            route_date_value if route_date_value else datetime.now()
+        ),  # Use route_date for date field
+        route_date=route_date_value,
+        driver_id=None,  # Skip driver_id due to foreign key constraint issue with 'drivers' table
+        vehicle_id=route_data.get("vehicle_id"),
+        area=route_data.get("area"),
+        status=RouteStatus.PLANNED.value,
+        total_stops=len(route_data.get("stops", [])),
+    )
 
-        # Add stops if provided
-        for stop_data in route_data.get("stops", []):
-            stop = RouteStop(
-                route_id=route.id,
-                order_id=stop_data["order_id"],
-                stop_sequence=stop_data["stop_sequence"],
-                latitude=stop_data["latitude"],
-                longitude=stop_data["longitude"],
-                address=stop_data["address"],
-                estimated_arrival=(
-                    datetime.fromisoformat(stop_data["estimated_arrival"])
-                    if isinstance(stop_data.get("estimated_arrival"), str)
-                    else stop_data.get("estimated_arrival")
-                ),
-                estimated_duration_minutes=stop_data.get(
-                    "estimated_duration_minutes", 15
-                ),
-            )
-            db.add(stop)
+    db.add(route)
+    await db.flush()
 
-            # Update order status
-            order = await db.get(Order, stop_data["order_id"])
-            if order:
-                order.route_id = route.id
-                order.driver_id = None  # Skip due to foreign key issue
-                order.status = OrderStatus.ASSIGNED
-
-        await db.commit()
-        await db.refresh(route)
-
-        return {
-            "id": route.id,
-            "route_number": route.route_number,
-            "route_date": (
-                route.route_date.strftime("%Y-%m-%d")
-                if route.route_date
-                else route.date.strftime("%Y-%m-%d")
+    # Add stops if provided
+    for stop_data in route_data.get("stops", []):
+        stop = RouteStop(
+            route_id=route.id,
+            order_id=stop_data["order_id"],
+            stop_sequence=stop_data["stop_sequence"],
+            latitude=stop_data["latitude"],
+            longitude=stop_data["longitude"],
+            address=stop_data["address"],
+            estimated_arrival=(
+                datetime.fromisoformat(stop_data["estimated_arrival"])
+                if isinstance(stop_data.get("estimated_arrival"), str)
+                else stop_data.get("estimated_arrival")
             ),
-            "area": route.area,
-            "driver_id": route_data.get(
-                "driver_id"
-            ),  # Return original driver_id from request
-            "vehicle_id": route.vehicle_id,
-            "status": route.status,
-            "total_stops": route.total_stops,
-        }
+            estimated_duration_minutes=stop_data.get(
+                "estimated_duration_minutes", 15
+            ),
+        )
+        db.add(stop)
 
-    except Exception as e:
-        logger.error(f"Error creating route: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail=f"創建路線時發生錯誤: {str(e)}")
+        # Update order status
+        order = await db.get(Order, stop_data["order_id"])
+        if order:
+            order.route_id = route.id
+            order.driver_id = None  # Skip due to foreign key issue
+            order.status = OrderStatus.ASSIGNED
+
+    await db.commit()
+    await db.refresh(route)
+
+    return {
+        "id": route.id,
+        "route_number": route.route_number,
+        "route_date": (
+            route.route_date.strftime("%Y-%m-%d")
+            if route.route_date
+            else route.date.strftime("%Y-%m-%d")
+        ),
+        "area": route.area,
+        "driver_id": route_data.get(
+            "driver_id"
+        ),  # Return original driver_id from request
+        "vehicle_id": route.vehicle_id,
+        "status": route.status,
+        "total_stops": route.total_stops,
+    }
 
 
 @router.get("/", response_model=List[Dict[str, Any]])
+@handle_api_errors()
 async def list_routes(
     area: Optional[str] = Query(None),
     driver_id: Optional[int] = Query(None),
@@ -137,100 +133,34 @@ async def list_routes(
     current_user: User = Depends(get_current_user),
 ):
     """List routes with filters"""
-    try:
-        query = select(Route)
+    query = select(Route)
 
-        # Apply filters
-        conditions = []
+    # Apply filters
+    conditions = []
 
-        # For drivers, skip driver filtering due to foreign key issue
-        # if current_user.role == UserRole.DRIVER:
-        #     conditions.append(Route.driver_id == current_user.id)
-        # elif driver_id:
-        #     conditions.append(Route.driver_id == driver_id)
+    # For drivers, skip driver filtering due to foreign key issue
+    # if current_user.role == UserRole.DRIVER:
+    #     conditions.append(Route.driver_id == current_user.id)
+    # elif driver_id:
+    #     conditions.append(Route.driver_id == driver_id)
 
-        if area:
-            conditions.append(Route.area == area)
-        if status:
-            conditions.append(Route.status == status)
-        if date_from:
-            conditions.append(Route.route_date >= date_from)
-        if date_to:
-            conditions.append(Route.route_date <= date_to)
+    if area:
+        conditions.append(Route.area == area)
+    if status:
+        conditions.append(Route.status == status)
+    if date_from:
+        conditions.append(Route.route_date >= date_from)
+    if date_to:
+        conditions.append(Route.route_date <= date_to)
 
-        if conditions:
-            query = query.where(and_(*conditions))
+    if conditions:
+        query = query.where(and_(*conditions))
 
-        result = await db.execute(query)
-        routes = result.scalars().all()
+    result = await db.execute(query)
+    routes = result.scalars().all()
 
-        return [
-            {
-                "id": route.id,
-                "route_number": route.route_number,
-                "route_date": (
-                    route.route_date.strftime("%Y-%m-%d")
-                    if route.route_date
-                    else route.date.strftime("%Y-%m-%d")
-                ),
-                "area": route.area,
-                "driver_id": route.driver_id,
-                "vehicle_id": route.vehicle_id,
-                "status": route.status,
-                "total_stops": route.total_stops,
-            }
-            for route in routes
-        ]
-
-    except Exception as e:
-        logger.error(f"Error listing routes: {str(e)}")
-        raise HTTPException(status_code=500, detail="獲取路線列表時發生錯誤")
-
-
-@router.put("/{route_id}", response_model=Dict[str, Any])
-async def update_route(
-    route_id: int,
-    update_data: Dict[str, Any],
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Update route"""
-    try:
-        route = await db.get(Route, route_id)
-        if not route:
-            raise HTTPException(status_code=404, detail="路線不存在")
-
-        # Check permissions
-        if current_user.role not in [
-            UserRole.SUPER_ADMIN,
-            UserRole.MANAGER,
-            UserRole.OFFICE_STAFF,
-        ]:
-            raise HTTPException(status_code=403, detail="沒有權限更新路線")
-
-        # Update fields
-        # Skip driver_id update due to foreign key issue
-        # if "driver_id" in update_data:
-        #     route.driver_id = update_data["driver_id"]
-        if "vehicle_id" in update_data:
-            route.vehicle_id = update_data["vehicle_id"]
-        if "status" in update_data:
-            route.status = update_data["status"]
-            if (
-                update_data["status"] == RouteStatus.IN_PROGRESS.value
-                and not route.started_at
-            ):
-                route.started_at = datetime.now()
-            elif (
-                update_data["status"] == RouteStatus.COMPLETED.value
-                and not route.completed_at
-            ):
-                route.completed_at = datetime.now()
-
-        await db.commit()
-        await db.refresh(route)
-
-        return {
+    return [
+        {
             "id": route.id,
             "route_number": route.route_number,
             "route_date": (
@@ -243,60 +173,93 @@ async def update_route(
             "vehicle_id": route.vehicle_id,
             "status": route.status,
             "total_stops": route.total_stops,
-            "started_at": route.started_at.isoformat() if route.started_at else None,
         }
+        for route in routes
+    ]
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating route: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="更新路線時發生錯誤")
+
+@router.put("/{route_id}", response_model=Dict[str, Any])
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "路線不存在"})
+async def update_route(
+    route_id: int,
+    update_data: Dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update route"""
+    route = await db.get(Route, route_id)
+    if not route:
+        raise KeyError("route_not_found")
+
+    # Update fields
+    # Skip driver_id update due to foreign key issue
+    # if "driver_id" in update_data:
+    #     route.driver_id = update_data["driver_id"]
+    if "vehicle_id" in update_data:
+        route.vehicle_id = update_data["vehicle_id"]
+    if "status" in update_data:
+        route.status = update_data["status"]
+        if (
+            update_data["status"] == RouteStatus.IN_PROGRESS.value
+            and not route.started_at
+        ):
+            route.started_at = datetime.now()
+        elif (
+            update_data["status"] == RouteStatus.COMPLETED.value
+            and not route.completed_at
+        ):
+            route.completed_at = datetime.now()
+
+    await db.commit()
+    await db.refresh(route)
+
+    return {
+        "id": route.id,
+        "route_number": route.route_number,
+        "route_date": (
+            route.route_date.strftime("%Y-%m-%d")
+            if route.route_date
+            else route.date.strftime("%Y-%m-%d")
+        ),
+        "area": route.area,
+        "driver_id": route.driver_id,
+        "vehicle_id": route.vehicle_id,
+        "status": route.status,
+        "total_stops": route.total_stops,
+        "started_at": route.started_at.isoformat() if route.started_at else None,
+    }
 
 
 @router.delete("/{route_id}")
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "路線不存在"})
 async def cancel_route(
     route_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Cancel route"""
-    try:
-        route = await db.get(Route, route_id)
-        if not route:
-            raise HTTPException(status_code=404, detail="路線不存在")
+    route = await db.get(Route, route_id)
+    if not route:
+        raise KeyError("route_not_found")
 
-        # Check permissions
-        if current_user.role not in [
-            UserRole.SUPER_ADMIN,
-            UserRole.MANAGER,
-            UserRole.OFFICE_STAFF,
-        ]:
-            raise HTTPException(status_code=403, detail="沒有權限取消路線")
+    # Update status
+    route.status = RouteStatus.CANCELLED.value
 
-        # Update status
-        route.status = RouteStatus.CANCELLED.value
+    # Update associated orders
+    query = select(Order).where(Order.route_id == route_id)
+    result = await db.execute(query)
+    orders = result.scalars().all()
 
-        # Update associated orders
-        query = select(Order).where(Order.route_id == route_id)
-        result = await db.execute(query)
-        orders = result.scalars().all()
+    for order in orders:
+        order.route_id = None
+        order.driver_id = None
+        order.status = OrderStatus.PENDING
 
-        for order in orders:
-            order.route_id = None
-            order.driver_id = None
-            order.status = OrderStatus.PENDING
+    await db.commit()
 
-        await db.commit()
-
-        return {"message": "路線已成功取消", "route_id": route_id}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error cancelling route: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="取消路線時發生錯誤")
+    return success_response(message="路線已成功取消", data={"route_id": route_id})
 
 
 # ==================== Optimization Operations ====================
@@ -304,6 +267,7 @@ async def cancel_route(
 
 @router.post("/optimize", response_model=RouteOptimizationResponse)
 @rate_limit(requests_per_minute=10)
+@handle_api_errors()
 async def optimize_routes(
     request: RouteOptimizationRequest,
     db: AsyncSession = Depends(get_db),
@@ -317,56 +281,51 @@ async def optimize_routes(
     - **order_ids**: Optional list of order IDs to include
     - **constraints**: Route optimization constraints
     """
-    try:
-        # Get orders for the date
-        # TODO: Implement database query
-        orders = [
-            {
-                "id": f"ORD{i:04d}",
-                "customer_name": f"Customer {i}",
-                "customer_id": f"CUST{i:04d}",
-                "address": f"台北市大安區和平東路{i}號",
-                "latitude": 25.0330 + (i % 10) * 0.01,
-                "longitude": 121.5654 + (i % 10) * 0.01,
-                "quantity": (i % 3) + 1,
-                "cylinder_type": "20kg" if i % 2 else "16kg",
-                "priority": "urgent" if i % 5 == 0 else "normal",
-            }
-            for i in range(1, 31)
-        ]
+    # Get orders for the date
+    # TODO: Implement database query
+    orders = [
+        {
+            "id": f"ORD{i:04d}",
+            "customer_name": f"Customer {i}",
+            "customer_id": f"CUST{i:04d}",
+            "address": f"台北市大安區和平東路{i}號",
+            "latitude": 25.0330 + (i % 10) * 0.01,
+            "longitude": 121.5654 + (i % 10) * 0.01,
+            "quantity": (i % 3) + 1,
+            "cylinder_type": "20kg" if i % 2 else "16kg",
+            "priority": "urgent" if i % 5 == 0 else "normal",
+        }
+        for i in range(1, 31)
+    ]
 
-        # Get available drivers
-        # TODO: Implement database query
-        drivers = [
-            {
-                "id": f"DRV{i:03d}",
-                "name": f"司機 {i}",
-                "phone": f"09{i:08d}",
-                "vehicle_type": "truck" if i % 2 else "van",
-                "vehicle_number": f"ABC-{i:03d}",
-                "max_capacity": 50 if i % 2 else 30,
-                "status": "available",
-            }
-            for i in range(1, 6)
-        ]
+    # Get available drivers
+    # TODO: Implement database query
+    drivers = [
+        {
+            "id": f"DRV{i:03d}",
+            "name": f"司機 {i}",
+            "phone": f"09{i:08d}",
+            "vehicle_type": "truck" if i % 2 else "van",
+            "vehicle_number": f"ABC-{i:03d}",
+            "max_capacity": 50 if i % 2 else 30,
+            "status": "available",
+        }
+        for i in range(1, 6)
+    ]
 
-        # Filter by request parameters
-        if request.order_ids:
-            orders = [o for o in orders if o["id"] in request.order_ids]
+    # Filter by request parameters
+    if request.order_ids:
+        orders = [o for o in orders if o["id"] in request.order_ids]
 
-        if request.driver_ids:
-            drivers = [d for d in drivers if d["id"] in request.driver_ids]
+    if request.driver_ids:
+        drivers = [d for d in drivers if d["id"] in request.driver_ids]
 
-        # Optimize routes
-        result = await route_optimization_service.optimize_routes(
-            orders, drivers, request.constraints
-        )
+    # Optimize routes
+    result = await route_optimization_service.optimize_routes(
+        orders, drivers, request.constraints
+    )
 
-        return result
-
-    except Exception as e:
-        logger.error(f"Error optimizing routes: {str(e)}")
-        raise HTTPException(status_code=500, detail="路線優化時發生錯誤")
+    return result
 
 
 @router.get("/{route_id}/details", response_model=OptimizedRoute)

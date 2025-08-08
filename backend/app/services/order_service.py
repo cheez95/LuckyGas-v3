@@ -10,6 +10,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.metrics import background_tasks_counter, orders_created_counter
+from app.core.service_utils import (
+    handle_service_errors,
+    transactional,
+    validate_pagination
+)
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.repositories.customer_repository import CustomerRepository
 from app.repositories.order_repository import OrderRepository
@@ -35,6 +40,8 @@ class OrderService:
         self.order_repo = OrderRepository(session)
         self.customer_repo = CustomerRepository(session)
 
+    @handle_service_errors(operation="建立訂單")
+    @transactional()
     async def create_order(
         self,
         order_data: OrderCreate,
@@ -127,6 +134,8 @@ class OrderService:
 
         return order
 
+    @handle_service_errors(operation="更新訂單")
+    @transactional()
     async def update_order(
         self, order_id: int, order_update: OrderUpdate, updated_by: int
     ) -> Optional[Order]:
@@ -185,13 +194,15 @@ class OrderService:
 
         return updated_order
 
+    @handle_service_errors(operation="查詢訂單")
+    @validate_pagination(max_page_size=500)
     async def get_orders_for_date(
         self,
         scheduled_date: date,
         status: Optional[OrderStatus] = None,
         area: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 100,
+        page: int = 1,
+        page_size: int = 100,
     ) -> Tuple[List[Order], int]:
         """
         Get orders for a specific date with filters
@@ -200,14 +211,15 @@ class OrderService:
             scheduled_date: Date to query
             status: Optional status filter
             area: Optional area filter
-            skip: Pagination offset
-            limit: Pagination limit
+            page: Page number
+            page_size: Items per page
 
         Returns:
             Tuple of (orders list, total count)
         """
+        skip = (page - 1) * page_size
         return await self.order_repo.get_orders_by_date(
-            scheduled_date, status, area, skip, limit
+            scheduled_date, status, area, skip, page_size
         )
 
     async def assign_orders_to_routes(
@@ -287,6 +299,8 @@ class OrderService:
             "routes_created": len(optimized_routes),
         }
 
+    @handle_service_errors(operation="更新配送狀態")
+    @transactional()
     async def update_delivery_status(
         self,
         order_id: int,
@@ -451,6 +465,8 @@ class OrderService:
         timestamp = datetime.now()
         return f"ORD-{timestamp.strftime('%Y % m % d')}-{timestamp.microsecond:06d}"
 
+    @handle_service_errors(operation="批量建立訂單")
+    @transactional()
     async def create_bulk_orders(
         self, orders_data: List[OrderCreate], created_by: int
     ) -> List[Order]:

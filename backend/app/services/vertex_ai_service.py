@@ -8,6 +8,12 @@ from google.cloud import aiplatform, storage
 from google.cloud.aiplatform import AutoMLTabularTrainingJob, Endpoint, Model
 
 from app.core.config import settings
+from app.core.service_utils import (
+    handle_service_errors,
+    cache_result,
+    retry_on_failure,
+    measure_performance
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +119,10 @@ class VertexAIService:
             logger.error(f"Error deploying model: {str(e)}")
             raise
 
+    @handle_service_errors(operation="預測日常需求")
+    @cache_result(ttl=3600, key_prefix="demand_prediction")
+    @retry_on_failure(max_retries=3)
+    @measure_performance(metric_name="demand_prediction")
     async def predict_daily_demand(
         self, customer_data: List[Dict[str, Any]], prediction_date: datetime
     ) -> List[Dict[str, Any]]:
@@ -208,6 +218,10 @@ class VertexAIService:
                 orders, drivers, constraints
             )
 
+    @handle_service_errors(operation="預測客戶流失")
+    @cache_result(ttl=1800, key_prefix="churn_prediction")
+    @retry_on_failure(max_retries=3)
+    @measure_performance(metric_name="churn_prediction")
     async def predict_customer_churn(
         self, customer_data: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -247,6 +261,9 @@ class VertexAIService:
             logger.error(f"Error predicting customer churn: {str(e)}")
             return await self._simple_churn_prediction(customer_data)
 
+    @handle_service_errors(operation="批量預測")
+    @retry_on_failure(max_retries=2)
+    @measure_performance(metric_name="batch_prediction")
     async def batch_predict(
         self,
         input_uri: str,

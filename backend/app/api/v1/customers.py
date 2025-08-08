@@ -7,6 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_current_user, get_db
+from app.core.api_utils import (
+    handle_api_errors,
+    require_roles,
+    paginate_response,
+    success_response,
+    error_response,
+)
 from app.core.cache import cache, cache_result
 from app.models.customer import Customer as CustomerModel
 from app.models.customer_inventory import CustomerInventory as CustomerInventoryModel
@@ -26,6 +33,9 @@ router = APIRouter()
 
 @router.get("/", response_model=CustomerList)
 @cache_result("customers:list", expire=timedelta(minutes=15))
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors()
+@paginate_response(default_page_size=100, max_page_size=5000)
 async def get_customers(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
@@ -38,10 +48,6 @@ async def get_customers(
     """
     Retrieve customers
     """
-    # Check permissions
-    allowed_roles = [UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF]
-    if current_user.role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
     customer_service = CustomerService(db)
@@ -70,6 +76,8 @@ async def get_customers(
 
 @router.get("/{customer_id}", response_model=Customer)
 @cache_result("customers:detail", expire=timedelta(hours=2))
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "客戶不存在"})
 async def get_customer(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -78,11 +86,6 @@ async def get_customer(
     """
     Get customer by ID
     """
-    # Check permissions
-    allowed_roles = [UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF]
-    if current_user.role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     customer_service = CustomerService(db)
 
@@ -90,12 +93,14 @@ async def get_customer(
     customer_details = await customer_service.get_customer_details(customer_id)
 
     if not customer_details:
-        raise HTTPException(status_code=404, detail="客戶不存在")
+        raise KeyError("customer_not_found")
 
     return customer_details["customer"]
 
 
 @router.post("/", response_model=Customer)
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors()
 async def create_customer(
     customer_in: CustomerCreate,
     db: AsyncSession = Depends(get_db),
@@ -104,27 +109,21 @@ async def create_customer(
     """
     Create new customer
     """
-    # Check permissions
-    allowed_roles = [UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF]
-    if current_user.role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     customer_service = CustomerService(db)
 
-    try:
-        # Create customer using service
-        customer = await customer_service.create_customer(customer_in)
+    # Create customer using service
+    customer = await customer_service.create_customer(customer_in)
 
-        # Clear customer - related cache
-        await cache.invalidate("customers:*")
+    # Clear customer - related cache
+    await cache.invalidate("customers:*")
 
-        return customer
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return customer
 
 
 @router.put("/{customer_id}", response_model=Customer)
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "客戶不存在"})
 async def update_customer(
     customer_id: int,
     customer_in: CustomerUpdate,
@@ -134,11 +133,6 @@ async def update_customer(
     """
     Update customer
     """
-    # Check permissions
-    allowed_roles = [UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF]
-    if current_user.role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     customer_service = CustomerService(db)
 
@@ -146,7 +140,7 @@ async def update_customer(
     customer = await customer_service.update_customer(customer_id, customer_in)
 
     if not customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
+        raise KeyError("customer_not_found")
 
     # Clear customer - related cache after update
     await cache.invalidate("customers:*")
@@ -155,6 +149,8 @@ async def update_customer(
 
 
 @router.delete("/{customer_id}")
+@require_roles([UserRole.SUPER_ADMIN])
+@handle_api_errors({KeyError: "客戶不存在"})
 async def delete_customer(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -163,10 +159,6 @@ async def delete_customer(
     """
     Delete customer (soft delete by marking as terminated)
     """
-    # Check permissions - only super admin can delete
-    if current_user.role != UserRole.SUPER_ADMIN:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     customer_service = CustomerService(db)
 
@@ -176,12 +168,12 @@ async def delete_customer(
     )
 
     if not success:
-        raise HTTPException(status_code=404, detail="客戶不存在")
+        raise KeyError("customer_not_found")
 
     # Clear customer - related cache after delete
     await cache.invalidate("customers:*")
 
-    return {"message": "客戶已停用"}
+    return success_response(message="客戶已停用")
 
 
 # Customer Inventory Endpoints
@@ -189,6 +181,9 @@ async def delete_customer(
 
 @router.get("/{customer_id}/inventory", response_model=CustomerInventoryList)
 @cache_result("customers:inventory", expire=timedelta(hours=1))
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF, UserRole.DRIVER, UserRole.CUSTOMER])
+@handle_api_errors({KeyError: "客戶不存在"})
+@paginate_response(default_page_size=100, max_page_size=1000)
 async def get_customer_inventory(
     customer_id: int,
     db: AsyncSession = Depends(get_db),
@@ -200,20 +195,10 @@ async def get_customer_inventory(
     """
     Get customer's product inventory
     """
-    # Check permissions
-    allowed_roles = [
-        UserRole.SUPER_ADMIN,
-        UserRole.MANAGER,
-        UserRole.OFFICE_STAFF,
-        UserRole.DRIVER,
-    ]
-    if current_user.role not in allowed_roles:
-        # Customers can only view their own inventory
-        if current_user.role == UserRole.CUSTOMER:
-            # TODO: Check if this customer belongs to the user
-            pass
-        else:
-            raise HTTPException(status_code=403, detail="權限不足")
+    # Additional permission check for customers
+    if current_user.role == UserRole.CUSTOMER:
+        # TODO: Check if this customer belongs to the user
+        pass
 
     # Check if customer exists
     customer_result = await db.execute(
@@ -221,7 +206,7 @@ async def get_customer_inventory(
     )
     customer = customer_result.scalar_one_or_none()
     if not customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
+        raise KeyError("customer_not_found")
 
     # Build query
     base_query = (
@@ -258,6 +243,8 @@ async def get_customer_inventory(
 
 
 @router.put("/{customer_id}/inventory/{product_id}", response_model=CustomerInventory)
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "客戶或產品不存在"})
 async def update_customer_inventory(
     customer_id: int,
     product_id: int,
@@ -268,25 +255,20 @@ async def update_customer_inventory(
     """
     Update customer's inventory count for a specific product
     """
-    # Check permissions
-    allowed_roles = [UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF]
-    if current_user.role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Check if customer and product exist
     customer_result = await db.execute(
         select(CustomerModel).where(CustomerModel.id == customer_id)
     )
     customer = customer_result.scalar_one_or_none()
     if not customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
+        raise KeyError("customer_not_found")
 
     product_result = await db.execute(
         select(GasProductModel).where(GasProductModel.id == product_id)
     )
     product = product_result.scalar_one_or_none()
     if not product:
-        raise HTTPException(status_code=404, detail="產品不存在")
+        raise KeyError("product_not_found")
 
     # Get or create inventory record
     inventory_result = await db.execute(

@@ -8,6 +8,10 @@ from geopy import distance
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 from app.core.config import settings
+from app.core.service_utils import (
+    handle_service_errors,
+    measure_performance
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +29,8 @@ class RouteOptimizationService:
             self._gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
         return self._gmaps
 
+    @handle_service_errors(operation="路線優化")
+    @measure_performance(metric_name="route_optimization")
     async def optimize_routes(
         self,
         orders: List[Dict[str, Any]],

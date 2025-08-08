@@ -9,6 +9,13 @@ from sqlalchemy.orm import selectinload
 
 from app.api import deps
 from app.api.deps import get_db
+from app.core.api_utils import (
+    handle_api_errors,
+    require_roles,
+    paginate_response,
+    success_response,
+    error_response,
+)
 from app.core.cache import cache, cache_result, invalidate_cache
 
 # Removed during compaction
@@ -17,7 +24,7 @@ from app.models.customer import Customer
 from app.models.gas_product import GasProduct
 from app.models.order import Order, OrderStatus
 from app.models.order_item import OrderItem
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.credit import CreditCheckResult, CreditSummary
 from app.schemas.order import Order as OrderSchema
 from app.schemas.order import (
@@ -36,6 +43,9 @@ router = APIRouter()
 
 @router.get("/", response_model=List[OrderSchema])
 @cache_result("orders:list", expire=timedelta(minutes=10))
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors()
+@paginate_response(default_page_size=100, max_page_size=1000)
 async def get_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -58,9 +68,6 @@ async def get_orders(
     - **date_to**: 結束日期
     - **is_urgent**: 是否緊急訂單
     """
-    # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staf"]:
-        raise HTTPException(status_code=403, detail="權限不足")
 
     # Initialize service
     OrderService(db)
@@ -107,16 +114,14 @@ async def get_orders(
 
 @router.get("/{order_id}", response_model=OrderSchema)
 @cache_result("order", expire=timedelta(hours=1))
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF, UserRole.DRIVER])
+@handle_api_errors({KeyError: "訂單不存在"})
 async def get_order(
     order_id: int,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
     """獲取特定訂單詳情"""
-    # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_sta", "driver"]:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     order_service = OrderService(db)
 
@@ -124,10 +129,10 @@ async def get_order(
     order = await order_service.order_repo.get_with_details(order_id)
 
     if not order:
-        raise HTTPException(status_code=404, detail="訂單不存在")
+        raise KeyError("order_not_found")
 
     # Drivers can only see orders assigned to them
-    if current_user.role == "driver" and order.driver_id != current_user.id:
+    if current_user.role == UserRole.DRIVER and order.driver_id != current_user.id:
         raise HTTPException(status_code=403, detail="無權查看此訂單")
 
     return order
@@ -135,6 +140,8 @@ async def get_order(
 
 @router.post("/", response_model=OrderSchema)
 @invalidate_cache("orders:list:*")
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors()
 async def create_order(
     order_create: OrderCreate,
     db: AsyncSession = Depends(get_db),
@@ -143,28 +150,23 @@ async def create_order(
     """
     創建新訂單
     """
-    # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staf"]:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     order_service = OrderService(db)
 
-    try:
-        # Create order using service with credit checking
-        order = await order_service.create_order(
-            order_data=order_create,
-            created_by=current_user.id,
-            skip_credit_check=False,
-            created_by_role=current_user.role,
-        )
+    # Create order using service with credit checking
+    order = await order_service.create_order(
+        order_data=order_create,
+        created_by=current_user.id,
+        skip_credit_check=False,
+        created_by_role=current_user.role,
+    )
 
-        return order
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return order
 
 
 @router.put("/{order_id}", response_model=OrderSchema)
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "訂單不存在"})
 async def update_order(
     order_id: int,
     order_update: OrderUpdate,
@@ -172,32 +174,27 @@ async def update_order(
     current_user: User = Depends(deps.get_current_user),
 ):
     """更新訂單"""
-    # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staf"]:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     order_service = OrderService(db)
 
-    try:
-        # Update order using service
-        order = await order_service.update_order(
-            order_id=order_id, order_update=order_update, updated_by=current_user.id
-        )
+    # Update order using service
+    order = await order_service.update_order(
+        order_id=order_id, order_update=order_update, updated_by=current_user.id
+    )
 
-        if not order:
-            raise HTTPException(status_code=404, detail="訂單不存在")
+    if not order:
+        raise KeyError("order_not_found")
 
-        # Invalidate specific order cache and order list cache
-        await cache.invalidate(f"order:update_order:{order_id}:*")
-        await cache.invalidate("orders:list:*")
+    # Invalidate specific order cache and order list cache
+    await cache.invalidate(f"order:update_order:{order_id}:*")
+    await cache.invalidate("orders:list:*")
 
-        return order
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return order
 
 
 @router.delete("/{order_id}")
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
+@handle_api_errors({KeyError: "訂單不存在"})
 async def cancel_order(
     order_id: int,
     reason: Optional[str] = Query(None, description="取消原因"),
@@ -205,62 +202,46 @@ async def cancel_order(
     current_user: User = Depends(deps.get_current_user),
 ):
     """取消訂單"""
-    # Check permissions
-    if current_user.role not in ["super_admin", "manager", "office_staf"]:
-        raise HTTPException(status_code=403, detail="權限不足")
-
     # Initialize service
     order_service = OrderService(db)
 
-    try:
-        # Update order status to cancelled using service
-        order = await order_service.update_delivery_status(
-            order_id=order_id,
-            status=OrderStatus.CANCELLED.value,
-            notes=f"取消原因：{reason}" if reason else None,
-            updated_by=current_user.id,
-        )
+    # Update order status to cancelled using service
+    order = await order_service.update_delivery_status(
+        order_id=order_id,
+        status=OrderStatus.CANCELLED.value,
+        notes=f"取消原因：{reason}" if reason else None,
+        updated_by=current_user.id,
+    )
 
-        if not order:
-            raise HTTPException(status_code=404, detail="訂單不存在")
+    if not order:
+        raise KeyError("order_not_found")
 
-        # Invalidate specific order cache and order list cache
-        await cache.invalidate(f"order:cancel_order:{order_id}:*")
-        await cache.invalidate("orders:list:*")
+    # Invalidate specific order cache and order list cache
+    await cache.invalidate(f"order:cancel_order:{order_id}:*")
+    await cache.invalidate("orders:list:*")
 
-        # Removed during compaction
-        # Send real - time notification
-        # await notify_order_update(
-        #     order_id=order_id,
-        #     status="cancelled",
-        #     details={
-        #         "order_number": order.order_number,
-        #         "customer_id": order.customer_id,
-        #         "cancelled_by": current_user.username,
-        #         "reason": reason or "未提供原因",
-        #         "cancelled_at": datetime.utcnow().isoformat()
-        #     }
-        # )
+    # Removed during compaction
+    # Send real - time notification
+    # await notify_order_update(
+    #     order_id=order_id,
+    #     status="cancelled",
+    #     details={
+    #         "order_number": order.order_number,
+    #         "customer_id": order.customer_id,
+    #         "cancelled_by": current_user.username,
+    #         "reason": reason or "未提供原因",
+    #         "cancelled_at": datetime.utcnow().isoformat()
+    #     }
+    # )
 
-        return {"message": "訂單已成功取消", "order_id": order_id}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return success_response(message="訂單已成功取消", data={"order_id": order_id})
 
 
 # V2 endpoints for flexible product system
 
 
-@router.post("/v2/", response_model=OrderV2)
-async def create_order_v2(
-    order_create: OrderCreateV2,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user),
-):
-    """
-    創建新訂單（支援彈性產品系統）
-
-    使用新的產品系統，通過 order_items 指定產品和數量
-    """
+async def _validate_order_request(order_create: OrderCreateV2, current_user: User, db: AsyncSession) -> Customer:
+    """Validate order creation request and return customer"""
     # Check permissions
     if current_user.role not in ["super_admin", "manager", "office_staf"]:
         raise HTTPException(status_code=403, detail="權限不足")
@@ -272,58 +253,61 @@ async def create_order_v2(
 
     if not customer:
         raise HTTPException(status_code=404, detail="客戶不存在")
+    
+    return customer
 
-    # Create order data
+
+def _prepare_order_data(order_create: OrderCreateV2, customer: Customer) -> dict:
+    """Prepare order data with defaults from customer"""
     order_data = order_create.model_dump(exclude={"order_items"})
-
+    
     # Generate order number
     timestamp = datetime.now()
     order_data["order_number"] = (
-        f"ORD-{timestamp.strftime('%Y % m % d')}-{timestamp.microsecond:06d}"
+        f"ORD-{timestamp.strftime('%Y%m%d')}-{timestamp.microsecond:06d}"
     )
-
+    
     # Use customer's address if not specified
     if not order_data.get("delivery_address"):
         order_data["delivery_address"] = customer.address
-
+    
     # Use customer's delivery time preferences if not specified
     if not order_data.get("delivery_time_start"):
         order_data["delivery_time_start"] = customer.delivery_time_start
     if not order_data.get("delivery_time_end"):
         order_data["delivery_time_end"] = customer.delivery_time_end
-
+    
     # Initialize amounts
     order_data["total_amount"] = 0
     order_data["discount_amount"] = 0
     order_data["final_amount"] = 0
+    
+    return order_data
 
-    # Create order
-    order = Order(**order_data)
-    db.add(order)
-    await db.flush()  # Get order ID without committing
 
-    # Create order items and calculate total
+async def _create_order_items(order: Order, item_data_list: list, db: AsyncSession) -> tuple[float, float]:
+    """Create order items and return total amounts"""
     total_amount = 0
     discount_amount = 0
-
-    for item_data in order_create.order_items:
+    
+    for item_data in item_data_list:
         # Verify product exists
         product_query = select(GasProduct).where(
             GasProduct.id == item_data.gas_product_id
         )
         product_result = await db.execute(product_query)
         product = product_result.scalar_one_or_none()
-
+        
         if not product:
             raise HTTPException(
                 status_code=404, detail=f"產品ID {item_data.gas_product_id} 不存在"
             )
-
+        
         if not product.is_available:
             raise HTTPException(
                 status_code=400, detail=f"產品 {product.display_name} 目前無法訂購"
             )
-
+        
         # Create order item
         item = OrderItem(
             order_id=order.id,
@@ -340,22 +324,57 @@ async def create_order_v2(
             actual_quantity=item_data.actual_quantity,
             notes=item_data.notes,
         )
-
-        # Calculate subtotal and final amount
+        
+        # Calculate amounts
         item.calculate_subtotal()
         item.calculate_final_amount()
         total_amount += item.subtotal
         discount_amount += item.discount_amount
-
+        
         db.add(item)
+    
+    return total_amount, discount_amount
 
-    # Update order amounts
+
+def _calculate_order_totals(order: Order, total_amount: float, discount_amount: float):
+    """Calculate and set order total amounts"""
     order.total_amount = total_amount
     order.discount_amount = discount_amount
     order.final_amount = total_amount - discount_amount
 
-    await db.commit()
 
+@router.post("/v2/", response_model=OrderV2)
+async def create_order_v2(
+    order_create: OrderCreateV2,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    創建新訂單（支援彈性產品系統）
+
+    使用新的產品系統，通過 order_items 指定產品和數量
+    """
+    # Validate request and get customer
+    customer = await _validate_order_request(order_create, current_user, db)
+    
+    # Prepare order data
+    order_data = _prepare_order_data(order_create, customer)
+    
+    # Create order
+    order = Order(**order_data)
+    db.add(order)
+    await db.flush()  # Get order ID without committing
+    
+    # Create order items and calculate totals
+    total_amount, discount_amount = await _create_order_items(
+        order, order_create.order_items, db
+    )
+    
+    # Update order amounts
+    _calculate_order_totals(order, total_amount, discount_amount)
+    
+    await db.commit()
+    
     # Load order with items
     query = (
         select(Order)
@@ -364,22 +383,7 @@ async def create_order_v2(
     )
     result = await db.execute(query)
     order = result.scalar_one()
-
-    # Removed during compaction
-    # Send real - time notification
-    # await notify_order_update(
-    #     order_id=order.id,
-    #     status="created",
-    #     details={
-    #         "order_number": order.order_number,
-    #         "customer_id": order.customer_id,
-    #         "customer_name": customer.name,
-    #         "total_amount": float(order.final_amount),
-    #         "scheduled_date": order.scheduled_date.isoformat() if order.scheduled_date else None,
-    #         "created_by": current_user.username
-    #     }
-    # )
-
+    
     return order
 
 
@@ -564,53 +568,38 @@ async def get_order_stats(
     }
 
 
-@router.post("/search", response_model=OrderSearchResult)
-async def search_orders(
-    criteria: OrderSearchCriteria = Body(...),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user),
-):
-    """
-    訂單進階搜尋
-
-    支援:
-    - 全文搜尋 (訂單號、客戶名稱、地址、備註)
-    - 日期範圍篩選
-    - 多選篩選器 (狀態、優先級、付款狀態等)
-    - 金額範圍篩選
-    - 地區與客戶類型篩選
-    """
-    start_time = time.time()
-
-    # Base query with joins
+def _build_search_query(criteria: OrderSearchCriteria):
+    """Build base query with required joins for search"""
     query = select(Order).options(
         selectinload(Order.customer),
         selectinload(Order.order_items).selectinload(OrderItem.gas_product),
     )
+    
+    # Apply required joins based on criteria
+    if criteria.keyword or criteria.region or criteria.customer_type:
+        query = query.join(Customer, Order.customer_id == Customer.id)
+        
+    if criteria.cylinder_type:
+        query = query.join(OrderItem, Order.id == OrderItem.order_id)
+        query = query.join(GasProduct, OrderItem.gas_product_id == GasProduct.id)
+        
+    return query
 
-    conditions = []
 
-    # Full - text search
-    if criteria.keyword:
-        keyword_conditions = or_(
-            Order.order_number.ilike(f"%{criteria.keyword}%"),
-            Order.delivery_notes.ilike(f"%{criteria.keyword}%"),
-            Customer.name.ilike(f"%{criteria.keyword}%"),
-            Customer.phone.ilike(f"%{criteria.keyword}%"),
-            Customer.address.ilike(f"%{criteria.keyword}%"),
-        )
-        conditions.append(keyword_conditions)
-
-    # Date range filter
+def _apply_date_filters(conditions: list, criteria: OrderSearchCriteria):
+    """Apply date range filters to conditions list"""
     if criteria.date_from:
         conditions.append(Order.order_date >= criteria.date_from)
     if criteria.date_to:
         conditions.append(Order.order_date <= criteria.date_to)
 
+
+def _apply_status_filters(conditions: list, criteria: OrderSearchCriteria):
+    """Apply status and priority filters to conditions list"""
     # Status filters
     if criteria.status:
         conditions.append(Order.status.in_(criteria.status))
-
+    
     # Priority filters
     if criteria.priority:
         priority_conditions = []
@@ -625,32 +614,41 @@ async def search_orders(
                 )
         if priority_conditions:
             conditions.append(or_(*priority_conditions))
-
+    
     # Payment filters
     if criteria.payment_status:
         conditions.append(Order.payment_status.in_(criteria.payment_status))
     if criteria.payment_method:
         conditions.append(Order.payment_method.in_(criteria.payment_method))
 
+
+def _apply_search_filters(conditions: list, criteria: OrderSearchCriteria):
+    """Apply keyword search and other filters to conditions list"""
+    # Full-text search
+    if criteria.keyword:
+        keyword_conditions = or_(
+            Order.order_number.ilike(f"%{criteria.keyword}%"),
+            Order.delivery_notes.ilike(f"%{criteria.keyword}%"),
+            Customer.name.ilike(f"%{criteria.keyword}%"),
+            Customer.phone.ilike(f"%{criteria.keyword}%"),
+            Customer.address.ilike(f"%{criteria.keyword}%"),
+        )
+        conditions.append(keyword_conditions)
+    
     # Customer and driver filters
     if criteria.customer_id:
         conditions.append(Order.customer_id == criteria.customer_id)
     if criteria.driver_id:
         conditions.append(Order.driver_id == criteria.driver_id)
-
+    
     # Amount range filters
     if criteria.min_amount is not None:
         conditions.append(Order.final_amount >= criteria.min_amount)
     if criteria.max_amount is not None:
         conditions.append(Order.final_amount <= criteria.max_amount)
-
-    # Join with customer table if needed
-    if criteria.keyword or criteria.region or criteria.customer_type:
-        query = query.join(Customer, Order.customer_id == Customer.id)
-
+    
     # Region filter
     if criteria.region:
-        # Assuming region is stored in customer address or a separate field
         region_map = {
             "north": ["北區", "北部"],
             "south": ["南區", "南部"],
@@ -664,33 +662,26 @@ async def search_orders(
                 Customer.address.ilike(f"%{kw}%") for kw in region_keywords
             ]
             conditions.append(or_(*region_conditions))
-
+    
     # Customer type filter
     if criteria.customer_type:
-        # Assuming customer_type is a field in Customer model
-        # If not, we can use tags or other classification
         conditions.append(Customer.customer_type == criteria.customer_type)
-
+    
     # Cylinder type filter
     if criteria.cylinder_type:
-        # Need to join with order items and gas products
-        query = query.join(OrderItem, Order.id == OrderItem.order_id)
-        query = query.join(GasProduct, OrderItem.gas_product_id == GasProduct.id)
-
         cylinder_conditions = []
         for cylinder in criteria.cylinder_type:
             cylinder_conditions.append(GasProduct.display_name.ilike(f"%{cylinder}%"))
         if cylinder_conditions:
             conditions.append(or_(*cylinder_conditions))
 
-    # Apply all conditions
-    if conditions:
-        query = query.where(and_(*conditions))
 
-    # Get total count
+async def _get_search_count(db: AsyncSession, criteria: OrderSearchCriteria, conditions: list) -> int:
+    """Get total count of search results"""
     count_query = select(func.count()).select_from(Order)
+    
     if conditions:
-        # Need to re - apply joins for count query
+        # Re-apply joins for count query
         if criteria.keyword or criteria.region or criteria.customer_type:
             count_query = count_query.join(Customer, Order.customer_id == Customer.id)
         if criteria.cylinder_type:
@@ -699,19 +690,20 @@ async def search_orders(
                 GasProduct, OrderItem.gas_product_id == GasProduct.id
             )
         count_query = count_query.where(and_(*conditions))
-
+    
     total_result = await db.execute(count_query)
-    total = total_result.scalar() or 0
+    return total_result.scalar() or 0
 
-    # Apply pagination and ordering
+
+def _apply_sorting_pagination(query, criteria: OrderSearchCriteria):
+    """Apply sorting and pagination to query"""
     query = query.order_by(Order.created_at.desc())
     query = query.offset(criteria.skip).limit(criteria.limit)
+    return query
 
-    # Execute query
-    result = await db.execute(query)
-    orders = result.scalars().unique().all()
 
-    # Convert to dict format
+def _convert_orders_to_dict(orders) -> list:
+    """Convert order objects to dictionary format for response"""
     order_dicts = []
     for order in orders:
         order_dict = {
@@ -751,10 +743,50 @@ async def search_orders(
             ),
         }
         order_dicts.append(order_dict)
+    return order_dicts
 
-    # Calculate search time
-    search_time = (time.time() - start_time) * 1000  # Convert to milliseconds
 
+@router.post("/search", response_model=OrderSearchResult)
+async def search_orders(
+    criteria: OrderSearchCriteria = Body(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    訂單進階搜尋
+
+    支援:
+    - 全文搜尋 (訂單號、客戶名稱、地址、備註)
+    - 日期範圍篩選
+    - 多選篩選器 (狀態、優先級、付款狀態等)
+    - 金額範圍篩選
+    - 地區與客戶類型篩選
+    """
+    start_time = time.time()
+    
+    # Build query and apply filters
+    query = _build_search_query(criteria)
+    conditions = []
+    
+    _apply_date_filters(conditions, criteria)
+    _apply_status_filters(conditions, criteria)
+    _apply_search_filters(conditions, criteria)
+    
+    # Apply conditions to query
+    if conditions:
+        query = query.where(and_(*conditions))
+    
+    # Get total count and execute search
+    total = await _get_search_count(db, criteria, conditions)
+    query = _apply_sorting_pagination(query, criteria)
+    
+    result = await db.execute(query)
+    orders = result.scalars().unique().all()
+    
+    # Convert results and calculate timing
+    order_dicts = _convert_orders_to_dict(orders)
+    search_time = (time.time() - start_time) * 1000
+    
     return OrderSearchResult(
         orders=order_dicts,
         total=total,

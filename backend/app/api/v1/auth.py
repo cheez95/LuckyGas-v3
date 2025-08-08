@@ -14,6 +14,7 @@ from app.api.auth_deps.security import (
     require_secure_auth,
 )
 from app.api.deps import get_current_user, get_db
+from app.core.api_utils import handle_api_errors, require_roles, success_response, error_response
 from app.core.cache import cache
 from app.core.config import settings
 from app.core.security import (
@@ -208,50 +209,50 @@ async def register(
 
 
 @router.post("/refresh", response_model=Token)
+@handle_api_errors({
+    ValueError: "無效的重新整理令牌",
+    KeyError: "缺少必要的令牌資訊"
+})
 async def refresh_token(
     token_request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
     Refresh access token using refresh token
     """
-    try:
-        payload = decode_refresh_token(token_request.refresh_token)
-        username = payload.get("sub")
-        if not username:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="無效的重新整理令牌"
-            )
-
-        # Get user from database
-        result = await db.execute(
-            select(UserModel).where(UserModel.username == username)
-        )
-        user = result.scalar_one_or_none()
-
-        if not user or not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="用戶不存在或已停用"
-            )
-
-        # Create new tokens
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        new_access_token = create_access_token(
-            data={"sub": user.username, "role": user.role.value},
-            expires_delta=access_token_expires,
+    payload = decode_refresh_token(token_request.refresh_token)
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="無效的重新整理令牌"
         )
 
-        new_refresh_token = create_refresh_token(
-            data={"sub": user.username, "role": user.role.value}
+    # Get user from database
+    result = await db.execute(
+        select(UserModel).where(UserModel.username == username)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="用戶不存在或已停用"
         )
 
-        return {
-            "access_token": new_access_token,
-            "refresh_token": new_refresh_token,
-            "token_type": "bearer",
-        }
+    # Create new tokens
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    new_access_token = create_access_token(
+        data={"sub": user.username, "role": user.role.value},
+        expires_delta=access_token_expires,
+    )
 
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    new_refresh_token = create_refresh_token(
+        data={"sub": user.username, "role": user.role.value}
+    )
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer",
+    }
 
 
 @router.get("/me", response_model=User)
@@ -263,6 +264,8 @@ async def read_users_me(current_user: UserModel = Depends(get_current_user)) -> 
 
 
 @router.get("/users", response_model=List[User])
+@handle_api_errors()
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER])
 async def list_users(
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
@@ -272,18 +275,18 @@ async def list_users(
     """
     List all users (admin only)
     """
-    if (
-        current_user.role != UserRole.SUPER_ADMIN
-        and current_user.role != UserRole.MANAGER
-    ):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="權限不足")
 
     result = await db.execute(select(UserModel).offset(skip).limit(limit))
     users = result.scalars().all()
-    return users
+    return success_response(data=users, message="用戶列表獲取成功")
 
 
 @router.post("/users", response_model=User)
+@handle_api_errors({
+    ValueError: "無效的用戶資料",
+    KeyError: "缺少必要的用戶欄位"
+})
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER])
 async def create_user(
     user_in: UserCreate,
     db: AsyncSession = Depends(get_db),
@@ -292,11 +295,6 @@ async def create_user(
     """
     Create new user (admin only)
     """
-    if (
-        current_user.role != UserRole.SUPER_ADMIN
-        and current_user.role != UserRole.MANAGER
-    ):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="權限不足")
 
     # Check if user exists
     result = await db.execute(
@@ -322,10 +320,15 @@ async def create_user(
     await db.commit()
     await db.refresh(db_user)
 
-    return db_user
+    return success_response(data=db_user, message="用戶建立成功")
 
 
 @router.put("/users/{user_id}", response_model=User)
+@handle_api_errors({
+    ValueError: "無效的用戶更新資料",
+    KeyError: "缺少必要的用戶欄位"
+})
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER])
 async def update_user(
     user_id: int,
     user_update: dict,
@@ -335,11 +338,6 @@ async def update_user(
     """
     Update user (admin only)
     """
-    if (
-        current_user.role != UserRole.SUPER_ADMIN
-        and current_user.role != UserRole.MANAGER
-    ):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="權限不足")
 
     result = await db.execute(select(UserModel).where(UserModel.id == user_id))
     user = result.scalar_one_or_none()
@@ -355,7 +353,7 @@ async def update_user(
     await db.commit()
     await db.refresh(user)
 
-    return user
+    return success_response(data=user, message="用戶更新成功")
 
 
 @router.post("/forgot - password")
@@ -459,6 +457,8 @@ async def reset_password(
 
 
 @router.patch("/users/{user_id}/toggle - status", response_model=User)
+@handle_api_errors()
+@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER])
 async def toggle_user_status(
     user_id: int,
     db: AsyncSession = Depends(get_db),
@@ -467,11 +467,6 @@ async def toggle_user_status(
     """
     Toggle user active status (admin only)
     """
-    if (
-        current_user.role != UserRole.SUPER_ADMIN
-        and current_user.role != UserRole.MANAGER
-    ):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="權限不足")
 
     result = await db.execute(select(UserModel).where(UserModel.id == user_id))
     user = result.scalar_one_or_none()
@@ -483,7 +478,8 @@ async def toggle_user_status(
     await db.commit()
     await db.refresh(user)
 
-    return user
+    status_text = "啟用" if user.is_active else "停用"
+    return success_response(data=user, message=f"用戶狀態已更改為{status_text}")
 
 
 @router.post("/change - password")

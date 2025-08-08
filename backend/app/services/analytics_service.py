@@ -9,6 +9,12 @@ from sqlalchemy import and_, case, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.service_utils import (
+    handle_service_errors,
+    validate_date_range,
+    cache_result,
+    measure_performance
+)
 from app.core.storage import StorageService
 from app.models import (
     Customer,
@@ -36,11 +42,47 @@ class AnalyticsService:
         self.email_service = EmailService()
         self.storage_service = StorageService()
 
+    @handle_service_errors(operation="計算營收指標")
+    @validate_date_range(max_days=365, allow_future=False)
+    @cache_result(ttl=300, key_prefix="revenue")
+    @measure_performance(metric_name="revenue_calculation")
     async def get_revenue_metrics(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
         """Get revenue metrics for executive dashboard."""
-        # Total revenue
+        # Get base revenue data
+        current_revenue, order_count = await self._calculate_base_revenue(
+            start_date, end_date
+        )
+        
+        # Calculate period comparisons
+        prev_revenue, growth = await self._calculate_period_comparisons(
+            start_date, end_date, current_revenue
+        )
+        
+        # Get revenue trends and breakdowns
+        daily_trend, revenue_by_product = await self._calculate_revenue_trends(
+            start_date, end_date
+        )
+
+        return {
+            "total": float(current_revenue),
+            "growth": round(growth, 2),
+            "orderCount": order_count or 0,
+            "averageOrderValue": (
+                float(current_revenue / order_count)
+                if order_count
+                else 0
+            ),
+            "dailyTrend": daily_trend,
+            "byProduct": revenue_by_product,
+            "previousPeriod": float(prev_revenue),
+        }
+
+    async def _calculate_base_revenue(
+        self, start_date: datetime, end_date: datetime
+    ) -> tuple[float, int]:
+        """Calculate base revenue and order count for period."""
         revenue_query = select(
             func.sum(Order.total_amount).label("total"),
             func.count(Order.id).label("order_count"),
@@ -53,8 +95,13 @@ class AnalyticsService:
         )
         result = await self.db.execute(revenue_query)
         revenue_data = result.first()
+        
+        return revenue_data.total or 0, revenue_data.order_count or 0
 
-        # Previous period comparison
+    async def _calculate_period_comparisons(
+        self, start_date: datetime, end_date: datetime, current_revenue: float
+    ) -> tuple[float, float]:
+        """Calculate previous period comparison and growth rate."""
         period_days = (end_date - start_date).days
         prev_start = start_date - timedelta(days=period_days)
         prev_end = start_date
@@ -69,13 +116,18 @@ class AnalyticsService:
         prev_result = await self.db.execute(prev_query)
         prev_revenue = prev_result.scalar() or 0
 
-        current_revenue = revenue_data.total or 0
         growth = (
             ((current_revenue - prev_revenue) / prev_revenue * 100)
             if prev_revenue > 0
             else 0
         )
+        
+        return prev_revenue, growth
 
+    async def _calculate_revenue_trends(
+        self, start_date: datetime, end_date: datetime
+    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """Calculate daily revenue trends and product breakdown."""
         # Daily revenue trend
         daily_query = (
             select(
@@ -128,21 +180,13 @@ class AnalyticsService:
             }
             for row in product_result
         ]
+        
+        return daily_revenue, revenue_by_product
 
-        return {
-            "total": float(current_revenue),
-            "growth": round(growth, 2),
-            "orderCount": revenue_data.order_count or 0,
-            "averageOrderValue": (
-                float(current_revenue / revenue_data.order_count)
-                if revenue_data.order_count
-                else 0
-            ),
-            "dailyTrend": daily_revenue,
-            "byProduct": revenue_by_product,
-            "previousPeriod": float(prev_revenue),
-        }
-
+    @handle_service_errors(operation="計算訂單指標")
+    @validate_date_range(max_days=365, allow_future=False)
+    @cache_result(ttl=300, key_prefix="orders")
+    @measure_performance(metric_name="order_metrics")
     async def get_order_metrics(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
@@ -208,10 +252,43 @@ class AnalyticsService:
             ),
         }
 
+    @handle_service_errors(operation="計算客戶指標")
+    @validate_date_range(max_days=365, allow_future=False)
+    @cache_result(ttl=300, key_prefix="customers")
+    @measure_performance(metric_name="customer_metrics")
     async def get_customer_metrics(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
         """Get customer metrics for dashboards."""
+        # Calculate basic customer counts
+        total_customers, new_customers, active_customers = await self._calculate_customer_counts(
+            start_date, end_date
+        )
+        
+        # Calculate customer activity and segments
+        top_customers, customer_segments = await self._calculate_customer_activity(
+            start_date, end_date
+        )
+        
+        # Calculate retention and trends
+        retention_rate, churn_rate = await self._calculate_customer_trends(
+            start_date, end_date, active_customers
+        )
+
+        return {
+            "total": total_customers,
+            "new": new_customers,
+            "active": active_customers,
+            "topCustomers": top_customers,
+            "segments": customer_segments,
+            "retentionRate": retention_rate,
+            "churnRate": churn_rate,
+        }
+
+    async def _calculate_customer_counts(
+        self, start_date: datetime, end_date: datetime
+    ) -> tuple[int, int, int]:
+        """Calculate total, new, and active customer counts."""
         # Total customers
         total_query = select(func.count(Customer.id)).where(Customer.is_active)
         total_result = await self.db.execute(total_query)
@@ -234,7 +311,13 @@ class AnalyticsService:
         )
         active_result = await self.db.execute(active_query)
         active_customers = active_result.scalar() or 0
+        
+        return total_customers, new_customers, active_customers
 
+    async def _calculate_customer_activity(
+        self, start_date: datetime, end_date: datetime
+    ) -> tuple[List[Dict[str, Any]], Dict[str, int]]:
+        """Calculate top customers and customer segments."""
         # Top customers by revenue
         top_customers_query = (
             select(
@@ -278,7 +361,13 @@ class AnalyticsService:
 
         segment_result = await self.db.execute(segment_query)
         customer_segments = {row.customer_type: row.count for row in segment_result}
+        
+        return top_customers, customer_segments
 
+    async def _calculate_customer_trends(
+        self, start_date: datetime, end_date: datetime, active_customers: int
+    ) -> tuple[float, float]:
+        """Calculate customer retention and churn rates."""
         # Retention rate (customers who ordered in both current and previous period)
         period_days = (end_date - start_date).days
         prev_start = start_date - timedelta(days=period_days)
@@ -312,35 +401,52 @@ class AnalyticsService:
             },
         )
         retained_customers = retention_result.scalar() or 0
+        
+        retention_rate = round(
+            (retained_customers / active_customers * 100) if active_customers > 0 else 0,
+            2,
+        )
+        churn_rate = round(
+            100 - retention_rate if active_customers > 0 else 0,
+            2,
+        )
+        
+        return retention_rate, churn_rate
 
-        return {
-            "total": total_customers,
-            "new": new_customers,
-            "active": active_customers,
-            "topCustomers": top_customers,
-            "segments": customer_segments,
-            "retentionRate": round(
-                (
-                    (retained_customers / active_customers * 100)
-                    if active_customers > 0
-                    else 0
-                ),
-                2,
-            ),
-            "churnRate": round(
-                (
-                    100 - (retained_customers / active_customers * 100)
-                    if active_customers > 0
-                    else 0
-                ),
-                2,
-            ),
-        }
-
+    @handle_service_errors(operation="計算現金流指標")
+    @validate_date_range(max_days=365, allow_future=False)
+    @cache_result(ttl=600, key_prefix="cash_flow")
+    @measure_performance(metric_name="cash_flow_calculation")
     async def get_cash_flow_metrics(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
         """Get cash flow metrics for financial dashboard."""
+        # Get daily inflows and outstanding receivables
+        daily_inflows, outstanding_receivables = await self._calculate_cash_inflows(
+            start_date, end_date
+        )
+        
+        # Get payment methods breakdown
+        payment_methods = await self._calculate_payment_methods(start_date, end_date)
+        
+        # Generate daily cash flow trend
+        cash_flow_trend = self._generate_cash_flow_trend(start_date, end_date, daily_inflows)
+        
+        total_inflow = sum(daily_inflows.values())
+        collection_rate = self._calculate_collection_rate(total_inflow, outstanding_receivables)
+
+        return {
+            "totalInflow": float(total_inflow),
+            "outstandingReceivables": float(outstanding_receivables),
+            "dailyTrend": cash_flow_trend,
+            "paymentMethods": payment_methods,
+            "collectionRate": collection_rate,
+        }
+
+    async def _calculate_cash_inflows(
+        self, start_date: datetime, end_date: datetime
+    ) -> tuple[Dict[str, float], float]:
+        """Calculate daily cash inflows and outstanding receivables."""
         # Cash inflows (payments received)
         inflow_query = (
             select(
@@ -369,8 +475,13 @@ class AnalyticsService:
 
         receivables_result = await self.db.execute(receivables_query)
         outstanding_receivables = receivables_result.scalar() or 0
+        
+        return daily_inflows, outstanding_receivables
 
-        # Payment methods breakdown
+    async def _calculate_payment_methods(
+        self, start_date: datetime, end_date: datetime
+    ) -> List[Dict[str, Any]]:
+        """Calculate payment methods breakdown."""
         payment_method_query = (
             select(
                 Payment.payment_method,
@@ -388,7 +499,7 @@ class AnalyticsService:
         )
 
         method_result = await self.db.execute(payment_method_query)
-        payment_methods = [
+        return [
             {
                 "method": row.payment_method,
                 "amount": float(row.amount or 0),
@@ -397,7 +508,10 @@ class AnalyticsService:
             for row in method_result
         ]
 
-        # Generate daily cash flow
+    def _generate_cash_flow_trend(
+        self, start_date: datetime, end_date: datetime, daily_inflows: Dict[str, float]
+    ) -> List[Dict[str, Any]]:
+        """Generate daily cash flow trend data."""
         date_range = pd.date_range(start=start_date, end=end_date, freq="D")
         cash_flow_trend = []
         cumulative_cash = 0
@@ -410,24 +524,24 @@ class AnalyticsService:
             cash_flow_trend.append(
                 {"date": date_str, "inflow": daily_cash, "cumulative": cumulative_cash}
             )
+        
+        return cash_flow_trend
 
-        total_inflow = sum(daily_inflows.values())
-
-        return {
-            "totalInflow": float(total_inflow),
-            "outstandingReceivables": float(outstanding_receivables),
-            "dailyTrend": cash_flow_trend,
-            "paymentMethods": payment_methods,
-            "collectionRate": round(
-                (
-                    (total_inflow / (total_inflow + outstanding_receivables) * 100)
-                    if (total_inflow + outstanding_receivables) > 0
-                    else 0
-                ),
-                2,
+    def _calculate_collection_rate(self, total_inflow: float, outstanding_receivables: float) -> float:
+        """Calculate collection rate percentage."""
+        return round(
+            (
+                (total_inflow / (total_inflow + outstanding_receivables) * 100)
+                if (total_inflow + outstanding_receivables) > 0
+                else 0
             ),
-        }
+            2,
+        )
 
+    @handle_service_errors(operation="計算效能比較")
+    @validate_date_range(max_days=365, allow_future=False)
+    @cache_result(ttl=600, key_prefix="performance")
+    @measure_performance(metric_name="performance_comparison")
     async def get_performance_comparison(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
@@ -524,11 +638,29 @@ class AnalyticsService:
             "averageOrderValue": float(revenue / orders) if orders > 0 else 0,
         }
 
+    @handle_service_errors(operation="計算頂級績效指標")
+    @validate_date_range(max_days=365, allow_future=False)
+    @cache_result(ttl=600, key_prefix="top_performance")
+    @measure_performance(metric_name="top_performance_metrics")
     async def get_top_performing_metrics(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, Any]:
         """Get top performing routes, drivers, and products."""
-        # Top routes by delivery count
+        # Get top performing routes
+        top_routes = await self._get_top_routes(start_date, end_date)
+        
+        # Get top performing drivers
+        top_drivers = await self._get_top_drivers(start_date, end_date)
+        
+        # Get top performing products
+        top_products = await self._get_top_products(start_date, end_date)
+
+        return {"routes": top_routes, "drivers": top_drivers, "products": top_products}
+
+    async def _get_top_routes(
+        self, start_date: datetime, end_date: datetime
+    ) -> List[Dict[str, Any]]:
+        """Get top routes by delivery count."""
         routes_query = (
             select(
                 Route.name,
@@ -556,7 +688,7 @@ class AnalyticsService:
         )
 
         routes_result = await self.db.execute(routes_query)
-        top_routes = [
+        return [
             {
                 "name": row.name,
                 "deliveryCount": row.delivery_count,
@@ -565,7 +697,10 @@ class AnalyticsService:
             for row in routes_result
         ]
 
-        # Top drivers by efficiency
+    async def _get_top_drivers(
+        self, start_date: datetime, end_date: datetime
+    ) -> List[Dict[str, Any]]:
+        """Get top drivers by efficiency."""
         drivers_query = (
             select(
                 User.name,
@@ -601,7 +736,7 @@ class AnalyticsService:
         )
 
         drivers_result = await self.db.execute(drivers_query)
-        top_drivers = [
+        return [
             {
                 "name": row.name,
                 "deliveryCount": row.delivery_count,
@@ -617,7 +752,10 @@ class AnalyticsService:
             for row in drivers_result
         ]
 
-        # Top products by revenue
+    async def _get_top_products(
+        self, start_date: datetime, end_date: datetime
+    ) -> List[Dict[str, Any]]:
+        """Get top products by revenue."""
         products_query = (
             select(
                 GasProduct.name,
@@ -640,7 +778,7 @@ class AnalyticsService:
         )
 
         products_result = await self.db.execute(products_query)
-        top_products = [
+        return [
             {
                 "name": row.name,
                 "revenue": float(row.revenue or 0),
@@ -649,14 +787,36 @@ class AnalyticsService:
             for row in products_result
         ]
 
-        return {"routes": top_routes, "drivers": top_drivers, "products": top_products}
-
     async def get_realtime_order_status(self, date: datetime) -> Dict[str, Any]:
-        """Get real - time order status for operations dashboard."""
+        """Get real-time order status for operations dashboard."""
+        start_of_day, end_of_day = self._get_day_boundaries(date)
+        
+        # Get order status breakdown
+        order_status = await self._get_order_status_breakdown(start_of_day, end_of_day)
+        
+        # Get recent orders
+        recent_orders = await self._get_recent_orders(start_of_day, end_of_day)
+        
+        # Get hourly trend
+        hourly_trend = await self._get_hourly_order_trend(start_of_day)
+
+        return {
+            "statusBreakdown": order_status,
+            "recentOrders": recent_orders,
+            "hourlyTrend": hourly_trend,
+            "lastUpdated": datetime.now().isoformat(),
+        }
+
+    def _get_day_boundaries(self, date: datetime) -> tuple[datetime, datetime]:
+        """Get start and end of day boundaries."""
         start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = date.replace(hour=23, minute=59, second=59, microsecond=999999)
+        return start_of_day, end_of_day
 
-        # Orders by status
+    async def _get_order_status_breakdown(
+        self, start_of_day: datetime, end_of_day: datetime
+    ) -> Dict[str, Dict[str, Any]]:
+        """Get order status breakdown for the day."""
         status_query = (
             select(
                 Order.status,
@@ -670,12 +830,15 @@ class AnalyticsService:
         )
 
         status_result = await self.db.execute(status_query)
-        order_status = {
+        return {
             row.status: {"count": row.count, "amount": float(row.amount or 0)}
             for row in status_result
         }
 
-        # Recent orders (last 10)
+    async def _get_recent_orders(
+        self, start_of_day: datetime, end_of_day: datetime
+    ) -> List[Dict[str, Any]]:
+        """Get recent orders for the day."""
         recent_query = (
             select(Order)
             .options(
@@ -690,7 +853,7 @@ class AnalyticsService:
         )
 
         recent_result = await self.db.execute(recent_query)
-        recent_orders = [
+        return [
             {
                 "id": order.id,
                 "orderNumber": order.order_number,
@@ -706,7 +869,8 @@ class AnalyticsService:
             for order in recent_result.scalars()
         ]
 
-        # Hourly order trend
+    async def _get_hourly_order_trend(self, start_of_day: datetime) -> List[Dict[str, Any]]:
+        """Get hourly order trend for the day."""
         hourly_query = (
             select(
                 func.extract("hour", Order.created_at).label("hour"),
@@ -714,7 +878,8 @@ class AnalyticsService:
             )
             .where(
                 and_(
-                    Order.created_at >= start_of_day, Order.created_at <= datetime.now()
+                    Order.created_at >= start_of_day, 
+                    Order.created_at <= datetime.now()
                 )
             )
             .group_by("hour")
@@ -722,19 +887,33 @@ class AnalyticsService:
         )
 
         hourly_result = await self.db.execute(hourly_query)
-        hourly_trend = [
+        return [
             {"hour": int(row.hour), "count": row.count} for row in hourly_result
         ]
 
-        return {
-            "statusBreakdown": order_status,
-            "recentOrders": recent_orders,
-            "hourlyTrend": hourly_trend,
-            "lastUpdated": datetime.now().isoformat(),
-        }
-
     async def get_driver_utilization(self, date: datetime) -> Dict[str, Any]:
         """Get driver utilization metrics."""
+        # Get basic driver counts
+        active_drivers, total_drivers = await self._calculate_driver_counts(date)
+        
+        # Get detailed driver performance
+        driver_performance = await self._calculate_driver_performance(date)
+        
+        # Calculate utilization metrics
+        utilization_rate, summary = self._calculate_utilization_metrics(
+            active_drivers, total_drivers, driver_performance
+        )
+
+        return {
+            "totalDrivers": total_drivers,
+            "activeDrivers": active_drivers,
+            "utilizationRate": utilization_rate,
+            "driverPerformance": driver_performance,
+            "summary": summary,
+        }
+
+    async def _calculate_driver_counts(self, date: datetime) -> tuple[int, int]:
+        """Calculate active and total driver counts."""
         # Active drivers today
         active_drivers_query = select(func.count(func.distinct(Route.driver_id))).where(
             and_(Route.date == date.date(), Route.status != RouteStatus.CANCELLED)
@@ -748,8 +927,13 @@ class AnalyticsService:
         )
         total_result = await self.db.execute(total_drivers_query)
         total_drivers = total_result.scalar() or 0
+        
+        return active_drivers, total_drivers
 
-        # Driver performance
+    async def _calculate_driver_performance(
+        self, date: datetime
+    ) -> List[Dict[str, Any]]:
+        """Calculate detailed driver performance metrics."""
         driver_stats_query = (
             select(
                 User.id,
@@ -771,8 +955,6 @@ class AnalyticsService:
         )
 
         driver_result = await self.db.execute(driver_stats_query)
-
-        driver_performance = []
         driver_summary = {}
 
         for row in driver_result:
@@ -789,6 +971,7 @@ class AnalyticsService:
             driver_summary[row.id]["deliveries"] += row.delivery_count or 0
             driver_summary[row.id]["completed"] += row.completed_count or 0
 
+            # Update status based on route status
             if row.status == RouteStatus.IN_PROGRESS:
                 driver_summary[row.id]["status"] = "active"
             elif (
@@ -796,32 +979,54 @@ class AnalyticsService:
                 and driver_summary[row.id]["status"] == "idle"
             ):
                 driver_summary[row.id]["status"] = "completed"
+        
+        return list(driver_summary.values())
 
-        driver_performance = list(driver_summary.values())
-
+    def _calculate_utilization_metrics(
+        self, active_drivers: int, total_drivers: int, driver_performance: List[Dict[str, Any]]
+    ) -> tuple[float, Dict[str, int]]:
+        """Calculate utilization rate and status summary."""
         utilization_rate = round(
             (active_drivers / total_drivers * 100) if total_drivers > 0 else 0, 2
         )
-
-        return {
-            "totalDrivers": total_drivers,
-            "activeDrivers": active_drivers,
-            "utilizationRate": utilization_rate,
-            "driverPerformance": driver_performance,
-            "summary": {
-                "idle": len([d for d in driver_performance if d["status"] == "idle"]),
-                "active": len(
-                    [d for d in driver_performance if d["status"] == "active"]
-                ),
-                "completed": len(
-                    [d for d in driver_performance if d["status"] == "completed"]
-                ),
-            },
+        
+        summary = {
+            "idle": len([d for d in driver_performance if d["status"] == "idle"]),
+            "active": len([d for d in driver_performance if d["status"] == "active"]),
+            "completed": len([d for d in driver_performance if d["status"] == "completed"]),
         }
+        
+        return utilization_rate, summary
 
     async def get_route_efficiency_metrics(self, date: datetime) -> Dict[str, Any]:
         """Get route efficiency metrics."""
-        # Routes for the day
+        # Get route performance data
+        routes, total_routes, total_deliveries = await self._calculate_route_performance(date)
+        
+        # Calculate delivery efficiency metrics
+        completed_deliveries, overall_efficiency = await self._calculate_delivery_efficiency(
+            routes, total_deliveries
+        )
+        
+        # Calculate optimization metrics
+        on_time_rate, status_breakdown = await self._calculate_optimization_metrics(
+            routes, total_routes
+        )
+
+        return {
+            "totalRoutes": total_routes,
+            "totalDeliveries": total_deliveries,
+            "completedDeliveries": completed_deliveries,
+            "overallEfficiency": overall_efficiency,
+            "onTimeRate": on_time_rate,
+            "routes": routes,
+            "statusBreakdown": status_breakdown,
+        }
+
+    async def _calculate_route_performance(
+        self, date: datetime
+    ) -> tuple[List[Dict[str, Any]], int, int]:
+        """Calculate route performance data for the given date."""
         routes_query = (
             select(
                 Route.id,
@@ -855,33 +1060,17 @@ class AnalyticsService:
 
         routes = []
         total_routes = 0
-        on_time_routes = 0
         total_deliveries = 0
-        completed_deliveries = 0
 
         for row in routes_result:
             total_routes += 1
             total_deliveries += row.delivery_count or 0
-            completed_deliveries += row.completed_count or 0
 
             # Calculate if route is on time
-            on_time = True
-            if row.actual_start_time and row.planned_start_time:
-                start_delay = (
-                    row.actual_start_time - row.planned_start_time
-                ).total_seconds() / 60
-                if start_delay > 15:  # 15 minutes tolerance
-                    on_time = False
-
-            if on_time and row.actual_end_time and row.planned_end_time:
-                end_delay = (
-                    row.actual_end_time - row.planned_end_time
-                ).total_seconds() / 60
-                if end_delay > 30:  # 30 minutes tolerance
-                    on_time = False
-
-            if on_time:
-                on_time_routes += 1
+            on_time = self._is_route_on_time(
+                row.actual_start_time, row.planned_start_time,
+                row.actual_end_time, row.planned_end_time
+            )
 
             efficiency = round(
                 (
@@ -903,7 +1092,34 @@ class AnalyticsService:
                     "onTime": on_time,
                 }
             )
+        
+        return routes, total_routes, total_deliveries
 
+    def _is_route_on_time(
+        self, actual_start: datetime, planned_start: datetime,
+        actual_end: datetime, planned_end: datetime
+    ) -> bool:
+        """Determine if a route is on time based on start and end times."""
+        on_time = True
+        
+        if actual_start and planned_start:
+            start_delay = (actual_start - planned_start).total_seconds() / 60
+            if start_delay > 15:  # 15 minutes tolerance
+                on_time = False
+
+        if on_time and actual_end and planned_end:
+            end_delay = (actual_end - planned_end).total_seconds() / 60
+            if end_delay > 30:  # 30 minutes tolerance
+                on_time = False
+        
+        return on_time
+
+    async def _calculate_delivery_efficiency(
+        self, routes: List[Dict[str, Any]], total_deliveries: int
+    ) -> tuple[int, float]:
+        """Calculate delivery efficiency metrics."""
+        completed_deliveries = sum(route["completedCount"] for route in routes)
+        
         overall_efficiency = round(
             (
                 (completed_deliveries / total_deliveries * 100)
@@ -912,40 +1128,59 @@ class AnalyticsService:
             ),
             2,
         )
+        
+        return completed_deliveries, overall_efficiency
 
+    async def _calculate_optimization_metrics(
+        self, routes: List[Dict[str, Any]], total_routes: int
+    ) -> tuple[float, Dict[str, int]]:
+        """Calculate route optimization metrics."""
+        on_time_routes = sum(1 for route in routes if route["onTime"])
+        
         on_time_rate = round(
             (on_time_routes / total_routes * 100) if total_routes > 0 else 0, 2
         )
-
-        return {
-            "totalRoutes": total_routes,
-            "totalDeliveries": total_deliveries,
-            "completedDeliveries": completed_deliveries,
-            "overallEfficiency": overall_efficiency,
-            "onTimeRate": on_time_rate,
-            "routes": routes,
-            "statusBreakdown": {
-                "planned": len(
-                    [r for r in routes if r["status"] == RouteStatus.PLANNED]
-                ),
-                "inProgress": len(
-                    [r for r in routes if r["status"] == RouteStatus.IN_PROGRESS]
-                ),
-                "completed": len(
-                    [r for r in routes if r["status"] == RouteStatus.COMPLETED]
-                ),
-                "cancelled": len(
-                    [r for r in routes if r["status"] == RouteStatus.CANCELLED]
-                ),
-            },
+        
+        status_breakdown = {
+            "planned": len([r for r in routes if r["status"] == RouteStatus.PLANNED]),
+            "inProgress": len([r for r in routes if r["status"] == RouteStatus.IN_PROGRESS]),
+            "completed": len([r for r in routes if r["status"] == RouteStatus.COMPLETED]),
+            "cancelled": len([r for r in routes if r["status"] == RouteStatus.CANCELLED]),
         }
+        
+        return on_time_rate, status_breakdown
 
     async def get_delivery_success_metrics(self, date: datetime) -> Dict[str, Any]:
         """Get delivery success metrics."""
-        start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_day = date.replace(hour=23, minute=59, second=59, microsecond=999999)
+        start_of_day, end_of_day = self._get_day_boundaries(date)
+        
+        # Get delivery status breakdown
+        status_breakdown, total_deliveries, successful_deliveries = await self._get_delivery_status(
+            start_of_day, end_of_day
+        )
+        
+        # Get average delivery time
+        avg_delivery_time = await self._get_average_delivery_time(start_of_day, end_of_day)
+        
+        # Get failure reasons
+        failure_reasons = await self._get_failure_reasons(start_of_day, end_of_day)
+        
+        # Calculate success rate
+        success_rate = self._calculate_success_rate(successful_deliveries, total_deliveries)
 
-        # Delivery status breakdown
+        return {
+            "totalDeliveries": total_deliveries,
+            "successfulDeliveries": successful_deliveries,
+            "successRate": success_rate,
+            "averageDeliveryTime": round(avg_delivery_time, 2),
+            "statusBreakdown": status_breakdown,
+            "failureReasons": failure_reasons,
+        }
+
+    async def _get_delivery_status(
+        self, start_of_day: datetime, end_of_day: datetime
+    ) -> tuple[Dict[str, int], int, int]:
+        """Get delivery status breakdown and counts."""
         status_query = (
             select(
                 DeliveryHistory.status, func.count(DeliveryHistory.id).label("count")
@@ -964,8 +1199,13 @@ class AnalyticsService:
 
         total_deliveries = sum(status_breakdown.values())
         successful_deliveries = status_breakdown.get(DeliveryStatus.COMPLETED, 0)
+        
+        return status_breakdown, total_deliveries, successful_deliveries
 
-        # Average delivery time
+    async def _get_average_delivery_time(
+        self, start_of_day: datetime, end_of_day: datetime
+    ) -> float:
+        """Get average delivery time in minutes."""
         time_query = select(
             func.avg(
                 func.extract(
@@ -982,9 +1222,12 @@ class AnalyticsService:
         )
 
         time_result = await self.db.execute(time_query)
-        avg_delivery_time = time_result.scalar() or 0
+        return time_result.scalar() or 0
 
-        # Failure reasons
+    async def _get_failure_reasons(
+        self, start_of_day: datetime, end_of_day: datetime
+    ) -> List[Dict[str, Any]]:
+        """Get top failure reasons."""
         failure_query = (
             select(DeliveryHistory.notes, func.count(DeliveryHistory.id).label("count"))
             .where(
@@ -999,12 +1242,14 @@ class AnalyticsService:
         )
 
         failure_result = await self.db.execute(failure_query)
-        failure_reasons = [
+        return [
             {"reason": row.notes or "未指定原因", "count": row.count}
             for row in failure_result
         ]
 
-        success_rate = round(
+    def _calculate_success_rate(self, successful_deliveries: int, total_deliveries: int) -> float:
+        """Calculate delivery success rate."""
+        return round(
             (
                 (successful_deliveries / total_deliveries * 100)
                 if total_deliveries > 0
@@ -1012,15 +1257,6 @@ class AnalyticsService:
             ),
             2,
         )
-
-        return {
-            "totalDeliveries": total_deliveries,
-            "successfulDeliveries": successful_deliveries,
-            "successRate": success_rate,
-            "averageDeliveryTime": round(avg_delivery_time, 2),
-            "statusBreakdown": status_breakdown,
-            "failureReasons": failure_reasons,
-        }
 
     async def get_equipment_inventory_status(self) -> Dict[str, Any]:
         """Get equipment inventory status."""
