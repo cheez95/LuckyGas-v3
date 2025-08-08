@@ -1,0 +1,9 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.production', '-t', 'asia-east1-docker.pkg.dev/vast-tributary-466619-m8/luckygas/luckygas-backend:latest', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-east1-docker.pkg.dev/vast-tributary-466619-m8/luckygas/luckygas-backend:latest']
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+timeout: '20m'

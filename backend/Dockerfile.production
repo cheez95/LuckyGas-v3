@@ -1,0 +1,80 @@
+# Multi-stage production Dockerfile for LuckyGas Backend
+# Optimized for minimal size and security
+
+# Stage 1: Python dependencies
+FROM python:3.11-slim AS python-deps
+
+WORKDIR /tmp
+
+# Install system dependencies for compilation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    python3-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for faster dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy requirements
+COPY requirements.txt .
+COPY pyproject.toml .
+
+# Install Python dependencies
+RUN uv pip install --system --no-cache -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim AS runtime
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080 \
+    ENVIRONMENT=production
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Create app directory
+WORKDIR /app
+
+# Copy Python packages from deps stage
+COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=python-deps /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/uploads && \
+    chown -R appuser:appuser /app/logs /app/uploads
+
+# Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
+
+# Expose port
+EXPOSE ${PORT}
+
+# Start command with optimal worker configuration
+CMD exec gunicorn app.main:app \
+    --bind 0.0.0.0:${PORT} \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --timeout 120 \
+    --keep-alive 5 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info

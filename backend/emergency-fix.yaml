@@ -1,0 +1,23 @@
+steps:
+  # Quick build with fixed requirements
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-f'
+      - 'Dockerfile.production'
+      - '-t'
+      - 'asia-east1-docker.pkg.dev/$PROJECT_ID/luckygas/luckygas-backend:v2'
+      - '.'
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-east1-docker.pkg.dev/$PROJECT_ID/luckygas/luckygas-backend:v2'
+
+substitutions:
+  _PROJECT_ID: vast-tributary-466619-m8
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'
+timeout: '10m'

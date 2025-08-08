@@ -37,6 +37,8 @@ beautifulsoup4==4.13.4
     # via backend (pyproject.toml)
 bidict==0.23.1
     # via python-socketio
+PyJWT==2.8.0
+    # via backend (authentication)
 billiard==4.2.1
     # via celery
 boto==2.49.0
