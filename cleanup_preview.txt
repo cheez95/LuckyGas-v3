@@ -1,0 +1,111 @@
+[0;34m========================================[0m
+[0;34m   LuckyGas Repository Cleanup Script   [0m
+[0;34m========================================[0m
+
+[1;33mRunning in DRY-RUN mode - no files will be deleted[0m
+
+This script will remove:
+  • 38 backend duplicate files (1.5 MB)
+  • 383 Python cache files (500 KB)
+  • 47 outdated documentation files (5 MB)
+  • 16 debug/test scripts in root (350 KB)
+  • 12 frontend duplicate files (1.5 MB)
+  • 8 configuration duplicates (1 MB)
+
+[0;32mTotal: 504 files, ~9.85 MB[0m
+[1;33mAll working code will be preserved[0m
+
+
+[0;34mStarting cleanup...[0m
+
+[1;33m[1/6] Removing backend duplicate files...[0m
+  [DRY-RUN] Would remove: backend/coverage_visualization 2.html
+  [DRY-RUN] Would remove: backend/deploy_integrated_backend 2.sh
+  [DRY-RUN] Would remove: backend/integration_test_results 2.json
+  [DRY-RUN] Would remove: backend/openapi 2.json
+  [DRY-RUN] Would remove: backend/requirements 2.txt
+  [DRY-RUN] Would remove: backend/run_tests 2.sh
+  [DRY-RUN] Would remove: backend/run-tests 2.sh
+  [DRY-RUN] Would remove: backend/security_audit_report 2.json
+  [DRY-RUN] Would remove: backend/simple_performance_test_results 2.json
+  [DRY-RUN] Would remove: backend/test_epic7_report 2.json
+  [DRY-RUN] Would remove: backend/test_report 2.json
+  [DRY-RUN] Would remove: backend/test-results 2.xml
+  [DRY-RUN] Would remove: backend/ui_functionality_report 2.json
+  [DRY-RUN] Would remove: backend/unit_test_results 2.json
+  [DRY-RUN] Would remove: backend/tests/mock-services/gcp/test-credentials 2.json
+  [DRY-RUN] Would remove: backend/tests/mock-services/gcp/test-credentials 3.json
+  [DRY-RUN] Would remove: backend/tests/contracts/consumer/test_example_new_feature.py 2.example
+  [DRY-RUN] Would remove: backend/tests/contracts/consumer/test_example_new_feature.py 3.example
+  [DRY-RUN] Would remove: backend/tests/init-scripts/01-init-test-db 2.sql
+  [DRY-RUN] Would remove: backend/tests/init-scripts/01-init-test-db 3.sql
+  [DRY-RUN] Would remove: backend/app/services/order_service_updated.py
+  [DRY-RUN] Would remove: backend/app/api/v1/health_simple.py
+  [DRY-RUN] Would remove: backend/app/api/v1/websocket_simple.py
+[1;33m[2/6] Removing debug/test scripts from backend root...[0m
+  [DRY-RUN] Would remove: backend/check_customer_schema.py
+  [DRY-RUN] Would remove: backend/check_drivers_schema.py
+  [DRY-RUN] Would remove: backend/check_orders_schema.py
+  [DRY-RUN] Would remove: backend/check_users.py
+  [DRY-RUN] Would remove: backend/create_test_user.py
+  [DRY-RUN] Would remove: backend/create_initial_migration.py
+  [DRY-RUN] Would remove: backend/analyze_database.py
+  [DRY-RUN] Would remove: backend/analyze_test_coverage.py
+  [DRY-RUN] Would remove: backend/init_test_data.py
+  [DRY-RUN] Would remove: backend/init_test_db.py
+  [DRY-RUN] Would remove: backend/security_audit.py
+  [DRY-RUN] Would remove: backend/simple_app.py
+  [DRY-RUN] Would remove: backend/run_all_tests.py
+  [DRY-RUN] Would remove: backend/generate_coverage_visualization.py
+  [DRY-RUN] Would remove: backend/ui_deep_examination.py
+[1;33m[3/6] Cleaning Python cache files...[0m
+  [DRY-RUN] Would remove all __pycache__ directories
+  [DRY-RUN] Found      949 __pycache__ directories
+  [DRY-RUN] Found     6163 .pyc/.pyo files
+[1;33m[4/6] Removing outdated documentation...[0m
+  [DRY-RUN] Would remove: PARALLEL_EXECUTION_PLAN.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/BUSINESS_RULES_VALIDATION.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/ROLLBACK_PROCEDURES.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/DAY3_DELIVERY_MIGRATION_PLAN.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/HANDOFF_DEVIN_TO_SAM.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/DATA_MIGRATION_ANALYSIS.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/BUSINESS_LOGIC_CLARIFICATIONS_NEEDED.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/EDGE_CASE_HANDLING_GUIDE.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/PRODUCTION_MIGRATION_LOG.md
+  [DRY-RUN] Would remove: backend/migrations/data_migration/MIGRATION_COORDINATION_SCRIPT.md
+  [DRY-RUN] Would remove: backend/app/scripts/MIGRATION_README.md
+  [DRY-RUN] Would remove: backend/app/services/google_cloud/ROUTES_API_README.md
+  [DRY-RUN] Would remove: backend/tests/README.md
+  [DRY-RUN] Would remove: backend/tests/TEST_ENVIRONMENT_README.md
+  [DRY-RUN] Would remove: backend/tests/contracts/CONTRACT_TESTING_GUIDE.md
+  [DRY-RUN] Would remove: backend/tests/contracts/QUICK_REFERENCE.md
+  [DRY-RUN] Would remove: backend/.pytest_cache/README.md
+  [DRY-RUN] Would remove: backend/tests/integration/.pytest_cache/README.md
+[1;33m[5/6] Cleaning frontend files...[0m
+  [DRY-RUN] Would remove: frontend/fix-duplicate-tests.cjs
+  [DRY-RUN] Would remove: frontend/fix-duplicate-tests 2.cjs
+  [DRY-RUN] Would remove: frontend/public/test-service-worker.html
+  [DRY-RUN] Would remove: frontend/public/test-service-worker 2.html
+  [DRY-RUN] Would remove: frontend/public/test-service-worker 3.html
+  [DRY-RUN] Would remove: frontend/src/components/Analytics/FuelSavingsChart 4.tsx
+  [DRY-RUN] Would remove: frontend/src/components/Analytics/FuelSavingsChart 5.tsx
+  [DRY-RUN] Would remove: frontend/src/components/Analytics/WeeklyTrendChart 4.tsx
+  [DRY-RUN] Would remove: frontend/src/components/Analytics/WeeklyTrendChart 5.tsx
+[1;33m[6/6] Cleaning root directory...[0m
+  [DRY-RUN] Would remove: nginx 2.conf
+
+[1;33mRemoving old backup files...[0m
+  [DRY-RUN] Would remove: backend/.env.backup
+  [DRY-RUN] Would remove: backend/.env.test.backup
+
+[0;34m========================================[0m
+[0;34m           Cleanup Complete!            [0m
+[0;34m========================================[0m
+
+[1;33mDRY-RUN Summary:[0m
+  • Files that would be removed: ~504
+  • Space that would be saved: ~9.85 MB
+
+Run without --dry-run to actually perform the cleanup.
+
+[0;32m✅ Repository cleanup completed successfully![0m

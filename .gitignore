@@ -6,12 +6,14 @@ env/
 ENV/
 
 # Python
-__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
 *.py[cod]
 *$py.class
 *.so
 .Python
-*.pyc
 
 # Distribution / packaging
 build/
@@ -31,7 +33,7 @@ wheels/
 *.egg
 PIPFILE.lock
 
-# Testing
+# Testing & Debug
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
@@ -40,6 +42,10 @@ PIPFILE.lock
 htmlcov/
 .tox/
 .nox/
+**/debug_*.py
+**/test_*.log
+**/*_debug.*
+**/*_test_output.*
 
 # uv
 .uv/
@@ -70,6 +76,10 @@ integrated_backend.log
 .env
 .env.*
 !.env.example
+.env.local
+.env.*.local
+**/.env.backup
+**/.env.test.backup
 
 # API Keys and Secrets
 **/config/secrets.json
@@ -79,7 +89,7 @@ integrated_backend.log
 *.pem
 *.key
 
-# Temporary files
+# Temporary files & Backups
 *.tmp
 *.temp
 *.bak
@@ -87,6 +97,15 @@ integrated_backend.log
 *.swo
 *~
 .DS_Store
+**/*.backup
+**/*.backup.*
+**/*_backup.*
+**/*.old
+**/*.orig
+**/* 2.*
+**/* 3.*
+**/* 4.*
+**/* 5.*
 
 # Test files outside test directories
 test_*.py
