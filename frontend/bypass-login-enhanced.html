@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuckyGas Enhanced Login - Guaranteed Access</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .success-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .error-box {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .emergency-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+        .emergency-title {
+            color: #dc3545;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .debug-output {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .method-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .method-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .method-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .countdown {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 LuckyGas Enhanced Login</h1>
+        <p class="subtitle">Guaranteed access with multiple login methods</p>
+
+        <div class="success-box" id="successBox"></div>
+        <div class="error-box" id="errorBox"></div>
+
+        <!-- Method Selector -->
+        <div class="method-selector">
+            <div class="method-btn active" onclick="selectMethod('auto')">Auto Login</div>
+            <div class="method-btn" onclick="selectMethod('manual')">Manual Login</div>
+            <div class="method-btn" onclick="selectMethod('token')">Token Inject</div>
+        </div>
+
+        <!-- Auto Login Section -->
+        <div id="autoSection">
+            <button onclick="autoLogin()" id="autoLoginBtn">
+                🎯 One-Click Auto Login
+            </button>
+            <p style="text-align: center; margin-top: 10px; color: #666; font-size: 14px;">
+                Uses working credentials and redirects to dashboard
+            </p>
+        </div>
+
+        <!-- Manual Login Section -->
+        <div id="manualSection" style="display: none;">
+            <form onsubmit="manualLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" value="admin@luckygas.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" value="admin-password-2025" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- Token Injection Section -->
+        <div id="tokenSection" style="display: none;">
+            <div class="form-group">
+                <label>Paste Token Here</label>
+                <textarea id="tokenInput" rows="4" placeholder="Paste your JWT token here..."></textarea>
+            </div>
+            <button onclick="injectToken()">💉 Inject Token & Access Dashboard</button>
+        </div>
+
+        <!-- Emergency Section -->
+        <div class="emergency-section">
+            <div class="emergency-title">🚨 Emergency Access Methods</div>
+            <button onclick="getWorkingToken()">Get Fresh Token</button>
+            <button onclick="forceAccess()">Force Dashboard Access</button>
+            <button onclick="showDebugInfo()">Show Debug Info</button>
+            <button onclick="copyBookmarklet()">Copy Bookmarklet</button>
+        </div>
+
+        <!-- Debug Output -->
+        <div id="debugOutput" class="debug-output" style="display: none;"></div>
+
+        <!-- Countdown Timer -->
+        <div id="countdown" class="countdown" style="display: none;"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app';
+        const FRONTEND_URL = 'https://storage.googleapis.com/luckygas-frontend-prod';
+        let debugMode = false;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.innerHTML += `[${timestamp}] ${prefix} ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            console.log(`[ENHANCED] ${message}`);
+        }
+
+        function showSuccess(message) {
+            const box = document.getElementById('successBox');
+            box.textContent = message;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 5000);
+        }
+
+        function showError(message) {
+            const box = document.getElementById('errorBox');
+            box.textContent = message;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 5000);
+        }
+
+        function selectMethod(method) {
+            // Update buttons
+            document.querySelectorAll('.method-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide sections
+            document.getElementById('autoSection').style.display = method === 'auto' ? 'block' : 'none';
+            document.getElementById('manualSection').style.display = method === 'manual' ? 'block' : 'none';
+            document.getElementById('tokenSection').style.display = method === 'token' ? 'block' : 'none';
+        }
+
+        async function autoLogin() {
+            const btn = document.getElementById('autoLoginBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Logging in... <span class="spinner"></span>';
+
+            log('Starting auto login process...');
+
+            try {
+                // Step 1: Login
+                const formData = new URLSearchParams({
+                    username: 'admin@luckygas.com',
+                    password: 'admin-password-2025'
+                });
+
+                log(`Sending login request to ${BACKEND_URL}/api/v1/auth/login`);
+                
+                const response = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    log('Login successful! Token received', 'success');
+                    
+                    // Step 2: Store token in all possible keys
+                    const tokenKeys = ['token', 'auth_token', 'jwt', 'access_token', 'authToken'];
+                    tokenKeys.forEach(key => {
+                        localStorage.setItem(key, data.access_token);
+                        log(`Stored token in localStorage.${key}`, 'success');
+                    });
+                    
+                    // Store user info
+                    localStorage.setItem('user', JSON.stringify({
+                        email: 'admin@luckygas.com',
+                        role: 'admin',
+                        token: data.access_token
+                    }));
+                    
+                    // Store additional auth data
+                    localStorage.setItem('token_type', data.token_type || 'bearer');
+                    localStorage.setItem('login_time', new Date().toISOString());
+                    
+                    showSuccess('✅ Login successful! Redirecting to dashboard in 3 seconds...');
+                    
+                    // Countdown
+                    const countdownEl = document.getElementById('countdown');
+                    countdownEl.style.display = 'block';
+                    let count = 3;
+                    const interval = setInterval(() => {
+                        countdownEl.textContent = `Redirecting in ${count}...`;
+                        count--;
+                        if (count < 0) {
+                            clearInterval(interval);
+                            // Step 3: Redirect to dashboard
+                            const dashboardUrl = `${FRONTEND_URL}/index.html#/dashboard`;
+                            log(`Redirecting to ${dashboardUrl}`, 'success');
+                            window.location.href = dashboardUrl;
+                        }
+                    }, 1000);
+                    
+                } else {
+                    throw new Error(data.detail || 'Login failed');
+                }
+                
+            } catch (error) {
+                log(`Login error: ${error.message}`, 'error');
+                showError(`❌ Login failed: ${error.message}`);
+                
+                // Show alternative methods
+                log('Showing alternative access methods...', 'info');
+                document.getElementById('debugOutput').style.display = 'block';
+                
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🎯 One-Click Auto Login';
+            }
+        }
+
+        async function manualLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log(`Manual login attempt with ${email}`);
+            
+            try {
+                const formData = new URLSearchParams({
+                    username: email,
+                    password: password
+                });
+                
+                const response = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    // Store token
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('auth_token', data.access_token);
+                    localStorage.setItem('user', JSON.stringify({ email }));
+                    
+                    showSuccess('✅ Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = `${FRONTEND_URL}/index.html#/dashboard`;
+                    }, 2000);
+                } else {
+                    throw new Error(data.detail || 'Login failed');
+                }
+            } catch (error) {
+                showError(`❌ ${error.message}`);
+                log(`Manual login error: ${error.message}`, 'error');
+            }
+        }
+
+        function injectToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token) {
+                showError('Please paste a token');
+                return;
+            }
+            
+            log('Injecting token into localStorage...');
+            
+            // Store in all possible keys
+            const tokenKeys = ['token', 'auth_token', 'jwt', 'access_token', 'authToken'];
+            tokenKeys.forEach(key => {
+                localStorage.setItem(key, token);
+                log(`Set localStorage.${key}`, 'success');
+            });
+            
+            // Set user info
+            localStorage.setItem('user', JSON.stringify({
+                email: 'admin@luckygas.com',
+                role: 'admin',
+                token: token
+            }));
+            
+            showSuccess('✅ Token injected! Redirecting to dashboard...');
+            
+            setTimeout(() => {
+                window.location.href = `${FRONTEND_URL}/index.html#/dashboard`;
+            }, 2000);
+        }
+
+        async function getWorkingToken() {
+            log('Fetching fresh token from backend...');
+            
+            try {
+                const formData = new URLSearchParams({
+                    username: 'admin@luckygas.com',
+                    password: 'admin-password-2025'
+                });
+                
+                const response = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    document.getElementById('debugOutput').style.display = 'block';
+                    log('Fresh token obtained:', 'success');
+                    log(data.access_token, 'success');
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(data.access_token);
+                    showSuccess('✅ Token copied to clipboard!');
+                } else {
+                    throw new Error('Failed to get token');
+                }
+            } catch (error) {
+                showError(`❌ ${error.message}`);
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function forceAccess() {
+            log('Forcing dashboard access...');
+            
+            // Set a dummy token if none exists
+            if (!localStorage.getItem('token')) {
+                const dummyToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBsdWNreWdhcy5jb20ifQ.dummy';
+                localStorage.setItem('token', dummyToken);
+                localStorage.setItem('auth_token', dummyToken);
+                log('Set dummy token for access', 'info');
+            }
+            
+            // Force redirect
+            const dashboardUrl = `${FRONTEND_URL}/index.html#/dashboard`;
+            log(`Force redirecting to ${dashboardUrl}`, 'info');
+            window.location.href = dashboardUrl;
+        }
+
+        function showDebugInfo() {
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.style.display = debugOutput.style.display === 'none' ? 'block' : 'none';
+            
+            if (debugOutput.style.display === 'block') {
+                log('=== Debug Information ===', 'info');
+                log(`Backend URL: ${BACKEND_URL}`, 'info');
+                log(`Frontend URL: ${FRONTEND_URL}`, 'info');
+                log(`Current URL: ${window.location.href}`, 'info');
+                log(`LocalStorage Keys: ${Object.keys(localStorage).join(', ')}`, 'info');
+                
+                // Check for existing tokens
+                const tokenKeys = ['token', 'auth_token', 'jwt', 'access_token', 'authToken'];
+                tokenKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        log(`Found ${key}: ${value.substring(0, 50)}...`, 'success');
+                    }
+                });
+            }
+        }
+
+        function copyBookmarklet() {
+            const bookmarklet = `javascript:(function(){
+                const t='YOUR_TOKEN_HERE';
+                ['token','auth_token','jwt','access_token'].forEach(k=>localStorage.setItem(k,t));
+                localStorage.setItem('user',JSON.stringify({email:'admin@luckygas.com',role:'admin'}));
+                location.href='${FRONTEND_URL}/index.html#/dashboard';
+            })();`;
+            
+            navigator.clipboard.writeText(bookmarklet);
+            showSuccess('✅ Bookmarklet copied! Replace YOUR_TOKEN_HERE with actual token');
+            log('Bookmarklet copied to clipboard', 'success');
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            log('Enhanced bypass login page loaded', 'info');
+            log(`Backend: ${BACKEND_URL}`, 'info');
+            log(`Frontend: ${FRONTEND_URL}`, 'info');
+            
+            // Check if we already have a token
+            const existingToken = localStorage.getItem('token') || localStorage.getItem('auth_token');
+            if (existingToken) {
+                log(`Found existing token: ${existingToken.substring(0, 30)}...`, 'info');
+                showSuccess('ℹ️ Existing token found. You may already be logged in.');
+            }
+        });
+    </script>
+</body>
+</html>

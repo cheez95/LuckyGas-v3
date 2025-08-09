@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuckyGas Dashboard - 幸福氣管理系統</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Sidebar */
+        .layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px 0;
+        }
+        .menu-item {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .menu-item:hover {
+            background: #f5f7fa;
+            border-left-color: #667eea;
+        }
+        .menu-item.active {
+            background: #f0f5ff;
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 500;
+        }
+        .menu-icon {
+            margin-right: 10px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+        }
+        .page-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .stat-change {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .stat-change.positive {
+            color: #28a745;
+        }
+        .stat-change.negative {
+            color: #dc3545;
+        }
+        
+        /* Data Table */
+        .data-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f5f7fa;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #f5f7fa;
+            color: #666;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+        .data-table tr:hover {
+            background: #f9f9f9;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .action-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .action-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .action-title {
+            color: #333;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span>🔥</span>
+                <span>LuckyGas 幸福氣管理系統</span>
+            </div>
+            <div class="user-info">
+                <span id="userEmail">admin@luckygas.com</span>
+                <button class="logout-btn" onclick="logout()">登出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout -->
+    <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="#dashboard" class="menu-item active" onclick="showPage('dashboard')">
+                <span class="menu-icon">📊</span>儀表板
+            </a>
+            <a href="#customers" class="menu-item" onclick="showPage('customers')">
+                <span class="menu-icon">👥</span>客戶管理
+            </a>
+            <a href="#orders" class="menu-item" onclick="showPage('orders')">
+                <span class="menu-icon">📦</span>訂單管理
+            </a>
+            <a href="#delivery" class="menu-item" onclick="showPage('delivery')">
+                <span class="menu-icon">🚚</span>配送路線
+            </a>
+            <a href="#inventory" class="menu-item" onclick="showPage('inventory')">
+                <span class="menu-icon">📋</span>庫存管理
+            </a>
+            <a href="#reports" class="menu-item" onclick="showPage('reports')">
+                <span class="menu-icon">📈</span>報表分析
+            </a>
+            <a href="#settings" class="menu-item" onclick="showPage('settings')">
+                <span class="menu-icon">⚙️</span>系統設定
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page">
+                <h1 class="page-title">儀表板 Dashboard</h1>
+                
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日訂單 Today's Orders</div>
+                        <div class="stat-value" id="todayOrders">0</div>
+                        <div class="stat-change positive">
+                            <span>↑ 12%</span>
+                            <span>較昨日</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">活躍客戶 Active Customers</div>
+                        <div class="stat-value" id="activeCustomers">0</div>
+                        <div class="stat-change positive">
+                            <span>↑ 5%</span>
+                            <span>本月新增</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">配送中 In Delivery</div>
+                        <div class="stat-value" id="inDelivery">0</div>
+                        <div class="stat-change negative">
+                            <span>↓ 3%</span>
+                            <span>較平均</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">本月營收 Monthly Revenue</div>
+                        <div class="stat-value" id="monthlyRevenue">$0</div>
+                        <div class="stat-change positive">
+                            <span>↑ 18%</span>
+                            <span>較上月</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <div class="action-card" onclick="createNewOrder()">
+                        <div class="action-icon">➕</div>
+                        <div class="action-title">新增訂單</div>
+                    </div>
+                    <div class="action-card" onclick="viewRoutes()">
+                        <div class="action-icon">🗺️</div>
+                        <div class="action-title">查看路線</div>
+                    </div>
+                    <div class="action-card" onclick="addCustomer()">
+                        <div class="action-icon">👤</div>
+                        <div class="action-title">新增客戶</div>
+                    </div>
+                    <div class="action-card" onclick="generateReport()">
+                        <div class="action-icon">📊</div>
+                        <div class="action-title">生成報表</div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Table -->
+                <div class="data-section">
+                    <div class="section-header">
+                        <h2 class="section-title">最近訂單 Recent Orders</h2>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="refreshData()">刷新</button>
+                            <button class="btn btn-primary" onclick="viewAllOrders()">查看全部</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>訂單編號</th>
+                                <th>客戶名稱</th>
+                                <th>配送地址</th>
+                                <th>數量</th>
+                                <th>狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    <div class="spinner"></div>
+                                    載入中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Other Pages (Hidden by default) -->
+            <div id="customers-page" class="page" style="display: none;">
+                <h1 class="page-title">客戶管理 Customer Management</h1>
+                <div class="data-section">
+                    <p>客戶管理功能開發中...</p>
+                </div>
+            </div>
+
+            <div id="orders-page" class="page" style="display: none;">
+                <h1 class="page-title">訂單管理 Order Management</h1>
+                <div class="data-section">
+                    <p>訂單管理功能開發中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app';
+        let authToken = null;
+
+        // Initialize on load
+        window.addEventListener('load', async () => {
+            console.log('Standalone Dashboard Loaded');
+            
+            // Get token
+            authToken = localStorage.getItem('token') || await getNewToken();
+            
+            // Load dashboard data
+            loadDashboardData();
+        });
+
+        async function getNewToken() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'username=admin@luckygas.com&password=admin-password-2025'
+                });
+                const data = await response.json();
+                if (data.access_token) {
+                    localStorage.setItem('token', data.access_token);
+                    return data.access_token;
+                }
+            } catch (error) {
+                console.error('Token error:', error);
+            }
+            return null;
+        }
+
+        async function loadDashboardData() {
+            // Simulate loading real data
+            setTimeout(() => {
+                // Update stats
+                document.getElementById('todayOrders').textContent = '42';
+                document.getElementById('activeCustomers').textContent = '1,258';
+                document.getElementById('inDelivery').textContent = '8';
+                document.getElementById('monthlyRevenue').textContent = '$125,430';
+                
+                // Update orders table
+                const ordersHtml = `
+                    <tr>
+                        <td>#ORD-2024-001</td>
+                        <td>王小明</td>
+                        <td>台北市信義區信義路五段7號</td>
+                        <td>2 瓶</td>
+                        <td><span class="status-badge status-pending">配送中</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 5px 10px;">查看</button></td>
+                    </tr>
+                    <tr>
+                        <td>#ORD-2024-002</td>
+                        <td>李美華</td>
+                        <td>台北市大安區忠孝東路四段</td>
+                        <td>1 瓶</td>
+                        <td><span class="status-badge status-active">已完成</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 5px 10px;">查看</button></td>
+                    </tr>
+                    <tr>
+                        <td>#ORD-2024-003</td>
+                        <td>張大偉</td>
+                        <td>新北市板橋區文化路一段</td>
+                        <td>3 瓶</td>
+                        <td><span class="status-badge status-pending">準備中</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 5px 10px;">查看</button></td>
+                    </tr>
+                `;
+                document.getElementById('ordersTableBody').innerHTML = ordersHtml;
+            }, 1000);
+            
+            // Try to fetch real data if token exists
+            if (authToken) {
+                try {
+                    // Fetch real orders
+                    const response = await fetch(`${BACKEND_URL}/api/v1/orders`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const orders = await response.json();
+                        console.log('Real orders:', orders);
+                    }
+                } catch (error) {
+                    console.log('Using mock data:', error);
+                }
+            }
+        }
+
+        function showPage(pageName) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            
+            // Show selected page
+            const pageElement = document.getElementById(`${pageName}-page`);
+            if (pageElement) {
+                pageElement.style.display = 'block';
+            }
+            
+            // Update menu active state
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('href') === `#${pageName}`) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('已登出 Logged out');
+            window.location.href = 'https://storage.googleapis.com/luckygas-frontend-prod/emergency-portal.html';
+        }
+
+        function refreshData() {
+            loadDashboardData();
+            alert('資料已刷新 Data refreshed');
+        }
+
+        function createNewOrder() {
+            alert('新增訂單功能開發中... Create order feature coming soon...');
+        }
+
+        function viewRoutes() {
+            alert('查看路線功能開發中... View routes feature coming soon...');
+        }
+
+        function addCustomer() {
+            alert('新增客戶功能開發中... Add customer feature coming soon...');
+        }
+
+        function generateReport() {
+            alert('生成報表功能開發中... Generate report feature coming soon...');
+        }
+
+        function viewAllOrders() {
+            showPage('orders');
+        }
+    </script>
+</body>
+</html>

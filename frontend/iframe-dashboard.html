@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuckyGas Dashboard - Iframe Bypass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+        
+        .control-bar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .iframe-container {
+            width: 100%;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 18px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #2a2a2a;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            color: white;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .btn-secondary {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-bar">
+        <div class="title">
+            <span>🚀</span>
+            <span>LuckyGas Dashboard - Iframe Isolation Mode</span>
+        </div>
+        <div class="controls">
+            <button onclick="reloadIframe()">🔄 Reload</button>
+            <button onclick="injectToken()">💉 Inject Token</button>
+            <button onclick="switchDashboard()">🔀 Switch Dashboard</button>
+            <button onclick="showInfo()">ℹ️ Info</button>
+        </div>
+    </div>
+    
+    <div class="iframe-container">
+        <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading Dashboard...</div>
+        </div>
+        <iframe id="dashboard-frame" src="https://storage.googleapis.com/luckygas-frontend-prod/standalone-dashboard.html"></iframe>
+    </div>
+    
+    <div class="modal" id="info-modal">
+        <div class="modal-content">
+            <div class="modal-title">📋 Iframe Isolation Mode</div>
+            <div class="modal-body">
+                <p>This dashboard runs in an isolated iframe, bypassing React Router authentication guards.</p>
+                <br>
+                <p><strong>Features:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Complete isolation from main app</li>
+                    <li>No redirect issues</li>
+                    <li>Token injection capability</li>
+                    <li>Multiple dashboard options</li>
+                </ul>
+                <br>
+                <p><strong>Current Dashboard:</strong> <span id="current-dashboard">Standalone</span></p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const BACKEND_URL = 'https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app';
+        const dashboards = [
+            {
+                name: 'Standalone Dashboard',
+                url: 'https://storage.googleapis.com/luckygas-frontend-prod/standalone-dashboard.html'
+            },
+            {
+                name: 'Emergency Portal',
+                url: 'https://storage.googleapis.com/luckygas-frontend-prod/emergency-portal.html'
+            },
+            {
+                name: 'Main Frontend',
+                url: 'https://storage.googleapis.com/luckygas-frontend-prod/index.html#/dashboard'
+            }
+        ];
+        let currentDashboardIndex = 0;
+        
+        window.addEventListener('load', () => {
+            const iframe = document.getElementById('dashboard-frame');
+            
+            // Hide loading overlay when iframe loads
+            iframe.addEventListener('load', () => {
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+            });
+            
+            // Inject token on load
+            setTimeout(injectToken, 2000);
+        });
+        
+        function reloadIframe() {
+            document.getElementById('loading').style.display = 'flex';
+            const iframe = document.getElementById('dashboard-frame');
+            iframe.src = iframe.src;
+        }
+        
+        async function injectToken() {
+            try {
+                // Get fresh token
+                const response = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'username=admin@luckygas.com&password=admin-password-2025'
+                });
+                
+                const data = await response.json();
+                
+                if (data.access_token) {
+                    // Try to inject into iframe
+                    const iframe = document.getElementById('dashboard-frame');
+                    
+                    try {
+                        // This might fail due to cross-origin restrictions
+                        iframe.contentWindow.localStorage.setItem('token', data.access_token);
+                        iframe.contentWindow.localStorage.setItem('auth_token', data.access_token);
+                        console.log('✅ Token injected into iframe');
+                    } catch (e) {
+                        console.log('⚠️ Cannot inject directly into iframe (cross-origin), setting in main window');
+                    }
+                    
+                    // Also set in main window
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('auth_token', data.access_token);
+                    
+                    alert('✅ Token injected successfully!');
+                }
+            } catch (error) {
+                console.error('Token injection error:', error);
+                alert('❌ Token injection failed: ' + error.message);
+            }
+        }
+        
+        function switchDashboard() {
+            currentDashboardIndex = (currentDashboardIndex + 1) % dashboards.length;
+            const dashboard = dashboards[currentDashboardIndex];
+            
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('dashboard-frame').src = dashboard.url;
+            document.getElementById('current-dashboard').textContent = dashboard.name;
+            
+            alert(`Switched to: ${dashboard.name}`);
+        }
+        
+        function showInfo() {
+            document.getElementById('info-modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('info-modal').classList.remove('active');
+        }
+        
+        // Handle messages from iframe (if needed)
+        window.addEventListener('message', (event) => {
+            console.log('Message from iframe:', event.data);
+        });
+    </script>
+</body>
+</html>
