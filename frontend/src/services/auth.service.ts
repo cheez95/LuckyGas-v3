@@ -10,13 +10,17 @@ export const authService = {
     formData.append('password', credentials.password);
     
     console.log('🔐 Sending login request...');
-    const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login/', formData, {
+    const startTime = performance.now();
+    
+    const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login', formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
+      timeout: 10000, // 10 second timeout for login
     });
     
-    console.log('🔐 Login response:', response.data);
+    const loginTime = performance.now() - startTime;
+    console.log(`🔐 Login response received in ${loginTime.toFixed(0)}ms`, response.data);
     
     // Store tokens
     const { access_token, refresh_token, token_type } = response.data;
@@ -35,7 +39,13 @@ export const authService = {
     
     // Fetch user data after successful login
     console.log('🔐 Fetching current user...');
+    const userStartTime = performance.now();
     const user = await this.getCurrentUser();
+    const userTime = performance.now() - userStartTime;
+    console.log(`🔐 User data fetched in ${userTime.toFixed(0)}ms`);
+    
+    const totalTime = performance.now() - startTime;
+    console.log(`✅ Login complete in ${totalTime.toFixed(0)}ms (login: ${loginTime.toFixed(0)}ms, user: ${userTime.toFixed(0)}ms)`);
     
     // Return combined response
     return {
@@ -58,23 +68,23 @@ export const authService = {
   
   
   async getCurrentUser(): Promise<User> {
-    const response = await api.get<User>('/auth/me/');
+    const response = await api.get<User>('/auth/me');
     return response.data;
   },
   
   async requestPasswordReset(email: string): Promise<void> {
-    await api.post('/auth/forgot-password/', { email });
+    await api.post('/auth/forgot-password', { email });
   },
   
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    await api.post('/auth/reset-password/', {
+    await api.post('/auth/reset-password', {
       token,
       new_password: newPassword,
     });
   },
   
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    await api.post('/auth/change-password/', {
+    await api.post('/auth/change-password', {
       current_password: currentPassword,
       new_password: newPassword,
     });
@@ -82,7 +92,7 @@ export const authService = {
   
   async refreshToken(refreshToken: string): Promise<TokenRefreshResponse> {
     const response = await api.post<TokenRefreshResponse & { token_type: string }>(
-      '/auth/refresh/',
+      '/auth/refresh',
       { refresh_token: refreshToken }
     );
     

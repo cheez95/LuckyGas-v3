@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 from contextlib import asynccontextmanager
 
@@ -8,6 +10,12 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# Log startup information immediately
+print(f"[STARTUP] LuckyGas Backend starting...", file=sys.stderr)
+print(f"[STARTUP] Python version: {sys.version}", file=sys.stderr)
+print(f"[STARTUP] PORT env: {os.environ.get('PORT', 'not set')}", file=sys.stderr)
+print(f"[STARTUP] ENVIRONMENT: {os.environ.get('ENVIRONMENT', 'not set')}", file=sys.stderr)
 
 from app.api.v1 import (
     analytics,
@@ -180,6 +188,20 @@ if settings.is_development():
     # Additional development origins
     cors_origins.extend(["http://localhost:*", "http://127.0.0.1:*"])
 
+# CRITICAL: Ensure cors_origins is never empty to prevent FastAPI from defaulting to "*"
+# When allow_origins is empty, FastAPI CORSMiddleware defaults to allowing all origins with "*"
+# which breaks when allow_credentials=True
+if not cors_origins:
+    logger.warning("CORS origins list is empty, using default production origins")
+    cors_origins = [
+        "https://storage.googleapis.com",
+        "https://luckygas-frontend-prod.storage.googleapis.com",
+        "https://app.luckygas.tw",
+        "https://www.luckygas.tw"
+    ]
+
+logger.info(f"CORS origins configured: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
@@ -236,9 +258,10 @@ app.add_middleware(MetricsMiddleware)
 #         return await app.state.performance_middleware(request, call_next)
 #     return await call_next(request)
 
-# Add HTTPS redirect middleware for production
-if settings.ENVIRONMENT.value == "production":
-    app.add_middleware(HTTPSRedirectMiddleware)
+# Don't add HTTPS redirect middleware on Cloud Run
+# Cloud Run already handles HTTPS termination, so this would cause redirect loops
+# if settings.ENVIRONMENT.value == "production":
+#     app.add_middleware(HTTPSRedirectMiddleware)
 
 
 # Add timing middleware

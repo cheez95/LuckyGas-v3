@@ -16,7 +16,13 @@ declare module 'axios' {
   }
 }
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+// Check for runtime override first, then fall back to environment variable
+const API_URL = (window as any).LUCKY_GAS_BACKEND_URL || 
+                (window as any).API_URL || 
+                import.meta.env.VITE_API_URL || 
+                'https://luckygas-backend-full-154687573210.asia-east1.run.app';
+
+console.log('🔧 API URL configured as:', API_URL);
 
 // Create axios instance
 const api: AxiosInstance = axios.create({

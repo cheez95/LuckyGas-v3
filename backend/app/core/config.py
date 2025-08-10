@@ -266,8 +266,19 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8000",
         # Production domains
+        "https://storage.googleapis.com",  # Google Cloud Storage hosting
+        "https://luckygas-frontend-prod.storage.googleapis.com",
         "https://app.luckygas.tw",
         "https://www.luckygas.tw",
+        # Cloud Storage URLs - FIXED to include all possible origins
+        "https://storage.googleapis.com",
+        "https://storage.cloud.google.com",
+        "https://luckygas-frontend-prod.storage.googleapis.com",
+        "https://storage.googleapis.com/luckygas-frontend-prod",
+        # Cloud Run URLs
+        "https://luckygas-backend-154687573210.asia-east1.run.app",
+        "https://luckygas-backend-staging-154687573210.asia-east1.run.app",
+        "https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app",
     ]
 
     def get_all_cors_origins(self) -> List[str]:

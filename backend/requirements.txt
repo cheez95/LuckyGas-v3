@@ -444,6 +444,8 @@ shapely==2.1.1
     # via google-cloud-aiplatform
 simple-websocket==1.1.0
     # via python-engineio
+slowapi==0.1.9
+    # via backend (rate limiting)
 six==1.17.0
     # via
     #   ecdsa
