@@ -116,6 +116,9 @@ examples/
 demos/
 samples/
 
+# Client data and sensitive information
+raw/
+
 # Legacy system analysis artifacts
 scripts/
 **/page_*.html
