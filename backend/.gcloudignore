@@ -1,0 +1,28 @@
+# Ignore everything except essential files
+*
+!app/
+!app/**
+!test_server.py
+!requirements.txt
+!requirements-security.txt
+!Dockerfile
+!Dockerfile.cloudrun
+!Dockerfile.test
+!Dockerfile.step4
+!start_cloudrun.py
+!minimal_step4_crud.py
+
+# But still ignore Python cache files
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.coverage
+*.log
+.git/
+.venv/
+venv/
+env/

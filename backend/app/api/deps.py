@@ -6,7 +6,7 @@ from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import async_session_maker
+from app.core import database
 from app.core.security import decode_access_token
 from app.models.user import User as UserModel
 from app.schemas.user import TokenData
@@ -15,7 +15,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api / v1 / auth / login")
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
+    if database.async_session_maker is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database not initialized"
+        )
+    async with database.async_session_maker() as session:
         yield session
 
 

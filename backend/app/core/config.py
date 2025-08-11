@@ -275,6 +275,9 @@ class Settings(BaseSettings):
         "https://storage.cloud.google.com",
         "https://luckygas-frontend-prod.storage.googleapis.com",
         "https://storage.googleapis.com/luckygas-frontend-prod",
+        # Staging frontend URLs
+        "https://storage.googleapis.com/luckygas-frontend-staging-2025",
+        "https://luckygas-frontend-staging-2025.storage.googleapis.com",
         # Cloud Run URLs
         "https://luckygas-backend-154687573210.asia-east1.run.app",
         "https://luckygas-backend-staging-154687573210.asia-east1.run.app",

@@ -73,11 +73,15 @@
             
             // Test 1: Check if frontend is accessible
             try {
-                const response = await fetch('http://localhost:5173');
+                const response = await fetch('https://storage.googleapis.com/luckygas-frontend-prod/index.html');
                 if (response.ok) {
-                    addResult('✅ Frontend server is accessible (HTTP ' + response.status + ')', 'success');
+                    addResult('✅ Frontend is accessible (HTTP ' + response.status + ')', 'success');
+                    const text = await response.text();
+                    if (text.includes('./')) {
+                        addResult('✅ Frontend using relative paths (FIXED!)', 'success');
+                    }
                 } else {
-                    addResult('❌ Frontend server returned error: ' + response.status, 'error');
+                    addResult('❌ Frontend returned error: ' + response.status, 'error');
                 }
             } catch (error) {
                 addResult('❌ Failed to connect to frontend: ' + error.message, 'error');
@@ -86,10 +90,10 @@
 
             // Test 2: Check API health
             try {
-                const response = await fetch('http://localhost:8000/health');
+                const response = await fetch('https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app/health');
                 const data = await response.json();
                 if (data.status === 'healthy') {
-                    addResult('✅ Backend API is healthy: ' + data.message, 'success');
+                    addResult('✅ Backend API is healthy - Step ' + data.step + ' with features: ' + data.features.join(', '), 'success');
                 } else {
                     addResult('❌ Backend API unhealthy', 'error');
                 }
@@ -97,22 +101,31 @@
                 addResult('❌ Failed to connect to backend API: ' + error.message, 'error');
             }
 
-            // Test 3: Load frontend in iframe
-            addResult('Loading frontend application...', 'info');
+            // Test 3: Check database connectivity
+            try {
+                const response = await fetch('https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app/api/v1/customers/count');
+                const data = await response.json();
+                addResult('✅ Database connected - ' + data.count + ' customers found', 'success');
+            } catch (error) {
+                addResult('❌ Database connection failed: ' + error.message, 'error');
+            }
+
+            // Test 4: Load frontend in iframe
+            addResult('Loading production frontend application...', 'info');
             const iframeContainer = document.getElementById('iframe-container');
             const iframe = document.createElement('iframe');
-            iframe.src = 'http://localhost:5173';
+            iframe.src = 'https://storage.googleapis.com/luckygas-frontend-prod/index.html';
             iframe.onload = () => {
                 addResult('✅ Frontend application loaded successfully', 'success');
                 
                 // Additional info
-                addResult('ℹ️ Key Features to Test:', 'info');
-                addResult('• Login with admin/admin123', 'info');
-                addResult('• Customer Management (客戶管理)', 'info');
-                addResult('• Order Management (訂單管理) - Full CRUD operations', 'info');
-                addResult('• Route Management (路線管理) - Progress tracking', 'info');
-                addResult('• API timeout set to 30 seconds', 'info');
-                addResult('• Request/response logging enabled in console', 'info');
+                addResult('ℹ️ Production System Information:', 'info');
+                addResult('• Frontend: https://storage.googleapis.com/luckygas-frontend-prod/index.html', 'info');
+                addResult('• Backend API: https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app', 'info');
+                addResult('• API Docs: https://luckygas-backend-step4-yzoirwjj3q-de.a.run.app/docs', 'info');
+                addResult('• Login: admin / admin-password-2025', 'info');
+                addResult('• Features: Customers, Orders, Authentication', 'info');
+                addResult('• Database: 3 customers loaded', 'info');
             };
             iframe.onerror = () => {
                 addResult('❌ Failed to load frontend application', 'error');

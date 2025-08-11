@@ -153,7 +153,11 @@
       "Bash(gh pr edit:*)",
       "Bash(gh pr:*)",
       "WebFetch(domain:github.com)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(echo:*)",
+      "Bash(git remote get-url:*)",
+      "mcp__playwright__browser_tab_select",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }

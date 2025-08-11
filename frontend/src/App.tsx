@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ConfigProvider, Spin } from 'antd';
 import zhTW from 'antd/locale/zh_TW';
 import dayjs from 'dayjs';
@@ -37,7 +37,7 @@ const Login = lazy(() => import('./components/Login'));
 const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
 const ResetPassword = lazy(() => import('./components/ResetPassword'));
 const MainLayout = lazy(() => import('./components/MainLayout'));
-const Dashboard = lazy(() => import('./components/dashboard/Dashboard'));
+const Dashboard = lazy(() => import('./components/dashboard/DashboardOptimized'));
 const CustomerManagement = lazy(() => import('./pages/office/CustomerManagement'));
 const OrderManagement = lazy(() => import('./pages/office/OrderManagement'));
 const RoutePlanning = lazy(() => import('./pages/dispatch/RoutePlanning'));
@@ -95,6 +95,46 @@ const NavigationSetup: React.FC<{ children: React.ReactNode }> = ({ children }) 
 };
 
 const App: React.FC = () => {
+  // Prevent infinite reload loops
+  useEffect(() => {
+    const reloadKey = 'last_reload_time';
+    const maxReloadsKey = 'reload_count';
+    const now = Date.now();
+    const lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0');
+    const reloadCount = parseInt(sessionStorage.getItem(maxReloadsKey) || '0');
+    
+    // If last reload was less than 3 seconds ago, increment counter
+    if (now - lastReload < 3000) {
+      const newCount = reloadCount + 1;
+      sessionStorage.setItem(maxReloadsKey, newCount.toString());
+      
+      // If we've reloaded more than 3 times in quick succession, stop
+      if (newCount > 3) {
+        console.error('🚨 Reload loop detected! Breaking the cycle.');
+        sessionStorage.removeItem(reloadKey);
+        sessionStorage.removeItem(maxReloadsKey);
+        // Clear any problematic auth state
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('token_expiry');
+        return;
+      }
+    } else {
+      // Reset counter if enough time has passed
+      sessionStorage.setItem(maxReloadsKey, '1');
+    }
+    
+    sessionStorage.setItem(reloadKey, now.toString());
+    
+    // Clear reload tracking after 10 seconds
+    const cleanup = setTimeout(() => {
+      sessionStorage.removeItem(reloadKey);
+      sessionStorage.removeItem(maxReloadsKey);
+    }, 10000);
+    
+    return () => clearTimeout(cleanup);
+  }, []);
+
   return (
     <ConfigProvider
       locale={zhTW}

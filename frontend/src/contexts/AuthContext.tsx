@@ -144,6 +144,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
+  // Listen for auth:logout events from API interceptor
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      console.log('Auth logout event received, clearing auth state');
+      setState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+      });
+      // Navigation will be handled by ProtectedRoute
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => {
+      window.removeEventListener('auth:logout', handleAuthLogout);
+    };
+  }, []);
+
   const value: AuthContextType = {
     ...state,
     login,

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#1890ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>幸福氣配送管理系統</title>
+    <script type="module" crossorigin src="./js/index-BVdISwaH.js"></script>
+    <link rel="modulepreload" crossorigin href="./js/vendor-react-chunk-C4HdTL9-.js">
+    <link rel="modulepreload" crossorigin href="./js/feature-maps-chunk-BnALqbV3.js">
+    <link rel="modulepreload" crossorigin href="./js/vendor-ui-chunk-nSkU6lAS.js">
+    <link rel="modulepreload" crossorigin href="./js/vendor-utils-chunk-Dq7h7Pqt.js">
+    <link rel="modulepreload" crossorigin href="./js/vendor-charts-chunk-C8lj-Z-Q.js">
+    <link rel="stylesheet" crossorigin href="./css/index-Cn_Srv4O.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(registration => console.log('ServiceWorker registered:', registration))
+            .catch(error => console.log('ServiceWorker registration failed:', error));
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -23,6 +23,7 @@ from app.api.v1 import (
     auth,
     communications,
     customers,
+    dashboard,
     delivery_history,
     driver,
     health,
@@ -324,6 +325,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
+app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["dashboard"])
 app.include_router(customers.router, prefix="/api/v1/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
 app.include_router(

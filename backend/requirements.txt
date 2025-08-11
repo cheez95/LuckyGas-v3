@@ -278,7 +278,7 @@ pandas==2.3.1
     #   ortools
 paramiko==3.5.1
     # via backend (pyproject.toml)
-passlib==1.7.4
+passlib[bcrypt]==1.7.4
     # via backend (pyproject.toml)
 pillow==11.3.0
     # via backend (pyproject.toml)

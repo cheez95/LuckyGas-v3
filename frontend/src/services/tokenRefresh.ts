@@ -65,7 +65,15 @@ export const tokenRefreshService = {
   
   getTimeUntilExpiry(): number {
     const expiryTime = localStorage.getItem('token_expiry');
-    if (!expiryTime) return 0;
+    if (!expiryTime) {
+      // If no expiry time but token exists, assume it's valid for 2 hours
+      const hasToken = localStorage.getItem('access_token');
+      if (hasToken) {
+        // Return a safe default (1 hour remaining)
+        return 60 * 60 * 1000;
+      }
+      return 0;
+    }
     
     const now = new Date().getTime();
     const expiry = parseInt(expiryTime);

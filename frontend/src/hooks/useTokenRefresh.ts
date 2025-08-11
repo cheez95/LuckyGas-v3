@@ -14,8 +14,21 @@ export const useTokenRefresh = () => {
     
     const timeUntilExpiry = tokenRefreshService.getTimeUntilExpiry();
     
-    if (timeUntilExpiry <= 0) {
-      // Token already expired
+    // If token_expiry is not set but access_token exists, set a default expiry
+    const hasToken = localStorage.getItem('access_token');
+    const hasExpiry = localStorage.getItem('token_expiry');
+    
+    if (hasToken && !hasExpiry) {
+      // Set default expiry to 2 hours from now
+      const defaultExpiry = new Date().getTime() + (2 * 60 * 60 * 1000);
+      localStorage.setItem('token_expiry', defaultExpiry.toString());
+      // Recalculate time until expiry
+      scheduleTokenRefresh();
+      return;
+    }
+    
+    if (timeUntilExpiry <= 0 && hasExpiry) {
+      // Token already expired (only if expiry was actually set)
       logout();
       return;
     }

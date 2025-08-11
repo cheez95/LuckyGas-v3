@@ -20,7 +20,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/dashboard / summary")
+@router.get("/dashboard/summary")
 @rate_limit(requests_per_minute=30)
 @handle_api_errors({
     ValueError: "無效的日期參數",
@@ -103,7 +103,7 @@ async def get_dashboard_summary(
     return success_response(data=dashboard_data, message="儀表板摘要獲取成功")
 
 
-@router.get("/fuel - savings / weekly")
+@router.get("/fuel-savings/weekly")
 @rate_limit(requests_per_minute=20)
 @handle_api_errors({
     ValueError: "無效的日期參數",
@@ -150,7 +150,7 @@ async def get_weekly_fuel_savings(
     return success_response(data=fuel_savings_data, message="週燃料節省資料獲取成功")
 
 
-@router.get("/drivers / top - performers")
+@router.get("/drivers/top-performers")
 @rate_limit(requests_per_minute=20)
 @handle_api_errors({
     ValueError: "無效的驅駛員參數",

@@ -1,80 +1,26 @@
-# Multi-stage production Dockerfile for LuckyGas Backend
-# Optimized for minimal size and security
+# Production Dockerfile for LuckyGas Backend
+FROM python:3.11-slim
 
-# Stage 1: Python dependencies
-FROM python:3.11-slim AS python-deps
-
-WORKDIR /tmp
-
-# Install system dependencies for compilation
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    python3-dev \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv for faster dependency management
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-# Copy requirements
-COPY requirements.txt .
-COPY pyproject.toml .
-
-# Install Python dependencies
-RUN uv pip install --system --no-cache -r requirements.txt
-
-# Stage 2: Runtime
-FROM python:3.11-slim AS runtime
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=8080 \
-    ENVIRONMENT=production
-
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Create app directory
 WORKDIR /app
 
-# Copy Python packages from deps stage
-COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=python-deps /usr/local/bin /usr/local/bin
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy application code
-COPY --chown=appuser:appuser . .
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Create necessary directories
-RUN mkdir -p /app/logs /app/uploads && \
-    chown -R appuser:appuser /app/logs /app/uploads
+# Copy application code only
+COPY app/ ./app/
 
-# Switch to non-root user
-USER appuser
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
+# Cloud Run sets the PORT environment variable
+EXPOSE 8080
 
-# Expose port
-EXPOSE ${PORT}
-
-# Start command with optimal worker configuration
-CMD exec gunicorn app.main:app \
-    --bind 0.0.0.0:${PORT} \
-    --workers 4 \
-    --worker-class uvicorn.workers.UvicornWorker \
-    --timeout 120 \
-    --keep-alive 5 \
-    --max-requests 1000 \
-    --max-requests-jitter 50 \
-    --access-logfile - \
-    --error-logfile - \
-    --log-level info
+# Run the application on the port specified by Cloud Run
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}

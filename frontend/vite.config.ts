@@ -5,6 +5,8 @@ import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Use relative paths for Cloud Storage deployment
+  base: './',
   plugins: [
     react(),
     // Bundle size analysis

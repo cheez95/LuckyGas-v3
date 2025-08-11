@@ -1,0 +1,35 @@
+# Ignore everything except backend
+*
+!backend/
+!backend/**
+
+# But still ignore common unnecessary files in backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.Python
+backend/env/
+backend/venv/
+backend/.venv/
+backend/pip-log.txt
+backend/pip-delete-this-directory.txt
+backend/.tox/
+backend/.coverage
+backend/.coverage.*
+backend/.cache
+backend/nosetests.xml
+backend/coverage.xml
+backend/*.cover
+backend/*.log
+backend/.git
+backend/.mypy_cache
+backend/.pytest_cache
+backend/.hypothesis
+backend/.DS_Store
+backend/node_modules/
+backend/dist/
+backend/build/
