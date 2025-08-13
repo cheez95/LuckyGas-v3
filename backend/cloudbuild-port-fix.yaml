@@ -1,0 +1,44 @@
+steps:
+  # Build the container image with the PORT fix
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/luckygas-backend-port-fix:latest', '-f', 'Dockerfile', '.']
+  
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/luckygas-backend-port-fix:latest']
+  
+  # Deploy to Cloud Run with proper environment variables
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'luckygas-backend-production'
+      - '--image'
+      - 'asia-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/luckygas-backend-port-fix:latest'
+      - '--region'
+      - 'asia-east1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--timeout'
+      - '300'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '2'
+      - '--min-instances'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=production,DATABASE_URL=postgresql+asyncpg://luckygas:staging-password-2025@35.194.143.37/luckygas,FIRST_SUPERUSER=admin@luckygas.com,FIRST_SUPERUSER_PASSWORD=admin-password-2025,SECRET_KEY=production-secret-key-very-long-and-secure-2025,LOG_LEVEL=INFO,USE_ASYNC_DB=true'
+      - '--update-annotations'
+      - 'run.googleapis.com/cpu-throttling=false'
+
+timeout: 1800s
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'

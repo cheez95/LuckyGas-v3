@@ -2,6 +2,7 @@
 *
 !app/
 !app/**
+!run.py
 !test_server.py
 !requirements.txt
 !requirements-security.txt
@@ -11,6 +12,9 @@
 !Dockerfile.step4
 !start_cloudrun.py
 !minimal_step4_crud.py
+!alembic.ini
+!alembic/
+!alembic/**
 
 # But still ignore Python cache files
 __pycache__/

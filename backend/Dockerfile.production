@@ -1,26 +1,69 @@
-# Production Dockerfile for LuckyGas Backend
-FROM python:3.11-slim
+# Lucky Gas Simplified Backend - Production Dockerfile
+# Multi-stage build for minimal image size
 
-WORKDIR /app
+# Stage 1: Builder
+FROM python:3.11-slim as builder
 
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Set working directory
+WORKDIR /app
 
-# Copy application code only
-COPY app/ ./app/
+# Copy requirements
+COPY requirements_simple.txt .
 
-# Set environment variables
+# Install Python dependencies to /root/.local
+RUN pip install --user --no-cache-dir -r requirements_simple.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python packages from builder
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
+
+# Copy application code
+COPY --chown=appuser:appuser app app/
+COPY --chown=appuser:appuser alembic alembic/
+COPY --chown=appuser:appuser alembic.ini .
+COPY --chown=appuser:appuser scripts scripts/
+
+# Create directories for logs and uploads
+RUN mkdir -p /app/logs /app/uploads && \
+    chown -R appuser:appuser /app/logs /app/uploads
+
+# Switch to non-root user
+USER appuser
+
+# Add Python packages to PATH
+ENV PATH=/home/appuser/.local/bin:$PATH
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
 
-# Cloud Run sets the PORT environment variable
+# Use production config
+ENV CONFIG_MODULE=app.core.config_production
+
+# Health check - uses curl for better reliability
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
+
+# Expose port (Cloud Run will override this with PORT env var)
 EXPOSE 8080
 
-# Run the application on the port specified by Cloud Run
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}
+# Start script that handles PORT environment variable
+CMD ["sh", "-c", "uvicorn app.main_simple:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1"]

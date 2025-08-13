@@ -1,4 +1,4 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ConfigProvider, Spin } from 'antd';
 import zhTW from 'antd/locale/zh_TW';
@@ -32,51 +32,56 @@ const PageLoader = () => (
   </div>
 );
 
-// Pages/Components - Lazy loaded
-const Login = lazy(() => import('./components/Login'));
-const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
-const ResetPassword = lazy(() => import('./components/ResetPassword'));
-const MainLayout = lazy(() => import('./components/MainLayout'));
-const Dashboard = lazy(() => import('./components/dashboard/DashboardOptimized'));
-const CustomerManagement = lazy(() => import('./pages/office/CustomerManagement'));
-const OrderManagement = lazy(() => import('./pages/office/OrderManagement'));
-const RoutePlanning = lazy(() => import('./pages/dispatch/RoutePlanning'));
-const DriverAssignment = lazy(() => import('./pages/dispatch/DriverAssignment'));
-const EmergencyDispatch = lazy(() => import('./pages/dispatch/EmergencyDispatch'));
-const DispatchDashboard = lazy(() => import('./pages/dispatch/DispatchDashboard'));
-const DeliveryHistory = lazy(() => import('./components/office/DeliveryHistory'));
-const UserProfile = lazy(() => import('./components/UserProfile'));
+// Import lazy loading wrapper
+import { lazyLoadComponent, lazyLoadWithRetry } from './components/common/LazyLoadComponent';
+
+// Pages/Components - Lazy loaded with error boundaries and retry
+const Login = lazyLoadComponent(() => import('./components/Login'));
+const ForgotPassword = lazyLoadComponent(() => import('./components/ForgotPassword'));
+const ResetPassword = lazyLoadComponent(() => import('./components/ResetPassword'));
+const MainLayout = lazyLoadComponent(() => import('./components/MainLayout'));
+const Dashboard = lazyLoadComponent(
+  lazyLoadWithRetry(() => import('./components/dashboard/DashboardWorking'), 3, 1000)
+);
+const CustomerManagement = lazyLoadComponent(() => import('./pages/office/CustomerManagement'));
+const OrderManagement = lazyLoadComponent(() => import('./pages/office/OrderManagement'));
+const RoutePlanning = lazyLoadComponent(() => import('./pages/dispatch/RoutePlanning'));
+const DriverAssignment = lazyLoadComponent(() => import('./pages/dispatch/DriverAssignment'));
+const EmergencyDispatch = lazyLoadComponent(() => import('./pages/dispatch/EmergencyDispatch'));
+const DispatchDashboard = lazyLoadComponent(() => import('./pages/dispatch/DispatchDashboard'));
+const DeliveryHistory = lazyLoadComponent(() => import('./components/office/DeliveryHistory'));
+const UserProfile = lazyLoadComponent(() => import('./components/UserProfile'));
 
 // Driver Pages - Lazy loaded
-const DriverDashboard = lazy(() => import('./pages/driver/DriverDashboard'));
-const RouteDetails = lazy(() => import('./pages/driver/RouteDetails'));
-const DeliveryView = lazy(() => import('./pages/driver/DeliveryView'));
-const DriverNavigation = lazy(() => import('./pages/driver/DriverNavigation'));
-const DeliveryScanner = lazy(() => import('./pages/driver/DeliveryScanner'));
+const DriverDashboard = lazyLoadComponent(() => import('./pages/driver/DriverDashboard'));
+const RouteDetails = lazyLoadComponent(() => import('./pages/driver/RouteDetails'));
+const DeliveryView = lazyLoadComponent(() => import('./pages/driver/DeliveryView'));
+const DriverNavigation = lazyLoadComponent(() => import('./pages/driver/DriverNavigation'));
+const DeliveryScanner = lazyLoadComponent(() => import('./pages/driver/DeliveryScanner'));
 
 // Customer Pages - Lazy loaded
-const CustomerPortal = lazy(() => import('./pages/customer/CustomerPortal'));
-const OrderTracking = lazy(() => import('./pages/customer/OrderTracking'));
+const CustomerPortal = lazyLoadComponent(() => import('./pages/customer/CustomerPortal'));
+const OrderTracking = lazyLoadComponent(() => import('./pages/customer/OrderTracking'));
 
 // Analytics Pages - Lazy loaded with prefetch
-const ReportingDashboard = lazy(() => 
+const ReportingDashboard = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/analytics/ReportingDashboard')
 );
-const AnalyticsPage = lazy(() => 
+const AnalyticsPage = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/AnalyticsPage')
 );
 
 // Admin Pages - Lazy loaded with prefetch for frequent users
-const ExecutiveDashboard = lazy(() => 
+const ExecutiveDashboard = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/admin/ExecutiveDashboard')
 );
-const OperationsDashboard = lazy(() => 
+const OperationsDashboard = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/admin/OperationsDashboard')
 );
-const FinancialDashboard = lazy(() => 
+const FinancialDashboard = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/admin/FinancialDashboard')
 );
-const PerformanceAnalytics = lazy(() => 
+const PerformanceAnalytics = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/admin/PerformanceAnalytics')
 );
 

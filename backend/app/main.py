@@ -27,6 +27,7 @@ from app.api.v1 import (
     delivery_history,
     driver,
     health,
+    health_debug,
     maps_proxy,
     monitoring,
     notifications,
@@ -370,6 +371,7 @@ app.include_router(notifications.router, prefix="/api/v1", tags=["notifications"
 app.include_router(sms.router, prefix="/api/v1", tags=["sms"])
 # Removed sms_webhooks during compaction
 app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
+app.include_router(health_debug.router, prefix="/api/v1", tags=["health"])
 app.include_router(monitoring.router, prefix="/api/v1", tags=["monitoring"])
 # app.include_router(migration.router, prefix="/api/v1", tags=["admin", "migration"])  # Temporarily disabled
 # Removed sync_operations during compaction

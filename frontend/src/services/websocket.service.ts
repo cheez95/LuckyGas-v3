@@ -58,9 +58,16 @@ class WebSocketService extends EventEmitter {
 
   constructor() {
     super();
+    // Determine the WebSocket URL based on environment
+    const isProduction = import.meta.env.PROD;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Use the same host as the current window location for WebSocket
-    const host = window.location.host;
+    
+    // In development, connect to backend on port 8000
+    // In production, use the same host (assuming backend is on same domain)
+    const host = isProduction 
+      ? window.location.host 
+      : 'localhost:8000';
+    
     // Match the backend endpoint path
     this.url = `${protocol}//${host}/api/v1/websocket/ws`;
     console.log('🔌 WebSocket URL:', this.url);

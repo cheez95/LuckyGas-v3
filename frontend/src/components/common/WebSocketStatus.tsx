@@ -62,7 +62,7 @@ const WebSocketStatus: React.FC = () => {
         return {
           status: 'success' as const,
           icon: <WifiOutlined />,
-          text: '已連線',
+          text: '線上',
           color: '#52c41a',
         };
       case 'connecting':

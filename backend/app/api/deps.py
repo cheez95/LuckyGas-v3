@@ -1,4 +1,5 @@
 from typing import AsyncGenerator
+import logging
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,17 +12,50 @@ from app.core.security import decode_access_token
 from app.models.user import User as UserModel
 from app.schemas.user import TokenData
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api / v1 / auth / login")
+logger = logging.getLogger(__name__)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Get database session with proper error handling and initialization."""
+    
+    # Log the current state
+    logger.info(f"get_db called - async_session_maker is {'None' if database.async_session_maker is None else 'initialized'}")
+    logger.info(f"get_db called - engine is {'None' if database.engine is None else 'initialized'}")
+    
     if database.async_session_maker is None:
+        logger.warning("Database session maker is None, attempting to initialize...")
+        
+        # Try to initialize the database if it hasn't been initialized yet
+        try:
+            await database.initialize_database()
+            logger.info("Database initialization completed")
+        except Exception as e:
+            logger.error(f"Database initialization failed: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Database service unavailable: {str(e)}"
+            )
+    
+    # Double-check after initialization
+    if database.async_session_maker is None:
+        logger.error("Database session maker is still None after initialization attempt")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database not initialized"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service not available - initialization failed"
         )
-    async with database.async_session_maker() as session:
-        yield session
+    
+    try:
+        async with database.async_session_maker() as session:
+            # Test the session is working
+            await session.execute(select(1))
+            yield session
+    except Exception as e:
+        logger.error(f"Database session error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database connection error: {str(e)}"
+        )
 
 
 async def get_current_user(

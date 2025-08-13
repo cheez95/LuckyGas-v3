@@ -167,8 +167,10 @@ async def login_optimized(
         )
     
     # Single database query to get user with all needed fields
+    # Simply get the user without trying to eagerly load relationships
     result = await db.execute(
-        select(UserModel).where(UserModel.username == form_data.username)
+        select(UserModel)
+        .where(UserModel.username == form_data.username)
     )
     user = result.scalar_one_or_none()
     
@@ -216,6 +218,7 @@ async def login_optimized(
     await db.commit()
     
     # Return combined response with user data
+    # Only include fields that are directly on the User model, no relationships
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -224,15 +227,12 @@ async def login_optimized(
         "user": {
             "id": user.id,
             "username": user.username,
-            "email": user.email if user.email else "",
-            "full_name": user.full_name if user.full_name else "",
-            "role": user.role.value if hasattr(user, 'role') and user.role else "user",
-            "is_active": user.is_active if hasattr(user, 'is_active') else True,
-            "created_at": user.created_at.isoformat() if hasattr(user, 'created_at') and user.created_at else None,
-            "updated_at": user.updated_at.isoformat() if hasattr(user, 'updated_at') and user.updated_at else None,
-            "phone": getattr(user, 'phone', None),
-            "department": getattr(user, 'department', None),
-            "employee_id": getattr(user, 'employee_id', None),
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role.value if user.role else "user",
+            "is_active": user.is_active,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None,
         }
     }
 

@@ -19,9 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationBell from './common/NotificationBell';
-import OfflineIndicator from './common/OfflineIndicator';
 import WebSocketStatus from './common/WebSocketStatus';
-import { useOfflineSync } from '../hooks/useOfflineSync';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -34,7 +32,6 @@ const MainLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
-  const { isOnline, syncPending, syncing } = useOfflineSync();
   const screens = useBreakpoint();
 
   // Menu items based on user role
@@ -258,7 +255,6 @@ const MainLayout: React.FC = () => {
             )}
             <Space size={isMobile ? 'small' : 'large'}>
               <WebSocketStatus />
-              <OfflineIndicator isOnline={isOnline} pendingSync={syncPending} syncing={syncing} />
               {!isMobile && <NotificationBell />}
               {!isMobile ? (
                 <Dropdown overlay={userMenu} trigger={['click']}>

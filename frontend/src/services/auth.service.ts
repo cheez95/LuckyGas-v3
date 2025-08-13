@@ -13,15 +13,14 @@ export const authService = {
     const startTime = performance.now();
     
     try {
-      // Try the optimized endpoint first (returns both tokens and user data)
-      console.log('🚀 Trying optimized login endpoint...');
+      // Use the simplified backend login endpoint directly
+      console.log('🚀 Calling simplified backend login endpoint...');
       const response = await api.post<{
         access_token: string;
-        refresh_token: string;
+        refresh_token?: string;
         token_type: string;
-        expires_in: number;
-        user: User;
-      }>('/auth/login-optimized', formData, {
+        user?: User;
+      }>('/auth/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -29,78 +28,57 @@ export const authService = {
       });
       
       const loginTime = performance.now() - startTime;
-      console.log(`🚀 Optimized login response received in ${loginTime.toFixed(0)}ms`, response.data);
+      console.log(`🚀 Login response received in ${loginTime.toFixed(0)}ms`, response.data);
       
-      // Store tokens
-      const { access_token, refresh_token, token_type, user } = response.data;
-      console.log('🔐 Storing tokens...');
+      // Store tokens - simplified backend returns user in response
+      const { access_token, token_type, user } = response.data;
+      console.log('🔐 Storing access token...');
       localStorage.setItem('access_token', access_token);
-      localStorage.setItem('refresh_token', refresh_token);
       
-      // Store token expiry time (2 hours from now)
-      const expiryTime = new Date().getTime() + (2 * 60 * 60 * 1000); // 2 hours in milliseconds
+      // Note: Simplified backend doesn't use refresh tokens, so we'll skip that
+      // Store token expiry time (30 minutes from now as per backend settings)
+      const expiryTime = new Date().getTime() + (30 * 60 * 1000); // 30 minutes in milliseconds
       localStorage.setItem('token_expiry', expiryTime.toString());
       
-      console.log('🔐 Tokens stored, checking localStorage:', {
+      console.log('🔐 Token stored, checking localStorage:', {
         hasAccessToken: !!localStorage.getItem('access_token'),
-        hasRefreshToken: !!localStorage.getItem('refresh_token'),
       });
       
       const totalTime = performance.now() - startTime;
-      console.log(`✅ Optimized login complete in ${totalTime.toFixed(0)}ms (single API call)`);
+      console.log(`✅ Login complete in ${totalTime.toFixed(0)}ms`);
       
-      // Return combined response (user data already included)
-      return {
-        access_token,
-        refresh_token,
-        token_type,
-        user,
-      };
-    } catch (error: any) {
-      // If optimized endpoint doesn't exist (404), fall back to traditional flow
-      if (error?.response?.status === 404 || error?.response?.status === 405) {
-        console.log('⚠️ Optimized endpoint not available, falling back to traditional login flow...');
-        
-        // Use traditional login endpoint
-        const response = await api.post<{ access_token: string; refresh_token: string; token_type: string }>('/auth/login', formData, {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          timeout: 10000,
-        });
-        
-        const loginTime = performance.now() - startTime;
-        console.log(`🔐 Login response received in ${loginTime.toFixed(0)}ms`, response.data);
-        
-        // Store tokens
-        const { access_token, refresh_token, token_type } = response.data;
-        localStorage.setItem('access_token', access_token);
-        localStorage.setItem('refresh_token', refresh_token);
-        
-        // Store token expiry time
-        const expiryTime = new Date().getTime() + (2 * 60 * 60 * 1000);
-        localStorage.setItem('token_expiry', expiryTime.toString());
-        
-        // Fetch user data separately
-        console.log('🔐 Fetching current user...');
-        const userStartTime = performance.now();
-        const user = await this.getCurrentUser();
-        const userTime = performance.now() - userStartTime;
-        console.log(`🔐 User data fetched in ${userTime.toFixed(0)}ms`);
-        
-        const totalTime = performance.now() - startTime;
-        console.log(`✅ Login complete in ${totalTime.toFixed(0)}ms (login: ${loginTime.toFixed(0)}ms, user: ${userTime.toFixed(0)}ms)`);
-        
+      // Return response with user data if provided, otherwise fetch it
+      if (user) {
         return {
           access_token,
-          refresh_token,
+          refresh_token: '', // No refresh token in simplified backend
           token_type,
           user,
         };
+      } else {
+        // Fetch user data if not included in login response
+        const userResponse = await api.get<User>('/auth/me');
+        return {
+          access_token,
+          refresh_token: '', // No refresh token in simplified backend
+          token_type,
+          user: userResponse.data,
+        };
       }
+    } catch (error: any) {
+      // Log the error details
+      console.error('❌ Login failed:', error?.response?.data || error.message);
       
-      // For other errors, re-throw
-      throw error;
+      // Throw a user-friendly error message
+      if (error?.response?.status === 401) {
+        throw new Error('帳號或密碼錯誤'); // "Incorrect username or password"
+      } else if (error?.response?.status === 400) {
+        throw new Error('帳號已被停用'); // "Account has been deactivated"
+      } else if (!error?.response) {
+        throw new Error('網路連線錯誤，請檢查您的網路連線'); // "Network error, please check your connection"
+      } else {
+        throw new Error('登入失敗，請稍後再試'); // "Login failed, please try again later"
+      }
     }
   },
   
