@@ -19,10 +19,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import after path is set
-from app.core.database_sync import engine, SessionLocal, Base
-from app.models.essential import User, Customer, Product, Order, Driver, Vehicle, UserRole
-from app.api.v1.auth_sync import get_password_hash
-from app.core.config_simple import settings
+from app.core.database import engine, SessionLocal, Base
+from app.models import User, Customer, Order, Driver, UserRole
+from app.api.v1.auth import get_password_hash
+from app.core.config import settings
 from datetime import datetime
 from sqlalchemy import text
 
@@ -71,9 +71,11 @@ def create_admin_user(db: SessionLocal):
 
 def create_sample_products(db: SessionLocal):
     """Create sample products if none exist"""
+    # Product model not available in simplified version
+    return
     try:
-        if db.query(Product).count() == 0:
-            from app.models.essential import ProductType
+        if False:  # db.query(Product).count() == 0:
+            from app.models import ProductType
             products = [
                 Product(
                     code="GAS-20KG",
@@ -193,6 +195,8 @@ def create_sample_drivers(db: SessionLocal):
                 db.add(driver)
             db.flush()  # Flush to get driver IDs
             
+            # Vehicle model not available in simplified version
+            """
             # Create vehicles assigned to drivers
             vehicles = [
                 Vehicle(
@@ -211,6 +215,7 @@ def create_sample_drivers(db: SessionLocal):
                 ),
             ]
             
+            """
             for vehicle in vehicles:
                 db.add(vehicle)
             
@@ -228,7 +233,7 @@ def create_sample_customers(db: SessionLocal):
     """Create a few sample customers if none exist"""
     try:
         if db.query(Customer).count() == 0:
-            from app.models.essential import CustomerType
+            from app.models import CustomerType
             customers = [
                 Customer(
                     code="C001",
@@ -316,9 +321,9 @@ def init_db():
         logger.info("📊 Database Summary:")
         logger.info(f"  • Users: {db.query(User).count()}")
         logger.info(f"  • Customers: {db.query(Customer).count()}")
-        logger.info(f"  • Products: {db.query(Product).count()}")
+        # logger.info(f"  • Products: {db.query(Product).count()}")
         logger.info(f"  • Drivers: {db.query(Driver).count()}")
-        logger.info(f"  • Vehicles: {db.query(Vehicle).count()}")
+        # logger.info(f"  • Vehicles: {db.query(Vehicle).count()}")
         logger.info("")
         logger.info("🔐 Admin Login:")
         logger.info(f"  Email: {settings.FIRST_SUPERUSER}")

@@ -15,7 +15,7 @@ if __name__ == "__main__":
     import uvicorn
     
     # Import the app after path is set
-    from app.main_simple import app
+    from app.main import app
     
     # Run the server
     uvicorn.run(

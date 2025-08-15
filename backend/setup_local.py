@@ -60,8 +60,8 @@ async def setup_database():
 async def create_sample_data():
     """Create sample data for testing."""
     try:
-        from app.core.database_simple import get_async_session
-        from app.models_simple import User, UserRole, Customer, CustomerType, Driver, Order, OrderStatus, Route
+        from app.core.database_async import get_async_session
+        from app.models import User, UserRole, Customer, CustomerType, Driver, Order, OrderStatus, Route
         from app.core.security import get_password_hash
         from sqlalchemy import select
         from datetime import datetime, timedelta
@@ -227,7 +227,7 @@ async def create_sample_data():
 async def test_api():
     """Test the API endpoints."""
     import httpx
-    from app.main_simple import app
+    from app.main import app
     import uvicorn
     import threading
     import time
@@ -326,7 +326,7 @@ async def main():
     logger.info("🎉"*20)
     
     logger.info("\nTo start the backend server:")
-    logger.info("  uv run uvicorn app.main_simple:app --reload --port 8000")
+    logger.info("  uv run uvicorn app.main:app --reload --port 8000")
     
     logger.info("\nTo access the API documentation:")
     logger.info("  http://localhost:8000/docs")

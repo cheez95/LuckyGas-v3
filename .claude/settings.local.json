@@ -160,7 +160,17 @@
       "Bash(git rm:*)",
       "Bash(gcloud artifacts docker images list:*)",
       "Bash(gcloud builds describe:*)",
-      "Bash(gcloud builds log:*)"
+      "Bash(gcloud builds log:*)",
+      "Bash(for file in *_simple.py)",
+      "Bash(do [ -f \"$file\" ])",
+      "Bash(done)",
+      "Bash([ -f models_simple.py ])",
+      "Bash([ -f app/models_simple.py ])",
+      "Bash([ -f database_sync.py ])",
+      "Bash([ -f deps_simple.py ])",
+      "Bash([ -f auth_sync.py ])",
+      "Bash([ -f app/main_simple.py ])",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

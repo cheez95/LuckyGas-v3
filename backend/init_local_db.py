@@ -160,7 +160,7 @@ async def test_api():
     
     # Start the server
     import uvicorn
-    from app.main_simple import app
+    from app.main import app
     import threading
     import time
     
@@ -258,7 +258,7 @@ async def main():
         logger.info("✅ Local development environment is ready!")
         logger.info("🎉"*20)
         logger.info("\nYou can now run the backend with:")
-        logger.info("  uv run uvicorn app.main_simple:app --reload")
+        logger.info("  uv run uvicorn app.main:app --reload")
         logger.info("\nOr use the full backend with:")
         logger.info("  uv run uvicorn app.main:app --reload")
     else:
