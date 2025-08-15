@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy requirements
-COPY requirements_simple.txt .
+COPY requirements.txt .
 
 # Install Python dependencies to /root/.local
-RUN pip install --user --no-cache-dir -r requirements_simple.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim
@@ -66,4 +66,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 EXPOSE 8080
 
 # Start script that handles PORT environment variable
-CMD ["sh", "-c", "uvicorn app.main_simple:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1"]

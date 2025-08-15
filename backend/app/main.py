@@ -16,7 +16,12 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.config import settings
+# Dynamic config import based on environment
+config_module = os.getenv('CONFIG_MODULE', 'app.core.config')
+if config_module == 'app.core.config_production':
+    from app.core.config_production import settings
+else:
+    from app.core.config import settings
 from app.core.database import init_db, test_connection
 import app.api.v1.auth as auth
 import app.api.v1.customers as customers

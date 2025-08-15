@@ -263,23 +263,23 @@ def create_initial_admin(db: Session):
     """
     # Check if admin exists
     admin = db.query(User).filter(
-        User.email == "admin@luckygas.com"
+        User.email == settings.FIRST_SUPERUSER
     ).first()
     
     if not admin:
         # Create admin user
         admin = User(
-            email="admin@luckygas.com",
+            email=settings.FIRST_SUPERUSER,
             username="admin",
             full_name="System Administrator",
-            hashed_password=get_password_hash("admin-password-2025"),
+            hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
             role=UserRole.ADMIN,
             is_active=True
         )
         db.add(admin)
         db.commit()
         db.refresh(admin)
-        print("✅ Admin user created: admin@luckygas.com / admin-password-2025")
+        print(f"✅ Admin user created: {settings.FIRST_SUPERUSER}")
     else:
         print("✓ Admin user already exists")
     
