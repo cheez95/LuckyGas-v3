@@ -9,7 +9,7 @@ from typing import Optional
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, ForeignKey, Text, Enum
 from sqlalchemy.sql import func
 
-from app.core.database_simple import Base
+from app.core.database import Base
 
 
 # Enumerations
