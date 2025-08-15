@@ -7,7 +7,7 @@ The Lucky Gas application has been successfully deployed to Google Cloud Platfor
 ### 🌐 Live URLs
 
 - **Frontend (Firebase)**: https://vast-tributary-466619-m8.web.app
-- **Backend API (Cloud Run)**: https://luckygas-backend-yzoirwjj3q-de.a.run.app
+- **Backend API (Cloud Run)**: https://luckygas-backend-154687573210.asia-east1.run.app
 
 ### 🔑 Login Credentials
 
