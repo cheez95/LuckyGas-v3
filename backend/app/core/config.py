@@ -59,6 +59,9 @@ class Settings(BaseSettings):
     # Timezone
     TIMEZONE: str = "Asia/Taipei"
     
+    # External Services
+    GOOGLE_MAPS_API_KEY: Optional[str] = os.getenv("GOOGLE_MAPS_API_KEY", None)
+    
     class Config:
         env_file = ".env.local" if os.path.exists(".env.local") else ".env"
         case_sensitive = True

@@ -1,11 +1,13 @@
 """
 Maps API endpoints for Lucky Gas system
 """
-from fastapi import APIRouter, Depends
+import os
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -16,13 +18,19 @@ def get_maps_script_url(
 ):
     """
     Get Google Maps script URL for frontend
-    In production, this would return a properly configured URL with API key
+    Securely retrieves API key from environment variables
     """
-    # For now, return a placeholder URL
-    # In production, the API key should be stored securely and injected here
-    # Using a placeholder that won't cause immediate errors
+    # Get API key from settings or environment variable
+    api_key = settings.GOOGLE_MAPS_API_KEY if hasattr(settings, 'GOOGLE_MAPS_API_KEY') else os.getenv('GOOGLE_MAPS_API_KEY')
+    
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Google Maps API key not configured. Please set GOOGLE_MAPS_API_KEY environment variable."
+        )
+    
     return {
-        "url": "https://maps.googleapis.com/maps/api/js?key=AIzaSyBNLrJhOMz6idD05pzfn5lhA-TAw-mAZCU&libraries=places,drawing,geometry&language=zh-TW&region=TW"
+        "url": f"https://maps.googleapis.com/maps/api/js?key={api_key}&libraries=places,drawing,geometry&language=zh-TW&region=TW"
     }
 
 

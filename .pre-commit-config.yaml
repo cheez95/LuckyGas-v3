@@ -1,6 +1,21 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+# SECURITY: This configuration helps prevent accidental commits of secrets
 repos:
+  # Secret Detection - CRITICAL SECURITY
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: .*\.lock$|package-lock\.json$|\.env\.example$
+  
+  # Additional secret scanning
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -52,3 +67,27 @@ repos:
     hooks:
       - id: pyupgrade
         args: ['--py39-plus']
+
+  # Custom hooks for API key detection
+  - repo: local
+    hooks:
+      - id: check-google-api-keys
+        name: Check for Google API Keys
+        entry: 'AIza[0-9A-Za-z\-_]{35}'
+        language: pygrep
+        types: [text]
+        exclude: \.md$|SECURITY\.md$|\.env\.example$
+        
+      - id: check-aws-keys
+        name: Check for AWS Keys  
+        entry: 'AKIA[0-9A-Z]{16}'
+        language: pygrep
+        types: [text]
+        exclude: \.md$|\.env\.example$
+        
+      - id: check-api-key-patterns
+        name: Check for API Key Patterns
+        entry: '(api[_-]?key|apikey|api_secret|secret[_-]?key)[\s]*=[\s]*["\'][A-Za-z0-9\-_]{20,}["\']'
+        language: pygrep
+        types: [text]
+        exclude: \.example$|\.md$|\.yaml$|test_.*\.py$
