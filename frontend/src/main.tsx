@@ -4,11 +4,12 @@ import './index.css'
 import './utils/i18n' // Initialize i18n
 import App from './App.tsx'
 import * as serviceWorkerRegistration from './serviceWorkerRegistration'
-import { setupErrorMonitoring } from './services/errorMonitoring'
+import { setupSafeErrorMonitoring } from './services/safeErrorMonitor'
 import { initPerformanceMonitoring } from './utils/performance'
 
-// Setup error monitoring
-setupErrorMonitoring()
+// Initialize safe error monitoring with circuit breaker protection
+setupSafeErrorMonitoring()
+console.info('[MAIN] Safe error monitoring enabled with circuit breaker protection')
 
 // Initialize performance monitoring
 if (typeof window !== 'undefined') {

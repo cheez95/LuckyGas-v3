@@ -453,7 +453,7 @@ const OrderList: React.FC = () => {
           return label.toLowerCase().includes(input.toLowerCase());
         }}
       >
-        {customers.map((customer) => (
+        {(customers || []).map((customer) => (
           <Option key={customer.id} value={customer.id}>
             {customer.short_name}
           </Option>
@@ -646,7 +646,7 @@ const OrderList: React.FC = () => {
                     return label.toLowerCase().includes(input.toLowerCase());
                   }}
                 >
-                  {customers.map((customer) => (
+                  {(customers || []).map((customer) => (
                     <Option key={customer.id} value={customer.id}>
                       {customer.short_name}
                     </Option>

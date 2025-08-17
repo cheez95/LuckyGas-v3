@@ -40,9 +40,8 @@ const Login = lazyLoadComponent(() => import('./components/Login'));
 const ForgotPassword = lazyLoadComponent(() => import('./components/ForgotPassword'));
 const ResetPassword = lazyLoadComponent(() => import('./components/ResetPassword'));
 const MainLayout = lazyLoadComponent(() => import('./components/MainLayout'));
-const Dashboard = lazyLoadComponent(
-  lazyLoadWithRetry(() => import('./components/dashboard/DashboardWorking'), 3, 1000)
-);
+// Temporarily use minimal dashboard for testing
+const Dashboard = lazyLoadComponent(() => import('./pages/MinimalDashboard'));
 const CustomerManagement = lazyLoadComponent(() => import('./pages/office/CustomerManagement'));
 const OrderManagement = lazyLoadComponent(() => import('./pages/office/OrderManagement'));
 const RoutePlanning = lazyLoadComponent(() => import('./pages/dispatch/RoutePlanning'));
@@ -51,6 +50,7 @@ const EmergencyDispatch = lazyLoadComponent(() => import('./pages/dispatch/Emerg
 const DispatchDashboard = lazyLoadComponent(() => import('./pages/dispatch/DispatchDashboard'));
 const DeliveryHistory = lazyLoadComponent(() => import('./components/office/DeliveryHistory'));
 const UserProfile = lazyLoadComponent(() => import('./components/UserProfile'));
+const TestDataStructures = lazyLoadComponent(() => import('./pages/TestDataStructures'));
 
 // Driver Pages - Lazy loaded
 const DriverDashboard = lazyLoadComponent(() => import('./pages/driver/DriverDashboard'));
@@ -202,6 +202,7 @@ const App: React.FC = () => {
                         <Route path="admin/performance" element={<PerformanceAnalytics />} />
                         
                         <Route path="profile" element={<UserProfile />} />
+                        <Route path="test-data" element={<TestDataStructures />} />
                       </Route>
                     </Routes>
                     </Suspense>

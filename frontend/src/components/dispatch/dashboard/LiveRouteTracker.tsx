@@ -64,13 +64,13 @@ const LiveRouteTracker: React.FC<LiveRouteTrackerProps> = ({ onRouteClick, maxHe
     fetchActiveRoutes();
     
     // Set up periodic refresh
-    updateIntervalRef.current = setInterval(() => {
+    updateIntervalRef.current = window.setInterval(() => {
       fetchActiveRoutes();
     }, 30000); // Refresh every 30 seconds
 
     return () => {
       if (updateIntervalRef.current) {
-        clearInterval(updateIntervalRef.current);
+        window.clearInterval(updateIntervalRef.current);
       }
     };
   }, []);

@@ -11,7 +11,7 @@ dotenv.config({ path: '.env.test' });
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests/e2e',
   
   // Run tests in parallel
   fullyParallel: true,
@@ -20,22 +20,23 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   
   // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   
   // Parallel workers
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 1 : 3,
   
   // Reporter to use
   reporter: [
-    ['html', { open: 'never' }],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
     ['json', { outputFile: 'test-results/results.json' }],
-    ['list']
+    ['list'],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
   
   // Shared settings for all projects
   use: {
-    // Base URL to use in actions
-    baseURL: process.env.VITE_APP_URL || 'http://localhost:5173',
+    // Base URL to use in actions - test deployed app
+    baseURL: 'https://vast-tributary-466619-m8.web.app',
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',

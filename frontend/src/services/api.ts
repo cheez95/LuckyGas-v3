@@ -31,7 +31,7 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 seconds timeout
-  withCredentials: true, // Include credentials for CORS
+  withCredentials: false, // Don't include cookies - we use Bearer tokens
 });
 
 // Request interceptor to add auth token and log requests

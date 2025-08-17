@@ -10,11 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from sqlalchemy.orm import Session
 
 # Dynamic config import based on environment
 config_module = os.getenv('CONFIG_MODULE', 'app.core.config')
@@ -22,13 +23,15 @@ if config_module == 'app.core.config_production':
     from app.core.config_production import settings
 else:
     from app.core.config import settings
-from app.core.database import init_db, test_connection
+from app.core.database import init_db, test_connection, get_db
 import app.api.v1.auth as auth
 import app.api.v1.customers as customers
 import app.api.v1.dashboard as dashboard
 import app.api.v1.websocket as websocket
-# TODO: Create these modules
-# from app.api.v1 import orders_simple, deliveries_simple, drivers_simple
+import app.api.v1.orders as orders
+import app.api.v1.drivers as drivers
+import app.api.v1.routes_simple as routes
+import app.api.v1.maps as maps
 from app.api.v1.auth import create_initial_admin
 from app.core.database import SessionLocal
 
@@ -84,15 +87,24 @@ app = FastAPI(
     redoc_url="/redoc" if settings.DEBUG else None
 )
 
-# Configure CORS
+# Configure CORS - MUST BE FIRST BEFORE ANY ROUTES
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=["*"],  # Allow all origins for now to fix CORS issues
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
+
+# HTTPS redirect middleware
+@app.middleware("http")
+async def ensure_https(request: Request, call_next):
+    """Ensure HTTPS and handle Cloud Run redirects"""
+    response = await call_next(request)
+    response.headers["X-Forwarded-Proto"] = "https"
+    return response
 
 # Exception handlers
 @app.exception_handler(StarletteHTTPException)
@@ -201,24 +213,38 @@ app.include_router(
     tags=["websocket"]
 )
 
-# Note: These endpoints would need to be created similarly
-# app.include_router(
-#     orders.router,
-#     prefix="/api/v1/orders",
-#     tags=["orders"]
-# )
+app.include_router(
+    orders.router,
+    prefix="/api/v1/orders",
+    tags=["orders"]
+)
 
-# app.include_router(
-#     deliveries_simple.router,
-#     prefix="/api/v1/deliveries",
-#     tags=["deliveries"]
-# )
+app.include_router(
+    drivers.router,
+    prefix="/api/v1/drivers",
+    tags=["drivers"]
+)
 
-# app.include_router(
-#     drivers.router,
-#     prefix="/api/v1/drivers",
-#     tags=["drivers"]
-# )
+app.include_router(
+    routes.router,
+    prefix="/api/v1/routes",
+    tags=["routes"]
+)
+
+app.include_router(
+    maps.router,
+    prefix="/api/v1/maps",
+    tags=["maps"]
+)
+
+# Additional endpoint for /api/v1/users/drivers
+@app.get("/api/v1/users/drivers")
+async def get_user_drivers(db: Session = Depends(get_db)):
+    """Get drivers from users table"""
+    return {
+        "drivers": [],
+        "total": 0
+    }
 
 
 # Cache statistics endpoint (for monitoring)

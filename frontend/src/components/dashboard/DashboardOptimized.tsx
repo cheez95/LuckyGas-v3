@@ -281,18 +281,18 @@ const DashboardOptimized: React.FC = () => {
     checkApiHealth();
     
     // Set up periodic refresh (every 30 seconds)
-    const refreshInterval = setInterval(() => {
+    const refreshInterval = window.setInterval(() => {
       fetchDashboardData();
     }, 30000);
     
     // Health check every 10 seconds
-    const healthInterval = setInterval(() => {
+    const healthInterval = window.setInterval(() => {
       checkApiHealth();
     }, 10000);
     
     return () => {
-      clearInterval(refreshInterval);
-      clearInterval(healthInterval);
+      window.clearInterval(refreshInterval);
+      window.clearInterval(healthInterval);
     };
   }, [fetchDashboardData, checkApiHealth]);
   

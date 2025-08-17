@@ -80,7 +80,7 @@ const DeliveryScanner: React.FC = () => {
   
   const startContinuousScanning = () => {
     // Scan every 500ms for better QR code detection
-    continuousScanIntervalRef.current = setInterval(() => {
+    continuousScanIntervalRef.current = window.setInterval(() => {
       if (scanning && videoRef.current && videoRef.current.readyState === 4) {
         captureAndScan();
       }
@@ -89,7 +89,7 @@ const DeliveryScanner: React.FC = () => {
   
   const stopContinuousScanning = () => {
     if (continuousScanIntervalRef.current) {
-      clearInterval(continuousScanIntervalRef.current);
+      window.clearInterval(continuousScanIntervalRef.current);
       continuousScanIntervalRef.current = null;
     }
   };

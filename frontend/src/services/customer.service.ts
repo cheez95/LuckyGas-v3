@@ -1,6 +1,7 @@
 import api, { handleApiError } from './api';
 import { Customer } from '../types/order';
 import { CustomerInventory, CustomerInventoryList } from '../types/product';
+import { toArray } from '../utils/dataHelpers';
 
 interface CustomerQueryParams {
   skip?: number;
@@ -63,6 +64,19 @@ export const customerService = {
       await api.delete(`/customers/${id}/`);
     } catch (error) {
       throw new Error(handleApiError(error));
+    }
+  },
+
+  async searchCustomers(query: string): Promise<Customer[]> {
+    try {
+      const response = await api.get<any>('/customers/search/', {
+        params: { q: query }
+      });
+      // Use toArray to safely handle response  
+      return toArray(response.data?.customers || response.data?.items || response.data, 'customers');
+    } catch (error) {
+      console.error('[customerService] searchCustomers error:', error);
+      return [];
     }
   },
   

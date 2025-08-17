@@ -314,9 +314,12 @@ class SecurityConfig:
 
     def _determine_security_level(self) -> SecurityLevel:
         """Determine security level based on environment."""
-        if settings.ENVIRONMENT.value == "production":
+        # Handle both enum and string values for ENVIRONMENT
+        env_value = settings.ENVIRONMENT.value if hasattr(settings.ENVIRONMENT, 'value') else settings.ENVIRONMENT
+        
+        if env_value == "production":
             return SecurityLevel.HIGH
-        elif settings.ENVIRONMENT.value == "staging":
+        elif env_value == "staging":
             return SecurityLevel.MEDIUM
         else:
             return SecurityLevel.LOW

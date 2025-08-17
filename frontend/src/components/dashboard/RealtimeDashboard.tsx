@@ -175,15 +175,15 @@ const RealtimeDashboard: React.FC = () => {
   // Fetch initial data
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 60000); // Refresh every minute
-    return () => clearInterval(interval);
+    const interval = window.setInterval(fetchDashboardData, 60000); // Refresh every minute
+    return () => window.clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
     try {
       const response = await fetch('/api/v1/analytics/dashboard/realtime', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
       

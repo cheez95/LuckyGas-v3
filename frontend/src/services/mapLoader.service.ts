@@ -64,7 +64,7 @@ class GoogleMapsLoader {
   private async loadMapsApi(config?: Partial<MapConfig>): Promise<void> {
     try {
       // Get secure script URL from backend
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${this.apiUrl}/api/v1/maps/script-url`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : '',

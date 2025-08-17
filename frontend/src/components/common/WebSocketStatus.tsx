@@ -46,13 +46,13 @@ const WebSocketStatus: React.FC = () => {
     websocketService.on('reconnecting', handleReconnecting);
 
     // Check connection state periodically
-    const interval = setInterval(updateConnectionState, 1000);
+    const interval = window.setInterval(updateConnectionState, 1000);
 
     return () => {
       websocketService.off('connected', handleConnected);
       websocketService.off('disconnected', handleDisconnected);
       websocketService.off('reconnecting', handleReconnecting);
-      clearInterval(interval);
+      window.clearInterval(interval);
     };
   }, []);
 

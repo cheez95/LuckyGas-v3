@@ -8,6 +8,7 @@ import {
   OrderCreateV2,
   OrderUpdateV2
 } from '../types/order';
+import { toArray } from '../utils/dataHelpers';
 
 interface OrderQueryParams {
   skip?: number;
@@ -77,6 +78,19 @@ export const orderService = {
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
+    }
+  },
+
+  async searchOrders(query: string): Promise<Order[]> {
+    try {
+      const response = await api.get<any>('/orders/search/', {
+        params: { q: query }
+      });
+      // Use toArray to safely handle response
+      return toArray(response.data?.orders || response.data, 'orders');
+    } catch (error) {
+      console.error('[orderService] searchOrders error:', error);
+      return [];
     }
   },
 

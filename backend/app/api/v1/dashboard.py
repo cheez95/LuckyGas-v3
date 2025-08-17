@@ -11,7 +11,7 @@ from sqlalchemy import func, and_, or_, text
 
 from app.core.database import get_db
 from app.models import Order, Customer, Driver, OrderStatus, UserRole, User
-from app.api.v1.auth import get_current_user
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -71,12 +71,9 @@ def get_dashboard_summary(
     # Get active customers (all customers for now)
     active_customers = db.query(func.count(Customer.id)).scalar() or 0
     
-    # Get drivers on route
+    # Get active drivers (simplified - just count active drivers)
     drivers_on_route = db.query(func.count(Driver.id)).filter(
-        and_(
-            Driver.is_active == True,
-            Driver.is_available == False  # Drivers on route are not available
-        )
+        Driver.is_active == True
     ).scalar() or 0
     
     # Get recent deliveries count

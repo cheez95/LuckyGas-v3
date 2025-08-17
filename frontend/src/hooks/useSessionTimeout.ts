@@ -95,12 +95,12 @@ export const useSessionTimeout = (options: UseSessionTimeoutOptions = {}) => {
       checkSession();
       
       // Set up interval
-      intervalRef.current = setInterval(checkSession, checkInterval);
+      intervalRef.current = window.setInterval(checkSession, checkInterval);
     }
     
     return () => {
       if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+        window.clearInterval(intervalRef.current);
       }
       if (warningModalRef.current) {
         warningModalRef.current.destroy();

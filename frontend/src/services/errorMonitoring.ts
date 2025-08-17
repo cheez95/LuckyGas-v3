@@ -80,7 +80,10 @@ class ErrorMonitoring implements ErrorMonitoringService {
   constructor() {
     this.sessionId = this.generateSessionId();
     this.logStorage = new ErrorLogStorage();
-    this.startSyncInterval();
+    
+    // DISABLED - Error monitoring causing infinite loop
+    console.warn('[ERROR MONITORING] Service initialization DISABLED');
+    // this.startSyncInterval();
     
     // Make service available globally
     if (typeof window !== 'undefined') {
@@ -124,20 +127,26 @@ class ErrorMonitoring implements ErrorMonitoringService {
   }
   
   logError(error: Error | AxiosError, context?: any): void {
-    const entry = this.createLogEntry('error', error.message, error, context);
-    
-    // Log to console in development
+    // DISABLED - Preventing infinite loop
     if (import.meta.env.DEV) {
-      console.error('[Error Monitor]', entry);
+      console.error('[Error Monitor DISABLED]', error.message, error);
     }
+    return;
     
-    // Save to local storage
-    this.logStorage.save(entry);
+    // const entry = this.createLogEntry('error', error.message, error, context);
     
-    // Try to send immediately
-    this.sendLog(entry).catch(() => {
-      // Will be retried by sync interval
-    });
+    // // Log to console in development
+    // if (import.meta.env.DEV) {
+    //   console.error('[Error Monitor]', entry);
+    // }
+    
+    // // Save to local storage
+    // this.logStorage.save(entry);
+    
+    // // Try to send immediately
+    // this.sendLog(entry).catch(() => {
+    //   // Will be retried by sync interval
+    // });
   }
   
   logWarning(message: string, context?: any): void {
@@ -181,87 +190,111 @@ class ErrorMonitoring implements ErrorMonitoringService {
   }
   
   private async sendLog(entry: ErrorLogEntry): Promise<void> {
-    // Skip sending in development unless explicitly enabled
-    if (import.meta.env.DEV && !import.meta.env.VITE_ENABLE_ERROR_REPORTING) {
-      return;
-    }
+    // COMPLETELY DISABLED - DO NOT SEND ANY LOGS
+    return Promise.resolve();
     
-    try {
-      const response = await fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: JSON.stringify(entry),
-      });
+    // // Skip sending in development unless explicitly enabled
+    // if (import.meta.env.DEV && !import.meta.env.VITE_ENABLE_ERROR_REPORTING) {
+    //   return;
+    // }
+    
+    // try {
+    //   const response = await fetch(this.apiEndpoint, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+    //     },
+    //     body: JSON.stringify(entry),
+    //   });
       
-      if (!response.ok) {
-        throw new Error(`Failed to send log: ${response.status}`);
-      }
+    //   if (!response.ok) {
+    //     throw new Error(`Failed to send log: ${response.status}`);
+    //   }
       
-      // Mark as synced
-      (entry as any).synced = true;
-    } catch (error) {
-      console.error('Failed to send error log:', error);
-      throw error;
-    }
+    //   // Mark as synced
+    //   (entry as any).synced = true;
+    // } catch (error) {
+    //   console.error('Failed to send error log:', error);
+    //   throw error;
+    // }
   }
   
   private async syncPendingLogs(): Promise<void> {
-    const pending = this.logStorage.getPending();
-    
-    if (pending.length === 0) {
-      return;
-    }
-    
-    if (import.meta.env.DEV) {
-      console.log(`[Error Monitor] Syncing ${pending.length} pending logs`);
-    }
-    
-    // Batch send logs
     try {
-      const response = await fetch(`${this.apiEndpoint}/batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-        body: JSON.stringify({ logs: pending }),
-      });
+      const pending = this.logStorage.getPending();
       
-      if (response.ok) {
-        // Clear synced logs
-        const remaining = this.logStorage.getAll().filter(log => !(log as any).synced);
-        localStorage.setItem('luckygas_error_logs', JSON.stringify(remaining));
+      if (pending.length === 0) {
+        return;
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log(`[Error Monitor] Syncing ${pending.length} pending logs`);
+      }
+      
+      // Batch send logs with timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      try {
+        const response = await fetch(`${this.apiEndpoint}/batch`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+          body: JSON.stringify({ logs: pending }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeout);
+        
+        if (response.ok) {
+          // Clear synced logs
+          const remaining = this.logStorage.getAll().filter(log => !(log as any).synced);
+          localStorage.setItem('luckygas_error_logs', JSON.stringify(remaining));
+        }
+      } catch (error: any) {
+        clearTimeout(timeout);
+        if (error.name !== 'AbortError') {
+          console.error('Failed to sync error logs:', error);
+        }
       }
     } catch (error) {
-      console.error('Failed to sync error logs:', error);
+      // Silently fail - will retry on next interval
+      if (import.meta.env.DEV) {
+        console.error('Failed to sync error logs:', error);
+      }
     }
   }
   
   private startSyncInterval(): void {
-    // Sync pending logs every 30 seconds
-    this.syncInterval = setInterval(() => {
-      this.syncPendingLogs();
-    }, 30000);
+    // DISABLED - CAUSING INFINITE LOOP AND MEMORY LEAK
+    // DO NOT RE-ENABLE UNTIL FIXED
+    console.warn('[ERROR MONITORING] Sync interval DISABLED due to infinite loop bug');
+    return;
     
-    // Also sync on page visibility change
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        this.syncPendingLogs();
-      }
-    });
+    // // Sync pending logs every 30 seconds
+    // this.syncInterval = window.setInterval(() => {
+    //   this.syncPendingLogs();
+    // }, 30000);
     
-    // Sync before page unload
-    window.addEventListener('beforeunload', () => {
-      this.syncPendingLogs();
-    });
+    // // Also sync on page visibility change
+    // document.addEventListener('visibilitychange', () => {
+    //   if (!document.hidden) {
+    //     this.syncPendingLogs();
+    //   }
+    // });
+    
+    // // Sync before page unload
+    // window.addEventListener('beforeunload', () => {
+    //   this.syncPendingLogs();
+    // });
   }
   
   public stopSync(): void {
     if (this.syncInterval) {
-      clearInterval(this.syncInterval);
+      window.clearInterval(this.syncInterval);
     }
   }
   
@@ -310,14 +343,25 @@ export function logReactError(error: Error, errorInfo: ErrorInfo): void {
 // Integration with unhandled promise rejections
 export function setupUnhandledRejectionHandler(): void {
   window.addEventListener('unhandledrejection', (event) => {
-    errorMonitoring.logError(
-      new Error(event.reason?.message || 'Unhandled Promise Rejection'),
-      {
-        type: 'Unhandled Promise Rejection',
-        reason: event.reason,
-        promise: event.promise,
-      }
-    );
+    // Prevent default browser error logging
+    event.preventDefault();
+    
+    // Create proper error object
+    const error = event.reason instanceof Error 
+      ? event.reason 
+      : new Error(event.reason?.message || event.reason?.toString() || 'Unhandled Promise Rejection');
+    
+    errorMonitoring.logError(error, {
+      type: 'Unhandled Promise Rejection',
+      reason: event.reason,
+      promise: event.promise,
+      stack: error.stack || new Error().stack,
+    });
+    
+    // Log to console in development for debugging
+    if (import.meta.env.DEV) {
+      console.error('Unhandled Promise Rejection:', event.reason);
+    }
   });
 }
 
@@ -338,8 +382,12 @@ export function setupGlobalErrorHandler(): void {
 
 // Setup all handlers
 export function setupErrorMonitoring(): void {
-  setupUnhandledRejectionHandler();
-  setupGlobalErrorHandler();
+  // DISABLED - Error monitoring causing infinite loop
+  console.warn('[ERROR MONITORING] Setup DISABLED - infinite loop bug');
+  return;
+  
+  // setupUnhandledRejectionHandler();
+  // setupGlobalErrorHandler();
 }
 
 // Export for use in other modules

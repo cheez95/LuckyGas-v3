@@ -47,6 +47,9 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const clickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
+  const infoWindowsRef = useRef<google.maps.InfoWindow[]>([]);
+  const isMountedRef = useRef(true);
 
   // Initialize Google Maps
   useEffect(() => {
@@ -99,8 +102,8 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
 
         // Add click listener
         if (onMapClick) {
-          mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
-            if (event.latLng) {
+          clickListenerRef.current = mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
+            if (event.latLng && isMountedRef.current) {
               onMapClick({
                 lat: event.latLng.lat(),
                 lng: event.latLng.lng(),
@@ -116,12 +119,57 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
     };
 
     initializeMap();
+    
+    // Cleanup function
+    return () => {
+      console.log('[RoutePlanningMap] Starting cleanup...');
+      isMountedRef.current = false;
+      
+      // Clear all markers and info windows
+      clearMarkers();
+      
+      // Remove click listener
+      if (clickListenerRef.current) {
+        google.maps.event.removeListener(clickListenerRef.current);
+        clickListenerRef.current = null;
+      }
+      
+      // Clear directions renderer
+      if (directionsRenderer) {
+        directionsRenderer.setMap(null);
+        directionsRenderer.setDirections({ routes: [] } as any);
+      }
+      
+      // Clear map instance
+      if (map) {
+        // Remove all listeners from map
+        google.maps.event.clearInstanceListeners(map);
+        // Clear the map div
+        if (mapRef.current) {
+          mapRef.current.innerHTML = '';
+        }
+      }
+      
+      console.log('[RoutePlanningMap] Cleanup completed');
+    };
   }, [depotLocation, onMapClick, t]);
 
-  // Clear existing markers
+  // Clear existing markers and info windows
   const clearMarkers = useCallback(() => {
-    markersRef.current.forEach(marker => marker.setMap(null));
+    console.log('[RoutePlanningMap] Clearing markers and info windows');
+    // Clear all markers
+    markersRef.current.forEach(marker => {
+      // Remove all listeners from marker
+      google.maps.event.clearInstanceListeners(marker);
+      marker.setMap(null);
+    });
     markersRef.current = [];
+    
+    // Clear all info windows
+    infoWindowsRef.current.forEach(infoWindow => {
+      infoWindow.close();
+    });
+    infoWindowsRef.current = [];
   }, []);
 
   // Create custom marker
@@ -158,9 +206,14 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
         </div>
       `,
     });
+    
+    // Store info window reference for cleanup
+    infoWindowsRef.current.push(infoWindow);
 
     marker.addListener('click', () => {
-      infoWindow.open(map, marker);
+      if (isMountedRef.current) {
+        infoWindow.open(map, marker);
+      }
     });
 
     return marker;
@@ -168,7 +221,7 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
 
   // Update route display
   const updateRoute = useCallback(async () => {
-    if (!map || !directionsService || !directionsRenderer || stops.length === 0) {
+    if (!map || !directionsService || !directionsRenderer || stops.length === 0 || !isMountedRef.current) {
       return;
     }
 
@@ -225,7 +278,9 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
 
       try {
         const result = await directionsService.route(request);
-        directionsRenderer.setDirections(result);
+        if (isMountedRef.current) {
+          directionsRenderer.setDirections(result);
+        }
 
         // Add custom markers for each stop
         stops.forEach((stop, index) => {
@@ -250,7 +305,9 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
 
   // Update route when stops change
   useEffect(() => {
-    updateRoute();
+    if (isMountedRef.current) {
+      updateRoute();
+    }
   }, [stops, updateRoute]);
 
   // Center map on all stops

@@ -78,7 +78,7 @@ const DataImport: React.FC = () => {
       const response = await fetch(`/api/v1/data/import/${dataType}?${params}`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: formData,
       });
@@ -140,7 +140,7 @@ const DataImport: React.FC = () => {
       
       const response = await fetch(`/api/v1/data/templates/${dataType}?format=${format}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 

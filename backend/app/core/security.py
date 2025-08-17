@@ -24,11 +24,11 @@ from app.core.security_config import (
 
 logger = get_logger(__name__)
 
-# Enhanced password context with bcrypt
+# Password context with optimized bcrypt rounds for better performance
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
-    bcrypt__rounds=12,  # Increase rounds for better security
+    bcrypt__rounds=10,  # Optimized for performance while maintaining security
 )
 
 

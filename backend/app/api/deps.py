@@ -1,6 +1,7 @@
 """
 Simplified API dependencies - Direct and simple!
 """
+import os
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -9,7 +10,13 @@ from jose import JWTError, jwt
 
 from app.core.database import get_db
 from app.models import User
-from app.core.config import settings
+
+# Dynamic config import based on environment
+config_module = os.getenv('CONFIG_MODULE', 'app.core.config')
+if config_module == 'app.core.config_production':
+    from app.core.config_production import settings
+else:
+    from app.core.config import settings
 
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")

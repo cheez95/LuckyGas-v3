@@ -182,18 +182,18 @@ const PerformanceAnalytics: React.FC = () => {
 
   useEffect(() => {
     if (autoRefresh) {
-      const interval = setInterval(() => {
+      const interval = window.setInterval(() => {
         fetchMetrics();
       }, 60 * 1000); // Refresh every minute
       setRefreshInterval(interval);
     } else if (refreshInterval) {
-      clearInterval(refreshInterval);
+      window.clearInterval(refreshInterval);
       setRefreshInterval(null);
     }
 
     return () => {
       if (refreshInterval) {
-        clearInterval(refreshInterval);
+        window.clearInterval(refreshInterval);
       }
     };
   }, [autoRefresh, timeRange]);

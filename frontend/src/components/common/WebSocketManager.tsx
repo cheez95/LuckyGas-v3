@@ -15,6 +15,8 @@ const WebSocketManager: React.FC = () => {
     console.log('🔌 Token exists:', !!accessToken);
     console.log('🔌 Token in localStorage:', !!localStorage.getItem('access_token'));
     
+    let connectTimer: NodeJS.Timeout | null = null;
+    
     if (isAuthenticated && accessToken) {
       console.log('🔌 WebSocketManager: User authenticated, initializing connection...');
       console.log('🔌 Current connection state:', websocketService.getConnectionState());
@@ -26,7 +28,7 @@ const WebSocketManager: React.FC = () => {
       }
       
       // Add a small delay to ensure token is properly set in localStorage
-      setTimeout(() => {
+      connectTimer = setTimeout(() => {
         console.log('🔌 Calling websocketService.connect()...');
         websocketService.connect();
       }, 500); // Increased delay to ensure auth is fully settled
@@ -38,7 +40,13 @@ const WebSocketManager: React.FC = () => {
 
     // Cleanup on unmount
     return () => {
-      console.log('🔌 WebSocketManager: Component unmounting, disconnecting...');
+      console.log('🔌 WebSocketManager: Component unmounting, cleaning up...');
+      
+      // Clear timer if still pending
+      if (connectTimer) {
+        clearTimeout(connectTimer);
+      }
+      
       // Don't disconnect on unmount if user is still authenticated
       if (!isAuthenticated) {
         websocketService.disconnect();

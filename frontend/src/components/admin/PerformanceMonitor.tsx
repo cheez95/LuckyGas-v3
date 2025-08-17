@@ -37,8 +37,8 @@ const PerformanceMonitor: React.FC = () => {
     fetchMetrics();
     
     if (autoRefresh) {
-      const interval = setInterval(fetchMetrics, 5000); // Refresh every 5 seconds
-      return () => clearInterval(interval);
+      const interval = window.setInterval(fetchMetrics, 5000); // Refresh every 5 seconds
+      return () => window.clearInterval(interval);
     }
   }, [autoRefresh]);
 

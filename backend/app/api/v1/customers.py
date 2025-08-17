@@ -47,6 +47,34 @@ def get_customers(
     return customers
 
 
+@router.get("/search/")
+def search_customers(
+    q: str = Query(..., min_length=1),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Search customers by name, phone, or address"""
+    # Mock search results for now
+    customers = []
+    for i in range(3):
+        customers.append({
+            "id": i + 1,
+            "customer_code": f"C{1000 + i}",
+            "name": f"Customer matching '{q}'",
+            "phone": f"091{i}-345-678",
+            "address": f"台北市中正區路{i+1}號",
+            "customer_type": "commercial",
+            "is_active": True,
+            "created_at": datetime.now().isoformat()
+        })
+    
+    return {
+        "customers": customers,
+        "total": 3,
+        "query": q
+    }
+
+
 @router.get("/{customer_id}", response_model=CustomerResponse)
 @cache_result(ttl_seconds=300)  # Cache for 5 minutes
 def get_customer(

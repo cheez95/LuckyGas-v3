@@ -75,11 +75,11 @@ export const useOfflineSync = () => {
     };
 
     checkQuota();
-    checkStorageIntervalRef.current = setInterval(checkQuota, 60000); // Check every minute
+    checkStorageIntervalRef.current = window.setInterval(checkQuota, 60000); // Check every minute
 
     return () => {
       if (checkStorageIntervalRef.current) {
-        clearInterval(checkStorageIntervalRef.current);
+        window.clearInterval(checkStorageIntervalRef.current);
       }
     };
   }, []);

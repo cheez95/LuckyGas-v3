@@ -170,7 +170,8 @@
       "Bash([ -f deps_simple.py ])",
       "Bash([ -f auth_sync.py ])",
       "Bash([ -f app/main_simple.py ])",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(firebase deploy:*)"
     ],
     "deny": []
   }

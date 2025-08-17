@@ -55,21 +55,30 @@ class WebSocketService extends EventEmitter {
   private isIntentionallyClosed: boolean = false;
   private messageQueue: WebSocketMessage[] = [];
   private subscriptions: Set<string> = new Set();
+  
+  // Memory leak prevention
+  private readonly MAX_MESSAGE_QUEUE_SIZE = 50; // Reduced from 100
+  private readonly MAX_RECONNECT_ATTEMPTS = 3; // Reduced to 3 to prevent excessive reconnection
+  private reconnectAttempts: number = 0;
+  private messageHistory: WebSocketMessage[] = [];
+  private readonly MAX_MESSAGE_HISTORY = 50; // Reduced from 100
+  private readonly MAX_RECONNECT_DELAY = 30000; // Max 30 seconds
 
   constructor() {
     super();
-    // Determine the WebSocket URL based on environment
-    const isProduction = import.meta.env.PROD;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // Use WebSocket URL from environment variables
+    const wsUrl = import.meta.env.VITE_WS_URL;
     
-    // In development, connect to backend on port 8000
-    // In production, use the same host (assuming backend is on same domain)
-    const host = isProduction 
-      ? window.location.host 
-      : 'localhost:8000';
+    if (wsUrl) {
+      // Use the WebSocket URL from env if available
+      this.url = `${wsUrl}/api/v1/websocket/ws`;
+    } else {
+      // Fallback to local development
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = import.meta.env.PROD ? window.location.host : 'localhost:8000';
+      this.url = `${protocol}//${host}/api/v1/websocket/ws`;
+    }
     
-    // Match the backend endpoint path
-    this.url = `${protocol}//${host}/api/v1/websocket/ws`;
     console.log('🔌 WebSocket URL:', this.url);
   }
 
@@ -81,10 +90,20 @@ class WebSocketService extends EventEmitter {
       return;
     }
 
+    // Check if we've exceeded max reconnect attempts
+    if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      console.error('Max reconnect attempts reached. Stopping reconnection.');
+      this.emit('max_reconnects_reached');
+      return;
+    }
+
     const wsUrl = `${this.url}?token=${encodeURIComponent(token)}`;
     console.log('🔌 Attempting to connect to:', wsUrl);
 
     try {
+      // Clean up old connection if exists
+      this.cleanupWebSocket();
+      
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
       console.log('🔌 WebSocket connection initiated');
@@ -97,14 +116,43 @@ class WebSocketService extends EventEmitter {
   disconnect(): void {
     console.log('🔌 WebSocket disconnect() called');
     this.isIntentionallyClosed = true;
+    this.reconnectAttempts = 0; // Reset reconnect attempts
     this.clearTimers();
     
-    if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
-      console.log('🔌 Closing WebSocket connection');
-      this.ws.close(1000, 'Client disconnecting');
+    // Clean up WebSocket
+    this.cleanupWebSocket();
+    
+    // Clear message queues to free memory
+    this.messageQueue = [];
+    this.messageHistory = [];
+    
+    // Clear subscriptions
+    this.subscriptions.clear();
+    
+    // Remove all event listeners
+    this.removeAllListeners();
+    
+    console.log('🔌 WebSocket fully disconnected and cleaned up');
+  }
+  
+  /**
+   * Clean up WebSocket connection and handlers
+   */
+  private cleanupWebSocket(): void {
+    if (this.ws) {
+      // Remove event handlers before closing
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
+      this.ws.onclose = null;
+      
+      // Close connection if open
+      if (this.ws.readyState !== WebSocket.CLOSED) {
+        console.log('🔌 Closing WebSocket connection');
+        this.ws.close(1000, 'Client disconnecting');
+      }
+      
       this.ws = null;
-    } else {
-      console.log('🔌 WebSocket already closed or null');
     }
   }
 
@@ -117,10 +165,12 @@ class WebSocketService extends EventEmitter {
       console.log('✅ WebSocket connected successfully!');
       this.emit('connected');
       this.isIntentionallyClosed = false;
+      this.reconnectAttempts = 0; // Reset on successful connection
+      this.reconnectInterval = 5000; // Reset backoff
       
       // Clear reconnect timer
       if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
+        window.clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
 
@@ -132,13 +182,13 @@ class WebSocketService extends EventEmitter {
         this.send({ type: 'subscribe', topic });
       });
 
-      // Send queued messages
-      while (this.messageQueue.length > 0) {
-        const message = this.messageQueue.shift();
-        if (message) {
-          this.send(message);
-        }
-      }
+      // Send queued messages (limit to prevent memory issues)
+      const messagesToSend = this.messageQueue.slice(0, this.MAX_MESSAGE_QUEUE_SIZE);
+      this.messageQueue = this.messageQueue.slice(this.MAX_MESSAGE_QUEUE_SIZE);
+      
+      messagesToSend.forEach(message => {
+        this.send(message);
+      });
     };
 
     this.ws.onmessage = (event) => {
@@ -170,6 +220,12 @@ class WebSocketService extends EventEmitter {
 
   private handleMessage(message: WebSocketMessage): void {
     console.log('📨 WebSocket received message:', message);
+    
+    // Store in history with limit
+    this.messageHistory.push(message);
+    if (this.messageHistory.length > this.MAX_MESSAGE_HISTORY) {
+      this.messageHistory = this.messageHistory.slice(-this.MAX_MESSAGE_HISTORY);
+    }
     
     // Emit generic message event
     this.emit('message', message);
@@ -230,7 +286,11 @@ class WebSocketService extends EventEmitter {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      // Queue message if not connected
+      // Queue message if not connected (with size limit)
+      if (this.messageQueue.length >= this.MAX_MESSAGE_QUEUE_SIZE) {
+        console.warn('Message queue full, dropping oldest message');
+        this.messageQueue.shift(); // Remove oldest
+      }
       this.messageQueue.push(message);
     }
   }
@@ -263,7 +323,7 @@ class WebSocketService extends EventEmitter {
   }
 
   private startHeartbeat(): void {
-    this.heartbeatInterval = setInterval(() => {
+    this.heartbeatInterval = window.setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.send({ type: 'ping' });
       }
@@ -272,12 +332,12 @@ class WebSocketService extends EventEmitter {
 
   private clearTimers(): void {
     if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
+      window.clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
 
     if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
+      window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
   }
@@ -287,16 +347,24 @@ class WebSocketService extends EventEmitter {
       return;
     }
 
-    console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds...`);
+    // Check max attempts
+    if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      console.error('Max reconnect attempts reached');
+      this.emit('max_reconnects_reached');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds... (attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
     this.emit('reconnecting');
     
-    this.reconnectTimer = setTimeout(() => {
+    this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
     }, this.reconnectInterval);
 
-    // Exponential backoff, max 60 seconds
-    this.reconnectInterval = Math.min(this.reconnectInterval * 1.5, 60000);
+    // Exponential backoff with max delay
+    this.reconnectInterval = Math.min(this.reconnectInterval * 2, this.MAX_RECONNECT_DELAY);
   }
 
   isConnected(): boolean {
@@ -319,6 +387,34 @@ class WebSocketService extends EventEmitter {
         return 'unknown';
     }
   }
+  
+  /**
+   * Get message history (limited to prevent memory issues)
+   */
+  getMessageHistory(): WebSocketMessage[] {
+    return [...this.messageHistory];
+  }
+  
+  /**
+   * Clear message history to free memory
+   */
+  clearMessageHistory(): void {
+    this.messageHistory = [];
+    console.log('🔌 Message history cleared');
+  }
+  
+  /**
+   * Get current memory usage stats
+   */
+  getMemoryStats() {
+    return {
+      messageQueueSize: this.messageQueue.length,
+      messageHistorySize: this.messageHistory.length,
+      subscriptionCount: this.subscriptions.size,
+      reconnectAttempts: this.reconnectAttempts,
+      connectionState: this.getConnectionState(),
+    };
+  }
 }
 
 // Export singleton instance
@@ -327,6 +423,11 @@ export const websocketService = new WebSocketService();
 // Expose to window for debugging
 if (typeof window !== 'undefined') {
   (window as any).websocketService = websocketService;
+  
+  // Clean up on page unload
+  window.addEventListener('beforeunload', () => {
+    websocketService.disconnect();
+  });
 }
 
 // Export convenience hooks for React components

@@ -239,6 +239,34 @@ def scheduled_cache_maintenance():
     logger.info(f"Cache maintenance complete. Before: {stats_before}, After: {stats_after}")
 
 
+# Simple async-compatible cache wrapper for security.py
+class AsyncCacheWrapper:
+    """
+    Async-compatible wrapper for SimpleCache
+    Makes our sync cache work with async code in security.py
+    """
+    def __init__(self):
+        self._cache = SimpleCache(ttl_seconds=300, max_size=1000)
+    
+    async def get(self, key: str) -> Optional[str]:
+        """Get value from cache (async-compatible)"""
+        value = self._cache.get(key)
+        return str(value) if value is not None else None
+    
+    async def set(self, key: str, value: Any, expire: int = 300) -> None:
+        """Set value in cache (async-compatible)"""
+        self._cache.set(key, value)
+    
+    async def delete(self, key: str) -> None:
+        """Delete value from cache (async-compatible)"""
+        # SimpleCache doesn't have delete, so we'll just set to None
+        self._cache.set(key, None)
+
+
+# Global async cache instance for security.py
+cache = AsyncCacheWrapper()
+
+
 # Example usage in API endpoint
 def example_cached_endpoint():
     """

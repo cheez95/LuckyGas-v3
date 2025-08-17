@@ -29,11 +29,11 @@ const DispatchDashboard: React.FC = () => {
 
   useEffect(() => {
     // Set up auto-refresh every minute
-    const refreshInterval = setInterval(() => {
+    const refreshInterval = window.setInterval(() => {
       setRefreshKey(prev => prev + 1);
     }, 60000);
 
-    return () => clearInterval(refreshInterval);
+    return () => window.clearInterval(refreshInterval);
   }, []);
 
   const handleFullscreen = () => {
