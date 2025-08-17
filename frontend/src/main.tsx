@@ -7,6 +7,11 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration'
 import { setupSafeErrorMonitoring } from './services/safeErrorMonitor'
 import { initPerformanceMonitoring } from './utils/performance'
 
+// Import API test utility (runs automatically in dev mode)
+if (import.meta.env.DEV) {
+  import('./utils/api-test')
+}
+
 // Initialize safe error monitoring with circuit breaker protection
 setupSafeErrorMonitoring()
 console.info('[MAIN] Safe error monitoring enabled with circuit breaker protection')

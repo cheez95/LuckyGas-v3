@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { withRetry, isRetryableError } from '../utils/fetchWithRetry';
 
-// Get API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Get API URL from environment variables - use HTTPS production URL as fallback
+const API_URL = import.meta.env.VITE_API_URL || 'https://luckygas-backend-full-154687573210.asia-east1.run.app';
 
 // Create axios instance with default config
 export const apiClient: AxiosInstance = axios.create({

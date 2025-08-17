@@ -290,9 +290,21 @@ const OrderManagement: React.FC = () => {
     setSearchLoading(true);
     setSearchCriteria(criteria);
     try {
-      const response = await api.post('/orders/search', criteria);
-      setOrders(response.data.orders);
-      message.success(`${t('orders.searchResults')}: ${response.data.total} ${t('orders.searchTime', { time: response.data.search_time.toFixed(2) })}`);
+      // Use GET with proper query parameters
+      const params = {
+        q: criteria.searchText || '',
+        status: criteria.status || 'all',
+        priority: criteria.priority,
+        date_from: criteria.dateRange?.[0]?.format('YYYY-MM-DD'),
+        date_to: criteria.dateRange?.[1]?.format('YYYY-MM-DD'),
+        customer_id: criteria.customerId,
+        skip: criteria.skip || 0,
+        limit: criteria.limit || 100
+      };
+      const response = await api.get('/orders/search', { params });
+      setOrders(response.data.orders || response.data.items || []);
+      const total = response.data.total || response.data.orders?.length || 0;
+      message.success(`${t('orders.searchResults')}: ${total}`);
     } catch (error) {
       message.error(t('orders.fetchError'));
     } finally {
@@ -303,9 +315,18 @@ const OrderManagement: React.FC = () => {
   const handleExportSearchResults = async (criteria: SearchCriteria) => {
     setSearchLoading(true);
     try {
-      // First get all results without pagination
-      const fullCriteria = { ...criteria, skip: 0, limit: 10000 };
-      const response = await api.post('/orders/search', fullCriteria);
+      // First get all results without pagination using GET
+      const params = {
+        q: criteria.searchText || '',
+        status: criteria.status || 'all',
+        priority: criteria.priority,
+        date_from: criteria.dateRange?.[0]?.format('YYYY-MM-DD'),
+        date_to: criteria.dateRange?.[1]?.format('YYYY-MM-DD'),
+        customer_id: criteria.customerId,
+        skip: 0,
+        limit: 10000
+      };
+      const response = await api.get('/orders/search', { params });
       
       // Create Excel export using the existing xlsx logic
       const ordersArray = toArray(response.data?.orders || response.data, 'orders');

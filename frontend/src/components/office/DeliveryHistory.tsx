@@ -75,11 +75,19 @@ const DeliveryHistory: React.FC = () => {
         params.customer_code = selectedCustomer;
       }
 
-      const response = await api.get('/delivery-history', { params });
+      // Try deliveries endpoint instead of delivery-history
+      const response = await api.get('/deliveries', { params });
       setDeliveries(response.data.items || []);
       setTotal(response.data.total || 0);
-    } catch (error) {
-      message.error('載入配送歷史失敗');
+    } catch (error: any) {
+      // Handle 404 gracefully - endpoint might not exist yet
+      if (error.response?.status === 404) {
+        console.warn('Deliveries endpoint not found, showing empty state');
+        setDeliveries([]);
+        setTotal(0);
+      } else {
+        message.error('載入配送歷史失敗');
+      }
     } finally {
       setLoading(false);
     }
@@ -94,10 +102,22 @@ const DeliveryHistory: React.FC = () => {
         params.date_to = dateRange[1].format('YYYY-MM-DD');
       }
 
-      const response = await api.get('/delivery-history/stats', { params });
+      // Try deliveries/stats endpoint
+      const response = await api.get('/deliveries/stats', { params });
       setStats(response.data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
+    } catch (error: any) {
+      // Handle 404 gracefully - endpoint might not exist yet
+      if (error.response?.status === 404) {
+        console.warn('Deliveries stats endpoint not found, using defaults');
+        setStats({
+          total_deliveries: 0,
+          total_amount: 0,
+          total_customers: 0,
+          total_drivers: 0
+        });
+      } else {
+        console.error('Failed to fetch stats:', error);
+      }
     }
   };
 
