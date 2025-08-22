@@ -13,8 +13,8 @@ global.TextDecoder = TextDecoder as any;
 global.import = {
   meta: {
     env: {
-      VITE_API_URL: 'http://localhost:8000',
-      VITE_WS_URL: 'ws://localhost:8000',
+      VITE_API_URL: 'https://localhost:8000',
+      VITE_WS_URL: 'wss://localhost:8000',
       VITE_ENV: 'test',
       VITE_GOOGLE_MAPS_API_KEY: 'test-key',
     }

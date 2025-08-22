@@ -3,6 +3,7 @@ import { Table, Button, Space, Card, Input, Tag, Modal, Form, Select, Statistic,
 import { UserAddOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, EnvironmentOutlined, ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
+import moment from 'moment';
 import api from '../../services/api';
 import CustomerDetail from '../../components/office/CustomerDetail';
 
@@ -97,28 +98,23 @@ const CustomerManagement: React.FC = () => {
 
   const fetchStatistics = async () => {
     try {
-      // Try without parameters first
-      const response = await api.get('/customers/statistics');
+      // Always include date parameters to avoid 422 validation error
+      const params = {
+        include_inactive: false,
+        date_from: moment().startOf('month').format('YYYY-MM-DD'),
+        date_to: moment().endOf('month').format('YYYY-MM-DD')
+      };
+      const response = await api.get('/customers/statistics', { params });
       setStats(response.data);
     } catch (error: any) {
-      console.error('Failed to fetch statistics:', error.response?.data || error);
-      // If that fails, try with different parameters
-      try {
-        const params = {
-          include_inactive: false
-        };
-        const response = await api.get('/customers/statistics', { params });
-        setStats(response.data);
-      } catch (error2: any) {
-        console.error('Failed with params:', error2.response?.data || error2);
-        // Set default stats if API fails
-        setStats({
-          totalCustomers: customers.length,
-          activeCustomers: customers.filter(c => c.status === 'active').length,
-          newCustomersThisMonth: 0,
-          averageOrderFrequency: 0,
-        });
-      }
+      console.error('Failed to fetch customer statistics:', error.response?.data || error);
+      // Set default stats if API fails
+      setStats({
+        totalCustomers: customers.length,
+        activeCustomers: customers.filter(c => c.status === 'active').length,
+        newCustomersThisMonth: 0,
+        averageOrderFrequency: 0,
+      });
     }
   };
 

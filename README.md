@@ -290,6 +290,48 @@ examples/
 - Include project-specific rules
 - Define coding standards
 
+## 🔒 Security Configuration
+
+### CRITICAL: Google Maps API Key Setup
+
+**⚠️ NEVER commit API keys to version control!**
+
+1. **Backend Configuration**:
+   ```bash
+   # Copy the example environment file
+   cp backend/.env.example backend/.env
+   
+   # Edit backend/.env and add your API key:
+   GOOGLE_MAPS_API_KEY=your-restricted-api-key-here
+   ```
+
+2. **Obtain and Restrict Your API Key**:
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new API key for Maps JavaScript API
+   - **IMPORTANT: Restrict your key**:
+     - Add HTTP referrer restrictions for your domains
+     - Enable only required APIs (Maps, Geocoding, Places)
+   
+3. **Install Pre-commit Hooks** (Prevents accidental key commits):
+   ```bash
+   # Install pre-commit
+   pip install pre-commit
+   
+   # Install the git hooks
+   pre-commit install
+   
+   # Run on all files to check
+   pre-commit run --all-files
+   ```
+
+4. **Security Best Practices**:
+   - Use different API keys for development and production
+   - Rotate keys regularly
+   - Monitor usage in Google Cloud Console
+   - Never share keys in documentation or issues
+   
+See [SECURITY.md](SECURITY.md) for complete security guidelines.
+
 ## Resources
 
 - [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)

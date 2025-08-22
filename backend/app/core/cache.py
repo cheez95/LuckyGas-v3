@@ -1,297 +1,296 @@
 """
-Redis caching service for performance optimization
+Simple in-memory caching for Lucky Gas
+Perfect for 15 concurrent users - no Redis needed!
 """
-
+import time
+import hashlib
 import json
+from functools import wraps, lru_cache
+from typing import Any, Optional, Dict
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta
-from functools import wraps
-from typing import Any, Callable, Optional, Union
-
-from redis import asyncio as aioredis
-
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class CacheService:
+class SimpleCache:
     """
-    Redis caching service with async support
+    Simple TTL-based in-memory cache
+    Perfect for your scale - 15 users don't need Redis!
     """
-
-    def __init__(self):
-        self.redis: Optional[aioredis.Redis] = None
-        self._connected = False
-
-    async def connect(self):
-        """Connect to Redis"""
-        if self._connected:
-            return
-
-        try:
-            self.redis = await aioredis.from_url(
-                settings.REDIS_URL,
-                encoding="utf - 8",
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-                retry_on_timeout=True,
-                health_check_interval=30,
-            )
-            await self.redis.ping()
-            self._connected = True
-            logger.info("Connected to Redis successfully")
-        except Exception as e:
-            logger.error(f"Failed to connect to Redis: {e}")
-            self._connected = False
-
-    async def disconnect(self):
-        """Disconnect from Redis"""
-        if self.redis:
-            await self.redis.close()
-            self._connected = False
-
-    async def get(self, key: str) -> Optional[Any]:
-        """Get value from cache"""
-        if not self._connected:
-            return None
-
-        try:
-            value = await self.redis.get(key)
-            if value:
-                return json.loads(value)
-            return None
-        except Exception as e:
-            logger.error(f"Cache get error for key {key}: {e}")
-            return None
-
-    async def set(
-        self, key: str, value: Any, expire: Optional[Union[int, timedelta]] = None
-    ) -> bool:
-        """Set value in cache with optional expiration"""
-        if not self._connected:
-            return False
-
-        try:
-            serialized = json.dumps(value, default=str, ensure_ascii=False)
-
-            if expire:
-                if isinstance(expire, timedelta):
-                    expire = int(expire.total_seconds())
-                await self.redis.setex(key, expire, serialized)
+    
+    def __init__(self, ttl_seconds: int = 300, max_size: int = 1000):
+        """
+        Initialize cache
+        
+        Args:
+            ttl_seconds: Time to live in seconds (default 5 minutes)
+            max_size: Maximum number of items in cache
+        """
+        self._cache: Dict[str, tuple[Any, float]] = {}
+        self.ttl_seconds = ttl_seconds
+        self.max_size = max_size
+        self.hits = 0
+        self.misses = 0
+    
+    def _make_key(self, *args, **kwargs) -> str:
+        """Create cache key from arguments"""
+        key_str = f"{str(args)}:{str(sorted(kwargs.items()))}"
+        return hashlib.md5(key_str.encode()).hexdigest()
+    
+    def get(self, key: str) -> Optional[Any]:
+        """Get value from cache if not expired"""
+        if key in self._cache:
+            value, timestamp = self._cache[key]
+            if time.time() - timestamp < self.ttl_seconds:
+                self.hits += 1
+                logger.debug(f"Cache HIT: {key[:8]}...")
+                return value
             else:
-                await self.redis.set(key, serialized)
-            return True
-        except Exception as e:
-            logger.error(f"Cache set error for key {key}: {e}")
-            return False
-
-    async def delete(self, key: str) -> bool:
-        """Delete a key from cache"""
-        if not self._connected:
-            return False
-
-        try:
-            await self.redis.delete(key)
-            return True
-        except Exception as e:
-            logger.error(f"Cache delete error for key {key}: {e}")
-            return False
-
-    async def invalidate(self, pattern: str) -> int:
-        """Invalidate cache keys matching pattern"""
-        if not self._connected:
-            return 0
-
-        try:
-            keys = []
-            async for key in self.redis.scan_iter(match=pattern):
-                keys.append(key)
-
-            if keys:
-                deleted = await self.redis.delete(*keys)
-                logger.info(
-                    f"Invalidated {deleted} cache keys matching pattern: {pattern}"
-                )
-                return deleted
-            return 0
-        except Exception as e:
-            logger.error(f"Cache invalidate error for pattern {pattern}: {e}")
-            return 0
-
-    async def cached(
-        self, key: str, func: Callable, expire: Optional[Union[int, timedelta]] = None
-    ) -> Any:
-        """Get value from cache or execute function and cache result"""
-        # Try to get from cache
-        cached_value = await self.get(key)
-        if cached_value is not None:
-            logger.debug(f"Cache hit for key: {key}")
-            return cached_value
-
-        # Execute function and cache result
-        logger.debug(f"Cache miss for key: {key}")
-        result = await func()
-        await self.set(key, result, expire)
-        return result
-
-    async def increment(self, key: str, amount: int = 1) -> Optional[int]:
-        """Increment a counter in cache"""
-        if not self._connected:
-            return None
-
-        try:
-            return await self.redis.incr(key, amount)
-        except Exception as e:
-            logger.error(f"Cache increment error for key {key}: {e}")
-            return None
-
-    async def decrement(self, key: str, amount: int = 1) -> Optional[int]:
-        """Decrement a counter in cache"""
-        if not self._connected:
-            return None
-
-        try:
-            return await self.redis.decr(key, amount)
-        except Exception as e:
-            logger.error(f"Cache decrement error for key {key}: {e}")
-            return None
-
-    async def exists(self, key: str) -> bool:
-        """Check if key exists in cache"""
-        if not self._connected:
-            return False
-
-        try:
-            return await self.redis.exists(key) > 0
-        except Exception as e:
-            logger.error(f"Cache exists error for key {key}: {e}")
-            return False
-
-    async def ttl(self, key: str) -> Optional[int]:
-        """Get time to live for a key in seconds"""
-        if not self._connected:
-            return None
-
-        try:
-            ttl = await self.redis.ttl(key)
-            return ttl if ttl >= 0 else None
-        except Exception as e:
-            logger.error(f"Cache TTL error for key {key}: {e}")
-            return None
+                # Expired, remove it
+                del self._cache[key]
+                logger.debug(f"Cache EXPIRED: {key[:8]}...")
+        
+        self.misses += 1
+        logger.debug(f"Cache MISS: {key[:8]}...")
+        return None
+    
+    def set(self, key: str, value: Any):
+        """Set value in cache with current timestamp"""
+        # Check size limit
+        if len(self._cache) >= self.max_size:
+            # Remove oldest entry (simple FIFO)
+            oldest_key = next(iter(self._cache))
+            del self._cache[oldest_key]
+            logger.debug(f"Cache EVICT: {oldest_key[:8]}... (size limit)")
+        
+        self._cache[key] = (value, time.time())
+        logger.debug(f"Cache SET: {key[:8]}...")
+    
+    def clear(self):
+        """Clear all cache entries"""
+        self._cache.clear()
+        self.hits = 0
+        self.misses = 0
+        logger.info("Cache cleared")
+    
+    def get_stats(self) -> dict:
+        """Get cache statistics"""
+        total = self.hits + self.misses
+        hit_rate = (self.hits / total * 100) if total > 0 else 0
+        
+        return {
+            'entries': len(self._cache),
+            'hits': self.hits,
+            'misses': self.misses,
+            'hit_rate': f"{hit_rate:.1f}%",
+            'memory_kb': len(str(self._cache)) / 1024  # Rough estimate
+        }
 
 
-# Global cache instance
-cache = CacheService()
+# Global cache instances for different data types
+customer_cache = SimpleCache(ttl_seconds=600, max_size=500)    # 10 minutes - customer data
+delivery_cache = SimpleCache(ttl_seconds=300, max_size=1000)   # 5 minutes - delivery data
+stats_cache = SimpleCache(ttl_seconds=900, max_size=100)       # 15 minutes - statistics
+auth_cache = SimpleCache(ttl_seconds=1800, max_size=50)        # 30 minutes - auth tokens
 
 
-async def get_redis_client():
-    """Get Redis client instance for monitoring components"""
-    if not cache._connected:
-        await cache.connect()
-    return cache.redis
-
-
-def cache_key(*args, **kwargs) -> str:
-    """Generate cache key from arguments"""
-    parts = [str(arg) for arg in args]
-    if kwargs:
-        parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
-    return ":".join(parts)
-
-
-def cache_result(
-    key_prefix: str, expire: Optional[Union[int, timedelta]] = timedelta(hours=1)
-):
+def cache_result(cache_instance: SimpleCache = None, ttl_seconds: int = 300):
     """
     Decorator to cache function results
-
+    
     Usage:
-        @cache_result("customer", expire=timedelta(hours=2))
-        async def get_customer(customer_id: int):
-            # Expensive operation
-            return customer_data
+        @cache_result(ttl_seconds=600)
+        def get_customer(customer_id: int):
+            # Expensive database query
+            return customer
     """
-
+    if cache_instance is None:
+        cache_instance = SimpleCache(ttl_seconds=ttl_seconds)
+    
     def decorator(func):
         @wraps(func)
-        async def wrapper(*args, **kwargs):
-            # Generate cache key
-            key = cache_key(key_prefix, func.__name__, *args, **kwargs)
-
-            # Try to get from cache
-            cached = await cache.get(key)
-            if cached is not None:
-                return cached
-
-            # Execute function and cache result
-            result = await func(*args, **kwargs)
-            if result is not None:
-                await cache.set(key, result, expire)
+        def wrapper(*args, **kwargs):
+            # Create cache key
+            cache_key = cache_instance._make_key(func.__name__, *args, **kwargs)
+            
+            # Check cache
+            cached_value = cache_instance.get(cache_key)
+            if cached_value is not None:
+                return cached_value
+            
+            # Execute function
+            result = func(*args, **kwargs)
+            
+            # Cache result
+            cache_instance.set(cache_key, result)
+            
             return result
-
+        
+        # Add cache control methods
+        wrapper.cache_clear = cache_instance.clear
+        wrapper.cache_stats = cache_instance.get_stats
+        
         return wrapper
-
+    
     return decorator
 
 
-def invalidate_cache(pattern: str):
+# Specific cache decorators for common use cases
+def cache_customer(ttl_seconds: int = 600):
+    """Cache customer data for 10 minutes"""
+    return cache_result(customer_cache, ttl_seconds)
+
+
+def cache_delivery(ttl_seconds: int = 300):
+    """Cache delivery data for 5 minutes"""
+    return cache_result(delivery_cache, ttl_seconds)
+
+
+def cache_stats(ttl_seconds: int = 900):
+    """Cache statistics for 15 minutes"""
+    return cache_result(stats_cache, ttl_seconds)
+
+
+# LRU cache for frequently called functions
+@lru_cache(maxsize=128)
+def get_active_customers_cached(date_str: str):
     """
-    Decorator to invalidate cache after function execution
-
-    Usage:
-        @invalidate_cache("customer:*")
-        async def update_customer(customer_id: int, data: dict):
-            # Update operation
-            return updated_customer
+    Get active customers for a specific date
+    Uses built-in LRU cache - perfect for your scale!
+    
+    Args:
+        date_str: Date string (used for cache key)
+    
+    Note: In real implementation, this would query the database
     """
-
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            result = await func(*args, **kwargs)
-            await cache.invalidate(pattern)
-            return result
-
-        return wrapper
-
-    return decorator
+    # This is just a placeholder
+    # Real implementation would query database
+    return []
 
 
-# Cache key patterns for different entities
+@lru_cache(maxsize=64)
+def get_driver_schedule_cached(driver_id: int, date_str: str):
+    """
+    Get driver schedule for a specific date
+    Cached because schedules don't change often during the day
+    """
+    # Placeholder for real implementation
+    return []
 
 
-class CacheKeys:
-    """Standardized cache key patterns"""
+# Cache management functions
+def clear_all_caches():
+    """Clear all cache instances"""
+    customer_cache.clear()
+    delivery_cache.clear()
+    stats_cache.clear()
+    auth_cache.clear()
+    
+    # Clear LRU caches
+    get_active_customers_cached.cache_clear()
+    get_driver_schedule_cached.cache_clear()
+    
+    logger.info("All caches cleared")
 
-    # Customer cache keys
-    CUSTOMER = "customer:{customer_id}"
-    CUSTOMER_LIST = "customers:list:{skip}:{limit}"
-    CUSTOMER_STATS = "customer:stats:{customer_id}"
 
-    # Order cache keys
-    ORDER = "order:{order_id}"
-    ORDER_LIST = "orders:list:{skip}:{limit}:{status}"
-    ORDER_DAILY_COUNT = "orders:daily_count:{date}"
+def get_all_cache_stats() -> dict:
+    """Get statistics for all caches"""
+    return {
+        'customer_cache': customer_cache.get_stats(),
+        'delivery_cache': delivery_cache.get_stats(),
+        'stats_cache': stats_cache.get_stats(),
+        'auth_cache': auth_cache.get_stats(),
+        'lru_caches': {
+            'active_customers': {
+                'size': get_active_customers_cached.cache_info().currsize,
+                'hits': get_active_customers_cached.cache_info().hits,
+                'misses': get_active_customers_cached.cache_info().misses
+            },
+            'driver_schedule': {
+                'size': get_driver_schedule_cached.cache_info().currsize,
+                'hits': get_driver_schedule_cached.cache_info().hits,
+                'misses': get_driver_schedule_cached.cache_info().misses
+            }
+        }
+    }
 
-    # Route cache keys
-    ROUTE = "route:{route_id}"
-    ROUTE_LIST = "routes:list:{date}:{area}"
-    ROUTE_DRIVER = "route:driver:{driver_id}:{date}"
-    ROUTE_OPTIMIZATION = "route:optimization:{date}:{area}"
 
-    # Prediction cache keys
-    PREDICTION_CUSTOMER = "prediction:customer:{customer_id}"
-    PREDICTION_BATCH = "prediction:batch:{date}"
-    PREDICTION_METRICS = "prediction:metrics"
+# Scheduled cache clearing (call this periodically)
+def scheduled_cache_maintenance():
+    """
+    Run this every hour to clear old cache entries
+    Can be called from a cron job or scheduler
+    """
+    stats_before = get_all_cache_stats()
+    
+    # Clear caches that are too large
+    for cache_name, cache in [
+        ('customer', customer_cache),
+        ('delivery', delivery_cache),
+        ('stats', stats_cache),
+        ('auth', auth_cache)
+    ]:
+        if cache.get_stats()['entries'] > cache.max_size * 0.8:
+            logger.info(f"Cache {cache_name} is 80% full, clearing...")
+            cache.clear()
+    
+    stats_after = get_all_cache_stats()
+    logger.info(f"Cache maintenance complete. Before: {stats_before}, After: {stats_after}")
 
-    # Statistics cache keys
-    STATS_DASHBOARD = "stats:dashboard:{date}"
-    STATS_REVENUE = "stats:revenue:{start_date}:{end_date}"
-    STATS_PERFORMANCE = "stats:performance:{driver_id}:{month}"
 
-    @staticmethod
-    def format(pattern: str, **kwargs) -> str:
-        """Format cache key with parameters"""
-        return pattern.format(**kwargs)
+# Simple async-compatible cache wrapper for security.py
+class AsyncCacheWrapper:
+    """
+    Async-compatible wrapper for SimpleCache
+    Makes our sync cache work with async code in security.py
+    """
+    def __init__(self):
+        self._cache = SimpleCache(ttl_seconds=300, max_size=1000)
+    
+    async def get(self, key: str) -> Optional[str]:
+        """Get value from cache (async-compatible)"""
+        value = self._cache.get(key)
+        return str(value) if value is not None else None
+    
+    async def set(self, key: str, value: Any, expire: int = 300) -> None:
+        """Set value in cache (async-compatible)"""
+        self._cache.set(key, value)
+    
+    async def delete(self, key: str) -> None:
+        """Delete value from cache (async-compatible)"""
+        # SimpleCache doesn't have delete, so we'll just set to None
+        self._cache.set(key, None)
+
+
+# Global async cache instance for security.py
+cache = AsyncCacheWrapper()
+
+
+# Example usage in API endpoint
+def example_cached_endpoint():
+    """
+    Example of how to use caching in endpoints
+    """
+    
+    @cache_customer(ttl_seconds=600)
+    def get_customer_summary(customer_id: int, date: str):
+        """This expensive query will be cached for 10 minutes"""
+        # Simulate expensive database query
+        time.sleep(0.1)  # Pretend this takes 100ms
+        return {
+            'customer_id': customer_id,
+            'date': date,
+            'total_orders': 42,
+            'total_amount': 1234.56
+        }
+    
+    # First call - will be slow (100ms)
+    result1 = get_customer_summary(1, "2024-01-20")
+    
+    # Second call - will be instant (from cache)
+    result2 = get_customer_summary(1, "2024-01-20")
+    
+    # Check cache stats
+    stats = get_customer_summary.cache_stats()
+    print(f"Cache stats: {stats}")

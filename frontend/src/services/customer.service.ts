@@ -1,6 +1,7 @@
 import api, { handleApiError } from './api';
 import { Customer } from '../types/order';
 import { CustomerInventory, CustomerInventoryList } from '../types/product';
+import { toArray } from '../utils/dataHelpers';
 
 interface CustomerQueryParams {
   skip?: number;
@@ -20,9 +21,15 @@ interface CustomerListResponse {
 export const customerService = {
   async getCustomers(params?: CustomerQueryParams): Promise<CustomerListResponse> {
     try {
+      // Debug logging to trace URL source
+      console.log('[customerService] Getting customers...');
+      console.log('[customerService] API instance baseURL:', (api.defaults as any).baseURL);
+      console.trace('[customerService] Stack trace for URL source');
+      
       const response = await api.get<CustomerListResponse>('/customers/', { params });
       return response.data;
     } catch (error) {
+      console.error('[customerService] Error getting customers:', error);
       throw new Error(handleApiError(error));
     }
   },
@@ -63,6 +70,19 @@ export const customerService = {
       await api.delete(`/customers/${id}/`);
     } catch (error) {
       throw new Error(handleApiError(error));
+    }
+  },
+
+  async searchCustomers(query: string): Promise<Customer[]> {
+    try {
+      const response = await api.get<any>('/customers/search/', {
+        params: { q: query }
+      });
+      // Use toArray to safely handle response  
+      return toArray(response.data?.customers || response.data?.items || response.data, 'customers');
+    } catch (error) {
+      console.error('[customerService] searchCustomers error:', error);
+      return [];
     }
   },
   

@@ -92,7 +92,7 @@ const RealtimeOrderTracking: React.FC<OrderTrackingProps> = ({ orderId, customer
       setRefreshing(true);
       const response = await fetch(`/api/v1/orders/${orderId}/tracking`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
 

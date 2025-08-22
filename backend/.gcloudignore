@@ -10,11 +10,14 @@
 !Dockerfile.cloudrun
 !Dockerfile.test
 !Dockerfile.step4
+!Dockerfile.production
 !start_cloudrun.py
 !minimal_step4_crud.py
 !alembic.ini
 !alembic/
 !alembic/**
+!scripts/
+!scripts/**
 
 # But still ignore Python cache files
 __pycache__/

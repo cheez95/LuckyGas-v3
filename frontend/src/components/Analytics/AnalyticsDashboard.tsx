@@ -112,9 +112,9 @@ const AnalyticsDashboard: React.FC = () => {
     fetchDashboardData();
     
     // Auto-refresh every 5 minutes
-    const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
+    const interval = window.setInterval(fetchDashboardData, 5 * 60 * 1000);
     
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, []);
 
 

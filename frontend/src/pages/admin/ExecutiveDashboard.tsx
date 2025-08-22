@@ -143,11 +143,11 @@ const ExecutiveDashboard: React.FC = () => {
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       fetchMetrics(true);
     }, 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, [dateRange]);
 
   const fetchMetrics = async (isRefresh = false) => {

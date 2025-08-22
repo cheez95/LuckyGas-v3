@@ -1,116 +1,143 @@
-from typing import AsyncGenerator
-import logging
-
+"""
+Simplified API dependencies - Direct and simple!
+"""
+import os
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 
-from app.core import database
-from app.core.security import decode_access_token
-from app.models.user import User as UserModel
-from app.schemas.user import TokenData
+from app.core.database import get_db
+from app.models import User
 
-logger = logging.getLogger(__name__)
+# Dynamic config import based on environment
+config_module = os.getenv('CONFIG_MODULE', 'app.core.config')
+if config_module == 'app.core.config_production':
+    from app.core.config_production import settings
+else:
+    from app.core.config import settings
+
+# OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Get database session with proper error handling and initialization."""
-    
-    # Log the current state
-    logger.info(f"get_db called - async_session_maker is {'None' if database.async_session_maker is None else 'initialized'}")
-    logger.info(f"get_db called - engine is {'None' if database.engine is None else 'initialized'}")
-    
-    if database.async_session_maker is None:
-        logger.warning("Database session maker is None, attempting to initialize...")
-        
-        # Try to initialize the database if it hasn't been initialized yet
-        try:
-            await database.initialize_database()
-            logger.info("Database initialization completed")
-        except Exception as e:
-            logger.error(f"Database initialization failed: {str(e)}", exc_info=True)
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Database service unavailable: {str(e)}"
-            )
-    
-    # Double-check after initialization
-    if database.async_session_maker is None:
-        logger.error("Database session maker is still None after initialization attempt")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database service not available - initialization failed"
-        )
-    
-    try:
-        async with database.async_session_maker() as session:
-            # Test the session is working
-            await session.execute(select(1))
-            yield session
-    except Exception as e:
-        logger.error(f"Database session error: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database connection error: {str(e)}"
-        )
+# JWT settings
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = "HS256"
 
 
-async def get_current_user(
-    db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)
-) -> UserModel:
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Get current user from JWT token
+    SYNC version - no async complications!
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="無法驗證憑據",
-        headers={"WWW - Authenticate": "Bearer"},
+        detail="無法驗證憑證",  # "Could not validate credentials"
+        headers={"WWW-Authenticate": "Bearer"},
     )
-
+    
     try:
-        payload = decode_access_token(token)
-        username: str = payload.get("sub")
-        role: str = payload.get("role")
-        if username is None:
+        # Decode JWT token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username, role=role)
-    except (JWTError, ValueError):
+    except JWTError:
         raise credentials_exception
-
-    result = await db.execute(
-        select(UserModel).where(UserModel.username == token_data.username)
-    )
-    user = result.scalar_one_or_none()
-
+    
+    # Get user from database - SYNC query!
+    user = db.query(User).filter(User.email == email).first()
+    
     if user is None:
         raise credentials_exception
+    
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="用戶已停用")
-
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="帳號已被停用"  # "Account has been deactivated"
+        )
+    
     return user
 
 
-async def get_current_active_user(
-    current_user: UserModel = Depends(get_current_user),
-) -> UserModel:
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="用戶已停用")
+def get_current_active_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """
+    Get current active user
+    Just an alias for get_current_user since we already check is_active
+    """
     return current_user
 
 
-def check_permission(required_permission: str):
-    async def permission_checker(
-        current_user: UserModel = Depends(get_current_active_user),
-    ) -> UserModel:
-        # For now, just return the user - implement permission checking later
+def require_role(allowed_roles: list):
+    """
+    Dependency to check user role
+    
+    Usage:
+        @router.get("/admin-only")
+        def admin_endpoint(
+            current_user = Depends(require_role(["admin"]))
+        ):
+            return {"message": "Admin access granted"}
+    """
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="權限不足"  # "Insufficient permissions"
+            )
         return current_user
+    return role_checker
 
-    return permission_checker
+
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Get current user if token is provided, otherwise return None
+    Useful for endpoints that work with or without authentication
+    """
+    if not token:
+        return None
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+    except JWTError:
+        return None
+    
+    user = db.query(User).filter(User.email == email).first()
+    
+    if user and user.is_active:
+        return user
+    
+    return None
 
 
-async def get_current_active_superuser(
-    current_user: UserModel = Depends(get_current_user),
-) -> UserModel:
-    if current_user.role != "super_admin":
-        raise HTTPException(status_code=400, detail="權限不足")
+# Commonly used role checkers
+def require_admin(current_user: User = Depends(require_role(["admin"]))):
+    """Require admin role"""
+    return current_user
+
+
+def require_manager(current_user: User = Depends(require_role(["admin", "manager"]))):
+    """Require admin or manager role"""
+    return current_user
+
+
+def require_staff(current_user: User = Depends(require_role(["admin", "manager", "staff"]))):
+    """Require admin, manager, or staff role"""
+    return current_user
+
+
+def require_driver(current_user: User = Depends(require_role(["admin", "manager", "driver"]))):
+    """Require admin, manager, or driver role"""
     return current_user

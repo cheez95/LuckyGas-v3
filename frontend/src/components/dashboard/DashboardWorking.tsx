@@ -10,7 +10,8 @@ import {
   ClockCircleOutlined,
   RocketOutlined,
 } from '@ant-design/icons';
-import axios from 'axios';
+import { apiClient } from '../../services/api.service';
+import { useCleanup } from '../../hooks/useCleanup';
 
 const { Title } = Typography;
 
@@ -35,6 +36,7 @@ interface RouteProgress {
 }
 
 const DashboardWorking: React.FC = () => {
+  const cleanup = useCleanup();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     todayOrders: 0,
@@ -48,27 +50,25 @@ const DashboardWorking: React.FC = () => {
   const [routes, setRoutes] = useState<RouteProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:8000/api/v1/dashboard/summary', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      // Use cleanup hook for safe API call
+      const response = await apiClient.get('/dashboard/summary', { 
+        signal: cleanup.getSignal() 
       });
       
-      if (response.data) {
+      // Only update state if still mounted
+      if (cleanup.isMounted() && response.data) {
         setStats(response.data.stats);
         setRoutes(response.data.routes || []);
         setError(null);
       }
-    } catch (err) {
+    } catch (err: any) {
+      // Don't log or update state for aborted requests
+      if (err.name === 'CanceledError' || err.name === 'AbortError') {
+        return;
+      }
+      
       console.error('Dashboard fetch error:', err);
       // Use mock data if backend fails
       setStats({
@@ -100,11 +100,30 @@ const DashboardWorking: React.FC = () => {
           progressPercentage: 83
         }
       ]);
-      setError('使用模擬數據 (後端連接失敗)');
+      // Only update state if still mounted
+      if (cleanup.isMounted()) {
+        setError('使用模擬數據 (後端連接失敗)');
+      }
     } finally {
-      setLoading(false);
+      if (cleanup.isMounted()) {
+        setLoading(false);
+      }
     }
   };
+  
+  useEffect(() => {
+    fetchDashboardData();
+    
+    // Use cleanup hook's safe interval
+    const interval = cleanup.setInterval(() => {
+      fetchDashboardData();
+    }, 30000); // Refresh every 30 seconds
+    
+    // Cleanup is handled automatically by useCleanup hook
+    return () => {
+      cleanup.clearInterval(interval);
+    };
+  }, []);
 
   if (loading) {
     return (

@@ -162,7 +162,22 @@
       "Bash(gcloud builds describe:*)",
       "Bash(gcloud builds log:*)",
       "Bash(git pull:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(for file in *_simple.py)",
+      "Bash(do [ -f \"$file\" ])",
+      "Bash(done)",
+      "Bash([ -f models_simple.py ])",
+      "Bash([ -f app/models_simple.py ])",
+      "Bash([ -f database_sync.py ])",
+      "Bash([ -f deps_simple.py ])",
+      "Bash([ -f auth_sync.py ])",
+      "Bash([ -f app/main_simple.py ])",
+      "Bash(sed:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(VITE_API_URL=https://luckygas-backend-staging-154687573210.asia-east1.run.app VITE_WS_URL=wss://luckygas-backend-staging-154687573210.asia-east1.run.app VITE_ENV=production npm run build)",
+      "Bash(VITE_API_URL=https://luckygas-backend-production-154687573210.asia-east1.run.app VITE_WS_URL=wss://luckygas-backend-production-154687573210.asia-east1.run.app VITE_ENV=production npm run build)",
+      "Bash(sudo rm:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }

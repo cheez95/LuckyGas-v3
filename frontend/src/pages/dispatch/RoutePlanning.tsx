@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Row,
   Col,
@@ -31,10 +31,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import dayjs, { Dayjs } from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
-import RoutePlanningMap from '../../components/dispatch/maps/RoutePlanningMap';
+import SafeRoutePlanningMap from '../../components/dispatch/maps/SafeRoutePlanningMap';
 import { orderService } from '../../services/order.service';
 import { routeService } from '../../services/route.service';
 import { driverService } from '../../services/driver.service';
+import { toArray, safeMap, SafeArray } from '../../utils/dataHelpers';
+import { memoryLeakDetector } from '../../utils/memoryLeakDetector';
 
 interface Order {
   id: number;
@@ -91,6 +93,14 @@ const RoutePlanning: React.FC = () => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   
+  // Refs for cleanup
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+  
+  // Memory leak detection
+  const mountTimeRef = useRef<number>(Date.now());
+  const activeRequestsRef = useRef<number>(0);
+  
   // State
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [selectedArea, setSelectedArea] = useState<string>('all');
@@ -111,6 +121,19 @@ const RoutePlanning: React.FC = () => {
 
   // Fetch available orders
   const fetchAvailableOrders = async () => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    
+    if (!isMountedRef.current) return;
+    
+    activeRequestsRef.current++;
+    console.log(`[RoutePlanning] Starting request. Active requests: ${activeRequestsRef.current}`);
+    
     setIsLoading(true);
     try {
       const response = await orderService.searchOrders({
@@ -118,45 +141,160 @@ const RoutePlanning: React.FC = () => {
         dateTo: selectedDate.format('YYYY-MM-DD'),
         status: ['pending', 'confirmed'],
         area: selectedArea !== 'all' ? selectedArea : undefined,
+        signal: abortControllerRef.current.signal,
       });
       
-      setAvailableOrders(response.orders.map((order: any) => ({
+      // Debug logging
+      console.log('[RoutePlanning] fetchAvailableOrders response:', response);
+      console.log('[RoutePlanning] response type:', typeof response);
+      console.log('[RoutePlanning] response.orders:', response?.orders);
+      
+      // Use safe array handling
+      const ordersArray = toArray(response?.orders || response, 'orders');
+      console.log('[RoutePlanning] ordersArray:', ordersArray);
+      
+      const mappedOrders = safeMap(ordersArray, (order: any) => ({
         id: order.id,
         orderNumber: order.orderNumber,
-        customerName: order.customer.shortName,
-        customerCode: order.customer.customerCode,
-        deliveryAddress: order.deliveryAddress || order.customer.address,
-        area: order.customer.area,
+        customerName: order.customer?.shortName || '',
+        customerCode: order.customer?.customerCode || '',
+        deliveryAddress: order.deliveryAddress || order.customer?.address || '',
+        area: order.customer?.area || '',
         products: formatProducts(order),
-        totalAmount: order.finalAmount,
-        isUrgent: order.isUrgent,
-        deliveryNotes: order.deliveryNotes,
-        location: order.customer.location ? {
+        totalAmount: order.finalAmount || 0,
+        isUrgent: order.isUrgent || false,
+        deliveryNotes: order.deliveryNotes || '',
+        location: order.customer?.location ? {
           lat: order.customer.location.latitude,
           lng: order.customer.location.longitude,
-        } : generateMockLocation(order.customer.area),
-      })));
-    } catch (error) {
-      message.error(t('dispatch.route.fetchOrdersError'));
+        } : generateMockLocation(order.customer?.area || ''),
+      }));
+      
+      if (isMountedRef.current) {
+        setAvailableOrders(mappedOrders);
+      }
+    } catch (error: any) {
+      if (error.name !== 'AbortError' && isMountedRef.current) {
+        console.error('[RoutePlanning] fetchAvailableOrders error:', error);
+        message.error(t('dispatch.route.fetchOrdersError'));
+        setAvailableOrders([]);
+      }
     } finally {
-      setIsLoading(false);
+      activeRequestsRef.current--;
+      console.log(`[RoutePlanning] Request completed. Active requests: ${activeRequestsRef.current}`);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   // Fetch available drivers
   const fetchDrivers = async () => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    
+    if (!isMountedRef.current) return;
+    
+    activeRequestsRef.current++;
+    console.log(`[RoutePlanning] Starting driver request. Active requests: ${activeRequestsRef.current}`);
+    
     try {
-      const response = await driverService.getAvailableDrivers(selectedDate.format('YYYY-MM-DD'));
-      setDrivers(response);
-    } catch (error) {
-      message.error(t('dispatch.route.fetchDriversError'));
+      const response = await driverService.getAvailableDrivers(selectedDate.format('YYYY-MM-DD'), {
+        signal: abortControllerRef.current.signal,
+      });
+      
+      // Debug logging
+      console.log('[RoutePlanning] fetchDrivers response:', response);
+      console.log('[RoutePlanning] response type:', typeof response);
+      
+      // Use safe array handling
+      const driversArray = toArray(response, 'drivers');
+      console.log('[RoutePlanning] driversArray:', driversArray);
+      
+      if (isMountedRef.current) {
+        setDrivers(driversArray);
+      }
+    } catch (error: any) {
+      if (error.name !== 'AbortError' && isMountedRef.current) {
+        console.error('[RoutePlanning] fetchDrivers error:', error);
+        message.error(t('dispatch.route.fetchDriversError'));
+        setDrivers([]);
+      }
+    } finally {
+      activeRequestsRef.current--;
+      console.log(`[RoutePlanning] Driver request completed. Active requests: ${activeRequestsRef.current}`);
     }
   };
 
-  // Initial data load
+  // Initial data load with cleanup
   useEffect(() => {
+    const mountTime = Date.now();
+    mountTimeRef.current = mountTime;
+    console.log(`[RoutePlanning] Component mounted at ${new Date(mountTime).toISOString()}`);
+    console.log('[RoutePlanning] Memory usage:', performance.memory ? {
+      usedJSHeapSize: `${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB`,
+      totalJSHeapSize: `${Math.round(performance.memory.totalJSHeapSize / 1048576)}MB`,
+      jsHeapSizeLimit: `${Math.round(performance.memory.jsHeapSizeLimit / 1048576)}MB`
+    } : 'Not available');
+    
+    // Start memory leak detection in development
+    if (process.env.NODE_ENV === 'development') {
+      memoryLeakDetector.startMonitoring(3000); // Monitor every 3 seconds
+    }
+    
+    isMountedRef.current = true;
+    
     fetchAvailableOrders();
     fetchDrivers();
+    
+    return () => {
+      const lifetime = Date.now() - mountTimeRef.current;
+      console.log(`[RoutePlanning] Component unmounting after ${Math.round(lifetime / 1000)}s`);
+      console.log(`[RoutePlanning] Active requests at unmount: ${activeRequestsRef.current}`);
+      console.log('[RoutePlanning] Memory usage at unmount:', performance.memory ? {
+        usedJSHeapSize: `${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB`,
+        totalJSHeapSize: `${Math.round(performance.memory.totalJSHeapSize / 1048576)}MB`,
+      } : 'Not available');
+      
+      isMountedRef.current = false;
+      
+      // Cancel any pending requests
+      if (abortControllerRef.current) {
+        console.log('[RoutePlanning] Aborting pending requests...');
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      
+      // Clear large data arrays to free memory
+      console.log('[RoutePlanning] Clearing data arrays...');
+      setAvailableOrders([]);
+      setSelectedOrders([]);
+      setRouteStops([]);
+      setDrivers([]);
+      setRouteStats({
+        totalDistance: 0,
+        totalDuration: 0,
+        totalStops: 0,
+        totalWeight: 0,
+      });
+      
+      console.log('[RoutePlanning] Cleanup completed successfully');
+      
+      // Stop memory leak detection
+      if (process.env.NODE_ENV === 'development') {
+        memoryLeakDetector.stopMonitoring();
+      }
+      
+      // Warn if there are still active requests
+      if (activeRequestsRef.current > 0) {
+        console.warn(`[RoutePlanning] WARNING: ${activeRequestsRef.current} requests still active after cleanup!`);
+      }
+    };
   }, [selectedDate, selectedArea]);
 
   // Format products display
@@ -232,16 +370,23 @@ const RoutePlanning: React.FC = () => {
       return;
     }
     
+    if (!isMountedRef.current) return;
+    
+    activeRequestsRef.current++;
+    console.log(`[RoutePlanning] Starting optimization. Active requests: ${activeRequestsRef.current}`);
+    
     setIsOptimizing(true);
     try {
       const response = await routeService.optimizeRoute({
         date: selectedDate.format('YYYY-MM-DD'),
         driverId: selectedDriver,
         orderIds: routeStops.map(s => s.orderId),
+        signal: abortControllerRef.current?.signal,
       });
       
       // Reorder stops based on optimization
-      const optimizedStops = response.optimizedOrder.map((orderId: number, index: number) => {
+      const optimizedOrderArray = toArray(response.optimizedOrder || response, 'optimizedOrder');
+      const optimizedStops = safeMap(optimizedOrderArray, (orderId: number, index: number) => {
         const stop = routeStops.find(s => s.orderId === orderId);
         return {
           ...stop,
@@ -249,19 +394,26 @@ const RoutePlanning: React.FC = () => {
         };
       });
       
-      setRouteStops(optimizedStops);
-      setRouteStats({
-        totalDistance: response.totalDistance,
-        totalDuration: response.totalDuration,
-        totalStops: optimizedStops.length,
-        totalWeight: response.totalWeight,
-      });
-      
-      message.success(t('dispatch.route.optimizeSuccess'));
-    } catch (error) {
-      message.error(t('dispatch.route.optimizeError'));
+      if (isMountedRef.current) {
+        setRouteStops(optimizedStops);
+        setRouteStats({
+          totalDistance: response.totalDistance,
+          totalDuration: response.totalDuration,
+          totalStops: optimizedStops.length,
+          totalWeight: response.totalWeight,
+        });
+        message.success(t('dispatch.route.optimizeSuccess'));
+      }
+    } catch (error: any) {
+      if (error.name !== 'AbortError' && isMountedRef.current) {
+        message.error(t('dispatch.route.optimizeError'));
+      }
     } finally {
-      setIsOptimizing(false);
+      activeRequestsRef.current--;
+      console.log(`[RoutePlanning] Optimization completed. Active requests: ${activeRequestsRef.current}`);
+      if (isMountedRef.current) {
+        setIsOptimizing(false);
+      }
     }
   };
 
@@ -290,27 +442,34 @@ const RoutePlanning: React.FC = () => {
             stops: routeStops,
             totalDistance: routeStats.totalDistance,
             totalDuration: routeStats.totalDuration,
+            signal: abortControllerRef.current?.signal,
           });
           
-          message.success(t('dispatch.route.saveSuccess'));
-          
-          // Reset form
-          setRouteStops([]);
-          setSelectedOrders([]);
-          setSelectedDriver(undefined);
-          setRouteStats({
-            totalDistance: 0,
-            totalDuration: 0,
-            totalStops: 0,
-            totalWeight: 0,
-          });
-          
-          // Refresh available orders
-          fetchAvailableOrders();
-        } catch (error) {
-          message.error(t('dispatch.route.saveError'));
+          if (isMountedRef.current) {
+            message.success(t('dispatch.route.saveSuccess'));
+            
+            // Reset form
+            setRouteStops([]);
+            setSelectedOrders([]);
+            setSelectedDriver(undefined);
+            setRouteStats({
+              totalDistance: 0,
+              totalDuration: 0,
+              totalStops: 0,
+              totalWeight: 0,
+            });
+            
+            // Refresh available orders
+            fetchAvailableOrders();
+          }
+        } catch (error: any) {
+          if (error.name !== 'AbortError' && isMountedRef.current) {
+            message.error(t('dispatch.route.saveError'));
+          }
         } finally {
-          setIsSaving(false);
+          if (isMountedRef.current) {
+            setIsSaving(false);
+          }
         }
       },
     });
@@ -442,7 +601,7 @@ const RoutePlanning: React.FC = () => {
               placeholder={t('dispatch.route.selectDriver')}
               allowClear
             >
-              {drivers.map(driver => (
+              {safeMap(drivers, (driver) => (
                 <Select.Option key={driver.id} value={driver.id}>
                   {driver.fullName} {driver.vehicleNumber && `(${driver.vehicleNumber})`}
                 </Select.Option>
@@ -503,7 +662,7 @@ const RoutePlanning: React.FC = () => {
 
         {/* Middle Panel - Route Map */}
         <Col span={10}>
-          <RoutePlanningMap
+          <SafeRoutePlanningMap
             stops={routeStops}
             height="calc(100vh - 250px)"
             showOptimizeButton

@@ -66,7 +66,7 @@ class GoogleMapsService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    this.baseURL = import.meta.env.VITE_API_URL || 'https://luckygas-backend-production-154687573210.asia-east1.run.app';
     
     this.api = axios.create({
       baseURL: `${this.baseURL}/api/v1/maps`,
@@ -79,7 +79,7 @@ class GoogleMapsService {
     // Add auth token to requests
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('access_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }

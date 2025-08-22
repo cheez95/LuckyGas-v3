@@ -69,7 +69,7 @@ const EnhancedMobileDriverInterface: React.FC = () => {
         setBatteryLevel(mobileService.getBatteryLevel());
       };
       updateBatteryLevel();
-      const batteryInterval = setInterval(updateBatteryLevel, 30000); // Update every 30s
+      const batteryInterval = window.setInterval(updateBatteryLevel, 30000); // Update every 30s
       
       // Monitor online status
       const handleOnline = () => {
@@ -89,11 +89,11 @@ const EnhancedMobileDriverInterface: React.FC = () => {
         setOfflineQueueCount(mobileService.getOfflineQueueCount());
       };
       updateOfflineQueue();
-      const queueInterval = setInterval(updateOfflineQueue, 5000); // Check every 5s
+      const queueInterval = window.setInterval(updateOfflineQueue, 5000); // Check every 5s
       
       return () => {
-        clearInterval(batteryInterval);
-        clearInterval(queueInterval);
+        window.clearInterval(batteryInterval);
+        window.clearInterval(queueInterval);
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
       };

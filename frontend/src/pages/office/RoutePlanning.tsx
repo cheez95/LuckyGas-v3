@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, Button, Space, Select, DatePicker, Row, Col, List, Tag, Statistic, message, Spin, Badge, Tooltip, Modal, Form, Input, Drawer, Timeline, Transfer, Progress } from 'antd';
 import { EnvironmentOutlined, CarOutlined, ClockCircleOutlined, UserOutlined, ReloadOutlined, SendOutlined, DragOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
+import { apiWithCancel, requestManager } from '../../services/api.service';
 import dayjs from 'dayjs';
 import GoogleMapsPlaceholder, { MapMarker } from '../../components/common/GoogleMapsPlaceholder';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
@@ -98,7 +99,7 @@ const RoutePlanning: React.FC = () => {
       
       // Update driver status in drivers list
       setDrivers(prevDrivers => 
-        prevDrivers.map(driver => 
+        (prevDrivers || []).map(driver => 
           driver.id === location.driver_id 
             ? { ...driver, currentLocation: { latitude: location.latitude, longitude: location.longitude } }
             : driver
@@ -119,8 +120,31 @@ const RoutePlanning: React.FC = () => {
     enableNotifications: true,
   });
 
+  // UseRef to track if component is mounted
+  const isMountedRef = useRef(true);
+  
+  useEffect(() => {
+    // Set mounted flag
+    isMountedRef.current = true;
+    
+    // Cleanup function to cancel requests and set unmounted flag
+    return () => {
+      isMountedRef.current = false;
+      // Cancel all pending requests for this component
+      requestManager.cancel('route-planning-drivers');
+      requestManager.cancel('route-planning-routes');
+      requestManager.cancel('route-planning-orders');
+    };
+  }, []);
+  
   useEffect(() => {
     fetchData();
+    // Cleanup function to cancel requests when date changes
+    return () => {
+      requestManager.cancel('route-planning-drivers');
+      requestManager.cancel('route-planning-routes');
+      requestManager.cancel('route-planning-orders');
+    };
   }, [selectedDate]);
   
   // Subscribe to driver locations when drivers are loaded
@@ -141,23 +165,50 @@ const RoutePlanning: React.FC = () => {
   }, [drivers, subscribeToDriverLocation, unsubscribeFromDriverLocation]);
 
   const fetchData = async () => {
+    // Only proceed if component is mounted
+    if (!isMountedRef.current) return;
+    
     setLoading(true);
     try {
       const [driversRes, routesRes, ordersRes] = await Promise.all([
-        api.get('/drivers'),
-        api.get(`/routes?date=${selectedDate.format('YYYY-MM-DD')}`),
-        api.get(`/orders/unassigned?date=${selectedDate.format('YYYY-MM-DD')}`),
-      ]);
+        apiWithCancel.get('/drivers', 'route-planning-drivers', { cache: true }),
+        apiWithCancel.get(
+          `/routes?date=${selectedDate.format('YYYY-MM-DD')}`, 
+          'route-planning-routes',
+          { cache: true, debounce: 500 }
+        ),
+        apiWithCancel.get(
+          `/orders/unassigned?date=${selectedDate.format('YYYY-MM-DD')}`,
+          'route-planning-orders',
+          { cache: true, debounce: 500 }
+        ),
+      ]).catch(error => {
+        // Handle cancellation errors silently
+        if (error.message === 'Request cancelled') {
+          return [];
+        }
+        throw error;
+      });
       
-      setDrivers(driversRes.data);
-      setRoutes(routesRes.data);
-      setUnassignedOrders(ordersRes.data);
-      
-      calculateStatistics(routesRes.data, ordersRes.data);
-    } catch (error) {
-      message.error(t('routes.fetchError'));
+      // Only update state if component is still mounted
+      if (isMountedRef.current && driversRes && routesRes && ordersRes) {
+        setDrivers(driversRes.data || []);
+        setRoutes(routesRes.data || []);
+        setUnassignedOrders(ordersRes.data || []);
+        
+        calculateStatistics(routesRes.data || [], ordersRes.data || []);
+      }
+    } catch (error: any) {
+      // Only show error if component is mounted and it's not a cancellation
+      if (isMountedRef.current && error.message !== 'Request cancelled') {
+        message.error(t('routes.fetchError'));
+        console.error('Failed to fetch route planning data:', error);
+      }
     } finally {
-      setLoading(false);
+      // Only update loading state if component is mounted
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -226,25 +277,41 @@ const RoutePlanning: React.FC = () => {
     return markers;
   };
 
-  const handleOptimizeRoutes = async () => {
+  const handleOptimizeRoutes = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     setOptimizing(true);
     try {
-      const response = await api.post('/routes/optimize', {
-        date: selectedDate.format('YYYY-MM-DD'),
-        drivers: drivers.filter(d => d.status === 'available').map(d => d.id),
-      });
+      const response = await apiWithCancel.post(
+        '/routes/optimize',
+        {
+          date: selectedDate.format('YYYY-MM-DD'),
+          drivers: (drivers || []).filter(d => d.status === 'available').map(d => d.id),
+        },
+        'route-planning-optimize'
+      );
       
-      setRoutes(response.data.routes);
-      setUnassignedOrders(response.data.unassigned);
-      message.success(t('routes.optimizeSuccess'));
-      
-      calculateStatistics(response.data.routes, response.data.unassigned);
-    } catch (error) {
-      message.error(t('routes.optimizeError'));
+      // Only update state if component is still mounted
+      if (isMountedRef.current && response.data) {
+        setRoutes(response.data.routes || []);
+        setUnassignedOrders(response.data.unassigned || []);
+        message.success(t('routes.optimizeSuccess'));
+        
+        calculateStatistics(response.data.routes || [], response.data.unassigned || []);
+      }
+    } catch (error: any) {
+      // Only show error if component is mounted and it's not a cancellation
+      if (isMountedRef.current && error.message !== 'Request cancelled') {
+        message.error(t('routes.optimizeError'));
+        console.error('Failed to optimize routes:', error);
+      }
     } finally {
-      setOptimizing(false);
+      // Only update optimizing state if component is mounted
+      if (isMountedRef.current) {
+        setOptimizing(false);
+      }
     }
-  };
+  }, [drivers, selectedDate, t]);
 
   const handleAssignToRoute = (routeId: string, orderIds: string[]) => {
     const ordersToAssign = unassignedOrders.filter(order => orderIds.includes(order.id));
@@ -292,42 +359,68 @@ const RoutePlanning: React.FC = () => {
     setRoutes(updatedRoutes);
   };
 
-  const handleAssignDriver = async (values: any) => {
+  const handleAssignDriver = useCallback(async (values: any) => {
+    if (!isMountedRef.current) return;
+    
     try {
-      const response = await api.post('/routes', {
-        driverId: values.driverId,
-        date: selectedDate.format('YYYY-MM-DD'),
-        routeNumber: values.routeNumber,
-      });
+      const response = await apiWithCancel.post(
+        '/routes',
+        {
+          driverId: values.driverId,
+          date: selectedDate.format('YYYY-MM-DD'),
+          routeNumber: values.routeNumber,
+        },
+        'route-planning-assign-driver'
+      );
       
-      setRoutes([...routes, response.data]);
-      setIsAssignDriverModalVisible(false);
-      form.resetFields();
-      message.success(t('routes.createSuccess'));
-    } catch (error) {
-      message.error(t('routes.createError'));
+      // Only update state if component is still mounted
+      if (isMountedRef.current && response.data) {
+        setRoutes([...routes, response.data]);
+        setIsAssignDriverModalVisible(false);
+        form.resetFields();
+        message.success(t('routes.createSuccess'));
+      }
+    } catch (error: any) {
+      // Only show error if component is mounted and it's not a cancellation
+      if (isMountedRef.current && error.message !== 'Request cancelled') {
+        message.error(t('routes.createError'));
+        console.error('Failed to assign driver:', error);
+      }
     }
-  };
+  }, [routes, selectedDate, form, t]);
 
-  const handlePublishRoutes = async () => {
+  const handlePublishRoutes = useCallback(async () => {
     Modal.confirm({
       title: t('routes.publishConfirm'),
       content: t('routes.publishWarning'),
       onOk: async () => {
+        if (!isMountedRef.current) return;
+        
         try {
-          await api.post('/routes/publish', {
-            date: selectedDate.format('YYYY-MM-DD'),
-            routeIds: routes.map(r => r.id),
-          });
+          await apiWithCancel.post(
+            '/routes/publish',
+            {
+              date: selectedDate.format('YYYY-MM-DD'),
+              routeIds: routes.map(r => r.id),
+            },
+            'route-planning-publish'
+          );
           
-          message.success(t('routes.publishSuccess'));
-          fetchData();
-        } catch (error) {
-          message.error(t('routes.publishError'));
+          // Only update if component is still mounted
+          if (isMountedRef.current) {
+            message.success(t('routes.publishSuccess'));
+            fetchData();
+          }
+        } catch (error: any) {
+          // Only show error if component is mounted and it's not a cancellation
+          if (isMountedRef.current && error.message !== 'Request cancelled') {
+            message.error(t('routes.publishError'));
+            console.error('Failed to publish routes:', error);
+          }
         }
       },
     });
-  };
+  }, [routes, selectedDate, t, fetchData]);
 
   const getDriverStatusColor = (status: string) => {
     const colors: Record<string, string> = {

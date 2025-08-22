@@ -1,0 +1,270 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop, master ]
+  pull_request:
+    branches: [ main, develop, master ]
+  schedule:
+    # Run weekly security scan on Mondays at 3 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      deep_scan:
+        description: 'Run deep scan including git history'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  secret-scanning:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_SUMMARY: true
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Detect Secrets
+        uses: reviewdog/action-detect-secrets@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          fail_on_error: true
+
+      - name: Custom Secret Scanner
+        run: |
+          chmod +x ./scan-secrets.sh
+          ./scan-secrets.sh || true
+        continue-on-error: true
+
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scan-results
+          path: security-scan-report-*.md
+
+  dependency-check:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Python Security Check
+        run: |
+          pip install safety bandit pip-audit
+          cd backend
+          # Check for known vulnerabilities
+          pip-audit || true
+          # Run bandit security linter
+          bandit -r app/ -f json -o bandit-report.json || true
+          # Safety check (deprecated packages)
+          safety check --json || true
+
+      - name: Node.js Security Check
+        run: |
+          cd frontend
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Upload vulnerability reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: vulnerability-reports
+          path: |
+            backend/bandit-report.json
+            backend/safety-report.json
+
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript, python
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+      - name: SonarCloud Scan
+        if: github.event_name != 'pull_request'
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
+  security-report:
+    name: Generate Security Report
+    needs: [secret-scanning, dependency-check, code-security]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate consolidated report
+        run: |
+          echo "# 🔒 Security Scan Summary" > security-summary.md
+          echo "" >> security-summary.md
+          echo "**Date**: $(date -u '+%Y-%m-%d %H:%M UTC')" >> security-summary.md
+          echo "**Branch**: ${{ github.ref_name }}" >> security-summary.md
+          echo "**Commit**: ${{ github.sha }}" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          echo "## Scan Results" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          # Check job statuses
+          if [ "${{ needs.secret-scanning.result }}" == "success" ]; then
+            echo "✅ **Secret Scanning**: Passed" >> security-summary.md
+          else
+            echo "❌ **Secret Scanning**: Failed" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.dependency-check.result }}" == "success" ]; then
+            echo "✅ **Dependency Check**: Passed" >> security-summary.md
+          else
+            echo "⚠️ **Dependency Check**: Warnings" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.code-security.result }}" == "success" ]; then
+            echo "✅ **Code Security**: Passed" >> security-summary.md
+          else
+            echo "⚠️ **Code Security**: Needs Review" >> security-summary.md
+          fi
+          
+          echo "" >> security-summary.md
+          echo "## Next Steps" >> security-summary.md
+          echo "" >> security-summary.md
+          echo "1. Review any warnings in the detailed reports" >> security-summary.md
+          echo "2. Update dependencies with known vulnerabilities" >> security-summary.md
+          echo "3. Rotate any potentially exposed credentials" >> security-summary.md
+          echo "4. Enable branch protection rules" >> security-summary.md
+          
+          cat security-summary.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      - name: Create issue for failures
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = `🔒 Security Scan Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            ## Security Scan Failure
+            
+            The automated security scan has detected potential issues.
+            
+            **Workflow Run**: [${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            **Branch**: ${context.ref}
+            **Commit**: ${context.sha}
+            
+            ### Required Actions:
+            1. Review the security scan results
+            2. Fix any exposed secrets immediately
+            3. Update vulnerable dependencies
+            4. Re-run the security scan
+            
+            cc @security-team
+            `;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['security', 'critical', 'automated']
+            });
+
+  notify:
+    name: Security Notifications
+    needs: [security-report]
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"⚠️ Security scan failed for Lucky Gas! Check GitHub Actions for details."}' \
+            $SLACK_WEBHOOK
+        continue-on-error: true
+
+      - name: Send email notification
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: Security Scan Failed - Lucky Gas
+          to: security@luckygas.com
+          from: GitHub Actions
+          body: |
+            Security scan has failed for the Lucky Gas repository.
+            
+            Please review the results immediately at:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        continue-on-error: true

@@ -314,9 +314,12 @@ class SecurityConfig:
 
     def _determine_security_level(self) -> SecurityLevel:
         """Determine security level based on environment."""
-        if settings.ENVIRONMENT.value == "production":
+        # Handle both enum and string values for ENVIRONMENT
+        env_value = settings.ENVIRONMENT.value if hasattr(settings.ENVIRONMENT, 'value') else settings.ENVIRONMENT
+        
+        if env_value == "production":
             return SecurityLevel.HIGH
-        elif settings.ENVIRONMENT.value == "staging":
+        elif env_value == "staging":
             return SecurityLevel.MEDIUM
         else:
             return SecurityLevel.LOW
@@ -424,21 +427,27 @@ class SecurityConfig:
 
     def _get_cors_config(self) -> Dict[str, any]:
         """Get CORS configuration based on security level."""
-        if self.security_level == SecurityLevel.HIGH:
-            return {
-                "allow_origins": ["https://app.luckygas.tw", "https://www.luckygas.tw"],
-                "allow_credentials": True,
-                "allow_methods": ["GET", "POST", "PUT", "DELETE"],
-                "max_age": 3600,
-            }
+        # Always use BACKEND_CORS_ORIGINS if available
+        if hasattr(settings, 'BACKEND_CORS_ORIGINS'):
+            origins = settings.BACKEND_CORS_ORIGINS
+        elif self.security_level == SecurityLevel.HIGH:
+            origins = [
+                "https://app.luckygas.tw", 
+                "https://www.luckygas.tw",
+                "https://vast-tributary-466619-m8.web.app",
+                "https://luckygas-frontend-staging-2025.web.app",
+                "https://luckygas-frontend-production-2025.web.app"
+            ]
         else:
-            # Development / staging - more permissive
-            return {
-                "allow_origins": settings.get_all_cors_origins(),
-                "allow_credentials": True,
-                "allow_methods": ["*"],
-                "max_age": 3600,
-            }
+            origins = ["*"]
+        
+        return {
+            "allow_origins": origins,
+            "allow_credentials": True,
+            "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["*"],
+            "max_age": 3600,
+        }
 
     def _get_rate_limits(self) -> Dict[str, Dict[str, int]]:
         """Get rate limiting configuration."""

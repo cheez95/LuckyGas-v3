@@ -124,11 +124,11 @@ const SMSMonitor: React.FC = () => {
   useEffect(() => {
     fetchData();
     // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    const interval = window.setInterval(fetchData, 30000);
     setRefreshInterval(interval);
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) window.clearInterval(interval);
     };
   }, [dateRange, filters]);
 

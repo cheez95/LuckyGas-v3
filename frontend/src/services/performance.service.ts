@@ -331,13 +331,14 @@ class PerformanceMonitoringService {
 
   // Start periodic reporting
   private startPeriodicReporting() {
-    this.reportTimer = setInterval(() => {
+    // Re-enabled with safe monitoring that prevents infinite loops
+    this.reportTimer = window.setInterval(() => {
       const report = this.generateReport();
       this.sendReportToBackend(report);
     }, this.reportInterval);
   }
 
-  // Send report to backend
+  // Send report to backend with safe error handling
   private async sendReportToBackend(report: PerformanceReport) {
     if (import.meta.env.DEV) {
       console.log('Performance Report:', report);
@@ -346,16 +347,34 @@ class PerformanceMonitoringService {
     // In production, send to backend
     if (import.meta.env.PROD) {
       try {
-        await fetch('/api/v1/monitoring/performance', {
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch('/api/v1/monitoring/performance', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
           },
           body: JSON.stringify(report),
+          signal: controller.signal,
         });
-      } catch (error) {
-        console.error('Failed to send performance report:', error);
+        
+        clearTimeout(timeout);
+        
+        if (!response.ok) {
+          // Silent failure - don't throw to prevent error monitoring recursion
+          console.warn(`Performance report failed with status: ${response.status}`);
+        }
+      } catch (error: any) {
+        // Silent failure - only log to console, don't report to error monitoring
+        if (error.name === 'AbortError') {
+          console.warn('Performance report timeout after 5 seconds');
+        } else {
+          console.warn('Failed to send performance report (silent failure):', error.message);
+        }
+        // DO NOT throw or report this error - would cause monitoring recursion
       }
     }
   }
@@ -363,7 +382,7 @@ class PerformanceMonitoringService {
   // Cleanup
   destroy() {
     if (this.reportTimer) {
-      clearInterval(this.reportTimer);
+      window.clearInterval(this.reportTimer);
     }
     
     this.observers.forEach(observer => observer.disconnect());

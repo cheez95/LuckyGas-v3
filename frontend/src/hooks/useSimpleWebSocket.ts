@@ -175,14 +175,14 @@ export function useSimpleWebSocket(options: WebSocketOptions = {}) {
     connect();
     
     // Set up periodic ping to keep connection alive
-    const pingInterval = setInterval(() => {
+    const pingInterval = window.setInterval(() => {
       if (ws.current?.readyState === WebSocket.OPEN) {
         sendMessage({ type: 'ping' });
       }
     }, 30000); // Ping every 30 seconds
     
     return () => {
-      clearInterval(pingInterval);
+      window.clearInterval(pingInterval);
       disconnect();
     };
   }, [connect, disconnect, sendMessage]);

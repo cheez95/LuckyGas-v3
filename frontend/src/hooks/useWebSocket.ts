@@ -51,7 +51,7 @@ export const useWebSocket = ({
       onConnect?.();
 
       // Start heartbeat
-      heartbeatIntervalRef.current = setInterval(() => {
+      heartbeatIntervalRef.current = window.setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'heartbeat' }));
         }
@@ -86,7 +86,7 @@ export const useWebSocket = ({
 
       // Clear heartbeat
       if (heartbeatIntervalRef.current) {
-        clearInterval(heartbeatIntervalRef.current);
+        window.clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
       }
 
@@ -107,7 +107,7 @@ export const useWebSocket = ({
     }
 
     if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
+      window.clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
     }
 

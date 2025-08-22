@@ -5,9 +5,44 @@ import viteCompression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Use relative paths for Cloud Storage deployment
-  base: './',
+  // Use absolute paths for Firebase hosting with SPA
+  base: '/',
   plugins: [
+    // Force HTTPS plugin - MUST be first to process all code
+    {
+      name: 'force-https',
+      enforce: 'pre',
+      transform(code, id) {
+        // Skip node_modules
+        if (id.includes('node_modules')) {
+          return null;
+        }
+        
+        // Replace any HTTP URLs with HTTPS for luckygas-backend
+        let modified = false;
+        let newCode = code;
+        
+        // Replace http:// with https:// for luckygas-backend URLs
+        if (code.includes('http://luckygas-backend')) {
+          newCode = newCode.replace(/http:\/\/luckygas-backend/g, 'https://luckygas-backend');
+          modified = true;
+          console.log(`[force-https] Replaced HTTP with HTTPS in ${id}`);
+        }
+        
+        // Also check for any staging URLs with HTTP
+        if (code.includes('http://') && code.includes('staging')) {
+          newCode = newCode.replace(/http:\/\/([^\/\s'"]+staging[^\/\s'"]*)/g, 'https://$1');
+          modified = true;
+          console.log(`[force-https] Replaced staging HTTP URL in ${id}`);
+        }
+        
+        return modified ? newCode : null;
+      },
+      // Also process HTML
+      transformIndexHtml(html) {
+        return html.replace(/http:\/\/luckygas-backend/g, 'https://luckygas-backend');
+      }
+    },
     react(),
     // Bundle size analysis
     visualizer({

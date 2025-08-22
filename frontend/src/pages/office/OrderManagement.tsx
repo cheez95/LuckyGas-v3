@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Table, Button, Space, Card, Input, Tag, Modal, Form, Select, DatePicker, Row, Col, message, Statistic, Timeline, Drawer, InputNumber } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ClockCircleOutlined, CheckCircleOutlined, CarOutlined, ExclamationCircleOutlined, EyeOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import api from '../../services/api';
+import { apiWithCancel, requestManager } from '../../services/api.service';
 import dayjs from 'dayjs';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import OrderModificationModal from '../../components/orders/OrderModificationModal';
@@ -13,6 +14,17 @@ import OrderSearchPanel, { SearchCriteria } from '../../components/orders/OrderS
 import TemplateQuickSelect from '../../components/orders/TemplateQuickSelect';
 import OrderTemplateManager from '../../components/orders/OrderTemplateManager';
 import { features } from '../../config/features';
+import { 
+  toArray, 
+  safeMap, 
+  safeFilter, 
+  safeFind, 
+  safeReduce, 
+  safeLength,
+  safeSome,
+  safeForEach,
+  ensureArray 
+} from '../../utils/dataHelpers';
 
 interface Order {
   id: string;
@@ -72,6 +84,9 @@ const OrderManagement: React.FC = () => {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(null);
+  
+  // UseRef to track if component is mounted
+  const isMountedRef = useRef(true);
 
   // Statistics
   const [stats, setStats] = useState({
@@ -107,30 +122,71 @@ const OrderManagement: React.FC = () => {
   });
 
   useEffect(() => {
+    // Set mounted flag
+    isMountedRef.current = true;
+    
+    // Fetch initial data
     fetchOrders();
     fetchStatistics();
     fetchCustomers();
     fetchDrivers();
+    
+    // Cleanup function
+    return () => {
+      isMountedRef.current = false;
+      // Cancel all pending requests
+      requestManager.cancel('orders-fetch');
+      requestManager.cancel('orders-statistics');
+      requestManager.cancel('orders-customers');
+      requestManager.cancel('orders-drivers');
+    };
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     setLoading(true);
     try {
-      const response = await api.get('/orders');
-      setOrders(response.data);
-    } catch (error) {
-      message.error(t('orders.fetchError'));
+      const response = await apiWithCancel.get('/orders', 'orders-fetch', { 
+        cache: true,
+        debounce: 300 
+      });
+      
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        // Use toArray to safely extract orders array from response
+        const ordersData = toArray(response.data, 'orders');
+        setOrders(ordersData);
+      }
+    } catch (error: any) {
+      // Only show error if component is mounted and it's not a cancellation
+      if (isMountedRef.current && error.message !== 'Request cancelled') {
+        message.error(t('orders.fetchError'));
+        setOrders([]); // Ensure orders is always an array even on error
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [t]);
 
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     try {
       // Try without any parameters first to see what the API expects
-      const response = await api.get('/orders/statistics');
-      setStats(response.data);
+      const response = await apiWithCancel.get('/orders/statistics', 'orders-statistics', {
+        cache: true,
+        debounce: 500
+      });
+      
+      if (isMountedRef.current) {
+        setStats(response.data);
+      }
     } catch (error: any) {
+      if (error.message === 'Request cancelled') return;
+      
       console.error('Failed to fetch statistics:', error.response?.data || error);
       // If that fails, try with different parameter combinations
       try {
@@ -140,75 +196,115 @@ const OrderManagement: React.FC = () => {
           start_date: today.startOf('day').format('YYYY-MM-DD'),
           end_date: today.endOf('day').format('YYYY-MM-DD')
         };
-        const response = await api.get('/orders/statistics', { params });
-        setStats(response.data);
-      } catch (error2: any) {
-        console.error('Failed with date params:', error2.response?.data || error2);
-        // Set default stats if API fails
-        setStats({
-          totalOrders: 0,
-          pendingOrders: 0,
-          todayDeliveries: 0,
-          monthlyRevenue: 0,
+        const response = await apiWithCancel.get('/orders/statistics?start_date=' + params.start_date + '&end_date=' + params.end_date, 'orders-statistics-retry', {
+          cache: true
         });
+        
+        if (isMountedRef.current) {
+          setStats(response.data);
+        }
+      } catch (error2: any) {
+        if (isMountedRef.current && error2.message !== 'Request cancelled') {
+          console.error('Failed with date params:', error2.response?.data || error2);
+          // Set default stats if API fails
+          setStats({
+            totalOrders: 0,
+            pendingOrders: 0,
+            todayDeliveries: 0,
+            monthlyRevenue: 0,
+          });
+        }
       }
     }
-  };
+  }, []);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     setCustomersLoading(true);
     try {
-      const response = await api.get('/customers');
-      // Handle both array and object response formats
-      let customerData = Array.isArray(response.data) 
-        ? response.data 
-        : (response.data?.data || response.data?.customers || response.data?.items || []);
-      
-      // Ensure it's always an array
-      if (!Array.isArray(customerData)) {
-        customerData = [];
-      }
-      
-      // Filter out customers without valid IDs and ensure unique IDs
-      const validCustomers = customerData.filter((customer, index) => {
-        const id = customer.id || customer.編號;
-        return id !== null && id !== undefined;
+      const response = await apiWithCancel.get('/customers', 'orders-customers', {
+        cache: true,
+        debounce: 500
       });
       
-      setCustomers(validCustomers);
-    } catch (error) {
-      console.error('Failed to fetch customers:', error);
-      setCustomers([]); // Ensure customers is always an array
+      if (isMountedRef.current) {
+        // Handle both array and object response formats using toArray
+        const customerData = toArray(response.data, 'customers');
+        
+        // Filter out customers without valid IDs and ensure unique IDs
+        const validCustomers = safeFilter(customerData, (customer) => {
+          const id = customer.id || customer.編號;
+          return id !== null && id !== undefined;
+        });
+        
+        setCustomers(validCustomers);
+      }
+    } catch (error: any) {
+      if (isMountedRef.current && error.message !== 'Request cancelled') {
+        console.error('Failed to fetch customers:', error);
+        setCustomers([]); // Ensure customers is always an array
+      }
     } finally {
-      setCustomersLoading(false);
+      if (isMountedRef.current) {
+        setCustomersLoading(false);
+      }
     }
-  };
+  }, []);
 
   const fetchOrderTimeline = async (orderId: string) => {
     try {
       const response = await api.get(`/orders/${orderId}/timeline`);
-      setOrderTimeline(response.data);
+      // Ensure timeline is always an array
+      const timelineData = toArray(response.data, 'timeline');
+      setOrderTimeline(timelineData);
     } catch (error) {
       console.error('Failed to fetch timeline:', error);
+      setOrderTimeline([]); // Ensure it's always an array
     }
   };
 
-  const fetchDrivers = async () => {
+  const fetchDrivers = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     try {
-      const response = await api.get('/users/drivers');
-      setDrivers(response.data);
-    } catch (error) {
-      console.error('Failed to fetch drivers:', error);
+      const response = await apiWithCancel.get('/users/drivers', 'orders-drivers', {
+        cache: true,
+        debounce: 500
+      });
+      
+      if (isMountedRef.current) {
+        // Use toArray to safely extract drivers array
+        const driversData = toArray(response.data, 'drivers');
+        setDrivers(driversData);
+      }
+    } catch (error: any) {
+      if (isMountedRef.current && error.message !== 'Request cancelled') {
+        console.error('Failed to fetch drivers:', error);
+        setDrivers([]); // Ensure drivers is always an array
+      }
     }
-  };
+  }, []);
 
   const handleAdvancedSearch = async (criteria: SearchCriteria) => {
     setSearchLoading(true);
     setSearchCriteria(criteria);
     try {
-      const response = await api.post('/orders/search', criteria);
-      setOrders(response.data.orders);
-      message.success(`${t('orders.searchResults')}: ${response.data.total} ${t('orders.searchTime', { time: response.data.search_time.toFixed(2) })}`);
+      // Use GET with proper query parameters
+      const params = {
+        q: criteria.searchText || '',
+        status: criteria.status || 'all',
+        priority: criteria.priority,
+        date_from: criteria.dateRange?.[0]?.format('YYYY-MM-DD'),
+        date_to: criteria.dateRange?.[1]?.format('YYYY-MM-DD'),
+        customer_id: criteria.customerId,
+        skip: criteria.skip || 0,
+        limit: criteria.limit || 100
+      };
+      const response = await api.get('/orders/search', { params });
+      setOrders(response.data.orders || response.data.items || []);
+      const total = response.data.total || response.data.orders?.length || 0;
+      message.success(`${t('orders.searchResults')}: ${total}`);
     } catch (error) {
       message.error(t('orders.fetchError'));
     } finally {
@@ -219,12 +315,22 @@ const OrderManagement: React.FC = () => {
   const handleExportSearchResults = async (criteria: SearchCriteria) => {
     setSearchLoading(true);
     try {
-      // First get all results without pagination
-      const fullCriteria = { ...criteria, skip: 0, limit: 10000 };
-      const response = await api.post('/orders/search', fullCriteria);
+      // First get all results without pagination using GET
+      const params = {
+        q: criteria.searchText || '',
+        status: criteria.status || 'all',
+        priority: criteria.priority,
+        date_from: criteria.dateRange?.[0]?.format('YYYY-MM-DD'),
+        date_to: criteria.dateRange?.[1]?.format('YYYY-MM-DD'),
+        customer_id: criteria.customerId,
+        skip: 0,
+        limit: 10000
+      };
+      const response = await api.get('/orders/search', { params });
       
       // Create Excel export using the existing xlsx logic
-      const exportData = response.data.orders.map((order: any) => ({
+      const ordersArray = toArray(response.data?.orders || response.data, 'orders');
+      const exportData = safeMap(ordersArray, (order: any) => ({
         [t('orders.orderNumber')]: order.order_number,
         [t('orders.customer')]: order.customer_name,
         [t('orders.phone')]: order.customer_phone,
@@ -244,8 +350,8 @@ const OrderManagement: React.FC = () => {
       XLSX.utils.book_append_sheet(wb, ws, t('orders.searchResults'));
       
       // Auto-size columns
-      const colWidths = Object.keys(exportData[0] || {}).map(key => ({
-        wch: Math.max(key.length, ...exportData.map(row => String(row[key] || '').length))
+      const colWidths = safeMap(Object.keys(exportData[0] || {}), key => ({
+        wch: Math.max(key.length, ...safeMap(exportData, row => String(row[key] || '').length))
       }));
       ws['!cols'] = colWidths;
       
@@ -322,16 +428,16 @@ const OrderManagement: React.FC = () => {
   const handleSubmit = async (values: any) => {
     try {
       // Get selected customer details
-      const selectedCustomer = customers.find(c => c.id === values.customerId);
+      const selectedCustomer = safeFind(customers, c => c.id === values.customerId);
       if (!selectedCustomer) {
         message.error(t('orders.customerNotFound'));
         return;
       }
 
       // Calculate total amount from products array
-      const products = values.products || [];
-      const totalAmount = products.reduce((sum: number, product: any) => {
-        return sum + (product.quantity * product.unitPrice);
+      const products = ensureArray(values.products);
+      const totalAmount = safeReduce(products, (sum: number, product: any) => {
+        return sum + ((product?.quantity || 0) * (product?.unitPrice || 0));
       }, 0);
 
       // For now, we'll still send the first product as the main product
@@ -348,7 +454,7 @@ const OrderManagement: React.FC = () => {
       };
 
       // Process each product and accumulate quantities by type
-      products.forEach((product: any) => {
+      safeForEach(products, (product: any) => {
         const qtyField = `qty_${product.cylinderType}`;
         if (qtyField in quantityFields) {
           quantityFields[qtyField] += product.quantity || 0;
@@ -499,10 +605,10 @@ const OrderManagement: React.FC = () => {
       key: 'product',
       render: (_, record) => {
         // If order has products array, display all products
-        if (record.products && record.products.length > 0) {
+        if (safeLength(record.products) > 0) {
           return (
             <Space direction="vertical" size="small">
-              {record.products.map((product, index) => (
+              {safeMap(record.products, (product, index) => (
                 <Space key={index}>
                   <Tag>{product.cylinderType}</Tag>
                   <span>x {product.quantity}</span>
@@ -658,7 +764,7 @@ const OrderManagement: React.FC = () => {
             </Button>
           </Space>
           
-          {selectedRowKeys.length > 0 && (
+          {safeLength(selectedRowKeys) > 0 && (
             <BulkOrderActions
               selectedOrderIds={selectedRowKeys}
               selectedOrders={selectedRows}
@@ -720,7 +826,7 @@ const OrderManagement: React.FC = () => {
                   }
                   onChange={(value) => setSelectedCustomerId(value ? Number(value) : null)}
                 >
-                  {(customers || []).map((customer, index) => (
+                  {safeMap(customers, (customer, index) => (
                     <Select.Option 
                       key={customer.id || customer.編號 || `customer-${index}`} 
                       value={customer.id || customer.編號}
@@ -776,7 +882,7 @@ const OrderManagement: React.FC = () => {
                 customerId={selectedCustomerId}
                 onTemplateSelect={(template) => {
                   // Apply template data to form
-                  const templateProducts = template.products.map((product: any) => ({
+                  const templateProducts = safeMap(template.products, (product: any) => ({
                     cylinderType: '20kg', // Default, will need to map from product ID
                     quantity: product.quantity,
                     unitPrice: product.unit_price || 800
@@ -812,7 +918,7 @@ const OrderManagement: React.FC = () => {
                   }
                   style={{ marginBottom: 16 }}
                 >
-                  {fields.map(({ key, name, ...restField }) => (
+                  {safeMap(fields, ({ key, name, ...restField }) => (
                     <Row gutter={16} key={key} style={{ marginBottom: 8 }}>
                       <Col span={8}>
                         <Form.Item
@@ -859,7 +965,7 @@ const OrderManagement: React.FC = () => {
                         </Form.Item>
                       </Col>
                       <Col span={4}>
-                        {fields.length > 1 && (
+                        {safeLength(fields) > 1 && (
                           <Button
                             type="link"
                             danger
@@ -877,8 +983,8 @@ const OrderManagement: React.FC = () => {
                 
                 <Form.Item shouldUpdate>
                   {() => {
-                    const products = form.getFieldValue('products') || [];
-                    const total = products.reduce((sum: number, product: any) => {
+                    const products = ensureArray(form.getFieldValue('products'));
+                    const total = safeReduce(products, (sum: number, product: any) => {
                       return sum + ((product?.quantity || 0) * (product?.unitPrice || 0));
                     }, 0);
                     
@@ -991,7 +1097,7 @@ const OrderManagement: React.FC = () => {
 
             <Card title={t('orders.timeline')}>
               <Timeline>
-                {orderTimeline.map((item, index) => (
+                {safeMap(orderTimeline, (item, index) => (
                   <Timeline.Item
                     key={index}
                     color={item.status === 'delivered' ? 'green' : 'blue'}

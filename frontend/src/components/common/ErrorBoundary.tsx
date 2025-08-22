@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Result, Button, Typography, Space } from 'antd';
 import { CloseCircleOutlined, ReloadOutlined, HomeOutlined } from '@ant-design/icons';
-import { logReactError } from '../../services/errorMonitoring';
+import { logReactError } from '../../services/safeErrorMonitor';
 
 const { Paragraph, Text } = Typography;
 
@@ -42,11 +42,8 @@ export class ErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     });
     
-    // Log to error monitoring service
+    // Use safe error monitoring with circuit breaker protection
     logReactError(error, errorInfo);
-    
-    // Send to error reporting service if available (legacy support)
-    this.reportError(error, errorInfo);
     
     this.setState({
       error,
@@ -54,16 +51,6 @@ export class ErrorBoundary extends Component<Props, State> {
     });
   }
 
-  private reportError = (error: Error, errorInfo: ErrorInfo) => {
-    // Integration point for error reporting services (e.g., Sentry, LogRocket)
-    if (window.errorReporting?.logError) {
-      window.errorReporting.logError(error, {
-        ...errorInfo,
-        errorId: this.state.errorId,
-        context: 'ErrorBoundary',
-      });
-    }
-  }
 
   handleReset = () => {
     this.setState({ hasError: false, error: null, errorInfo: null, errorId: undefined });

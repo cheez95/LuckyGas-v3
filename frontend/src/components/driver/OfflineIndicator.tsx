@@ -79,9 +79,9 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ className, showDeta
     };
 
     checkStorage();
-    const interval = setInterval(checkStorage, 60000); // Check every minute
+    const interval = window.setInterval(checkStorage, 60000); // Check every minute
 
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, []);
 
   // Load sync status

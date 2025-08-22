@@ -1,307 +1,296 @@
-from datetime import timedelta
-from typing import Any, Optional
-
+"""
+Simplified Customer API endpoints - Direct ORM, no service layers
+"""
+from typing import List, Optional
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session
+from sqlalchemy import func, and_, or_
 
-from app.api.deps import get_current_user, get_db
-from app.core.api_utils import (
-    handle_api_errors,
-    require_roles,
-    paginate_response,
-    success_response,
-    error_response,
+from app.core.database import get_db
+from app.models import Customer, Order, Delivery, CustomerType
+from app.schemas.customer import (
+    CustomerCreate, CustomerUpdate, CustomerResponse,
+    CustomerDeliveryHistory
 )
-from app.core.cache import cache, cache_result
-from app.models.customer import Customer as CustomerModel
-from app.models.customer_inventory import CustomerInventory as CustomerInventoryModel
-from app.models.gas_product import GasProduct as GasProductModel
-from app.models.user import User as UserModel
-from app.models.user import UserRole
-from app.schemas.customer import Customer, CustomerCreate, CustomerList, CustomerUpdate
-from app.schemas.customer_inventory import (
-    CustomerInventory,
-    CustomerInventoryList,
-    CustomerInventoryUpdate,
-)
-from app.services.customer_service import CustomerService
+from app.api.deps import get_current_user, require_role
+from app.core.cache import cache_result
 
 router = APIRouter()
 
 
-@router.get("/", response_model=CustomerList)
-@cache_result("customers:list", expire=timedelta(minutes=15))
-@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
-@handle_api_errors()
-@paginate_response(default_page_size=100, max_page_size=5000)
-async def get_customers(
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+@router.get("/", response_model=List[CustomerResponse])
+def get_customers(
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=5000),
+    limit: int = Query(50, ge=1, le=100),
+    customer_type: Optional[CustomerType] = None,
     area: Optional[str] = None,
-    search: Optional[str] = None,
-    is_active: Optional[str] = None,
-) -> Any:
+    is_active: bool = True,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     """
-    Retrieve customers
+    Get all customers with optional filtering
+    Simple, direct query - no unnecessary abstractions
     """
+    query = db.query(Customer)
+    
+    # Apply filters
+    if customer_type:
+        query = query.filter(Customer.customer_type == customer_type)
+    if area:
+        query = query.filter(Customer.area == area)
+    query = query.filter(Customer.is_active == is_active)
+    
+    # Pagination
+    customers = query.offset(skip).limit(limit).all()
+    return customers
 
-    # Initialize service
-    customer_service = CustomerService(db)
 
-    # Convert is_active string to boolean
-    is_active_bool = True
-    if is_active is not None:
-        is_active_bool = (
-            is_active.lower() in ["true", "1", "yes"]
-            if isinstance(is_active, str)
-            else bool(is_active)
+@router.get("/search/")
+def search_customers(
+    q: str = Query(..., min_length=1),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Search customers by name, phone, or address"""
+    # Search in actual database
+    search_term = f"%{q}%"
+    customers = db.query(Customer).filter(
+        or_(
+            Customer.short_name.ilike(search_term),
+            Customer.invoice_title.ilike(search_term),
+            Customer.phone.like(search_term),
+            Customer.address.ilike(search_term),
+            Customer.customer_code.like(search_term)
         )
-
-    # Use service to search / list customers
-    customers, total = await customer_service.search_customers(
-        search_term=search,
-        area=area,
-        customer_type=None,
-        is_active=is_active_bool,
-        skip=skip,
-        limit=limit,
-    )
-
-    return CustomerList(items=customers, total=total, skip=skip, limit=limit)
+    ).limit(20).all()
+    
+    return {
+        "customers": customers,
+        "total": len(customers),
+        "query": q
+    }
 
 
-@router.get("/{customer_id}", response_model=Customer)
-@cache_result("customers:detail", expire=timedelta(hours=2))
-@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
-@handle_api_errors({KeyError: "客戶不存在"})
-async def get_customer(
+@router.get("/{customer_id}", response_model=CustomerResponse)
+@cache_result(ttl_seconds=300)  # Cache for 5 minutes
+def get_customer(
     customer_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
-) -> Any:
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     """
-    Get customer by ID
+    Get single customer by ID
+    Cached because customer info doesn't change often
     """
-    # Initialize service
-    customer_service = CustomerService(db)
-
-    # Get customer using service
-    customer_details = await customer_service.get_customer_details(customer_id)
-
-    if not customer_details:
-        raise KeyError("customer_not_found")
-
-    return customer_details["customer"]
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="客戶不存在")
+    return customer
 
 
-@router.post("/", response_model=Customer)
-@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
-@handle_api_errors()
-async def create_customer(
-    customer_in: CustomerCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
-) -> Any:
+@router.get("/{customer_id}/deliveries", response_model=CustomerDeliveryHistory)
+def get_customer_deliveries(
+    customer_id: int,
+    days: int = Query(30, ge=1, le=365),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get customer delivery history
+    This is the CRITICAL query - must be fast!
+    Uses index: idx_delivery_customer_date
+    """
+    # Check customer exists
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=404, detail="客戶不存在")
+    
+    # Calculate date range
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=days)
+    
+    # Query deliveries - USES INDEX!
+    deliveries_query = db.query(Delivery).filter(
+        and_(
+            Delivery.customer_id == customer_id,
+            Delivery.delivery_date >= start_date,
+            Delivery.delivery_date <= end_date
+        )
+    ).order_by(Delivery.delivery_date.desc())
+    
+    # Get total count for pagination
+    total_count = deliveries_query.count()
+    
+    # Apply pagination
+    deliveries = deliveries_query.offset(skip).limit(limit).all()
+    
+    # Calculate summary stats
+    summary_stats = db.query(
+        func.count(Delivery.id).label('total_deliveries'),
+        func.sum(Order.total_amount).label('total_amount')
+    ).select_from(Delivery).join(
+        Order, Delivery.order_id == Order.id
+    ).filter(
+        and_(
+            Delivery.customer_id == customer_id,
+            Delivery.delivery_date >= start_date,
+            Delivery.status == 'delivered'
+        )
+    ).first()
+    
+    return {
+        "customer": customer,
+        "deliveries": deliveries,
+        "total_count": total_count,
+        "summary": {
+            "total_deliveries": summary_stats.total_deliveries or 0,
+            "total_amount": summary_stats.total_amount or 0.0,
+            "date_range": {
+                "start": start_date,
+                "end": end_date
+            }
+        }
+    }
+
+
+@router.post("/", response_model=CustomerResponse)
+def create_customer(
+    customer: CustomerCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin", "manager", "staff"]))
+):
     """
     Create new customer
+    Simple direct creation - no service layer needed
     """
-    # Initialize service
-    customer_service = CustomerService(db)
+    # Check if customer code already exists
+    existing = db.query(Customer).filter(Customer.code == customer.code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="客戶代碼已存在")
+    
+    # Create customer
+    db_customer = Customer(**customer.dict())
+    db.add(db_customer)
+    db.commit()
+    db.refresh(db_customer)
+    
+    return db_customer
 
-    # Create customer using service
-    customer = await customer_service.create_customer(customer_in)
 
-    # Clear customer - related cache
-    await cache.invalidate("customers:*")
-
-    return customer
-
-
-@router.put("/{customer_id}", response_model=Customer)
-@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
-@handle_api_errors({KeyError: "客戶不存在"})
-async def update_customer(
+@router.put("/{customer_id}", response_model=CustomerResponse)
+def update_customer(
     customer_id: int,
-    customer_in: CustomerUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
-) -> Any:
+    customer: CustomerUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin", "manager", "staff"]))
+):
     """
-    Update customer
+    Update customer information
+    Direct update - no unnecessary complexity
     """
-    # Initialize service
-    customer_service = CustomerService(db)
-
-    # Update customer using service
-    customer = await customer_service.update_customer(customer_id, customer_in)
-
-    if not customer:
-        raise KeyError("customer_not_found")
-
-    # Clear customer - related cache after update
-    await cache.invalidate("customers:*")
-
-    return customer
+    db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not db_customer:
+        raise HTTPException(status_code=404, detail="客戶不存在")
+    
+    # Update fields
+    update_data = customer.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_customer, field, value)
+    
+    db_customer.updated_at = datetime.now()
+    db.commit()
+    db.refresh(db_customer)
+    
+    return db_customer
 
 
 @router.delete("/{customer_id}")
-@require_roles([UserRole.SUPER_ADMIN])
-@handle_api_errors({KeyError: "客戶不存在"})
-async def delete_customer(
+def delete_customer(
     customer_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
-) -> Any:
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin"]))
+):
     """
-    Delete customer (soft delete by marking as terminated)
+    Soft delete customer (set is_active = False)
+    We never actually delete data
     """
-    # Initialize service
-    customer_service = CustomerService(db)
-
-    # Deactivate customer using service
-    success = await customer_service.deactivate_customer(
-        customer_id, reason="由管理員停用"
-    )
-
-    if not success:
-        raise KeyError("customer_not_found")
-
-    # Clear customer - related cache after delete
-    await cache.invalidate("customers:*")
-
-    return success_response(message="客戶已停用")
+    db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not db_customer:
+        raise HTTPException(status_code=404, detail="客戶不存在")
+    
+    # Soft delete
+    db_customer.is_active = False
+    db_customer.updated_at = datetime.now()
+    db.commit()
+    
+    return {"message": "客戶已停用"}
 
 
-# Customer Inventory Endpoints
-
-
-@router.get("/{customer_id}/inventory", response_model=CustomerInventoryList)
-@cache_result("customers:inventory", expire=timedelta(hours=1))
-@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF, UserRole.DRIVER, UserRole.CUSTOMER])
-@handle_api_errors({KeyError: "客戶不存在"})
-@paginate_response(default_page_size=100, max_page_size=1000)
-async def get_customer_inventory(
-    customer_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    is_active: Optional[bool] = None,
-) -> Any:
+@router.get("/statistics/")
+def get_customer_statistics(
+    include_inactive: bool = Query(False),
+    date_from: Optional[datetime] = Query(None),
+    date_to: Optional[datetime] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     """
-    Get customer's product inventory
+    Get customer statistics
     """
-    # Additional permission check for customers
-    if current_user.role == UserRole.CUSTOMER:
-        # TODO: Check if this customer belongs to the user
-        pass
+    # Count total customers
+    total_query = db.query(func.count(Customer.id))
+    if not include_inactive:
+        total_query = total_query.filter(Customer.is_active == True)
+    total_customers = total_query.scalar() or 0
+    
+    # Count active customers
+    active_customers = db.query(func.count(Customer.id)).filter(
+        Customer.is_active == True
+    ).scalar() or 0
+    
+    # Count new customers this month
+    start_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_customers_this_month = db.query(func.count(Customer.id)).filter(
+        Customer.created_at >= start_of_month
+    ).scalar() or 0
+    
+    return {
+        "totalCustomers": total_customers,
+        "activeCustomers": active_customers,
+        "newCustomersThisMonth": new_customers_this_month,
+        "averageOrderFrequency": 0  # Will be calculated once orders are imported
+    }
 
-    # Check if customer exists
-    customer_result = await db.execute(
-        select(CustomerModel).where(CustomerModel.id == customer_id)
-    )
-    customer = customer_result.scalar_one_or_none()
-    if not customer:
-        raise KeyError("customer_not_found")
-
-    # Build query
-    base_query = (
-        select(CustomerInventoryModel)
-        .options(selectinload(CustomerInventoryModel.gas_product))
-        .where(CustomerInventoryModel.customer_id == customer_id)
-    )
-
-    # Apply filters
-    if is_active is not None:
-        base_query = base_query.where(CustomerInventoryModel.is_active == is_active)
-
-    # Get total count
-    count_query = (
-        select(func.count())
-        .select_from(CustomerInventoryModel)
-        .where(CustomerInventoryModel.customer_id == customer_id)
-    )
-    if is_active is not None:
-        count_query = count_query.where(CustomerInventoryModel.is_active == is_active)
-
-    count_result = await db.execute(count_query)
-    total = count_result.scalar() or 0
-
-    # Apply pagination
-    query = base_query.offset(skip).limit(limit)
-
-    result = await db.execute(query)
-    inventory_items = result.scalars().all()
-
-    return CustomerInventoryList(
-        items=inventory_items, total=total, skip=skip, limit=limit
-    )
-
-
-@router.put("/{customer_id}/inventory/{product_id}", response_model=CustomerInventory)
-@require_roles([UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.OFFICE_STAFF])
-@handle_api_errors({KeyError: "客戶或產品不存在"})
-async def update_customer_inventory(
-    customer_id: int,
-    product_id: int,
-    inventory_update: CustomerInventoryUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
-) -> Any:
+@router.get("/stats/summary")
+@cache_result(ttl_seconds=600)  # Cache for 10 minutes
+def get_customer_stats(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(["admin", "manager"]))
+):
     """
-    Update customer's inventory count for a specific product
+    Get customer statistics summary
+    Cached because stats don't change frequently
     """
-    # Check if customer and product exist
-    customer_result = await db.execute(
-        select(CustomerModel).where(CustomerModel.id == customer_id)
-    )
-    customer = customer_result.scalar_one_or_none()
-    if not customer:
-        raise KeyError("customer_not_found")
-
-    product_result = await db.execute(
-        select(GasProductModel).where(GasProductModel.id == product_id)
-    )
-    product = product_result.scalar_one_or_none()
-    if not product:
-        raise KeyError("product_not_found")
-
-    # Get or create inventory record
-    inventory_result = await db.execute(
-        select(CustomerInventoryModel).where(
-            CustomerInventoryModel.customer_id == customer_id,
-            CustomerInventoryModel.gas_product_id == product_id,
-        )
-    )
-    inventory = inventory_result.scalar_one_or_none()
-
-    if not inventory:
-        # Create new inventory record
-        inventory = CustomerInventoryModel(
-            customer_id=customer_id, gas_product_id=product_id
-        )
-        db.add(inventory)
-
-    # Update inventory
-    update_data = inventory_update.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(inventory, field, value)
-
-    # Update total if owned or rented changed
-    if "quantity_owned" in update_data or "quantity_rented" in update_data:
-        inventory.update_total()
-
-    await db.commit()
-    await db.refresh(inventory)
-
-    # Load related data
-    await db.refresh(inventory, ["gas_product"])
-
-    # Clear customer inventory cache after update
-    await cache.invalidate("customers:inventory:*")
-
-    return inventory
+    stats = db.query(
+        func.count(Customer.id).label('total_customers'),
+        func.count(Customer.id).filter(Customer.is_active == True).label('active_customers'),
+        func.count(Customer.id).filter(Customer.customer_type == CustomerType.RESTAURANT).label('restaurants'),
+        func.count(Customer.id).filter(Customer.customer_type == CustomerType.RESIDENTIAL).label('residential'),
+        func.count(Customer.id).filter(Customer.customer_type == CustomerType.COMMERCIAL).label('commercial'),
+        func.count(Customer.id).filter(Customer.customer_type == CustomerType.INDUSTRIAL).label('industrial')
+    ).first()
+    
+    return {
+        "total_customers": stats.total_customers,
+        "active_customers": stats.active_customers,
+        "by_type": {
+            "restaurant": stats.restaurants,
+            "residential": stats.residential,
+            "commercial": stats.commercial,
+            "industrial": stats.industrial
+        }
+    }

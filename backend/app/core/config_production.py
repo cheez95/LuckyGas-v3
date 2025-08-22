@@ -28,6 +28,8 @@ class ProductionSettings(BaseSettings):
         "https://storage.googleapis.com",
         "https://luckygas-frontend-production.storage.googleapis.com",
         "https://luckygas-frontend-staging-2025.storage.googleapis.com",
+        "https://vast-tributary-466619-m8.web.app",
+        "https://vast-tributary-466619-m8.firebaseapp.com",
         "https://app.luckygas.tw",
         "https://www.luckygas.tw",
         "https://luckygas.tw"

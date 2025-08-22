@@ -199,7 +199,7 @@ const DashboardOptimized: React.FC = () => {
     // Fix WebSocket URL configuration
     const wsUrl = import.meta.env.VITE_WS_URL || 
                   import.meta.env.VITE_API_URL?.replace('https://', 'wss://').replace('http://', 'ws://') ||
-                  'ws://localhost:8000';
+                  'wss://localhost:8000';
     
     console.log('🔌 WebSocket URL configured:', wsUrl);
     
@@ -281,18 +281,18 @@ const DashboardOptimized: React.FC = () => {
     checkApiHealth();
     
     // Set up periodic refresh (every 30 seconds)
-    const refreshInterval = setInterval(() => {
+    const refreshInterval = window.setInterval(() => {
       fetchDashboardData();
     }, 30000);
     
     // Health check every 10 seconds
-    const healthInterval = setInterval(() => {
+    const healthInterval = window.setInterval(() => {
       checkApiHealth();
     }, 10000);
     
     return () => {
-      clearInterval(refreshInterval);
-      clearInterval(healthInterval);
+      window.clearInterval(refreshInterval);
+      window.clearInterval(healthInterval);
     };
   }, [fetchDashboardData, checkApiHealth]);
   

@@ -22,7 +22,7 @@ class GoogleMapsLoader {
   private apiUrl: string;
 
   private constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    this.apiUrl = import.meta.env.VITE_API_URL || 'https://luckygas-backend-production-154687573210.asia-east1.run.app';
   }
 
   static getInstance(): GoogleMapsLoader {
@@ -64,7 +64,7 @@ class GoogleMapsLoader {
   private async loadMapsApi(config?: Partial<MapConfig>): Promise<void> {
     try {
       // Get secure script URL from backend
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${this.apiUrl}/api/v1/maps/script-url`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : '',

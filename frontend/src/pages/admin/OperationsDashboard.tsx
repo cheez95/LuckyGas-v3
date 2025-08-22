@@ -180,14 +180,14 @@ const OperationsDashboard: React.FC = () => {
   // Auto-refresh every 30 seconds
   useEffect(() => {
     if (autoRefresh) {
-      refreshIntervalRef.current = setInterval(() => {
+      refreshIntervalRef.current = window.setInterval(() => {
         fetchMetrics();
       }, 30 * 1000);
     }
 
     return () => {
       if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
+        window.clearInterval(refreshIntervalRef.current);
       }
     };
   }, [date, autoRefresh]);

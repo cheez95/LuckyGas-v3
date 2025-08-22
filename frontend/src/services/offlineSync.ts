@@ -449,12 +449,20 @@ class OfflineSyncService {
     }
   }
   
-  // Start periodic sync
+  // Start periodic sync with safe error handling
   private startPeriodicSync(): void {
+    // Re-enabled with safe error handling that prevents infinite loops
     // Sync every 30 seconds when online
-    this.syncInterval = setInterval(() => {
+    this.syncInterval = window.setInterval(() => {
       if (navigator.onLine) {
-        this.syncPendingData();
+        // Wrap in try-catch to prevent any errors from breaking the sync
+        try {
+          this.syncPendingData();
+        } catch (error) {
+          // Silent failure - only log to console
+          console.warn('[Offline Sync] Sync failed (silent):', error);
+          // DO NOT report to error monitoring - would cause recursion
+        }
       }
     }, 30000);
   }
@@ -462,7 +470,7 @@ class OfflineSyncService {
   // Stop periodic sync
   stopPeriodicSync(): void {
     if (this.syncInterval) {
-      clearInterval(this.syncInterval);
+      window.clearInterval(this.syncInterval);
       this.syncInterval = null;
     }
   }
