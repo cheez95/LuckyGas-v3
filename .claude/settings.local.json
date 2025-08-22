@@ -160,7 +160,9 @@
       "Bash(git rm:*)",
       "Bash(gcloud artifacts docker images list:*)",
       "Bash(gcloud builds describe:*)",
-      "Bash(gcloud builds log:*)"
+      "Bash(gcloud builds log:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)"
     ],
     "deny": []
   }
