@@ -29,13 +29,13 @@ describe('Test Infrastructure', () => {
 
   it('should mock import.meta.env correctly', () => {
     // Access through global mock instead of direct import.meta
-    expect((global as any).import.meta.env.VITE_API_URL).toBe('http://localhost:8000');
-    expect((global as any).import.meta.env.VITE_WS_URL).toBe('ws://localhost:8000');
+    expect((global as any).import.meta.env.VITE_API_URL).toBe('https://localhost:8000');
+    expect((global as any).import.meta.env.VITE_WS_URL).toBe('wss://localhost:8000');
     expect((global as any).import.meta.env.VITE_ENV).toBe('test');
   });
 
   it('should have WebSocket mock available', () => {
-    const ws = new WebSocket('ws://localhost:8000');
+    const ws = new WebSocket('wss://localhost:8000');
     expect(ws).toBeDefined();
     expect(ws.readyState).toBe(1); // OPEN state
   });

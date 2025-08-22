@@ -58,8 +58,8 @@ const Dashboard: React.FC = () => {
       
       // Fetch today's orders
       const orders = await orderService.getOrders({
-        date_from: today,
-        date_to: today,
+        date_from: `${today}T00:00:00Z`,
+        date_to: `${today}T23:59:59Z`,
       });
       
       // Fetch active customers
@@ -67,8 +67,8 @@ const Dashboard: React.FC = () => {
       
       // Fetch today's routes
       const routes = await routeService.getRoutes({
-        date_from: dayjs().format('YYYY-MM-DD'),
-        date_to: dayjs().format('YYYY-MM-DD'),
+        date_from: dayjs().startOf('day').toISOString(),
+        date_to: dayjs().endOf('day').toISOString(),
       });
       setTodayRoutes(routes);
       

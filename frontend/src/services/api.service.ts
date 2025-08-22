@@ -13,9 +13,25 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and force HTTPS
 apiClient.interceptors.request.use(
   (config) => {
+    // CRITICAL: Force HTTPS for all requests
+    if (config.baseURL && config.baseURL.includes('http://')) {
+      console.warn(`[Axios HTTPS Override] Converting HTTP to HTTPS: ${config.baseURL}`);
+      config.baseURL = config.baseURL.replace('http://', 'https://');
+    }
+    if (config.url && config.url.includes('http://')) {
+      console.warn(`[Axios HTTPS Override] Converting HTTP to HTTPS: ${config.url}`);
+      config.url = config.url.replace('http://', 'https://');
+    }
+    
+    // CRITICAL: Remove trailing slashes to prevent 307 redirects that lose auth headers
+    if (config.url && config.url.length > 1 && config.url.endsWith('/')) {
+      console.warn(`[Axios Trailing Slash Fix] Removing trailing slash from: ${config.url}`);
+      config.url = config.url.slice(0, -1);
+    }
+    
     // Add auth token from localStorage if available
     const token = localStorage.getItem('access_token');
     if (token) {

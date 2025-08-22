@@ -21,9 +21,15 @@ interface CustomerListResponse {
 export const customerService = {
   async getCustomers(params?: CustomerQueryParams): Promise<CustomerListResponse> {
     try {
+      // Debug logging to trace URL source
+      console.log('[customerService] Getting customers...');
+      console.log('[customerService] API instance baseURL:', (api.defaults as any).baseURL);
+      console.trace('[customerService] Stack trace for URL source');
+      
       const response = await api.get<CustomerListResponse>('/customers/', { params });
       return response.data;
     } catch (error) {
+      console.error('[customerService] Error getting customers:', error);
       throw new Error(handleApiError(error));
     }
   },

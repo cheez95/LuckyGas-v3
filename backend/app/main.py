@@ -32,6 +32,7 @@ import app.api.v1.orders as orders
 import app.api.v1.drivers as drivers
 import app.api.v1.routes_simple as routes
 import app.api.v1.maps as maps
+import app.api.v1.delivery_history_sync as delivery_history
 from app.api.v1.auth import create_initial_admin
 from app.core.database import SessionLocal
 
@@ -84,26 +85,81 @@ app = FastAPI(
     description="幸福氣體配送管理系統 - Simplified and Working!",
     lifespan=lifespan,
     docs_url="/docs" if settings.DEBUG else None,  # Disable docs in production
-    redoc_url="/redoc" if settings.DEBUG else None
+    redoc_url="/redoc" if settings.DEBUG else None,
+    root_path="",
+    root_path_in_servers=False,
+    redirect_slashes=False  # Disable automatic redirect to prevent losing auth headers
 )
 
 # Configure CORS - MUST BE FIRST BEFORE ANY ROUTES
+from app.core.security_config import security_config
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+
+cors_config = security_config.cors_config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now to fix CORS issues
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=cors_config.get("allow_origins", settings.BACKEND_CORS_ORIGINS),
+    allow_credentials=cors_config.get("allow_credentials", True),
+    allow_methods=cors_config.get("allow_methods", ["*"]),
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["*"],
+    max_age=cors_config.get("max_age", 3600)
+)
+
+# Add trusted host middleware
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"]  # Allow all hosts for Cloud Run
 )
 
 
-# HTTPS redirect middleware
+# Proxy fix middleware - MUST BE BEFORE OTHER MIDDLEWARE
 @app.middleware("http")
-async def ensure_https(request: Request, call_next):
-    """Ensure HTTPS and handle Cloud Run redirects"""
+async def fix_proxy_headers(request: Request, call_next):
+    """Fix proxy headers for Cloud Run deployment"""
+    # Cloud Run sets X-Forwarded-Proto header
+    # We need to ensure FastAPI knows it's behind HTTPS proxy
+    forwarded_proto = request.headers.get("X-Forwarded-Proto", "https")
+    forwarded_host = request.headers.get("X-Forwarded-Host", request.headers.get("host", ""))
+    
+    # Always force HTTPS in production or when behind proxy
+    if forwarded_proto == "https" or settings.ENVIRONMENT in ["production", "staging"]:
+        # Override the URL scheme to HTTPS
+        request.scope["scheme"] = "https"
+        # Also set the server host if available
+        if forwarded_host:
+            request.scope["server"] = (forwarded_host.split(":")[0], 443)
+    
+    # Process the request
     response = await call_next(request)
+    
+    # Add security headers to all responses
+    if settings.ENVIRONMENT in ["production", "staging"]:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["X-Forwarded-Proto"] = "https"
+    
+    # Fix redirect location headers to use HTTPS
+    if response.status_code in (301, 302, 303, 307, 308):
+        location = response.headers.get("location", "")
+        
+        # Handle relative redirects (like /api/v1/customers/)
+        if location.startswith("/"):
+            # Build the full HTTPS URL
+            if forwarded_host:
+                location = f"https://{forwarded_host}{location}"
+            else:
+                # Use the original host if no forwarded host
+                host = request.headers.get("host", "")
+                location = f"https://{host}{location}"
+            response.headers["location"] = location
+        # Handle absolute HTTP redirects
+        elif location.startswith("http://"):
+            response.headers["location"] = location.replace("http://", "https://", 1)
+    
     return response
 
 # Exception handlers
@@ -183,7 +239,8 @@ async def api_info():
             "/api/v1/customers",
             "/api/v1/orders",
             "/api/v1/deliveries",
-            "/api/v1/drivers"
+            "/api/v1/drivers",
+            "/api/v1/delivery-history"
         ]
     }
 
@@ -235,6 +292,12 @@ app.include_router(
     maps.router,
     prefix="/api/v1/maps",
     tags=["maps"]
+)
+
+app.include_router(
+    delivery_history.router,
+    prefix="/api/v1/delivery-history",
+    tags=["delivery_history"]
 )
 
 # Additional endpoint for /api/v1/users/drivers

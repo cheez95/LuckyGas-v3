@@ -171,7 +171,10 @@
       "Bash([ -f auth_sync.py ])",
       "Bash([ -f app/main_simple.py ])",
       "Bash(sed:*)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(VITE_API_URL=https://luckygas-backend-staging-154687573210.asia-east1.run.app VITE_WS_URL=wss://luckygas-backend-staging-154687573210.asia-east1.run.app VITE_ENV=production npm run build)",
+      "Bash(VITE_API_URL=https://luckygas-backend-production-154687573210.asia-east1.run.app VITE_WS_URL=wss://luckygas-backend-production-154687573210.asia-east1.run.app VITE_ENV=production npm run build)",
+      "Bash(sudo rm:*)"
     ],
     "deny": []
   }

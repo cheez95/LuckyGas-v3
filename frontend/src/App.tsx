@@ -51,6 +51,8 @@ const DispatchDashboard = lazyLoadComponent(() => import('./pages/dispatch/Dispa
 const DeliveryHistory = lazyLoadComponent(() => import('./components/office/DeliveryHistory'));
 const UserProfile = lazyLoadComponent(() => import('./components/UserProfile'));
 const TestDataStructures = lazyLoadComponent(() => import('./pages/TestDataStructures'));
+const TestDashboard = lazyLoadComponent(() => import('./pages/TestDashboard'));
+const ProductionMonitoringDashboard = lazyLoadComponent(() => import('./pages/ProductionMonitoringDashboard'));
 
 // Driver Pages - Lazy loaded
 const DriverDashboard = lazyLoadComponent(() => import('./pages/driver/DriverDashboard'));
@@ -163,6 +165,8 @@ const App: React.FC = () => {
                         <Route path="/login" element={<Login />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/test-dashboard" element={<TestDashboard />} />
+                        <Route path="/monitoring" element={<ProductionMonitoringDashboard />} />
                       
                       {/* Driver Routes - No MainLayout for mobile optimization */}
                       <Route path="/driver">

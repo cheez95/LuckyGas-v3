@@ -67,22 +67,22 @@ const DeliveryHistory: React.FC = () => {
       };
 
       if (dateRange[0] && dateRange[1]) {
-        params.date_from = dateRange[0].format('YYYY-MM-DD');
-        params.date_to = dateRange[1].format('YYYY-MM-DD');
+        params.date_from = dateRange[0].startOf('day').toISOString();
+        params.date_to = dateRange[1].endOf('day').toISOString();
       }
 
       if (selectedCustomer) {
         params.customer_code = selectedCustomer;
       }
 
-      // Try deliveries endpoint instead of delivery-history
-      const response = await api.get('/deliveries', { params });
+      // Use the correct delivery-history endpoint
+      const response = await api.get('/delivery-history', { params });
       setDeliveries(response.data.items || []);
       setTotal(response.data.total || 0);
     } catch (error: any) {
       // Handle 404 gracefully - endpoint might not exist yet
       if (error.response?.status === 404) {
-        console.warn('Deliveries endpoint not found, showing empty state');
+        console.warn('Delivery history endpoint not found, showing empty state');
         setDeliveries([]);
         setTotal(0);
       } else {
@@ -98,22 +98,25 @@ const DeliveryHistory: React.FC = () => {
     try {
       const params: any = {};
       if (dateRange[0] && dateRange[1]) {
-        params.date_from = dateRange[0].format('YYYY-MM-DD');
-        params.date_to = dateRange[1].format('YYYY-MM-DD');
+        params.date_from = dateRange[0].startOf('day').toISOString();
+        params.date_to = dateRange[1].endOf('day').toISOString();
       }
 
-      // Try deliveries/stats endpoint
-      const response = await api.get('/deliveries/stats', { params });
+      // Use the correct delivery-history/stats endpoint
+      const response = await api.get('/delivery-history/stats', { params });
       setStats(response.data);
     } catch (error: any) {
       // Handle 404 gracefully - endpoint might not exist yet
       if (error.response?.status === 404) {
-        console.warn('Deliveries stats endpoint not found, using defaults');
+        console.warn('Delivery history stats endpoint not found, using defaults');
         setStats({
           total_deliveries: 0,
-          total_amount: 0,
-          total_customers: 0,
-          total_drivers: 0
+          total_weight_kg: 0,
+          total_cylinders: 0,
+          unique_customers: 0,
+          cylinders_by_type: {},
+          top_customers: [],
+          deliveries_by_date: []
         });
       } else {
         console.error('Failed to fetch stats:', error);
@@ -268,7 +271,7 @@ const DeliveryHistory: React.FC = () => {
       )}
 
       {/* Top Customers */}
-      {stats && stats.top_customers.length > 0 && (
+      {stats && stats.top_customers && stats.top_customers.length > 0 && (
         <Card title="主要客戶" style={{ marginBottom: 16 }}>
           <Row gutter={8}>
             {stats.top_customers.slice(0, 5).map((customer, index) => (
@@ -312,7 +315,7 @@ const DeliveryHistory: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              {stats?.top_customers.map((customer) => (
+              {stats?.top_customers?.map((customer) => (
                 <Option key={customer.customer_code} value={customer.customer_code}>
                   {customer.customer_name || customer.customer_code}
                 </Option>
@@ -345,7 +348,7 @@ const DeliveryHistory: React.FC = () => {
       </Card>
 
       {/* Cylinder Type Summary */}
-      {stats && (
+      {stats && stats.cylinders_by_type && (
         <Card title="瓦斯桶類型統計" style={{ marginTop: 16 }}>
           <Row gutter={16}>
             {Object.entries(stats.cylinders_by_type).map(([type, count]) => (

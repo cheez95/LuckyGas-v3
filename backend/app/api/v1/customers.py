@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, or_
 
 from app.core.database import get_db
 from app.models import Customer, Order, Delivery, CustomerType
@@ -54,23 +54,21 @@ def search_customers(
     current_user = Depends(get_current_user)
 ):
     """Search customers by name, phone, or address"""
-    # Mock search results for now
-    customers = []
-    for i in range(3):
-        customers.append({
-            "id": i + 1,
-            "customer_code": f"C{1000 + i}",
-            "name": f"Customer matching '{q}'",
-            "phone": f"091{i}-345-678",
-            "address": f"台北市中正區路{i+1}號",
-            "customer_type": "commercial",
-            "is_active": True,
-            "created_at": datetime.now().isoformat()
-        })
+    # Search in actual database
+    search_term = f"%{q}%"
+    customers = db.query(Customer).filter(
+        or_(
+            Customer.short_name.ilike(search_term),
+            Customer.invoice_title.ilike(search_term),
+            Customer.phone.like(search_term),
+            Customer.address.ilike(search_term),
+            Customer.customer_code.like(search_term)
+        )
+    ).limit(20).all()
     
     return {
         "customers": customers,
-        "total": 3,
+        "total": len(customers),
         "query": q
     }
 
@@ -231,6 +229,41 @@ def delete_customer(
     
     return {"message": "客戶已停用"}
 
+
+@router.get("/statistics/")
+def get_customer_statistics(
+    include_inactive: bool = Query(False),
+    date_from: Optional[datetime] = Query(None),
+    date_to: Optional[datetime] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get customer statistics
+    """
+    # Count total customers
+    total_query = db.query(func.count(Customer.id))
+    if not include_inactive:
+        total_query = total_query.filter(Customer.is_active == True)
+    total_customers = total_query.scalar() or 0
+    
+    # Count active customers
+    active_customers = db.query(func.count(Customer.id)).filter(
+        Customer.is_active == True
+    ).scalar() or 0
+    
+    # Count new customers this month
+    start_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_customers_this_month = db.query(func.count(Customer.id)).filter(
+        Customer.created_at >= start_of_month
+    ).scalar() or 0
+    
+    return {
+        "totalCustomers": total_customers,
+        "activeCustomers": active_customers,
+        "newCustomersThisMonth": new_customers_this_month,
+        "averageOrderFrequency": 0  # Will be calculated once orders are imported
+    }
 
 @router.get("/stats/summary")
 @cache_result(ttl_seconds=600)  # Cache for 10 minutes

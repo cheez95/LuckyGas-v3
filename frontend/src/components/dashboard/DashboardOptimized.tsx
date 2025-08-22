@@ -199,7 +199,7 @@ const DashboardOptimized: React.FC = () => {
     // Fix WebSocket URL configuration
     const wsUrl = import.meta.env.VITE_WS_URL || 
                   import.meta.env.VITE_API_URL?.replace('https://', 'wss://').replace('http://', 'ws://') ||
-                  'ws://localhost:8000';
+                  'wss://localhost:8000';
     
     console.log('🔌 WebSocket URL configured:', wsUrl);
     

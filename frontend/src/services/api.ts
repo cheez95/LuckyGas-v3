@@ -16,13 +16,30 @@ declare module 'axios' {
   }
 }
 
-// Check for runtime override first, then fall back to environment variable
-const API_URL = (window as any).LUCKY_GAS_BACKEND_URL || 
-                (window as any).API_URL || 
-                import.meta.env.VITE_API_URL || 
-                'https://luckygas-backend-full-154687573210.asia-east1.run.app';
+// Use environment variable or fallback to production URL
+// CRITICAL: Always use HTTPS, never allow HTTP URLs
+let API_URL = import.meta.env.VITE_API_URL || 
+              'https://luckygas-backend-full-154687573210.asia-east1.run.app';
 
-console.log('🔧 API URL configured as:', API_URL);
+// Debug: Log the raw environment variable
+console.log('🔍 [API] Raw VITE_API_URL from environment:', import.meta.env.VITE_API_URL);
+console.log('🔍 [API] All environment variables:', import.meta.env);
+
+// Force HTTPS if somehow an HTTP URL gets through
+if (API_URL.startsWith('http://')) {
+  console.warn('⚠️ [API] Converting HTTP to HTTPS for API URL:', API_URL);
+  API_URL = API_URL.replace('http://', 'https://');
+}
+
+// Double-check for staging URLs
+if (API_URL.includes('staging') && API_URL.startsWith('http://')) {
+  console.error('❌ [API] CRITICAL: Staging URL with HTTP detected:', API_URL);
+  API_URL = API_URL.replace('http://', 'https://');
+  console.warn('✅ [API] Fixed to:', API_URL);
+}
+
+console.log('🔧 [API] Final API URL configured as:', API_URL);
+console.trace('[API] Stack trace for API URL configuration');
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -37,6 +54,16 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token and log requests
 api.interceptors.request.use(
   (config) => {
+    // CRITICAL: Force HTTPS for all requests
+    if (config.baseURL && config.baseURL.includes('http://')) {
+      console.warn(`[API] Converting HTTP to HTTPS in baseURL: ${config.baseURL}`);
+      config.baseURL = config.baseURL.replace('http://', 'https://');
+    }
+    if (config.url && config.url.includes('http://')) {
+      console.warn(`[API] Converting HTTP to HTTPS in URL: ${config.url}`);
+      config.url = config.url.replace('http://', 'https://');
+    }
+    
     // Add auth token
     const token = localStorage.getItem('access_token');
     if (token) {

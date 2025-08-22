@@ -46,8 +46,8 @@ def get_dashboard_summary(
     # Calculate today's orders
     today_orders = db.query(func.count(Order.id)).filter(
         and_(
-            Order.created_at >= today_start,
-            Order.created_at <= today_end
+            Order.order_date >= today,
+            Order.order_date <= today
         )
     ).scalar() or 0
     
@@ -56,9 +56,9 @@ def get_dashboard_summary(
     try:
         today_orders_list = db.query(Order).filter(
             and_(
-                Order.created_at >= today_start,
-                Order.created_at <= today_end,
-                Order.status.in_([OrderStatus.DELIVERED, OrderStatus.COMPLETED])
+                Order.order_date >= today,
+                Order.order_date <= today,
+                Order.status == OrderStatus.DELIVERED
             )
         ).all()
         
@@ -94,8 +94,8 @@ def get_dashboard_summary(
     if today_orders > 0:
         delivered_today = db.query(func.count(Order.id)).filter(
             and_(
-                Order.created_at >= today_start,
-                Order.created_at <= today_end,
+                Order.order_date >= today,
+                Order.order_date <= today,
                 Order.status == OrderStatus.DELIVERED
             )
         ).scalar() or 0
@@ -103,36 +103,55 @@ def get_dashboard_summary(
     else:
         completion_rate = 0
     
-    # Get route progress (mock data for now)
-    routes = [
-        {
-            "id": 1,
-            "routeNumber": "R001",
-            "status": "進行中",
-            "totalOrders": 15,
-            "completedOrders": 8,
-            "driverName": "陳大明",
-            "progressPercentage": 53
-        },
-        {
-            "id": 2,
-            "routeNumber": "R002",
-            "status": "進行中",
-            "totalOrders": 12,
-            "completedOrders": 10,
-            "driverName": "李小華",
-            "progressPercentage": 83
-        },
-        {
-            "id": 3,
-            "routeNumber": "R003",
-            "status": "準備中",
-            "totalOrders": 8,
-            "completedOrders": 0,
-            "driverName": "王小明",
-            "progressPercentage": 0
-        }
-    ]
+    # Get route progress (get real routes from DB or use mock if none exist)
+    routes = []
+    try:
+        # Try to get real routes from the database
+        from app.models import Route
+        active_routes = db.query(Route).filter(
+            and_(
+                Route.route_date >= today_start.date(),
+                Route.route_date <= today_end.date()
+            )
+        ).limit(5).all()
+        
+        for route in active_routes:
+            driver = db.query(Driver).filter(Driver.id == route.driver_id).first() if route.driver_id else None
+            progress = (route.completed_stops / route.total_stops * 100) if route.total_stops > 0 else 0
+            routes.append({
+                "id": route.id,
+                "routeNumber": route.route_code,
+                "status": "完成" if route.is_completed else "進行中",
+                "totalOrders": route.total_stops,
+                "completedOrders": route.completed_stops,
+                "driverName": driver.name if driver else "未指派",
+                "progressPercentage": round(progress)
+            })
+    except:
+        pass
+    
+    # If no real routes, use mock data
+    if not routes:
+        routes = [
+            {
+                "id": 1,
+                "routeNumber": "R001",
+                "status": "進行中",
+                "totalOrders": 15,
+                "completedOrders": 8,
+                "driverName": "陳大明",
+                "progressPercentage": 53
+            },
+            {
+                "id": 2,
+                "routeNumber": "R002",
+                "status": "進行中",
+                "totalOrders": 12,
+                "completedOrders": 10,
+                "driverName": "李小華",
+                "progressPercentage": 83
+            }
+        ]
     
     # Generate predictions (mock data)
     predictions = {
@@ -151,7 +170,7 @@ def get_dashboard_summary(
         activities.append({
             "id": f"order-{order.id}",
             "type": "order",
-            "message": f"新訂單來自 {customer.name if customer else '未知客戶'}",
+            "message": f"新訂單來自 {customer.short_name if customer else '未知客戶'}",
             "timestamp": order.created_at.isoformat() if order.created_at else datetime.utcnow().isoformat(),
             "status": "info"
         })

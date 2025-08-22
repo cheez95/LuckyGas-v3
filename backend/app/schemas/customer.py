@@ -16,17 +16,17 @@ class CustomerType(str, Enum):
 
 class CustomerBase(BaseModel):
     """Base customer model"""
-    code: str
-    name: str
-    phone: Optional[str]
-    email: Optional[str]
+    customer_code: str
+    short_name: str
+    phone: Optional[str] = None
+    invoice_title: Optional[str] = None
     address: str
-    area: Optional[str]
+    area: Optional[str] = None
     customer_type: CustomerType = CustomerType.RESIDENTIAL
-    pricing_tier: str = "standard"
-    credit_limit: float = 0.0
-    preferred_delivery_time: Optional[str]
-    notes: Optional[str]
+    cylinders_50kg: int = 0
+    cylinders_20kg: int = 0
+    cylinders_16kg: int = 0
+    cylinders_10kg: int = 0
 
 
 class CustomerCreate(CustomerBase):
@@ -36,30 +36,42 @@ class CustomerCreate(CustomerBase):
 
 class CustomerUpdate(BaseModel):
     """Update customer model"""
-    name: Optional[str]
-    phone: Optional[str]
-    email: Optional[str]
-    address: Optional[str]
-    area: Optional[str]
-    customer_type: Optional[CustomerType]
-    pricing_tier: Optional[str]
-    credit_limit: Optional[float]
-    current_balance: Optional[float]
-    preferred_delivery_time: Optional[str]
-    notes: Optional[str]
-    is_active: Optional[bool]
+    short_name: Optional[str] = None
+    phone: Optional[str] = None
+    invoice_title: Optional[str] = None
+    address: Optional[str] = None
+    area: Optional[str] = None
+    customer_type: Optional[CustomerType] = None
+    cylinders_50kg: Optional[int] = None
+    cylinders_20kg: Optional[int] = None
+    cylinders_16kg: Optional[int] = None
+    cylinders_10kg: Optional[int] = None
+    is_subscription: Optional[bool] = None
+    is_active: Optional[bool] = None
 
 
-class CustomerResponse(CustomerBase):
+class CustomerResponse(BaseModel):
     """Customer response model"""
     id: int
-    current_balance: float
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    customer_code: str
+    short_name: str
+    phone: Optional[str] = None
+    invoice_title: Optional[str] = None
+    address: str
+    area: Optional[str] = None
+    customer_type: CustomerType = CustomerType.RESIDENTIAL
+    cylinders_50kg: Optional[int] = 0
+    cylinders_20kg: Optional[int] = 0
+    cylinders_16kg: Optional[int] = 0
+    cylinders_10kg: Optional[int] = 0
+    is_subscription: Optional[bool] = False
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     class Config:
         orm_mode = True
+        from_attributes = True
 
 
 class DeliveryResponse(BaseModel):

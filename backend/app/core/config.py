@@ -28,6 +28,7 @@ class Settings(BaseSettings):
         "SECRET_KEY",
         "development-secret-key-change-in-production-must-be-32-chars"
     )
+    ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
     # CORS
@@ -35,7 +36,10 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://localhost:3000", 
         "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "https://vast-tributary-466619-m8.web.app",
+        "https://luckygas-frontend-staging-2025.web.app",
+        "https://luckygas-frontend-production-2025.web.app"
     ]
     
     # Admin user (for initial setup)
