@@ -25,10 +25,12 @@ let API_URL = import.meta.env.VITE_API_URL ||
 console.log('🔍 [API] Raw VITE_API_URL from environment:', import.meta.env.VITE_API_URL);
 console.log('🔍 [API] All environment variables:', import.meta.env);
 
-// Force HTTPS if somehow an HTTP URL gets through
-if (API_URL.startsWith('http://')) {
+// Force HTTPS if somehow an HTTP URL gets through (but not for localhost)
+if (API_URL.startsWith('http://') && !API_URL.includes('localhost')) {
   console.warn('⚠️ [API] Converting HTTP to HTTPS for API URL:', API_URL);
   API_URL = API_URL.replace('http://', 'https://');
+} else if (API_URL.startsWith('http://localhost')) {
+  console.log('🏠 [API] Keeping HTTP for localhost development:', API_URL);
 }
 
 // Double-check for staging URLs
@@ -54,12 +56,12 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token and log requests
 api.interceptors.request.use(
   (config) => {
-    // CRITICAL: Force HTTPS for all requests
-    if (config.baseURL && config.baseURL.includes('http://')) {
+    // CRITICAL: Force HTTPS for all requests (but not for localhost)
+    if (config.baseURL && config.baseURL.includes('http://') && !config.baseURL.includes('localhost')) {
       console.warn(`[API] Converting HTTP to HTTPS in baseURL: ${config.baseURL}`);
       config.baseURL = config.baseURL.replace('http://', 'https://');
     }
-    if (config.url && config.url.includes('http://')) {
+    if (config.url && config.url.includes('http://') && !config.url.includes('localhost')) {
       console.warn(`[API] Converting HTTP to HTTPS in URL: ${config.url}`);
       config.url = config.url.replace('http://', 'https://');
     }

@@ -325,7 +325,7 @@ def create_initial_admin(db: Session):
             username="admin",
             full_name="System Administrator",
             hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
-            role=UserRole.ADMIN,
+            role=UserRole.SUPER_ADMIN,
             is_active=True
         )
         db.add(admin)

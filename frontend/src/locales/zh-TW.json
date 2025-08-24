@@ -1,4 +1,5 @@
 {
+  "notes": "備註",
   "app": {
     "title": "幸福氣瓦斯配送管理系統",
     "shortTitle": "幸福氣",
@@ -31,6 +32,16 @@
     "delete": "刪除",
     "refresh": "重新整理",
     "create": "新增",
+    "view": "查看",
+    "confirm": "確認",
+    "add": "新增",
+    "update": "更新",
+    "submit": "提交",
+    "back": "返回",
+    "close": "關閉",
+    "export": "匯出",
+    "import": "匯入",
+    "filter": "篩選",
     "totalItems": "共 {{total}} 筆",
     "days": "天",
     "minutes": "分鐘",
@@ -45,6 +56,20 @@
     "no": "否",
     "active": "啟用",
     "inactive": "停用",
+    "error": {
+      "createFailed": "新增失敗",
+      "fetchFailed": "載入失敗",
+      "updateFailed": "更新失敗",
+      "deleteFailed": "刪除失敗",
+      "saveFailed": "儲存失敗",
+      "general": "操作失敗，請稍後再試"
+    },
+    "success": {
+      "createSuccess": "新增成功",
+      "updateSuccess": "更新成功",
+      "deleteSuccess": "刪除成功",
+      "saveSuccess": "儲存成功"
+    },
     "weekdays": {
       "monday": "週一",
       "tuesday": "週二",
@@ -1027,7 +1052,11 @@
       "assignedDriver": "指派司機",
       "removeDriver": "移除司機",
       "noDriverAssigned": "尚未指派司機",
-      "dragDriverHere": "拖拉司機卡片至此處指派"
+      "dragDriverHere": "拖拉司機卡片至此處指派",
+      "startSuccess": "路線開始成功",
+      "startError": "路線開始失敗",
+      "completeSuccess": "路線完成成功",
+      "stopCompleteSuccess": "停靠點完成成功"
     },
     "driver": {
       "title": "司機管理",

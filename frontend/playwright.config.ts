@@ -109,7 +109,7 @@ export default defineConfig({
     // Original comprehensive test
     {
       name: 'comprehensive',
-      testMatch: /comprehensive-frontend-test\.spec\.ts/,
+      testMatch: /comprehensive.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
 
@@ -154,7 +154,9 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     env: {
-      VITE_API_URL: 'http://localhost:8000',
+      VITE_API_URL: 'http://localhost:8001',
+      VITE_WS_URL: 'ws://localhost:8001',
+      VITE_ENV: 'development',
     },
   },
 });

@@ -22,7 +22,7 @@ router = APIRouter()
 @router.get("/", response_model=List[CustomerResponse])
 def get_customers(
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=2000),
     customer_type: Optional[CustomerType] = None,
     area: Optional[str] = None,
     is_active: bool = True,
@@ -95,7 +95,7 @@ def get_customer_deliveries(
     customer_id: int,
     days: int = Query(30, ge=1, le=365),
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=2000),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -233,14 +233,28 @@ def delete_customer(
 @router.get("/statistics/")
 def get_customer_statistics(
     include_inactive: bool = Query(False),
-    date_from: Optional[datetime] = Query(None),
-    date_to: Optional[datetime] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
     Get customer statistics
     """
+    # Parse date strings if provided
+    date_from_dt = None
+    date_to_dt = None
+    if date_from:
+        try:
+            date_from_dt = datetime.fromisoformat(date_from)
+        except ValueError:
+            pass  # Ignore invalid dates
+    if date_to:
+        try:
+            date_to_dt = datetime.fromisoformat(date_to)
+        except ValueError:
+            pass  # Ignore invalid dates
+    
     # Count total customers
     total_query = db.query(func.count(Customer.id))
     if not include_inactive:

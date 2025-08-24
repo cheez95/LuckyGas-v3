@@ -79,7 +79,7 @@ const CustomerManagement: React.FC = () => {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/customers');
+      const response = await api.get('/customers/');
       // Handle both array and object response formats
       const backendCustomers = Array.isArray(response.data) 
         ? response.data 
@@ -104,7 +104,7 @@ const CustomerManagement: React.FC = () => {
         date_from: moment().startOf('month').format('YYYY-MM-DD'),
         date_to: moment().endOf('month').format('YYYY-MM-DD')
       };
-      const response = await api.get('/customers/statistics', { params });
+      const response = await api.get('/customers/statistics/', { params });
       setStats(response.data);
     } catch (error: any) {
       console.error('Failed to fetch customer statistics:', error.response?.data || error);
@@ -261,7 +261,7 @@ const CustomerManagement: React.FC = () => {
       } else {
         // For creates, send all fields
         backendData = transformToBackendSchema(values);
-        await api.post('/customers', backendData);
+        await api.post('/customers/', backendData);
         message.success(t('customers.createSuccess'));
       }
       setIsModalVisible(false);
