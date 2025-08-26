@@ -11,8 +11,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Get database URL from environment
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://luckygas:password@localhost/luckygas")
+# Get database URL from environment - use clients SQLite database
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./luckygas_clients.db")
 
 # Convert async URL to sync if needed
 if DATABASE_URL.startswith("postgresql+asyncpg://"):
@@ -71,10 +71,12 @@ def init_db():
     Run this once when setting up
     """
     try:
-        # Import all models to register them
-        from app.models import (
+        # Import all models to register them - use comprehensive models
+        from app.models_comprehensive import (
             User, Customer, Order,
-            Driver, Delivery
+            Driver, Delivery, Route,
+            CustomerCylinder, CustomerTimeAvailability,
+            CustomerEquipment, CustomerUsageArea, CustomerUsageMetrics
         )
         
         # Create all tables
