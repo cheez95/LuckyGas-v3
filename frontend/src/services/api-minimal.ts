@@ -45,7 +45,7 @@ apiClient.interceptors.request.use(
     
     // Log request in development
     if (import.meta.env.DEV) {
-      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      // console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
         params: config.params,
         data: config.data,
       });
@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
   (response) => {
     // Log response in development
     if (import.meta.env.DEV) {
-      console.log(`✅ API Response: ${response.config.url}`, response.data);
+      // console.log(`✅ API Response: ${response.config.url}`, response.data);
     }
     return response;
   },
@@ -161,7 +161,7 @@ apiClient.interceptors.response.use(
 
 // Process queued requests when connection is restored
 export const processRequestQueue = async () => {
-  console.log(`📤 Processing ${requestQueue.length} queued requests...`);
+  // console.log(`📤 Processing ${requestQueue.length} queued requests...`);
   
   while (requestQueue.length > 0) {
     const { config, resolve, reject } = requestQueue.shift()!;
@@ -187,7 +187,7 @@ export const checkConnection = async (): Promise<boolean> => {
 
 // Listen for online event
 window.addEventListener('online', () => {
-  console.log('🌐 Connection restored, processing queued requests...');
+  // console.log('🌐 Connection restored, processing queued requests...');
   processRequestQueue();
 });
 

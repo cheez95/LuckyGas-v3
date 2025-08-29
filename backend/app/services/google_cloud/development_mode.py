@@ -8,7 +8,6 @@ with automatic detection of API key availability.
 import logging
 import os
 from enum import Enum
-from typing import Any, Dict, Optional
 
 from app.services.google_cloud.mock_routes_service import MockGoogleRoutesService
 from app.services.google_cloud.mock_vertex_ai_service import (

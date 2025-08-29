@@ -6,7 +6,6 @@ import hashlib
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
 

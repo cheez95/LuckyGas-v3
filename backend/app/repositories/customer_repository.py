@@ -5,7 +5,6 @@ Implements customer - specific queries and operations
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession

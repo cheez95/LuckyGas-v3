@@ -122,7 +122,7 @@ const DeliveryScanner: React.FC = () => {
       const result = await codeReaderRef.current.decodeFromImageElement(canvas);
       
       if (result) {
-        console.log('QR Code detected:', result.getText());
+        // console.log('QR Code detected:', result.getText());
         handleQRCodeScanned(result.getText());
       } else {
         // No QR code found, show feedback to user

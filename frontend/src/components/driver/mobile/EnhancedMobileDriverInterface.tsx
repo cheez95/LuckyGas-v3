@@ -194,7 +194,7 @@ const EnhancedMobileDriverInterface: React.FC = () => {
     }).catch(error => {
       if (!isOnline) {
         // Will be queued for offline sync
-        console.log('Location update queued for offline sync');
+        // console.log('Location update queued for offline sync');
       } else {
         console.error('Failed to update location:', error);
       }

@@ -1,0 +1,965 @@
+{
+  "total_rows": 1267,
+  "total_columns": 76,
+  "columns": {
+    "客戶": {
+      "data_type": "int64",
+      "non_null_count": "1267",
+      "null_count": "0",
+      "unique_values": 1267,
+      "sample_values": [
+        1400103,
+        1401728,
+        1402087,
+        1402498,
+        1405093
+      ]
+    },
+    "電子發票抬頭": {
+      "data_type": "object",
+      "non_null_count": "1267",
+      "null_count": "0",
+      "unique_values": 1204,
+      "sample_values": [
+        "豐年國小",
+        "豐榮國小",
+        "臺東縣大南國小",
+        "秀秀麵線羹",
+        "藍蜻蜓速食專賣店"
+      ]
+    },
+    "客戶簡稱": {
+      "data_type": "object",
+      "non_null_count": "1267",
+      "null_count": "0",
+      "unique_values": 1256,
+      "sample_values": [
+        "豐年附幼",
+        "豐榮附幼",
+        "大南幼兒園",
+        "￡秀秀麵線羹",
+        "藍蜻蜓家"
+      ]
+    },
+    "地址": {
+      "data_type": "object",
+      "non_null_count": "1267",
+      "null_count": "0",
+      "unique_values": 1166,
+      "sample_values": [
+        "臺東市中興路三段320號",
+        "臺東市中華路二段154巷150號",
+        "臺東縣卑南鄉東興村東園一街40號",
+        "臺東縣卑南鄉太平路631巷26號",
+        "臺東市精誠路236號"
+      ]
+    },
+    "系統上鋼瓶數量": {
+      "data_type": "object",
+      "non_null_count": "184",
+      "null_count": "1083",
+      "unique_values": 77,
+      "sample_values": [
+        "20*5+16*1",
+        "20*2+16*2",
+        "20*2",
+        "4*2+20*10+50*2",
+        "20*14+4*5"
+      ]
+    },
+    "50KG": {
+      "data_type": "float64",
+      "non_null_count": "62",
+      "null_count": "1205",
+      "unique_values": 7,
+      "sample_values": [
+        2.0,
+        5.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "營20": {
+      "data_type": "float64",
+      "non_null_count": "7",
+      "null_count": "1260",
+      "unique_values": 3,
+      "sample_values": [
+        3.0,
+        2.0,
+        2.0,
+        3.0,
+        1.0
+      ]
+    },
+    "營16": {
+      "data_type": "float64",
+      "non_null_count": "0",
+      "null_count": "1267",
+      "unique_values": 0,
+      "sample_values": []
+    },
+    "20KG": {
+      "data_type": "float64",
+      "non_null_count": "587",
+      "null_count": "680",
+      "unique_values": 8,
+      "sample_values": [
+        1.0,
+        1.0,
+        2.0,
+        1.0,
+        2.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "16KG": {
+      "data_type": "float64",
+      "non_null_count": "69",
+      "null_count": "1198",
+      "unique_values": 3,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        2.0,
+        1.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "10KG": {
+      "data_type": "float64",
+      "non_null_count": "5",
+      "null_count": "1262",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "4KG": {
+      "data_type": "float64",
+      "non_null_count": "56",
+      "null_count": "1211",
+      "unique_values": 3,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "好運16": {
+      "data_type": "float64",
+      "non_null_count": "54",
+      "null_count": "1213",
+      "unique_values": 5,
+      "sample_values": [
+        1.0,
+        2.0,
+        1.0,
+        1.0,
+        2.0
+      ]
+    },
+    "瓶安桶10": {
+      "data_type": "float64",
+      "non_null_count": "2",
+      "null_count": "1265",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0
+      ]
+    },
+    "幸福丸": {
+      "data_type": "float64",
+      "non_null_count": "11",
+      "null_count": "1256",
+      "unique_values": 3,
+      "sample_values": [
+        3.0,
+        3.0,
+        3.0,
+        5.0,
+        3.0
+      ]
+    },
+    "好運20": {
+      "data_type": "float64",
+      "non_null_count": "0",
+      "null_count": "1267",
+      "unique_values": 0,
+      "sample_values": []
+    },
+    "流量50公斤": {
+      "data_type": "float64",
+      "non_null_count": "245",
+      "null_count": "1022",
+      "unique_values": 11,
+      "sample_values": [
+        2.0,
+        3.0,
+        2.0,
+        3.0,
+        7.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "流量20公斤": {
+      "data_type": "float64",
+      "non_null_count": "227",
+      "null_count": "1040",
+      "unique_values": 6,
+      "sample_values": [
+        3.0,
+        1.0,
+        3.0,
+        3.0,
+        6.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "流量16公斤": {
+      "data_type": "float64",
+      "non_null_count": "0",
+      "null_count": "1267",
+      "unique_values": 0,
+      "sample_values": [],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "流量好運20公斤": {
+      "data_type": "float64",
+      "non_null_count": "0",
+      "null_count": "1267",
+      "unique_values": 0,
+      "sample_values": [],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "流量好運16公斤": {
+      "data_type": "float64",
+      "non_null_count": "144",
+      "null_count": "1123",
+      "unique_values": 2,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "計價方式": {
+      "data_type": "object",
+      "non_null_count": "1267",
+      "null_count": "0",
+      "unique_values": 3,
+      "sample_values": [
+        "桶裝",
+        "桶裝",
+        "桶裝",
+        "流量",
+        "桶裝"
+      ]
+    },
+    "結帳方式": {
+      "data_type": "object",
+      "non_null_count": "1266",
+      "null_count": "1",
+      "unique_values": 3,
+      "sample_values": [
+        "月結",
+        "月結",
+        "月結",
+        "月結",
+        "月結"
+      ]
+    },
+    "結帳用檔案": {
+      "data_type": "object",
+      "non_null_count": "10",
+      "null_count": "1257",
+      "unique_values": 1,
+      "sample_values": [
+        "V",
+        "V",
+        "V",
+        "V",
+        "V"
+      ]
+    },
+    "訂閱式會員": {
+      "data_type": "object",
+      "non_null_count": "320",
+      "null_count": "947",
+      "unique_values": 2,
+      "sample_values": [
+        "V",
+        "V",
+        "V",
+        "V",
+        "V"
+      ]
+    },
+    "發報": {
+      "data_type": "object",
+      "non_null_count": "794",
+      "null_count": "473",
+      "unique_values": 1,
+      "sample_values": [
+        "V",
+        "V",
+        "V",
+        "V",
+        "V"
+      ]
+    },
+    "排巡": {
+      "data_type": "object",
+      "non_null_count": "1191",
+      "null_count": "76",
+      "unique_values": 4,
+      "sample_values": [
+        "V",
+        "V",
+        "X",
+        "V",
+        "V"
+      ]
+    },
+    "設備客戶買斷": {
+      "data_type": "object",
+      "non_null_count": "3",
+      "null_count": "1264",
+      "unique_values": 3,
+      "sample_values": [
+        "設備學校的",
+        "設備飯店的",
+        "無法安裝"
+      ]
+    },
+    "已解約": {
+      "data_type": "object",
+      "non_null_count": "10",
+      "null_count": "1257",
+      "unique_values": 1,
+      "sample_values": [
+        "V",
+        "V",
+        "V",
+        "V",
+        "V"
+      ]
+    },
+    "需要當天配送": {
+      "data_type": "object",
+      "non_null_count": "11",
+      "null_count": "1256",
+      "unique_values": 3,
+      "sample_values": [
+        "V",
+        "V",
+        "V",
+        "V",
+        "V"
+      ]
+    },
+    "8~9": {
+      "data_type": "float64",
+      "non_null_count": "677",
+      "null_count": "590",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "9~10": {
+      "data_type": "float64",
+      "non_null_count": "750",
+      "null_count": "517",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "10~11": {
+      "data_type": "float64",
+      "non_null_count": "834",
+      "null_count": "433",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "11~12": {
+      "data_type": "float64",
+      "non_null_count": "837",
+      "null_count": "430",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "12~13": {
+      "data_type": "float64",
+      "non_null_count": "800",
+      "null_count": "467",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "13~14": {
+      "data_type": "float64",
+      "non_null_count": "807",
+      "null_count": "460",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "14~15": {
+      "data_type": "float64",
+      "non_null_count": "788",
+      "null_count": "479",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "15~16": {
+      "data_type": "float64",
+      "non_null_count": "796",
+      "null_count": "471",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "16~17": {
+      "data_type": "float64",
+      "non_null_count": "832",
+      "null_count": "435",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "17~18": {
+      "data_type": "float64",
+      "non_null_count": "797",
+      "null_count": "470",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "18~19": {
+      "data_type": "float64",
+      "non_null_count": "696",
+      "null_count": "571",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "19~20": {
+      "data_type": "float64",
+      "non_null_count": "661",
+      "null_count": "606",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "時段早1午2晚3全天0": {
+      "data_type": "float64",
+      "non_null_count": "1124",
+      "null_count": "143",
+      "unique_values": 4,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        2.0
+      ],
+      "note": "Time availability related - consider consolidation"
+    },
+    "公休日": {
+      "data_type": "object",
+      "non_null_count": "316",
+      "null_count": "951",
+      "unique_values": 25,
+      "sample_values": [
+        "Red",
+        "Red",
+        7,
+        2.3,
+        6.7
+      ]
+    },
+    "狀態": {
+      "data_type": "float64",
+      "non_null_count": "0",
+      "null_count": "1267",
+      "unique_values": 0,
+      "sample_values": []
+    },
+    "切替器型號": {
+      "data_type": "object",
+      "non_null_count": "691",
+      "null_count": "576",
+      "unique_values": 43,
+      "sample_values": [
+        "重量發報",
+        "接點式發報",
+        "重量發報",
+        "重量發報",
+        "重量發報"
+      ]
+    },
+    "月配送量": {
+      "data_type": "float64",
+      "non_null_count": "1073",
+      "null_count": "194",
+      "unique_values": 199,
+      "sample_values": [
+        20.0,
+        64.0,
+        100.0,
+        60.0,
+        36.0
+      ]
+    },
+    "退氣": {
+      "data_type": "float64",
+      "non_null_count": "1015",
+      "null_count": "252",
+      "unique_values": 172,
+      "sample_values": [
+        12.0,
+        0.0,
+        0.0,
+        2.0,
+        0.0
+      ]
+    },
+    "實際購買公斤數": {
+      "data_type": "float64",
+      "non_null_count": "1078",
+      "null_count": "189",
+      "unique_values": 428,
+      "sample_values": [
+        8.0,
+        64.0,
+        100.0,
+        58.0,
+        36.0
+      ],
+      "note": "Gas cylinder related - consider consolidation"
+    },
+    "退氣比例": {
+      "data_type": "float64",
+      "non_null_count": "1053",
+      "null_count": "214",
+      "unique_values": 76,
+      "sample_values": [
+        0.6,
+        0.0,
+        0.0,
+        0.0333333333333333,
+        0.0
+      ]
+    },
+    "平均日使用": {
+      "data_type": "float64",
+      "non_null_count": "1123",
+      "null_count": "144",
+      "unique_values": 245,
+      "sample_values": [
+        0.0,
+        0.3,
+        2.13333333333333,
+        3.3,
+        1.9
+      ]
+    },
+    "串接數量": {
+      "data_type": "float64",
+      "non_null_count": "802",
+      "null_count": "465",
+      "unique_values": 37,
+      "sample_values": [
+        20.0,
+        60.0,
+        72.0,
+        36.0,
+        70.0
+      ]
+    },
+    "備用量": {
+      "data_type": "float64",
+      "non_null_count": "813",
+      "null_count": "454",
+      "unique_values": 33,
+      "sample_values": [
+        20.0,
+        20.0,
+        36.0,
+        36.0,
+        70.0
+      ]
+    },
+    "最大週期": {
+      "data_type": "float64",
+      "non_null_count": "792",
+      "null_count": "475",
+      "unique_values": 70,
+      "sample_values": [
+        38.0,
+        23.90625,
+        32.0,
+        26.0,
+        4.0
+      ]
+    },
+    "可延後天數": {
+      "data_type": "float64",
+      "non_null_count": "791",
+      "null_count": "476",
+      "unique_values": 60,
+      "sample_values": [
+        37.0,
+        6.96875,
+        15.0,
+        25.0,
+        3.0
+      ]
+    },
+    "是否需要當天去": {
+      "data_type": "float64",
+      "non_null_count": "1130",
+      "null_count": "137",
+      "unique_values": 157,
+      "sample_values": [
+        0.0,
+        10.0,
+        7.86666666666667,
+        -3.33,
+        16.07
+      ]
+    },
+    "區域": {
+      "data_type": "object",
+      "non_null_count": "1266",
+      "null_count": "1",
+      "unique_values": 16,
+      "sample_values": [
+        "D-東方大鎮",
+        "C-漢中",
+        "E-力國",
+        "E-力國",
+        "A-瑞光"
+      ]
+    },
+    "1汽車/2機車/0全部": {
+      "data_type": "float64",
+      "non_null_count": "1263",
+      "null_count": "4",
+      "unique_values": 3,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        2.0
+      ]
+    },
+    "單一區域供應": {
+      "data_type": "float64",
+      "non_null_count": "1008",
+      "null_count": "259",
+      "unique_values": 5,
+      "sample_values": [
+        1.0,
+        1.0,
+        3.0,
+        2.0,
+        2.0
+      ]
+    },
+    "第一使用區域(串接)": {
+      "data_type": "object",
+      "non_null_count": "867",
+      "null_count": "400",
+      "unique_values": 120,
+      "sample_values": [
+        "20KG:3",
+        "重量發報20*1+16*1",
+        "20KG+16KG:2+2",
+        "重量發報20*1+16*1",
+        "50KG+20KG:1+1"
+      ]
+    },
+    "第二使用區域": {
+      "data_type": "object",
+      "non_null_count": "393",
+      "null_count": "874",
+      "unique_values": 145,
+      "sample_values": [
+        "煎台16*1",
+        "快速20*1",
+        "雙瓶20*2",
+        "16*1梅花盧",
+        "間台20*1"
+      ]
+    },
+    "第三使用區域": {
+      "data_type": "object",
+      "non_null_count": "193",
+      "null_count": "1074",
+      "unique_values": 84,
+      "sample_values": [
+        "快速20*1",
+        "低壓20*1",
+        "瓦斯爐20*1",
+        "間台20*1",
+        "快速爐20*1"
+      ]
+    },
+    "第四使用區域": {
+      "data_type": "object",
+      "non_null_count": "40",
+      "null_count": "1227",
+      "unique_values": 22,
+      "sample_values": [
+        "瓦斯爐20*1",
+        "廚房20*1",
+        "快速爐20*1",
+        "煎台16*1",
+        "飯鍋20*1"
+      ]
+    },
+    "第五使用區域": {
+      "data_type": "object",
+      "non_null_count": "5",
+      "null_count": "1262",
+      "unique_values": 5,
+      "sample_values": [
+        "4*1",
+        "熱水器20*1",
+        "快速爐20*1",
+        "5Q電子快速爐",
+        "瓦斯爐16*1"
+      ]
+    },
+    "預備桶": {
+      "data_type": "object",
+      "non_null_count": "294",
+      "null_count": "973",
+      "unique_values": 42,
+      "sample_values": [
+        1,
+        "4*1",
+        "20*1+16*1",
+        1,
+        "20*2"
+      ]
+    },
+    "串接場所申報": {
+      "data_type": "object",
+      "non_null_count": "1",
+      "null_count": "1266",
+      "unique_values": 1,
+      "sample_values": [
+        "4KG周期巡"
+      ]
+    },
+    "流量表": {
+      "data_type": "object",
+      "non_null_count": "264",
+      "null_count": "1003",
+      "unique_values": 2,
+      "sample_values": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "帶線流量錶": {
+      "data_type": "float64",
+      "non_null_count": "219",
+      "null_count": "1048",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "切替器": {
+      "data_type": "object",
+      "non_null_count": "342",
+      "null_count": "925",
+      "unique_values": 2,
+      "sample_values": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "Unnamed: 69": {
+      "data_type": "float64",
+      "non_null_count": "132",
+      "null_count": "1135",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "接點式壓力錶": {
+      "data_type": "float64",
+      "non_null_count": "269",
+      "null_count": "998",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "壓差開關": {
+      "data_type": "float64",
+      "non_null_count": "35",
+      "null_count": "1232",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "微動開關": {
+      "data_type": "float64",
+      "non_null_count": "3",
+      "null_count": "1264",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "永勝": {
+      "data_type": "float64",
+      "non_null_count": "5",
+      "null_count": "1262",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "智慧秤": {
+      "data_type": "float64",
+      "non_null_count": "298",
+      "null_count": "969",
+      "unique_values": 1,
+      "sample_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "類型": {
+      "data_type": "object",
+      "non_null_count": "95",
+      "null_count": "1172",
+      "unique_values": 5,
+      "sample_values": [
+        "學校",
+        "學校",
+        "學校",
+        "學校",
+        "市場"
+      ]
+    }
+  }
+}

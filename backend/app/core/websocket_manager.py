@@ -6,7 +6,6 @@ Eliminates ~300 lines of duplicate WebSocket code.
 import asyncio
 import json
 import logging
-from typing import Dict, List, Set, Optional, Any, Callable, TypedDict
 from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass, asdict

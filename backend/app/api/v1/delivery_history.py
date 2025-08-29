@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, func, select
@@ -32,6 +31,7 @@ async def get_delivery_history(
     db: AsyncSession = Depends(get_db),
 ):
     """Get delivery history with optional filters"""
+from typing import Optional
     # Build query
     query = select(DeliveryHistoryModel).options(
         joinedload(DeliveryHistoryModel.customer)

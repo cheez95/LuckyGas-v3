@@ -107,11 +107,11 @@ const Dashboard: React.FC = () => {
   // WebSocket connection status
   useEffect(() => {
     const handleConnected = () => {
-      console.log('📡 Dashboard: WebSocket connected!');
+      // console.log('📡 Dashboard: WebSocket connected!');
       setIsConnected(true);
     };
     const handleDisconnected = () => {
-      console.log('📡 Dashboard: WebSocket disconnected!');
+      // console.log('📡 Dashboard: WebSocket disconnected!');
       setIsConnected(false);
     };
     
@@ -120,7 +120,7 @@ const Dashboard: React.FC = () => {
     
     // Check current connection status
     const currentStatus = websocketService.isConnected();
-    console.log('📡 Dashboard: Current WebSocket status:', currentStatus);
+    // console.log('📡 Dashboard: Current WebSocket status:', currentStatus);
     setIsConnected(currentStatus);
     
     return () => {
@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
   // WebSocket listeners
   useEffect(() => {
     const handleOrderCreated = (data: any) => {
-      console.log('📦 Dashboard: Order update received:', data);
+      // console.log('📦 Dashboard: Order update received:', data);
       setStats(prev => ({ ...prev, todayOrders: prev.todayOrders + 1 }));
       addActivity('order', `新訂單 #${data.order_id} 已創建`, 'success');
     };

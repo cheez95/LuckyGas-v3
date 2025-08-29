@@ -7,7 +7,6 @@ import logging
 import random
 from datetime import datetime, timedelta
 from math import atan2, cos, radians, sin, sqrt
-from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.config import settings
 from app.services.google_cloud.routes_service import GoogleRoutesService

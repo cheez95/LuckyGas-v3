@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 
 import googlemaps
 import numpy as np

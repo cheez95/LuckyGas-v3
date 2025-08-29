@@ -1,10 +1,10 @@
 from typing import Any, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user
+from app.core.database import get_db
 from app.models.gas_product import DeliveryMethod
 from app.models.gas_product import GasProduct as GasProductModel
 from app.models.gas_product import ProductAttribute
@@ -21,8 +21,8 @@ router = APIRouter()
 
 
 @router.get("/", response_model=GasProductList)
-async def get_products(
-    db: AsyncSession = Depends(get_db),
+def get_products(
+    db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -37,25 +37,23 @@ async def get_products(
     Retrieve gas products with filtering options
     """
     # Build base query
-    base_query = select(GasProductModel)
+    query = db.query(GasProductModel)
 
     # Apply filters
     if delivery_method:
-        base_query = base_query.where(
-            GasProductModel.delivery_method == delivery_method
-        )
+        query = query.filter(GasProductModel.delivery_method == delivery_method)
 
     if size_kg:
-        base_query = base_query.where(GasProductModel.size_kg == size_kg)
+        query = query.filter(GasProductModel.size_kg == size_kg)
 
     if attribute:
-        base_query = base_query.where(GasProductModel.attribute == attribute)
+        query = query.filter(GasProductModel.attribute == attribute)
 
     if is_available is not None:
-        base_query = base_query.where(GasProductModel.is_available == is_available)
+        query = query.filter(GasProductModel.is_available == is_available)
 
     if is_active is not None:
-        base_query = base_query.where(GasProductModel.is_active == is_active)
+        query = query.filter(GasProductModel.is_active == is_active)
 
     if search:
         search_filter = or_(
@@ -63,49 +61,24 @@ async def get_products(
             GasProductModel.name_zh.ilike(f"%{search}%"),
             GasProductModel.name_en.ilike(f"%{search}%"),
         )
-        base_query = base_query.where(search_filter)
+        query = query.filter(search_filter)
 
     # Get total count
-    count_query = select(func.count()).select_from(GasProductModel)
-    # Apply the same filters to count query
-    if delivery_method:
-        count_query = count_query.where(
-            GasProductModel.delivery_method == delivery_method
-        )
-    if size_kg:
-        count_query = count_query.where(GasProductModel.size_kg == size_kg)
-    if attribute:
-        count_query = count_query.where(GasProductModel.attribute == attribute)
-    if is_available is not None:
-        count_query = count_query.where(GasProductModel.is_available == is_available)
-    if is_active is not None:
-        count_query = count_query.where(GasProductModel.is_active == is_active)
-    if search:
-        count_query = count_query.where(search_filter)
-
-    count_result = await db.execute(count_query)
-    total = count_result.scalar() or 0
+    total = query.count()
 
     # Apply pagination and ordering
-    query = (
-        base_query.order_by(
-            GasProductModel.delivery_method,
-            GasProductModel.size_kg,
-            GasProductModel.attribute,
-        )
-        .offset(skip)
-        .limit(limit)
-    )
-
-    result = await db.execute(query)
-    products = result.scalars().all()
+    products = query.order_by(
+        GasProductModel.delivery_method,
+        GasProductModel.size_kg,
+        GasProductModel.attribute,
+    ).offset(skip).limit(limit).all()
 
     return GasProductList(items=products, total=total, skip=skip, limit=limit)
 
 
 @router.get("/available", response_model=GasProductList)
-async def get_available_products(
-    db: AsyncSession = Depends(get_db),
+def get_available_products(
+    db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -117,70 +90,46 @@ async def get_available_products(
     Get only available products for ordering
     """
     # Build query for available and active products
-    base_query = select(GasProductModel).where(
-        GasProductModel.is_available, GasProductModel.is_active
+    query = db.query(GasProductModel).filter(
+        GasProductModel.is_available == True,
+        GasProductModel.is_active == True
     )
 
     # Apply filters
     if delivery_method:
-        base_query = base_query.where(
-            GasProductModel.delivery_method == delivery_method
-        )
+        query = query.filter(GasProductModel.delivery_method == delivery_method)
 
     if size_kg:
-        base_query = base_query.where(GasProductModel.size_kg == size_kg)
+        query = query.filter(GasProductModel.size_kg == size_kg)
 
     if attribute:
-        base_query = base_query.where(GasProductModel.attribute == attribute)
+        query = query.filter(GasProductModel.attribute == attribute)
 
     # Get total count
-    count_query = (
-        select(func.count())
-        .select_from(GasProductModel)
-        .where(GasProductModel.is_available, GasProductModel.is_active)
-    )
-    if delivery_method:
-        count_query = count_query.where(
-            GasProductModel.delivery_method == delivery_method
-        )
-    if size_kg:
-        count_query = count_query.where(GasProductModel.size_kg == size_kg)
-    if attribute:
-        count_query = count_query.where(GasProductModel.attribute == attribute)
-
-    count_result = await db.execute(count_query)
-    total = count_result.scalar() or 0
+    total = query.count()
 
     # Apply pagination and ordering
-    query = (
-        base_query.order_by(
-            GasProductModel.delivery_method,
-            GasProductModel.size_kg,
-            GasProductModel.attribute,
-        )
-        .offset(skip)
-        .limit(limit)
-    )
-
-    result = await db.execute(query)
-    products = result.scalars().all()
+    products = query.order_by(
+        GasProductModel.delivery_method,
+        GasProductModel.size_kg,
+        GasProductModel.attribute,
+    ).offset(skip).limit(limit).all()
 
     return GasProductList(items=products, total=total, skip=skip, limit=limit)
 
 
 @router.get("/{product_id}", response_model=GasProduct)
-async def get_product(
+def get_product(
     product_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ) -> Any:
     """
     Get specific product details
     """
-    result = await db.execute(
-        select(GasProductModel).where(GasProductModel.id == product_id)
-    )
-    product = result.scalar_one_or_none()
+    product = db.query(GasProductModel).filter(
+        GasProductModel.id == product_id
+    ).first()
 
     if not product:
         raise HTTPException(status_code=404, detail="產品不存在")
@@ -189,27 +138,26 @@ async def get_product(
 
 
 @router.post("/", response_model=GasProduct)
-async def create_product(
+def create_product(
     product_in: GasProductCreate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ) -> Any:
     """
     Create new gas product (admin only)
     """
     # Check permissions
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != "super_admin":
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Check if product combination exists
-    result = await db.execute(
-        select(GasProductModel).where(
-            GasProductModel.delivery_method == product_in.delivery_method,
-            GasProductModel.size_kg == product_in.size_kg,
-            GasProductModel.attribute == product_in.attribute,
-        )
-    )
-    if result.scalar_one_or_none():
+    existing = db.query(GasProductModel).filter(
+        GasProductModel.delivery_method == product_in.delivery_method,
+        GasProductModel.size_kg == product_in.size_kg,
+        GasProductModel.attribute == product_in.attribute,
+    ).first()
+    
+    if existing:
         raise HTTPException(status_code=400, detail="產品組合已存在")
 
     # Create product
@@ -224,31 +172,30 @@ async def create_product(
         db_product.name_zh = db_product.display_name
 
     db.add(db_product)
-    await db.commit()
-    await db.refresh(db_product)
+    db.commit()
+    db.refresh(db_product)
 
     return db_product
 
 
 @router.put("/{product_id}", response_model=GasProduct)
-async def update_product(
+def update_product(
     product_id: int,
     product_in: GasProductUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ) -> Any:
     """
     Update gas product (admin only)
     """
     # Check permissions
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != "super_admin":
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Get product
-    result = await db.execute(
-        select(GasProductModel).where(GasProductModel.id == product_id)
-    )
-    product = result.scalar_one_or_none()
+    product = db.query(GasProductModel).filter(
+        GasProductModel.id == product_id
+    ).first()
 
     if not product:
         raise HTTPException(status_code=404, detail="產品不存在")
@@ -258,30 +205,29 @@ async def update_product(
     for field, value in update_data.items():
         setattr(product, field, value)
 
-    await db.commit()
-    await db.refresh(product)
+    db.commit()
+    db.refresh(product)
 
     return product
 
 
 @router.delete("/{product_id}")
-async def delete_product(
+def delete_product(
     product_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ) -> Any:
     """
     Soft delete gas product (admin only)
     """
     # Check permissions
-    if current_user.role != UserRole.SUPER_ADMIN:
+    if current_user.role != UserRole.SUPER_ADMIN and current_user.role != "super_admin":
         raise HTTPException(status_code=403, detail="權限不足")
 
     # Get product
-    result = await db.execute(
-        select(GasProductModel).where(GasProductModel.id == product_id)
-    )
-    product = result.scalar_one_or_none()
+    product = db.query(GasProductModel).filter(
+        GasProductModel.id == product_id
+    ).first()
 
     if not product:
         raise HTTPException(status_code=404, detail="產品不存在")
@@ -289,6 +235,11 @@ async def delete_product(
     # Soft delete
     product.is_active = False
     product.is_available = False
-    await db.commit()
+    db.commit()
 
     return {"message": "產品已停用"}
+
+
+# Include import/export routes
+from app.api.v1.products_import import router as import_router
+router.include_router(import_router)

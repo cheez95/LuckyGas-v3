@@ -6,7 +6,6 @@ It supports Unix socket connections for production and TCP connections for local
 
 import os
 import logging
-from typing import Optional
 from urllib.parse import quote_plus
 
 logger = logging.getLogger(__name__)

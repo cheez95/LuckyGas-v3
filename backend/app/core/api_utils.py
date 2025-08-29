@@ -7,7 +7,7 @@ error handling, permission checking, and response formatting code.
 
 import functools
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Optional, Dict, Callable, Any, List, Union, Set
 from fastapi import HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError

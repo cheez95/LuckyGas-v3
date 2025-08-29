@@ -58,14 +58,14 @@ export async function fetchWithRetry<T>(
     try {
       // Log retry attempt in development
       if (attempt > 0 && import.meta.env.DEV) {
-        console.log(`🔄 Retry attempt ${attempt}/${opts.maxRetries}`);
+        // console.log(`🔄 Retry attempt ${attempt}/${opts.maxRetries}`);
       }
 
       const result = await fetchFn();
       
       // Success - return result
       if (attempt > 0 && import.meta.env.DEV) {
-        console.log(`✅ Request succeeded after ${attempt} retries`);
+        // console.log(`✅ Request succeeded after ${attempt} retries`);
       }
       
       return result;
@@ -93,7 +93,7 @@ export async function fetchWithRetry<T>(
       );
 
       if (import.meta.env.DEV) {
-        console.log(`⏳ Waiting ${Math.round(delay)}ms before retry...`);
+        // console.log(`⏳ Waiting ${Math.round(delay)}ms before retry...`);
       }
 
       // Wait before retrying

@@ -126,7 +126,7 @@ export function useSubmitHandler<T = any, R = any>(options: SubmitOptions<T, R>)
     } catch (error) {
       if (retryOnFailure && retryCount.current < maxRetries) {
         retryCount.current++;
-        console.log(`Retry attempt ${retryCount.current} of ${maxRetries}`);
+        // console.log(`Retry attempt ${retryCount.current} of ${maxRetries}`);
         
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, retryDelay * retryCount.current));

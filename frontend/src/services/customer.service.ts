@@ -22,8 +22,8 @@ export const customerService = {
   async getCustomers(params?: CustomerQueryParams): Promise<CustomerListResponse> {
     try {
       // Debug logging to trace URL source
-      console.log('[customerService] Getting customers...');
-      console.log('[customerService] API instance baseURL:', (api.defaults as any).baseURL);
+      // console.log('[customerService] Getting customers...');
+      // console.log('[customerService] API instance baseURL:', (api.defaults as any).baseURL);
       console.trace('[customerService] Stack trace for URL source');
       
       const response = await api.get<CustomerListResponse>('/customers/', { params });
@@ -34,9 +34,9 @@ export const customerService = {
     }
   },
   
-  async getCustomer(id: number): Promise<Customer> {
+  async getCustomer(id: string | number): Promise<Customer> {
     try {
-      const response = await api.get<Customer>(`/customers/${id}/`);
+      const response = await api.get<Customer>(`/customers/${id}`);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -58,7 +58,7 @@ export const customerService = {
   
   async updateCustomer(id: number, data: Partial<Customer>): Promise<Customer> {
     try {
-      const response = await api.put<Customer>(`/customers/${id}/`, data);
+      const response = await api.put<Customer>(`/customers/${id}`, data);
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -67,7 +67,7 @@ export const customerService = {
   
   async deleteCustomer(id: number): Promise<void> {
     try {
-      await api.delete(`/customers/${id}/`);
+      await api.delete(`/customers/${id}`);
     } catch (error) {
       throw new Error(handleApiError(error));
     }

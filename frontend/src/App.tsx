@@ -6,21 +6,17 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/zh-tw';
 import './App.css';
 
-// Utils
 import { setNavigate } from './utils/router';
 import { features } from './config/features';
 
-// Contexts
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 
-// Common Components
 import ErrorBoundary from './components/common/ErrorBoundary';
 import SessionManager from './components/common/SessionManager';
 import WebSocketManager from './components/common/WebSocketManager';
 
-// Loading fallback component
 const PageLoader = () => (
   <div style={{ 
     display: 'flex', 
@@ -32,19 +28,19 @@ const PageLoader = () => (
   </div>
 );
 
-// Import lazy loading wrapper
 import { lazyLoadComponent, lazyLoadWithRetry } from './components/common/LazyLoadComponent';
 
-// Pages/Components - Lazy loaded with error boundaries and retry
 const Login = lazyLoadComponent(() => import('./components/Login'));
 const ForgotPassword = lazyLoadComponent(() => import('./components/ForgotPassword'));
 const ResetPassword = lazyLoadComponent(() => import('./components/ResetPassword'));
 const MainLayout = lazyLoadComponent(() => import('./components/MainLayout'));
-// Temporarily use minimal dashboard for testing
-const Dashboard = lazyLoadComponent(() => import('./pages/MinimalDashboard'));
+// Fixed components using React.lazy directly to avoid hook errors
+const Dashboard = React.lazy(() => import('./pages/MinimalDashboard'));
 const CustomerManagement = lazyLoadComponent(() => import('./pages/office/CustomerManagement'));
-const OrderManagement = lazyLoadComponent(() => import('./pages/office/OrderManagement'));
-const RoutePlanning = lazyLoadComponent(() => import('./pages/dispatch/RoutePlanning'));
+const CustomerList = lazyLoadComponent(() => import('./pages/CustomerList'));
+const CustomerForm = lazyLoadComponent(() => import('./pages/office/CustomerForm'));
+const OrderManagement = React.lazy(() => import('./pages/office/OrderManagement'));
+const RoutePlanning = React.lazy(() => import('./pages/dispatch/RoutePlanning'));
 const DriverAssignment = lazyLoadComponent(() => import('./pages/dispatch/DriverAssignment'));
 const EmergencyDispatch = lazyLoadComponent(() => import('./pages/dispatch/EmergencyDispatch'));
 const DispatchDashboard = lazyLoadComponent(() => import('./pages/dispatch/DispatchDashboard'));
@@ -54,18 +50,15 @@ const TestDataStructures = lazyLoadComponent(() => import('./pages/TestDataStruc
 const TestDashboard = lazyLoadComponent(() => import('./pages/TestDashboard'));
 const ProductionMonitoringDashboard = lazyLoadComponent(() => import('./pages/ProductionMonitoringDashboard'));
 
-// Driver Pages - Lazy loaded
 const DriverDashboard = lazyLoadComponent(() => import('./pages/driver/DriverDashboard'));
 const RouteDetails = lazyLoadComponent(() => import('./pages/driver/RouteDetails'));
 const DeliveryView = lazyLoadComponent(() => import('./pages/driver/DeliveryView'));
 const DriverNavigation = lazyLoadComponent(() => import('./pages/driver/DriverNavigation'));
 const DeliveryScanner = lazyLoadComponent(() => import('./pages/driver/DeliveryScanner'));
 
-// Customer Pages - Lazy loaded
 const CustomerPortal = lazyLoadComponent(() => import('./pages/customer/CustomerPortal'));
 const OrderTracking = lazyLoadComponent(() => import('./pages/customer/OrderTracking'));
 
-// Analytics Pages - Lazy loaded with prefetch
 const ReportingDashboard = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/analytics/ReportingDashboard')
 );
@@ -73,7 +66,6 @@ const AnalyticsPage = lazyLoadComponent(() =>
   import(/* webpackPrefetch: true */ './pages/AnalyticsPage')
 );
 
-// Admin Pages - Lazy loaded with prefetch for frequent users
 const ExecutiveDashboard = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/admin/ExecutiveDashboard')
 );
@@ -86,11 +78,12 @@ const FinancialDashboard = lazyLoadComponent(() =>
 const PerformanceAnalytics = lazyLoadComponent(() => 
   import(/* webpackPrefetch: true */ './pages/admin/PerformanceAnalytics')
 );
+const ProductManagement = lazyLoadComponent(() => 
+  import(/* webpackPrefetch: true */ './pages/admin/ProductManagement')
+);
 
-// Set dayjs locale
 dayjs.locale('zh-tw');
 
-// Component to set up the navigate function
 const NavigationSetup: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   
@@ -185,7 +178,11 @@ const App: React.FC = () => {
                       <Route path="/" element={<MainLayout />}>
                         <Route index element={<Navigate to="/dashboard" replace />} />
                         <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="customers" element={<CustomerManagement />} />
+                        <Route path="customers" element={<CustomerList />} />
+                        <Route path="customers/new" element={<CustomerForm />} />
+                        <Route path="customers/:id" element={<CustomerForm />} />
+                        <Route path="customers/:id/edit" element={<CustomerForm />} />
+                        <Route path="customers-old" element={<CustomerManagement />} />
                         <Route path="orders" element={<OrderManagement />} />
                         <Route path="routes" element={<RoutePlanning />} />
                         <Route path="driver-assignment" element={<DriverAssignment />} />
@@ -204,6 +201,7 @@ const App: React.FC = () => {
                           <Route path="admin/financial" element={<FinancialDashboard />} />
                         )}
                         <Route path="admin/performance" element={<PerformanceAnalytics />} />
+                        <Route path="admin/products" element={<ProductManagement />} />
                         
                         <Route path="profile" element={<UserProfile />} />
                         <Route path="test-data" element={<TestDataStructures />} />

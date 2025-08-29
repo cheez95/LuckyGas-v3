@@ -4,7 +4,6 @@ import hashlib
 import logging
 import time
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, Optional
 
 import aiohttp
 

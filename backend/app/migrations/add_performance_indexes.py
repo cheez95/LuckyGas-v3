@@ -166,11 +166,10 @@ def drop_indexes():
 
 
 if __name__ == "__main__":
-    import sys
-
+    
     if len(sys.argv) > 1 and sys.argv[1] == "rollback":
-        print("Rolling back database indexes...")
+        # print("Rolling back database indexes...")
         drop_indexes()
     else:
-        print("Creating database indexes...")
+        # print("Creating database indexes...")
         create_indexes()

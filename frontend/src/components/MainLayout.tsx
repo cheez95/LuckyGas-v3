@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   ShoppingCartOutlined,
+  ShoppingOutlined,
   EnvironmentOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -103,7 +104,17 @@ const MainLayout: React.FC = () => {
       },
     ];
 
-    return [...baseItems, ...officeItems];
+    // Add admin menu items for managers and super admins
+    const adminItems = [];
+    if (user?.role === 'manager' || user?.role === 'super_admin') {
+      adminItems.push({
+        key: '/admin/products',
+        icon: <ShoppingOutlined />,
+        label: <span data-testid="menu-products">{t('product.title')}</span>,
+      });
+    }
+
+    return [...baseItems, ...officeItems, ...adminItems];
   };
 
   const menuItems = getMenuItems();

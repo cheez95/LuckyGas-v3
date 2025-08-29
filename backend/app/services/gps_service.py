@@ -6,7 +6,6 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
 
 from app.core.logging import get_logger
 

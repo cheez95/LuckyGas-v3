@@ -1,7 +1,7 @@
 """Optimization data models for route optimization system."""
 
 from datetime import datetime, time
-from typing import Any, Dict, List, Optional
+from typing import Optional, List, Dict, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import (

@@ -55,7 +55,7 @@ def login_json_simple(request: LoginRequest):
     Simplified JSON login endpoint for immediate testing
     Bypasses bcrypt to eliminate performance issues
     """
-    print(f"Login attempt for: {request.username}")
+    # print(f"Login attempt for: {request.username}")
     
     # Hardcoded admin credentials for immediate testing
     if request.username == "admin@luckygas.com" and request.password == "admin-password-2025":
@@ -115,13 +115,13 @@ def login(
     """
     Login endpoint - Authenticate against database
     """
-    print(f"Form login attempt for: {form_data.username}")
+    # print(f"Form login attempt for: {form_data.username}")
     
     # Check user in database
     user = db.query(User).filter(User.email == form_data.username).first()
     
     if not user:
-        print(f"User not found: {form_data.username}")
+        # print(f"User not found: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
@@ -132,7 +132,7 @@ def login(
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     if not pwd_context.verify(form_data.password, user.hashed_password):
-        print(f"Invalid password for user: {form_data.username}")
+        # print(f"Invalid password for user: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
@@ -331,8 +331,9 @@ def create_initial_admin(db: Session):
         db.add(admin)
         db.commit()
         db.refresh(admin)
-        print(f"✅ Admin user created: {settings.FIRST_SUPERUSER}")
+        # print(f"✅ Admin user created: {settings.FIRST_SUPERUSER}")
     else:
-        print("✓ Admin user already exists")
+        # print("✓ Admin user already exists")
+        pass
     
     return admin

@@ -169,7 +169,7 @@ const DispatchDashboard: React.FC = () => {
             <Col span={24}>
               <PriorityQueueManager
                 onDispatch={(order) => {
-                  console.log('Dispatch emergency order:', order);
+                  // console.log('Dispatch emergency order:', order);
                 }}
               />
             </Col>

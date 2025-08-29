@@ -23,7 +23,7 @@ export class ApiTester {
    * Run all API tests
    */
   async runAllTests(): Promise<TestResult[]> {
-    console.log('🧪 Starting API tests...');
+    // console.log('🧪 Starting API tests...');
     this.results = [];
 
     // Test health endpoint
@@ -161,20 +161,20 @@ export class ApiTester {
    * Print test results to console
    */
   private printResults(): void {
-    console.log('\n📊 API Test Results\n' + '='.repeat(50));
+    // console.log('\n📊 API Test Results\n' + '='.repeat(50));
     
     const successCount = this.results.filter(r => r.status === 'success').length;
     const warningCount = this.results.filter(r => r.status === 'warning').length;
     const errorCount = this.results.filter(r => r.status === 'error').length;
     
     this.results.forEach(result => {
-      console.log(result.message);
+      // console.log(result.message);
       if (result.error && result.status === 'error') {
         console.error('  Error details:', result.error);
       }
     });
     
-    console.log('\n' + '='.repeat(50));
+    // console.log('\n' + '='.repeat(50));
     console.log(`Summary: ${successCount} passed, ${warningCount} warnings, ${errorCount} errors`);
     
     if (errorCount === 0) {
@@ -192,11 +192,11 @@ export const apiTester = new ApiTester();
 if (import.meta.env.DEV) {
   // Run tests after a delay to allow app initialization
   setTimeout(() => {
-    console.log('Running API tests in development mode...');
+    // console.log('Running API tests in development mode...');
     apiTester.runAllTests().then(results => {
       // Store results globally for debugging
       (window as any).__API_TEST_RESULTS__ = results;
-      console.log('Test results stored in window.__API_TEST_RESULTS__');
+      // console.log('Test results stored in window.__API_TEST_RESULTS__');
     });
   }, 3000);
 }

@@ -302,7 +302,7 @@ const OrderList: React.FC = () => {
       danger: true,
       onClick: (selectedRows) => {
         // Implement bulk cancel logic
-        console.log('Bulk cancel:', selectedRows);
+        // console.log('Bulk cancel:', selectedRows);
       },
     },
   ];
@@ -504,7 +504,7 @@ const OrderList: React.FC = () => {
         exportable={true}
         onExport={() => {
           // Implement export functionality
-          console.log('Export orders');
+          // console.log('Export orders');
         }}
         pagination={{
           showSizeChanger: true,

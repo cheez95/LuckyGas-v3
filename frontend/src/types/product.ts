@@ -7,8 +7,11 @@ export type DeliveryMethod = typeof DeliveryMethod[keyof typeof DeliveryMethod];
 
 export const ProductAttribute = {
   REGULAR: 'regular',
+  COMMERCIAL: 'commercial',
   HAOYUN: 'haoyun',
-  PINGAN: 'pingan'
+  PINGAN: 'pingan',
+  XINGFU: 'xingfu',
+  SPECIAL: 'special'
 } as const;
 
 export type ProductAttribute = typeof ProductAttribute[keyof typeof ProductAttribute];
@@ -29,6 +32,38 @@ export interface GasProduct {
   track_inventory: boolean;
   low_stock_threshold: number;
   display_name: string;
+}
+
+export interface GasProductCreate {
+  delivery_method: DeliveryMethod;
+  size_kg: number;
+  attribute: ProductAttribute;
+  sku?: string;
+  name_zh: string;
+  name_en?: string;
+  description?: string;
+  unit_price: number;
+  deposit_amount?: number;
+  is_active?: boolean;
+  is_available?: boolean;
+  track_inventory?: boolean;
+  low_stock_threshold?: number;
+}
+
+export interface GasProductUpdate {
+  delivery_method?: DeliveryMethod;
+  size_kg?: number;
+  attribute?: ProductAttribute;
+  sku?: string;
+  name_zh?: string;
+  name_en?: string;
+  description?: string;
+  unit_price?: number;
+  deposit_amount?: number;
+  is_active?: boolean;
+  is_available?: boolean;
+  track_inventory?: boolean;
+  low_stock_threshold?: number;
 }
 
 export interface GasProductList {

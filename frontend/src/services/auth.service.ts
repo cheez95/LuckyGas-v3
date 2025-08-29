@@ -9,12 +9,12 @@ export const authService = {
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
     
-    console.log('🔐 Sending login request...');
+    // console.log('🔐 Sending login request...');
     const startTime = performance.now();
     
     try {
       // Use the simplified backend login endpoint directly
-      console.log('🚀 Calling simplified backend login endpoint...');
+      // console.log('🚀 Calling simplified backend login endpoint...');
       const response = await api.post<{
         access_token: string;
         refresh_token?: string;
@@ -28,11 +28,11 @@ export const authService = {
       });
       
       const loginTime = performance.now() - startTime;
-      console.log(`🚀 Login response received in ${loginTime.toFixed(0)}ms`, response.data);
+      // console.log(`🚀 Login response received in ${loginTime.toFixed(0)}ms`, response.data);
       
       // Store tokens - simplified backend returns user in response
       const { access_token, token_type, user } = response.data;
-      console.log('🔐 Storing access token...');
+      // console.log('🔐 Storing access token...');
       localStorage.setItem('access_token', access_token);
       
       // Note: Simplified backend doesn't use refresh tokens, so we'll skip that
@@ -40,12 +40,12 @@ export const authService = {
       const expiryTime = new Date().getTime() + (30 * 60 * 1000); // 30 minutes in milliseconds
       localStorage.setItem('token_expiry', expiryTime.toString());
       
-      console.log('🔐 Token stored, checking localStorage:', {
-        hasAccessToken: !!localStorage.getItem('access_token'),
-      });
+      // console.log('🔐 Token stored, checking localStorage:', {
+      //   hasAccessToken: !!localStorage.getItem('access_token'),
+      // });
       
       const totalTime = performance.now() - startTime;
-      console.log(`✅ Login complete in ${totalTime.toFixed(0)}ms`);
+      // console.log(`✅ Login complete in ${totalTime.toFixed(0)}ms`);
       
       // Return response with user data if provided, otherwise fetch it
       if (user) {

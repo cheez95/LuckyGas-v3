@@ -1,9 +1,9 @@
 """
 Order management endpoints - Simple implementation
 """
+from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional, List
 from datetime import datetime
 
 from app.core.database import get_db

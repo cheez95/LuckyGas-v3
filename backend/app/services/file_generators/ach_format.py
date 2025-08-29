@@ -5,7 +5,6 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
 
 from app.models.banking import PaymentBatch, PaymentTransaction
 

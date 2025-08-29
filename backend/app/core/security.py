@@ -3,7 +3,7 @@ import hashlib
 import io
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 
 import pyotp
 import qrcode

@@ -99,7 +99,7 @@ export function useOptimizedWebSocket({
       const ws = new WebSocket(url);
       
       ws.onopen = () => {
-        console.log('WebSocket connected');
+        // console.log('WebSocket connected');
         setIsConnected(true);
         reconnectAttemptsRef.current = 0;
         
@@ -119,7 +119,7 @@ export function useOptimizedWebSocket({
       };
       
       ws.onclose = () => {
-        console.log('WebSocket disconnected');
+        // console.log('WebSocket disconnected');
         setIsConnected(false);
         wsRef.current = null;
         
@@ -127,7 +127,7 @@ export function useOptimizedWebSocket({
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current++;
           reconnectTimeoutRef.current = window.setTimeout(() => {
-            console.log(`Reconnecting... (attempt ${reconnectAttemptsRef.current})`);
+            // console.log(`Reconnecting... (attempt ${reconnectAttemptsRef.current})`);
             connect();
           }, reconnectDelay * reconnectAttemptsRef.current);
         }

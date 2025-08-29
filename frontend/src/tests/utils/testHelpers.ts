@@ -182,9 +182,9 @@ export const expectDisabledForRole = (element: HTMLElement, roles: string[]) => 
 // Debug helpers
 export const logTestState = (label: string) => {
   if (process.env.DEBUG_TESTS) {
-    console.log(`[TEST STATE - ${label}]`);
-    console.log('Body HTML:', document.body.innerHTML);
-    console.log('---');
+    // console.log(`[TEST STATE - ${label}]`);
+    // console.log('Body HTML:', document.body.innerHTML);
+    // console.log('---');
   }
 };
 

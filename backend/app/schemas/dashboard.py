@@ -1,8 +1,8 @@
 """Dashboard schemas for optimized API responses."""
 
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class DashboardStats(BaseModel):
@@ -17,7 +17,7 @@ class DashboardStats(BaseModel):
     completion_rate: float = Field(0.0, description="Overall completion rate percentage")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class RouteProgress(BaseModel):
@@ -32,7 +32,7 @@ class RouteProgress(BaseModel):
     progress_percentage: float = Field(0.0, description="Progress percentage")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class PredictionSummary(BaseModel):
@@ -53,7 +53,7 @@ class RealtimeActivity(BaseModel):
     status: str = Field(..., description="Status: info, success, warning")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DashboardSummary(BaseModel):
@@ -65,7 +65,7 @@ class DashboardSummary(BaseModel):
     response_time_ms: int = Field(0, description="API response time in milliseconds")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
         schema_extra = {
             "example": {
                 "stats": {

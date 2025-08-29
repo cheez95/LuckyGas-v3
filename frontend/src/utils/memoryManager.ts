@@ -39,7 +39,7 @@ class MemoryManager {
       return;
     }
 
-    console.log('[MemoryManager] Starting memory monitoring');
+    // console.log('[MemoryManager] Starting memory monitoring');
     
     // Take initial baseline
     const initial = this.getCurrentMemory();
@@ -59,7 +59,7 @@ class MemoryManager {
     if (this.monitorInterval) {
       window.clearInterval(this.monitorInterval);
       this.monitorInterval = null;
-      console.log('[MemoryManager] Stopped memory monitoring');
+      // console.log('[MemoryManager] Stopped memory monitoring');
     }
   }
 
@@ -112,7 +112,7 @@ class MemoryManager {
 
     // Log periodic status
     if (this.memoryHistory.length % 10 === 0) {
-      console.log('[MemoryManager] Memory status:', {
+      // console.log('[MemoryManager] Memory status:', {
         current: this.formatBytes(metrics.heapUsed),
         total: this.formatBytes(metrics.heapTotal),
         limit: this.formatBytes(metrics.external),
@@ -191,10 +191,10 @@ class MemoryManager {
    */
   forceGC(): void {
     if (typeof (global as any).gc === 'function') {
-      console.log('[MemoryManager] Forcing garbage collection');
+      // console.log('[MemoryManager] Forcing garbage collection');
       (global as any).gc();
     } else {
-      console.log('[MemoryManager] Garbage collection not available');
+      // console.log('[MemoryManager] Garbage collection not available');
     }
   }
 
@@ -218,7 +218,7 @@ class MemoryManager {
       console.error('[MemoryManager] Failed to clear sessionStorage:', e);
     }
 
-    console.log('[MemoryManager] Caches cleared');
+    // console.log('[MemoryManager] Caches cleared');
   }
 }
 

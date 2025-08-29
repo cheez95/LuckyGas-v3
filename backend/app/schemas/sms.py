@@ -1,12 +1,12 @@
 """SMS - related Pydantic schemas."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
 
 from app.models.notification import NotificationStatus, SMSProvider
+from typing import Optional
 
 
 class SMSSendRequest(BaseModel):
@@ -72,7 +72,7 @@ class SMSLogResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SMSStatsResponse(BaseModel):
@@ -129,7 +129,7 @@ class SMSTemplateResponse(SMSTemplateBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ProviderConfigBase(BaseModel):
@@ -164,7 +164,7 @@ class ProviderConfigResponse(ProviderConfigBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BulkSMSRecipient(BaseModel):

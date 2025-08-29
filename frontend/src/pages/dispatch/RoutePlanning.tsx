@@ -132,7 +132,7 @@ const RoutePlanning: React.FC = () => {
     if (!isMountedRef.current) return;
     
     activeRequestsRef.current++;
-    console.log(`[RoutePlanning] Starting request. Active requests: ${activeRequestsRef.current}`);
+    // console.log(`[RoutePlanning] Starting request. Active requests: ${activeRequestsRef.current}`);
     
     setIsLoading(true);
     try {
@@ -145,13 +145,13 @@ const RoutePlanning: React.FC = () => {
       });
       
       // Debug logging
-      console.log('[RoutePlanning] fetchAvailableOrders response:', response);
-      console.log('[RoutePlanning] response type:', typeof response);
-      console.log('[RoutePlanning] response.orders:', response?.orders);
+      // console.log('[RoutePlanning] fetchAvailableOrders response:', response);
+      // console.log('[RoutePlanning] response type:', typeof response);
+      // console.log('[RoutePlanning] response.orders:', response?.orders);
       
       // Use safe array handling
       const ordersArray = toArray(response?.orders || response, 'orders');
-      console.log('[RoutePlanning] ordersArray:', ordersArray);
+      // console.log('[RoutePlanning] ordersArray:', ordersArray);
       
       const mappedOrders = safeMap(ordersArray, (order: any) => ({
         id: order.id,
@@ -181,7 +181,7 @@ const RoutePlanning: React.FC = () => {
       }
     } finally {
       activeRequestsRef.current--;
-      console.log(`[RoutePlanning] Request completed. Active requests: ${activeRequestsRef.current}`);
+      // console.log(`[RoutePlanning] Request completed. Active requests: ${activeRequestsRef.current}`);
       if (isMountedRef.current) {
         setIsLoading(false);
       }
@@ -201,7 +201,7 @@ const RoutePlanning: React.FC = () => {
     if (!isMountedRef.current) return;
     
     activeRequestsRef.current++;
-    console.log(`[RoutePlanning] Starting driver request. Active requests: ${activeRequestsRef.current}`);
+    // console.log(`[RoutePlanning] Starting driver request. Active requests: ${activeRequestsRef.current}`);
     
     try {
       const response = await driverService.getAvailableDrivers(selectedDate.format('YYYY-MM-DD'), {
@@ -209,12 +209,12 @@ const RoutePlanning: React.FC = () => {
       });
       
       // Debug logging
-      console.log('[RoutePlanning] fetchDrivers response:', response);
-      console.log('[RoutePlanning] response type:', typeof response);
+      // console.log('[RoutePlanning] fetchDrivers response:', response);
+      // console.log('[RoutePlanning] response type:', typeof response);
       
       // Use safe array handling
       const driversArray = toArray(response, 'drivers');
-      console.log('[RoutePlanning] driversArray:', driversArray);
+      // console.log('[RoutePlanning] driversArray:', driversArray);
       
       if (isMountedRef.current) {
         setDrivers(driversArray);
@@ -227,7 +227,7 @@ const RoutePlanning: React.FC = () => {
       }
     } finally {
       activeRequestsRef.current--;
-      console.log(`[RoutePlanning] Driver request completed. Active requests: ${activeRequestsRef.current}`);
+      // console.log(`[RoutePlanning] Driver request completed. Active requests: ${activeRequestsRef.current}`);
     }
   };
 
@@ -235,12 +235,12 @@ const RoutePlanning: React.FC = () => {
   useEffect(() => {
     const mountTime = Date.now();
     mountTimeRef.current = mountTime;
-    console.log(`[RoutePlanning] Component mounted at ${new Date(mountTime).toISOString()}`);
-    console.log('[RoutePlanning] Memory usage:', performance.memory ? {
-      usedJSHeapSize: `${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB`,
-      totalJSHeapSize: `${Math.round(performance.memory.totalJSHeapSize / 1048576)}MB`,
-      jsHeapSizeLimit: `${Math.round(performance.memory.jsHeapSizeLimit / 1048576)}MB`
-    } : 'Not available');
+    // console.log(`[RoutePlanning] Component mounted at ${new Date(mountTime).toISOString()}`);
+    // console.log('[RoutePlanning] Memory usage:', performance.memory ? {
+    //   usedJSHeapSize: `${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB`,
+    //   totalJSHeapSize: `${Math.round(performance.memory.totalJSHeapSize / 1048576)}MB`,
+    //   jsHeapSizeLimit: `${Math.round(performance.memory.jsHeapSizeLimit / 1048576)}MB`
+    // } : 'Not available');
     
     // Start memory leak detection in development
     if (process.env.NODE_ENV === 'development') {
@@ -254,24 +254,24 @@ const RoutePlanning: React.FC = () => {
     
     return () => {
       const lifetime = Date.now() - mountTimeRef.current;
-      console.log(`[RoutePlanning] Component unmounting after ${Math.round(lifetime / 1000)}s`);
-      console.log(`[RoutePlanning] Active requests at unmount: ${activeRequestsRef.current}`);
-      console.log('[RoutePlanning] Memory usage at unmount:', performance.memory ? {
-        usedJSHeapSize: `${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB`,
-        totalJSHeapSize: `${Math.round(performance.memory.totalJSHeapSize / 1048576)}MB`,
-      } : 'Not available');
+      // console.log(`[RoutePlanning] Component unmounting after ${Math.round(lifetime / 1000)}s`);
+      // console.log(`[RoutePlanning] Active requests at unmount: ${activeRequestsRef.current}`);
+      // console.log('[RoutePlanning] Memory usage at unmount:', performance.memory ? {
+      //   usedJSHeapSize: `${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB`,
+      //   totalJSHeapSize: `${Math.round(performance.memory.totalJSHeapSize / 1048576)}MB`,
+      // } : 'Not available');
       
       isMountedRef.current = false;
       
       // Cancel any pending requests
       if (abortControllerRef.current) {
-        console.log('[RoutePlanning] Aborting pending requests...');
+        // console.log('[RoutePlanning] Aborting pending requests...');
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
       
       // Clear large data arrays to free memory
-      console.log('[RoutePlanning] Clearing data arrays...');
+      // console.log('[RoutePlanning] Clearing data arrays...');
       setAvailableOrders([]);
       setSelectedOrders([]);
       setRouteStops([]);
@@ -283,7 +283,7 @@ const RoutePlanning: React.FC = () => {
         totalWeight: 0,
       });
       
-      console.log('[RoutePlanning] Cleanup completed successfully');
+      // console.log('[RoutePlanning] Cleanup completed successfully');
       
       // Stop memory leak detection
       if (process.env.NODE_ENV === 'development') {
@@ -373,7 +373,7 @@ const RoutePlanning: React.FC = () => {
     if (!isMountedRef.current) return;
     
     activeRequestsRef.current++;
-    console.log(`[RoutePlanning] Starting optimization. Active requests: ${activeRequestsRef.current}`);
+    // console.log(`[RoutePlanning] Starting optimization. Active requests: ${activeRequestsRef.current}`);
     
     setIsOptimizing(true);
     try {
@@ -410,7 +410,7 @@ const RoutePlanning: React.FC = () => {
       }
     } finally {
       activeRequestsRef.current--;
-      console.log(`[RoutePlanning] Optimization completed. Active requests: ${activeRequestsRef.current}`);
+      // console.log(`[RoutePlanning] Optimization completed. Active requests: ${activeRequestsRef.current}`);
       if (isMountedRef.current) {
         setIsOptimizing(false);
       }

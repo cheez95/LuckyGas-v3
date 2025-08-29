@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 from contextlib import asynccontextmanager
 
@@ -12,10 +11,10 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Log startup information immediately
-print(f"[STARTUP] LuckyGas Backend starting...", file=sys.stderr)
-print(f"[STARTUP] Python version: {sys.version}", file=sys.stderr)
-print(f"[STARTUP] PORT env: {os.environ.get('PORT', 'not set')}", file=sys.stderr)
-print(f"[STARTUP] ENVIRONMENT: {os.environ.get('ENVIRONMENT', 'not set')}", file=sys.stderr)
+# print(f"[STARTUP] LuckyGas Backend starting...", file=sys.stderr)
+# print(f"[STARTUP] Python version: {sys.version}", file=sys.stderr)
+# print(f"[STARTUP] PORT env: {os.environ.get('PORT', 'not set')}", file=sys.stderr)
+# print(f"[STARTUP] ENVIRONMENT: {os.environ.get('ENVIRONMENT', 'not set')}", file=sys.stderr)
 
 from app.api.v1 import (
     analytics,

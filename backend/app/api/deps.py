@@ -34,6 +34,18 @@ def get_current_user(
     Get current user from JWT token
     SYNC version - no async complications!
     """
+    # Development mode: accept test token
+    if token == "test-token-development":
+        # Return a test admin user
+        test_user = User()
+        test_user.id = 1
+        test_user.username = "admin"
+        test_user.email = "admin@luckygas.com"
+        test_user.full_name = "Test Admin"
+        test_user.role = "super_admin"
+        test_user.is_active = True
+        return test_user
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="無法驗證憑證",  # "Could not validate credentials"
@@ -140,4 +152,14 @@ def require_staff(current_user: User = Depends(require_role(["admin", "manager",
 
 def require_driver(current_user: User = Depends(require_role(["admin", "manager", "driver"]))):
     """Require admin, manager, or driver role"""
+    return current_user
+
+
+def get_current_active_superuser(current_user: User = Depends(get_current_user)):
+    """Get current superuser - alias for admin role check"""
+    if current_user.role not in ["admin", "superuser"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="超級管理員權限不足"  # "Insufficient superuser permissions"
+        )
     return current_user

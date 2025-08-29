@@ -28,11 +28,11 @@ const TestDataStructures: React.FC = () => {
     testFn: () => Promise<any>
   ): Promise<TestResult> => {
     try {
-      console.log(`[TEST] Testing endpoint: ${name}`);
+      // console.log(`[TEST] Testing endpoint: ${name}`);
       const response = await testFn();
       
-      console.log(`[TEST] ${name} response:`, response);
-      console.log(`[TEST] ${name} type:`, typeof response);
+      // console.log(`[TEST] ${name} response:`, response);
+      // console.log(`[TEST] ${name} type:`, typeof response);
       
       // Analyze the response structure
       let responseType = typeof response;
@@ -144,7 +144,7 @@ const TestDataStructures: React.FC = () => {
   };
 
   const testSafeArrayHandling = () => {
-    console.log('=== Testing SafeArray Utils ===');
+    // console.log('=== Testing SafeArray Utils ===');
     
     const testCases = [
       { input: null, expected: [] },
@@ -165,7 +165,7 @@ const TestDataStructures: React.FC = () => {
     testCases.forEach((testCase, index) => {
       const result = toArray(testCase.input);
       const passed = JSON.stringify(result) === JSON.stringify(testCase.expected);
-      console.log(
+      // console.log(
         `Test ${index + 1}: ${passed ? '✅' : '❌'}`,
         `Input:`, testCase.input,
         `Expected:`, testCase.expected,
@@ -259,10 +259,10 @@ const TestDataStructures: React.FC = () => {
           
           <Button
             onClick={() => {
-              console.log('Current test results:', testResults);
+              // console.log('Current test results:', testResults);
               testResults.forEach(result => {
                 if (result.rawResponse) {
-                  console.log(`\n${result.endpoint} raw response:`, result.rawResponse);
+                  // console.log(`\n${result.endpoint} raw response:`, result.rawResponse);
                 }
               });
             }}

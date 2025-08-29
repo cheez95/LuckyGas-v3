@@ -4,7 +4,6 @@ from fastapi.security import HTTPBearer
 Security - related dependencies for FastAPI routes.
 """
 
-from typing import Annotated, Optional
 
 from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import APIKeyHeader, HTTPBearer

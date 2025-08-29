@@ -9,7 +9,6 @@ This module provides utilities for API versioning including:
 
 import re
 from functools import wraps
-from typing import Callable, Dict, Optional
 
 from fastapi import Header, HTTPException, Request
 from fastapi.responses import JSONResponse

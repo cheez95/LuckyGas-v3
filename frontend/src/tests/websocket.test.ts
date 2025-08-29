@@ -22,7 +22,7 @@ class MockWebSocket {
   }
 
   send(data: string) {
-    console.log('MockWebSocket sending:', data);
+    // console.log('MockWebSocket sending:', data);
   }
 
   close() {

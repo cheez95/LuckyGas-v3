@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     
     # Admin user (for initial setup)
     FIRST_SUPERUSER: str = os.getenv("FIRST_SUPERUSER", "admin@luckygas.com")
-    FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "admin-password-2025")
+    FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD", "luckygas123")
     
     # API
     API_V1_STR: str = "/api/v1"

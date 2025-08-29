@@ -7,7 +7,6 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
 
 from sqlalchemy import func, select
 

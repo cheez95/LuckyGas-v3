@@ -7,7 +7,6 @@ import json
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 import aiohttp
 

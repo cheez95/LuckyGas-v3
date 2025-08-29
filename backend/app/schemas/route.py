@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
 from app.models.route import RouteStatus
+from typing import Optional
 
 
 class RouteStopBase(BaseModel):

@@ -77,7 +77,7 @@ const SafeRoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
 
   // Enhanced cleanup with resource tracking
   const cleanupResources = useCallback(() => {
-    console.log('[SafeRoutePlanningMap] Starting resource cleanup...');
+    // console.log('[SafeRoutePlanningMap] Starting resource cleanup...');
     const resources = getResources();
     if (!resources) return;
 
@@ -150,7 +150,7 @@ const SafeRoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
       }
     }
 
-    console.log('[SafeRoutePlanningMap] Resource cleanup completed');
+    // console.log('[SafeRoutePlanningMap] Resource cleanup completed');
   }, [getResources]);
 
   // Initialize Google Maps with resource tracking
@@ -232,7 +232,7 @@ const SafeRoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
     
     // Cleanup function with timeout for safety
     return () => {
-      console.log('[SafeRoutePlanningMap] Component unmounting...');
+      // console.log('[SafeRoutePlanningMap] Component unmounting...');
       isMountedRef.current = false;
       
       // Cancel any active requests
@@ -268,7 +268,7 @@ const SafeRoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
     const resources = getResources();
     if (!resources) return;
 
-    console.log('[SafeRoutePlanningMap] Clearing markers and info windows');
+    // console.log('[SafeRoutePlanningMap] Clearing markers and info windows');
     
     resources.markers.forEach(marker => {
       try {

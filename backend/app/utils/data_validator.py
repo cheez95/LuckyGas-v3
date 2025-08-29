@@ -7,7 +7,6 @@ import logging
 import re
 from collections import defaultdict
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -653,10 +652,9 @@ def validate_migration_data(
 if __name__ == "__main__":
     # Example usage
     import sqlite3
-    import sys
-
+    
     if len(sys.argv) < 2:
-        print("Usage: python data_validator.py <legacy_db_path> [output_dir]")
+        # print("Usage: python data_validator.py <legacy_db_path> [output_dir]")
         sys.exit(1)
 
     db_path = sys.argv[1]
@@ -671,9 +669,9 @@ if __name__ == "__main__":
     # Run validation
     results = validate_migration_data(customers_df, orders_df, output_dir)
 
-    print("\nValidation Summary:")
-    print(
+    # print("\nValidation Summary:")
+    # print(
         f"  Valid Customers: {results['valid_customers']}/{results['total_customers']}"
     )
-    print(f"  Valid Orders: {results['valid_orders']}/{results['total_orders']}")
-    print(f"  Overall Validity: {results['overall_validity_rate']:.2f}%")
+    # print(f"  Valid Orders: {results['valid_orders']}/{results['total_orders']}")
+    # print(f"  Overall Validity: {results['overall_validity_rate']:.2f}%")

@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Protocol
 
 from app.core.config import settings
 from app.models.notification import SMSProvider

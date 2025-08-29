@@ -1,11 +1,11 @@
 """
 Driver API endpoints for mobile app functionality
 """
+from typing import Any, Dict, List, Optional
 
 import base64
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status

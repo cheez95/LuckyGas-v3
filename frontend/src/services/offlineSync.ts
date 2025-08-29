@@ -65,7 +65,7 @@ class OfflineSyncService {
       
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('IndexedDB initialized successfully');
+        // console.log('IndexedDB initialized successfully');
         resolve();
       };
       
@@ -122,7 +122,7 @@ class OfflineSyncService {
       const request = store.add(fullEntry);
       
       request.onsuccess = () => {
-        console.log('Added to sync queue:', fullEntry);
+        // console.log('Added to sync queue:', fullEntry);
         
         // Show notification
         notification.info({
@@ -217,7 +217,7 @@ class OfflineSyncService {
         return;
       }
       
-      console.log(`Syncing ${pendingEntries.length} pending entries...`);
+      // console.log(`Syncing ${pendingEntries.length} pending entries...`);
       
       let successCount = 0;
       let failureCount = 0;
@@ -332,7 +332,7 @@ class OfflineSyncService {
       const request = store.put(entry);
       
       request.onsuccess = () => {
-        console.log('Data cached:', key);
+        // console.log('Data cached:', key);
         resolve();
       };
       
@@ -406,7 +406,7 @@ class OfflineSyncService {
       transaction.objectStore(STORES.OFFLINE_QUEUE).clear();
       
       transaction.oncomplete = () => {
-        console.log('All offline data cleared');
+        // console.log('All offline data cleared');
         resolve();
       };
       
@@ -420,7 +420,7 @@ class OfflineSyncService {
   private setupEventListeners(): void {
     // Listen for online/offline events
     window.addEventListener('online', () => {
-      console.log('Back online - syncing pending data...');
+      // console.log('Back online - syncing pending data...');
       notification.success({
         message: '已連線',
         description: '網路連線已恢復，正在同步資料...',
@@ -430,7 +430,7 @@ class OfflineSyncService {
     });
     
     window.addEventListener('offline', () => {
-      console.log('Gone offline - data will be synced when connection is restored');
+      // console.log('Gone offline - data will be synced when connection is restored');
       notification.warning({
         message: '離線模式',
         description: '網路連線已中斷，資料將在連線恢復後同步',
@@ -442,7 +442,7 @@ class OfflineSyncService {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data.type === 'sync-success') {
-          console.log('Sync success notification from service worker:', event.data);
+          // console.log('Sync success notification from service worker:', event.data);
           // Update UI or refresh data as needed
         }
       });
@@ -495,7 +495,7 @@ class OfflineSyncService {
     const cacheStore = transaction.objectStore(STORES.CACHED_DATA);
     
     return new Promise((resolve, reject) => {
-      let stats = {
+      const stats = {
         pending: 0,
         synced: 0,
         failed: 0,

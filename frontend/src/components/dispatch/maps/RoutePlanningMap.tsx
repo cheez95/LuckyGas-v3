@@ -122,7 +122,7 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
     
     // Cleanup function
     return () => {
-      console.log('[RoutePlanningMap] Starting cleanup...');
+      // console.log('[RoutePlanningMap] Starting cleanup...');
       isMountedRef.current = false;
       
       // Clear all markers and info windows
@@ -150,13 +150,13 @@ const RoutePlanningMap: React.FC<RoutePlanningMapProps> = ({
         }
       }
       
-      console.log('[RoutePlanningMap] Cleanup completed');
+      // console.log('[RoutePlanningMap] Cleanup completed');
     };
   }, [depotLocation, onMapClick, t]);
 
   // Clear existing markers and info windows
   const clearMarkers = useCallback(() => {
-    console.log('[RoutePlanningMap] Clearing markers and info windows');
+    // console.log('[RoutePlanningMap] Clearing markers and info windows');
     // Clear all markers
     markersRef.current.forEach(marker => {
       // Remove all listeners from marker

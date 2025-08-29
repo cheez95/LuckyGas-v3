@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,6 +32,7 @@ async def create_order_template(
     - 每個客戶可以建立多個模板
     - 支援定期訂單設定
     """
+from typing import List, Optional
     verify_user_role(current_user, ["super_admin", "manager", "office_staf"])
 
     try:

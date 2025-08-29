@@ -209,7 +209,7 @@ const ReportingDashboard: React.FC = () => {
 
   const handleExport = (format: 'pdf' | 'excel') => {
     // TODO: Implement export functionality
-    console.log(`Exporting as ${format}`);
+    // console.log(`Exporting as ${format}`);
   };
 
   if (!metrics) {

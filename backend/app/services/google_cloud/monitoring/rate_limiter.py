@@ -6,7 +6,6 @@ import asyncio
 import logging
 from collections import deque
 from datetime import datetime
-from typing import Dict, Optional, Tuple
 
 import redis.asyncio as redis
 

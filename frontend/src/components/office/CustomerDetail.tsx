@@ -260,7 +260,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
               size="small"
               onChange={(value) => {
                 // Handle inventory update
-                console.log('Update quantity:', value);
+                // console.log('Update quantity:', value);
               }}
             />
           )}

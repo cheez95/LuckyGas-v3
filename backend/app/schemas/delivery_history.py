@@ -1,9 +1,9 @@
 from datetime import date, datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from app.schemas.delivery_history_item import DeliveryHistoryItem
+from typing import Optional
 
 
 class DeliveryHistoryBase(BaseModel):

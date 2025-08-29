@@ -4,12 +4,12 @@
  */
 
 export const runMemoryLeakTest = async () => {
-  console.log('🧪 Starting Memory Leak Test Suite...');
-  console.log('=' .repeat(50));
+  // console.log('🧪 Starting Memory Leak Test Suite...');
+  // console.log('=' .repeat(50));
   
   // Test 1: Rapid tab switching
-  console.log('\n📋 Test 1: Rapid Tab Switching');
-  console.log('Simulating rapid navigation between tabs...');
+  // console.log('\n📋 Test 1: Rapid Tab Switching');
+  // console.log('Simulating rapid navigation between tabs...');
   
   const results = {
     initialMemory: 0,
@@ -23,12 +23,12 @@ export const runMemoryLeakTest = async () => {
   // Record initial memory
   if (performance.memory) {
     results.initialMemory = performance.memory.usedJSHeapSize;
-    console.log(`Initial memory: ${(results.initialMemory / 1048576).toFixed(2)}MB`);
+    // console.log(`Initial memory: ${(results.initialMemory / 1048576).toFixed(2)}MB`);
   }
   
   // Test rapid navigation
-  console.log('Please manually switch between tabs rapidly for 30 seconds...');
-  console.log('Switch between Dashboard, Route Planning, and other tabs');
+  // console.log('Please manually switch between tabs rapidly for 30 seconds...');
+  // console.log('Switch between Dashboard, Route Planning, and other tabs');
   
   // Monitor for 30 seconds
   let peakMemory = results.initialMemory;
@@ -47,7 +47,7 @@ export const runMemoryLeakTest = async () => {
   
   // Record final memory after GC
   if (typeof (window as any).gc === 'function') {
-    console.log('Running garbage collection...');
+    // console.log('Running garbage collection...');
     (window as any).gc();
     await new Promise(resolve => setTimeout(resolve, 2000));
   }
@@ -59,11 +59,11 @@ export const runMemoryLeakTest = async () => {
     const memoryIncrease = results.finalMemory - results.initialMemory;
     const memoryIncreaseMB = memoryIncrease / 1048576;
     
-    console.log(`\n📊 Test Results:`);
-    console.log(`Initial Memory: ${(results.initialMemory / 1048576).toFixed(2)}MB`);
-    console.log(`Peak Memory: ${(results.peakMemory / 1048576).toFixed(2)}MB`);
-    console.log(`Final Memory: ${(results.finalMemory / 1048576).toFixed(2)}MB`);
-    console.log(`Memory Increase: ${memoryIncreaseMB.toFixed(2)}MB`);
+    // console.log(`\n📊 Test Results:`);
+    // console.log(`Initial Memory: ${(results.initialMemory / 1048576).toFixed(2)}MB`);
+    // console.log(`Peak Memory: ${(results.peakMemory / 1048576).toFixed(2)}MB`);
+    // console.log(`Final Memory: ${(results.finalMemory / 1048576).toFixed(2)}MB`);
+    // console.log(`Memory Increase: ${memoryIncreaseMB.toFixed(2)}MB`);
     
     // Check for leak
     if (memoryIncreaseMB > 50) {
@@ -72,20 +72,20 @@ export const runMemoryLeakTest = async () => {
     } else if (memoryIncreaseMB > 20) {
       console.warn(`⚠️ POSSIBLE LEAK: ${memoryIncreaseMB.toFixed(2)}MB increase`);
     } else {
-      console.log(`✅ NO LEAK DETECTED: Memory increase within acceptable range`);
+      // console.log(`✅ NO LEAK DETECTED: Memory increase within acceptable range`);
     }
   }
   
   // Check console for cleanup messages
-  console.log('\n📝 Cleanup Verification:');
-  console.log('Check console for the following messages:');
-  console.log('- [RoutePlanning] Component unmounting...');
-  console.log('- [RoutePlanning] Cleanup completed successfully');
-  console.log('- [RoutePlanningMap] Cleanup completed');
-  console.log('- No "WARNING: requests still active" messages');
+  // console.log('\n📝 Cleanup Verification:');
+  // console.log('Check console for the following messages:');
+  // console.log('- [RoutePlanning] Component unmounting...');
+  // console.log('- [RoutePlanning] Cleanup completed successfully');
+  // console.log('- [RoutePlanningMap] Cleanup completed');
+  // console.log('- No "WARNING: requests still active" messages');
   
-  console.log('\n' + '='.repeat(50));
-  console.log('🧪 Memory Leak Test Complete');
+  // console.log('\n' + '='.repeat(50));
+  // console.log('🧪 Memory Leak Test Complete');
   
   return results;
 };
@@ -94,7 +94,7 @@ export const runMemoryLeakTest = async () => {
  * Test Google Maps cleanup specifically
  */
 export const testGoogleMapsCleanup = () => {
-  console.log('🗺️ Testing Google Maps Cleanup...');
+  // console.log('🗺️ Testing Google Maps Cleanup...');
   
   // Check for leaked map instances
   const mapDivs = document.querySelectorAll('div[style*="position: relative"]');
@@ -114,12 +114,12 @@ export const testGoogleMapsCleanup = () => {
   if (leakedMaps > 0) {
     console.error(`❌ Found ${leakedMaps} potential leaked map instances`);
   } else {
-    console.log('✅ No leaked map instances detected');
+    // console.log('✅ No leaked map instances detected');
   }
   
   // Check for map event listeners
   const mapElements = document.querySelectorAll('.gm-style');
-  console.log(`Found ${mapElements.length} active map elements`);
+  // console.log(`Found ${mapElements.length} active map elements`);
   
   return {
     leakedMaps,
@@ -131,13 +131,13 @@ export const testGoogleMapsCleanup = () => {
  * Test request cancellation
  */
 export const testRequestCancellation = async () => {
-  console.log('🌐 Testing Request Cancellation...');
+  // console.log('🌐 Testing Request Cancellation...');
   
   // This test requires manual interaction
-  console.log('1. Navigate to Route Planning tab');
-  console.log('2. Quickly navigate away before data loads');
+  // console.log('1. Navigate to Route Planning tab');
+  // console.log('2. Quickly navigate away before data loads');
   console.log('3. Check console for "AbortError" or request cancellation messages');
-  console.log('4. Verify no state updates after unmount');
+  // console.log('4. Verify no state updates after unmount');
   
   // Monitor network for pending requests
   const checkPendingRequests = () => {
@@ -150,9 +150,9 @@ export const testRequestCancellation = async () => {
     
     if (pendingFetches.length > 0) {
       console.warn(`⚠️ Found ${pendingFetches.length} pending API requests`);
-      pendingFetches.forEach(req => console.log('  -', req.name));
+      // pendingFetches.forEach(req => console.log('  -', req.name));
     } else {
-      console.log('✅ No pending API requests');
+      // console.log('✅ No pending API requests');
     }
     
     return pendingFetches.length;
@@ -170,9 +170,9 @@ export const testRequestCancellation = async () => {
  * Run all tests
  */
 export const runAllMemoryTests = async () => {
-  console.log('🚀 Running Complete Memory Leak Test Suite');
-  console.log('This will take approximately 1 minute');
-  console.log('');
+  // console.log('🚀 Running Complete Memory Leak Test Suite');
+  // console.log('This will take approximately 1 minute');
+  // console.log('');
   
   const results = {
     tabSwitching: null as any,
@@ -186,17 +186,17 @@ export const runAllMemoryTests = async () => {
   results.requestCancellation = testRequestCancellation();
   
   // Summary
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 TEST SUMMARY');
-  console.log('='.repeat(50));
+  // console.log('\n' + '='.repeat(50));
+  // console.log('📊 TEST SUMMARY');
+  // console.log('='.repeat(50));
   
   if (!results.tabSwitching.leakDetected && results.googleMaps.leakedMaps === 0) {
-    console.log('✅ ALL TESTS PASSED - No memory leaks detected');
+    // console.log('✅ ALL TESTS PASSED - No memory leaks detected');
   } else {
     console.error('❌ TESTS FAILED - Memory leaks detected');
   }
   
-  console.log('\nDetailed Results:', results);
+  // console.log('\nDetailed Results:', results);
   
   return results;
 };
@@ -210,9 +210,9 @@ if (typeof window !== 'undefined') {
     runAllMemoryTests,
   };
   
-  console.log('💡 Memory leak tests loaded. Available commands:');
-  console.log('  window.memoryLeakTests.runMemoryLeakTest() - Test tab switching');
-  console.log('  window.memoryLeakTests.testGoogleMapsCleanup() - Test map cleanup');
-  console.log('  window.memoryLeakTests.testRequestCancellation() - Test request cancellation');
-  console.log('  window.memoryLeakTests.runAllMemoryTests() - Run all tests');
+  // console.log('💡 Memory leak tests loaded. Available commands:');
+  // console.log('  window.memoryLeakTests.runMemoryLeakTest() - Test tab switching');
+  // console.log('  window.memoryLeakTests.testGoogleMapsCleanup() - Test map cleanup');
+  // console.log('  window.memoryLeakTests.testRequestCancellation() - Test request cancellation');
+  // console.log('  window.memoryLeakTests.runAllMemoryTests() - Run all tests');
 }

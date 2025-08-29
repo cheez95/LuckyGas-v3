@@ -5,7 +5,6 @@ import logging
 import time as time_module
 import uuid
 from datetime import datetime, time, timedelta
-from typing import Dict, List, Optional, Tuple
 
 from app.core.metrics import (
     route_optimization_histogram,

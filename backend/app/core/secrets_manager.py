@@ -9,7 +9,6 @@ import json
 import logging
 import os
 from functools import lru_cache
-from typing import Any, Dict, Optional, Union
 
 from google.api_core import exceptions as gcp_exceptions
 from google.cloud import secretmanager

@@ -35,7 +35,7 @@ class MemoryLeakDetector {
       return;
     }
 
-    console.log('[MemoryLeakDetector] Starting memory monitoring...');
+    // console.log('[MemoryLeakDetector] Starting memory monitoring...');
     this.isMonitoring = true;
     this.takeSnapshot(); // Initial snapshot
 
@@ -51,7 +51,7 @@ class MemoryLeakDetector {
   stopMonitoring(): void {
     if (!this.isMonitoring) return;
 
-    console.log('[MemoryLeakDetector] Stopping memory monitoring');
+    // console.log('[MemoryLeakDetector] Stopping memory monitoring');
     this.isMonitoring = false;
 
     if (this.intervalId) {
@@ -87,7 +87,7 @@ class MemoryLeakDetector {
     // Set baseline if not set
     if (!this.baselineMemory && this.snapshots.length === 1) {
       this.baselineMemory = snapshot.usedJSHeapSize;
-      console.log(`[MemoryLeakDetector] Baseline memory: ${this.formatBytes(this.baselineMemory)}`);
+      // console.log(`[MemoryLeakDetector] Baseline memory: ${this.formatBytes(this.baselineMemory)}`);
     }
   }
 
@@ -156,12 +156,12 @@ class MemoryLeakDetector {
    */
   private logCurrentState(snapshot: MemorySnapshot): void {
     console.group('[MemoryLeakDetector] Current State');
-    console.log(`Heap Used: ${this.formatBytes(snapshot.usedJSHeapSize)}`);
-    console.log(`Heap Total: ${this.formatBytes(snapshot.totalJSHeapSize)}`);
-    console.log(`Heap Limit: ${this.formatBytes(snapshot.jsHeapSizeLimit)}`);
-    console.log(`DOM Nodes: ${snapshot.activeDOMNodes}`);
-    console.log(`Event Listeners (approx): ${snapshot.activeListeners}`);
-    console.log(`Time: ${new Date(snapshot.timestamp).toLocaleTimeString()}`);
+    // console.log(`Heap Used: ${this.formatBytes(snapshot.usedJSHeapSize)}`);
+    // console.log(`Heap Total: ${this.formatBytes(snapshot.totalJSHeapSize)}`);
+    // console.log(`Heap Limit: ${this.formatBytes(snapshot.jsHeapSizeLimit)}`);
+    // console.log(`DOM Nodes: ${snapshot.activeDOMNodes}`);
+    // console.log(`Event Listeners (approx): ${snapshot.activeListeners}`);
+    // console.log(`Time: ${new Date(snapshot.timestamp).toLocaleTimeString()}`);
     console.groupEnd();
   }
 
@@ -178,12 +178,12 @@ class MemoryLeakDetector {
     const avgGrowthRate = memoryChange / duration; // bytes per second
 
     console.group('[MemoryLeakDetector] Final Report');
-    console.log(`Monitoring Duration: ${duration.toFixed(1)}s`);
-    console.log(`Starting Memory: ${this.formatBytes(first.usedJSHeapSize)}`);
-    console.log(`Ending Memory: ${this.formatBytes(last.usedJSHeapSize)}`);
-    console.log(`Total Change: ${this.formatBytes(memoryChange)} (${memoryChange > 0 ? '+' : ''}${(memoryChange / (1024 * 1024)).toFixed(2)}MB)`);
-    console.log(`Average Growth Rate: ${this.formatBytes(avgGrowthRate)}/s`);
-    console.log(`DOM Nodes Change: ${(last.activeDOMNodes || 0) - (first.activeDOMNodes || 0)}`);
+    // console.log(`Monitoring Duration: ${duration.toFixed(1)}s`);
+    // console.log(`Starting Memory: ${this.formatBytes(first.usedJSHeapSize)}`);
+    // console.log(`Ending Memory: ${this.formatBytes(last.usedJSHeapSize)}`);
+    // console.log(`Total Change: ${this.formatBytes(memoryChange)} (${memoryChange > 0 ? '+' : ''}${(memoryChange / (1024 * 1024)).toFixed(2)}MB)`);
+    // console.log(`Average Growth Rate: ${this.formatBytes(avgGrowthRate)}/s`);
+    // console.log(`DOM Nodes Change: ${(last.activeDOMNodes || 0) - (first.activeDOMNodes || 0)}`);
     
     // Analyze for leak patterns
     if (avgGrowthRate > 1024 * 1024) { // > 1MB/s
@@ -191,9 +191,9 @@ class MemoryLeakDetector {
     } else if (avgGrowthRate > 100 * 1024) { // > 100KB/s
       console.warn('⚠️ MODERATE LEAK RISK: Memory growing steadily');
     } else if (avgGrowthRate > 10 * 1024) { // > 10KB/s
-      console.log('ℹ️ LOW LEAK RISK: Minor memory growth detected');
+      // console.log('ℹ️ LOW LEAK RISK: Minor memory growth detected');
     } else {
-      console.log('✅ NO LEAK DETECTED: Memory usage stable');
+      // console.log('✅ NO LEAK DETECTED: Memory usage stable');
     }
     
     console.groupEnd();
@@ -222,7 +222,7 @@ class MemoryLeakDetector {
   reset(): void {
     this.snapshots = [];
     this.baselineMemory = null;
-    console.log('[MemoryLeakDetector] Reset complete');
+    // console.log('[MemoryLeakDetector] Reset complete');
   }
 }
 
@@ -234,8 +234,8 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   // Add to window for debugging
   (window as any).memoryLeakDetector = memoryLeakDetector;
   
-  console.log('[MemoryLeakDetector] Available in console as window.memoryLeakDetector');
-  console.log('Commands: startMonitoring(), stopMonitoring(), getCurrentStats(), reset()');
+  // console.log('[MemoryLeakDetector] Available in console as window.memoryLeakDetector');
+  // console.log('Commands: startMonitoring(), stopMonitoring(), getCurrentStats(), reset()');
 }
 
 export default memoryLeakDetector;

@@ -177,7 +177,11 @@
       "Bash(VITE_API_URL=https://luckygas-backend-staging-154687573210.asia-east1.run.app VITE_WS_URL=wss://luckygas-backend-staging-154687573210.asia-east1.run.app VITE_ENV=production npm run build)",
       "Bash(VITE_API_URL=https://luckygas-backend-production-154687573210.asia-east1.run.app VITE_WS_URL=wss://luckygas-backend-production-154687573210.asia-east1.run.app VITE_ENV=production npm run build)",
       "Bash(sudo rm:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(sqlite3:*)",
+      "Bash(open http://localhost:5174)",
+      "Bash(git log:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": []
   }

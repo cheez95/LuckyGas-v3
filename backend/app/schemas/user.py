@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.models.user import UserRole
+from typing import Optional, List
 
 
 class UserBase(BaseModel):

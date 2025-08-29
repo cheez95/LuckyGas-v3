@@ -23,11 +23,11 @@ const OFFLINE_API_PATTERNS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
+  // console.log('Service Worker installing...');
   
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching static assets');
+      // console.log('Caching static assets');
       return cache.addAll(STATIC_CACHE_URLS);
     })
   );
@@ -38,7 +38,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
+  // console.log('Service Worker activating...');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -102,7 +102,7 @@ async function handleApiRequest(request: Request): Promise<Response> {
     if (request.method === 'GET') {
       const cachedResponse = await caches.match(request);
       if (cachedResponse) {
-        console.log('Serving API response from cache:', request.url);
+        // console.log('Serving API response from cache:', request.url);
         return cachedResponse;
       }
     }
@@ -197,7 +197,7 @@ function createOfflineResponse(request: Request): Response {
 
 // Background sync event
 self.addEventListener('sync', (event) => {
-  console.log('Background sync triggered:', event.tag);
+  // console.log('Background sync triggered:', event.tag);
   
   if (event.tag === SYNC_TAG) {
     event.waitUntil(performBackgroundSync());
@@ -217,7 +217,7 @@ async function performBackgroundSync(): Promise<void> {
       });
     }
     
-    console.log('Background sync completed');
+    // console.log('Background sync completed');
   } catch (error) {
     console.error('Background sync failed:', error);
     throw error; // Retry later

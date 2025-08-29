@@ -16,12 +16,12 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token and force HTTPS
 apiClient.interceptors.request.use(
   (config) => {
-    // CRITICAL: Force HTTPS for all requests
-    if (config.baseURL && config.baseURL.includes('http://')) {
+    // CRITICAL: Force HTTPS for all requests (except localhost)
+    if (config.baseURL && config.baseURL.includes('http://') && !config.baseURL.includes('localhost')) {
       console.warn(`[Axios HTTPS Override] Converting HTTP to HTTPS: ${config.baseURL}`);
       config.baseURL = config.baseURL.replace('http://', 'https://');
     }
-    if (config.url && config.url.includes('http://')) {
+    if (config.url && config.url.includes('http://') && !config.url.includes('localhost')) {
       console.warn(`[Axios HTTPS Override] Converting HTTP to HTTPS: ${config.url}`);
       config.url = config.url.replace('http://', 'https://');
     }
@@ -40,7 +40,7 @@ apiClient.interceptors.request.use(
     
     // Log request for debugging
     if (import.meta.env.DEV) {
-      console.log(`🔐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      // console.log(`🔐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     }
     
     return config;

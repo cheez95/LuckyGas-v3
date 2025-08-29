@@ -1,310 +1,555 @@
 """
-Simplified Customer API endpoints - Direct ORM, no service layers
+Comprehensive Customer API Endpoints
+完整的客戶資料 API 端點
 """
-from typing import List, Optional
-from datetime import datetime, timedelta
+
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
-
+from sqlalchemy import func, or_, and_
+from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
-from app.models import Customer, Order, Delivery, CustomerType
-from app.schemas.customer import (
-    CustomerCreate, CustomerUpdate, CustomerResponse,
-    CustomerDeliveryHistory
+from app.client_models import (
+    Customer, CustomerCylinder, CustomerTimeAvailability,
+    CustomerEquipment, CustomerUsageArea, CustomerUsageMetrics,
+    CylinderType, CustomerType, PricingMethod, PaymentMethod
 )
-from app.api.deps import get_current_user, require_role
-from app.core.cache import cache_result
+from pydantic import BaseModel, Field
+from datetime import datetime
+import logging
 
-router = APIRouter()
+logger = logging.getLogger(__name__)
+
+router = APIRouter(tags=["customers"])
+
+class CylinderInfo(BaseModel):
+    cylinder_type: str
+    quantity: int
+    
+class TimeAvailabilityInfo(BaseModel):
+    weekday: str
+    time_slot: str
+    is_available: bool
+    
+class EquipmentInfo(BaseModel):
+    has_switch_valve: bool
+    has_gas_meter: bool
+    has_monitoring_device: bool
+    has_safety_equipment: bool
+    equipment_notes: Optional[str]
+    
+class UsageAreaInfo(BaseModel):
+    area_number: int
+    description: Optional[str]
+    usage_type: Optional[str]
+    
+class UsageMetricsInfo(BaseModel):
+    monthly_consumption: Optional[float]
+    average_cylinder_count: Optional[int]
+    refill_frequency_days: Optional[int]
+    consumption_pattern: Optional[str]
+    
+class CustomerSummary(BaseModel):
+    """Customer summary for list view"""
+    id: int
+    customer_code: str
+    short_name: str
+    customer_type: str
+    district: str
+    area: str
+    address: str
+    is_active: bool
+    cylinder_summary: str  # e.g., "20kg:5, 50kg:2"
+    pricing_method: str
+    payment_method: str
+    
+class CustomerDetail(BaseModel):
+    """Complete customer details"""
+    id: int
+    customer_code: str
+    short_name: str
+    full_name: Optional[str]
+    customer_type: str
+    district: str
+    area: str
+    address: str
+    phone: Optional[str]
+    contact_person: Optional[str]
+    
+    pricing_method: str
+    payment_method: str
+    requires_invoice_file: bool
+    
+    is_active: bool
+    is_vip: bool
+    has_contract: bool
+    termination_date: Optional[datetime]
+    
+    notes: Optional[str]
+    registration_number: Optional[str]
+    order_note: Optional[str]
+    address_note: Optional[str]
+    
+    cylinders: List[CylinderInfo]
+    time_availability: List[TimeAvailabilityInfo]
+    equipment: Optional[EquipmentInfo]
+    usage_areas: List[UsageAreaInfo]
+    usage_metrics: Optional[UsageMetricsInfo]
+    
+class PaginatedCustomers(BaseModel):
+    """Paginated customer list response"""
+    items: List[CustomerSummary]
+    total: int
+    page: int
+    pages: int
+    limit: int
+
+class AnalyticsSummary(BaseModel):
+    """Analytics dashboard summary"""
+    total_customers: int
+    active_customers: int
+    customers_by_area: Dict[str, int]
+    customers_by_type: Dict[str, int]
+    cylinder_distribution: Dict[str, int]
+    payment_methods: Dict[str, int]
+    pricing_methods: Dict[str, int]
+    time_preference_heatmap: List[Dict[str, Any]]
+    equipment_adoption: Dict[str, int]
 
 
-@router.get("/", response_model=List[CustomerResponse])
+@router.get("", response_model=PaginatedCustomers)
 def get_customers(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=2000),
-    customer_type: Optional[CustomerType] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=100),
+    search: Optional[str] = None,
     area: Optional[str] = None,
-    is_active: bool = True,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    district: Optional[str] = None,
+    customer_type: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    db: Session = Depends(get_db)
 ):
     """
-    Get all customers with optional filtering
-    Simple, direct query - no unnecessary abstractions
+    Get paginated customer list with filters
+    獲取分頁的客戶列表（含篩選功能）
     """
     query = db.query(Customer)
     
     # Apply filters
-    if customer_type:
-        query = query.filter(Customer.customer_type == customer_type)
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            or_(
+                Customer.short_name.ilike(search_pattern),
+                Customer.full_name.ilike(search_pattern),
+                Customer.customer_code.ilike(search_pattern),
+                Customer.address.ilike(search_pattern),
+                Customer.phone.ilike(search_pattern)
+            )
+        )
+    
     if area:
         query = query.filter(Customer.area == area)
-    query = query.filter(Customer.is_active == is_active)
+        
+    if district:
+        query = query.filter(Customer.district == district)
+        
+    if customer_type:
+        query = query.filter(Customer.customer_type == customer_type)
+        
+    if is_active is not None:
+        query = query.filter(Customer.is_active == is_active)
     
-    # Pagination
-    customers = query.offset(skip).limit(limit).all()
-    return customers
+    total = query.count()
+    
+    pages = (total + limit - 1) // limit
+    offset = (page - 1) * limit
+    
+    customers = query.options(
+        joinedload(Customer.cylinders)
+    ).offset(offset).limit(limit).all()
+    
+    items = []
+    for customer in customers:
+        cylinder_counts = {}
+        for cylinder in customer.cylinders:
+            cylinder_type = cylinder.cylinder_type.value if hasattr(cylinder.cylinder_type, 'value') else str(cylinder.cylinder_type)
+            # Simplify cylinder type display
+            if 'STANDARD_' in cylinder_type:
+                display_type = cylinder_type.replace('STANDARD_', '').replace('KG', 'kg')
+            elif 'FLOW_' in cylinder_type:
+                display_type = 'Flow ' + cylinder_type.replace('FLOW_', '').replace('KG', 'kg')
+            else:
+                display_type = cylinder_type.replace('_', ' ').title()
+            
+            cylinder_counts[display_type] = cylinder.quantity
+        
+        cylinder_summary = ", ".join([f"{k}:{v}" for k, v in cylinder_counts.items()]) if cylinder_counts else "無"
+        
+        items.append(CustomerSummary(
+            id=customer.id,
+            customer_code=customer.customer_code,
+            short_name=customer.short_name,
+            customer_type=customer.customer_type.value if customer.customer_type else "UNKNOWN",
+            district="",  # No district field in model, using empty string
+            area=customer.area or "",
+            address=customer.address or "",
+            is_active=customer.is_active,
+            cylinder_summary=cylinder_summary,
+            pricing_method=customer.pricing_method.value if customer.pricing_method else "BY_CYLINDER",
+            payment_method=customer.payment_method.value if customer.payment_method else "CASH"
+        ))
+    
+    return PaginatedCustomers(
+        items=items,
+        total=total,
+        page=page,
+        pages=pages,
+        limit=limit
+    )
 
 
-@router.get("/search/")
-def search_customers(
-    q: str = Query(..., min_length=1),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    """Search customers by name, phone, or address"""
-    # Search in actual database
-    search_term = f"%{q}%"
-    customers = db.query(Customer).filter(
-        or_(
-            Customer.short_name.ilike(search_term),
-            Customer.invoice_title.ilike(search_term),
-            Customer.phone.like(search_term),
-            Customer.address.ilike(search_term),
-            Customer.customer_code.like(search_term)
-        )
-    ).limit(20).all()
+@router.get("/{customer_id}")
+def get_customer_simple(customer_id: int, db: Session = Depends(get_db)):
+    """
+    Get customer details (simplified version)
+    獲取客戶詳細資料（簡化版）
+    """
+    customer = db.query(Customer).options(
+        joinedload(Customer.cylinders)
+    ).filter(Customer.id == customer_id).first()
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    # Calculate cylinder summary
+    cylinder_counts = {}
+    for cylinder in customer.cylinders:
+        cylinder_type = cylinder.cylinder_type.value if hasattr(cylinder.cylinder_type, 'value') else str(cylinder.cylinder_type)
+        if 'STANDARD_' in cylinder_type:
+            display_type = cylinder_type.replace('STANDARD_', '').replace('KG', 'kg')
+        elif 'FLOW_' in cylinder_type:
+            display_type = 'Flow ' + cylinder_type.replace('FLOW_', '').replace('KG', 'kg')
+        else:
+            display_type = cylinder_type.replace('_', ' ').title()
+        cylinder_counts[display_type] = cylinder.quantity
+    
+    # Build cylinder data for frontend
+    cylinders_50kg = cylinder_counts.get('50kg', 0) + cylinder_counts.get('Flow 50kg', 0)
+    cylinders_20kg = cylinder_counts.get('20kg', 0) + cylinder_counts.get('Flow 20kg', 0)
+    cylinders_16kg = cylinder_counts.get('16kg', 0)
+    cylinders_4kg = cylinder_counts.get('4kg', 0)
     
     return {
-        "customers": customers,
-        "total": len(customers),
-        "query": q
+        "id": customer.id,
+        "customer_code": customer.customer_code,
+        "short_name": customer.short_name,
+        "full_name": customer.short_name,  # Using short_name as full_name is not in model
+        "customer_type": customer.customer_type.value if customer.customer_type else "UNKNOWN",
+        "district": "",  # No district field in model
+        "area": customer.area or "",
+        "address": customer.address or "",
+        "phone": customer.phone or "",
+        "email": "",  # No email field in model
+        "contact_person": "",  # No contact_person field in model
+        "pricing_method": customer.pricing_method.value if customer.pricing_method else "BY_CYLINDER",
+        "payment_method": customer.payment_method.value if customer.payment_method else "CASH",
+        "invoice_title": customer.invoice_title or "",
+        "is_active": customer.is_active,
+        "is_vip": False,  # No is_vip field in model
+        "is_subscription": customer.is_subscription,
+        "has_contract": False,  # No has_contract field in model
+        "needs_same_day_delivery": customer.same_day_delivery if hasattr(customer, 'same_day_delivery') else False,
+        "delivery_time_start": "",  # No delivery time fields in model
+        "delivery_time_end": "",  # No delivery time fields in model
+        "cylinders_50kg": cylinders_50kg,
+        "cylinders_20kg": cylinders_20kg,
+        "cylinders_16kg": cylinders_16kg,
+        "cylinders_4kg": cylinders_4kg,
+        "avg_daily_usage": 0,  # No avg_daily_usage in model
+        "max_cycle_days": 30,  # No max_cycle_days in model
+        "can_delay_days": 0,  # No can_delay_days in model
+        "notes": "",  # No notes field in model
+        "created_at": customer.created_at.isoformat() if customer.created_at else None,
+        "updated_at": customer.updated_at.isoformat() if customer.updated_at else None
     }
 
 
-@router.get("/{customer_id}", response_model=CustomerResponse)
-@cache_result(ttl_seconds=300)  # Cache for 5 minutes
-def get_customer(
-    customer_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
+@router.get("/{customer_id}/full", response_model=CustomerDetail)
+def get_customer_full_details(customer_id: int, db: Session = Depends(get_db)):
     """
-    Get single customer by ID
-    Cached because customer info doesn't change often
+    Get complete customer details including all related data (alias for /{customer_id})
+    獲取完整的客戶詳細資料（包含所有相關資料）
     """
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    customer = db.query(Customer).options(
+        joinedload(Customer.cylinders),
+        joinedload(Customer.time_availability),
+        joinedload(Customer.equipment),
+        joinedload(Customer.usage_areas),
+        joinedload(Customer.usage_metrics)
+    ).filter(Customer.id == customer_id).first()
+    
     if not customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
-    return customer
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    cylinders = []
+    for c in customer.cylinders:
+        cylinders.append(CylinderInfo(
+            cylinder_type=c.cylinder_type.value if hasattr(c.cylinder_type, 'value') else str(c.cylinder_type),
+            quantity=c.quantity
+        ))
+    
+    time_slots = []
+    for t in customer.time_availability:
+        time_slots.append(TimeAvailabilityInfo(
+            weekday=t.weekday.value if hasattr(t.weekday, 'value') else str(t.weekday),
+            time_slot=t.time_slot.value if hasattr(t.time_slot, 'value') else str(t.time_slot),
+            is_available=t.is_available
+        ))
+    
+    equipment = None
+    if customer.equipment:
+        e = customer.equipment[0] if customer.equipment else None
+        if e:
+            equipment = EquipmentInfo(
+                has_switch_valve=e.has_switch_valve,
+                has_gas_meter=e.has_gas_meter,
+                has_monitoring_device=e.has_monitoring_device,
+                has_safety_equipment=e.has_safety_equipment,
+                equipment_notes=e.equipment_notes
+            )
+    
+    usage_areas = []
+    for u in customer.usage_areas:
+        usage_areas.append(UsageAreaInfo(
+            area_number=u.area_number,
+            description=u.description,
+            usage_type=u.usage_type
+        ))
+    
+    # Prepare usage metrics
+    usage_metrics = None
+    if customer.usage_metrics:
+        m = customer.usage_metrics[0] if customer.usage_metrics else None
+        if m:
+            usage_metrics = UsageMetricsInfo(
+                monthly_consumption=m.monthly_consumption,
+                average_cylinder_count=m.average_cylinder_count,
+                refill_frequency_days=m.refill_frequency_days,
+                consumption_pattern=m.consumption_pattern
+            )
+    
+    return CustomerDetail(
+        id=customer.id,
+        customer_code=customer.customer_code,
+        short_name=customer.short_name,
+        full_name=customer.full_name,
+        customer_type=customer.customer_type.value if customer.customer_type else "UNKNOWN",
+        district=customer.district or "",
+        area=customer.area or "",
+        address=customer.address or "",
+        phone=customer.phone,
+        contact_person=customer.contact_person,
+        pricing_method=customer.pricing_method.value if customer.pricing_method else "BY_CYLINDER",
+        payment_method=customer.payment_method.value if customer.payment_method else "CASH",
+        requires_invoice_file=customer.requires_invoice_file,
+        is_active=customer.is_active,
+        is_vip=customer.is_vip,
+        has_contract=customer.has_contract,
+        termination_date=customer.termination_date,
+        notes=customer.notes,
+        registration_number=customer.registration_number,
+        order_note=customer.order_note,
+        address_note=customer.address_note,
+        cylinders=cylinders,
+        time_availability=time_slots,
+        equipment=equipment,
+        usage_areas=usage_areas,
+        usage_metrics=usage_metrics
+    )
 
 
-@router.get("/{customer_id}/deliveries", response_model=CustomerDeliveryHistory)
-def get_customer_deliveries(
-    customer_id: int,
-    days: int = Query(30, ge=1, le=365),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=2000),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
+@router.get("/analytics/summary", response_model=AnalyticsSummary)
+def get_analytics_summary(db: Session = Depends(get_db)):
     """
-    Get customer delivery history
-    This is the CRITICAL query - must be fast!
-    Uses index: idx_delivery_customer_date
+    Get analytics dashboard summary data
+    獲取分析儀表板摘要資料
     """
-    # Check customer exists
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
+    # Basic counts
+    total_customers = db.query(Customer).count()
+    active_customers = db.query(Customer).filter(Customer.is_active == True).count()
     
-    # Calculate date range
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=days)
+    # Customers by area
+    area_counts = db.query(
+        Customer.area,
+        func.count(Customer.id)
+    ).group_by(Customer.area).all()
+    customers_by_area = {area: count for area, count in area_counts if area}
     
-    # Query deliveries - USES INDEX!
-    deliveries_query = db.query(Delivery).filter(
-        and_(
-            Delivery.customer_id == customer_id,
-            Delivery.delivery_date >= start_date,
-            Delivery.delivery_date <= end_date
-        )
-    ).order_by(Delivery.delivery_date.desc())
+    # Customers by type
+    type_counts = db.query(
+        Customer.customer_type,
+        func.count(Customer.id)
+    ).group_by(Customer.customer_type).all()
+    customers_by_type = {
+        (t.value if hasattr(t, 'value') else str(t)): count 
+        for t, count in type_counts if t
+    }
     
-    # Get total count for pagination
-    total_count = deliveries_query.count()
+    # Cylinder distribution
+    cylinder_counts = db.query(
+        CustomerCylinder.cylinder_type,
+        func.sum(CustomerCylinder.quantity)
+    ).group_by(CustomerCylinder.cylinder_type).all()
+    cylinder_distribution = {
+        (c.value if hasattr(c, 'value') else str(c)): int(count) 
+        for c, count in cylinder_counts if c
+    }
     
-    # Apply pagination
-    deliveries = deliveries_query.offset(skip).limit(limit).all()
+    # Payment methods
+    payment_counts = db.query(
+        Customer.payment_method,
+        func.count(Customer.id)
+    ).group_by(Customer.payment_method).all()
+    payment_methods = {
+        (p.value if hasattr(p, 'value') else str(p)): count 
+        for p, count in payment_counts if p
+    }
     
-    # Calculate summary stats
-    summary_stats = db.query(
-        func.count(Delivery.id).label('total_deliveries'),
-        func.sum(Order.total_amount).label('total_amount')
-    ).select_from(Delivery).join(
-        Order, Delivery.order_id == Order.id
-    ).filter(
-        and_(
-            Delivery.customer_id == customer_id,
-            Delivery.delivery_date >= start_date,
-            Delivery.status == 'delivered'
-        )
+    # Pricing methods
+    pricing_counts = db.query(
+        Customer.pricing_method,
+        func.count(Customer.id)
+    ).group_by(Customer.pricing_method).all()
+    pricing_methods = {
+        (p.value if hasattr(p, 'value') else str(p)): count 
+        for p, count in pricing_counts if p
+    }
+    
+    # Time preference heatmap
+    time_availability = db.query(
+        CustomerTimeAvailability.weekday,
+        CustomerTimeAvailability.time_slot,
+        func.sum(func.cast(CustomerTimeAvailability.is_available, type_=func.Integer))
+    ).group_by(
+        CustomerTimeAvailability.weekday,
+        CustomerTimeAvailability.time_slot
+    ).all()
+    
+    time_preference_heatmap = []
+    for weekday, time_slot, count in time_availability:
+        time_preference_heatmap.append({
+            "weekday": weekday.value if hasattr(weekday, 'value') else str(weekday),
+            "time_slot": time_slot.value if hasattr(time_slot, 'value') else str(time_slot),
+            "count": int(count) if count else 0
+        })
+    
+    # Equipment adoption
+    equipment_stats = db.query(
+        func.sum(func.cast(CustomerEquipment.has_switch_valve, type_=func.Integer)).label('switch_valve'),
+        func.sum(func.cast(CustomerEquipment.has_gas_meter, type_=func.Integer)).label('gas_meter'),
+        func.sum(func.cast(CustomerEquipment.has_monitoring_device, type_=func.Integer)).label('monitoring'),
+        func.sum(func.cast(CustomerEquipment.has_safety_equipment, type_=func.Integer)).label('safety')
     ).first()
     
-    return {
-        "customer": customer,
-        "deliveries": deliveries,
-        "total_count": total_count,
-        "summary": {
-            "total_deliveries": summary_stats.total_deliveries or 0,
-            "total_amount": summary_stats.total_amount or 0.0,
-            "date_range": {
-                "start": start_date,
-                "end": end_date
-            }
-        }
+    equipment_adoption = {
+        "switch_valve": int(equipment_stats.switch_valve) if equipment_stats.switch_valve else 0,
+        "gas_meter": int(equipment_stats.gas_meter) if equipment_stats.gas_meter else 0,
+        "monitoring_device": int(equipment_stats.monitoring) if equipment_stats.monitoring else 0,
+        "safety_equipment": int(equipment_stats.safety) if equipment_stats.safety else 0
     }
+    
+    return AnalyticsSummary(
+        total_customers=total_customers,
+        active_customers=active_customers,
+        customers_by_area=customers_by_area,
+        customers_by_type=customers_by_type,
+        cylinder_distribution=cylinder_distribution,
+        payment_methods=payment_methods,
+        pricing_methods=pricing_methods,
+        time_preference_heatmap=time_preference_heatmap,
+        equipment_adoption=equipment_adoption
+    )
 
 
-@router.post("/", response_model=CustomerResponse)
-def create_customer(
-    customer: CustomerCreate,
-    db: Session = Depends(get_db),
-    current_user = Depends(require_role(["admin", "manager", "staff"]))
-):
-    """
-    Create new customer
-    Simple direct creation - no service layer needed
-    """
-    # Check if customer code already exists
-    existing = db.query(Customer).filter(Customer.code == customer.code).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="客戶代碼已存在")
+# Individual resource endpoints for specific needs
+
+@router.get("/{customer_id}/cylinders")
+def get_customer_cylinders(customer_id: int, db: Session = Depends(get_db)):
+    """Get cylinders for a specific customer"""
+    cylinders = db.query(CustomerCylinder).filter(
+        CustomerCylinder.customer_id == customer_id
+    ).all()
     
-    # Create customer
-    db_customer = Customer(**customer.dict())
-    db.add(db_customer)
-    db.commit()
-    db.refresh(db_customer)
-    
-    return db_customer
+    return [{
+        "cylinder_type": c.cylinder_type.value if hasattr(c.cylinder_type, 'value') else str(c.cylinder_type),
+        "quantity": c.quantity
+    } for c in cylinders]
 
 
-@router.put("/{customer_id}", response_model=CustomerResponse)
-def update_customer(
-    customer_id: int,
-    customer: CustomerUpdate,
-    db: Session = Depends(get_db),
-    current_user = Depends(require_role(["admin", "manager", "staff"]))
-):
-    """
-    Update customer information
-    Direct update - no unnecessary complexity
-    """
-    db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not db_customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
-    
-    # Update fields
-    update_data = customer.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_customer, field, value)
-    
-    db_customer.updated_at = datetime.now()
-    db.commit()
-    db.refresh(db_customer)
-    
-    return db_customer
-
-
-@router.delete("/{customer_id}")
-def delete_customer(
-    customer_id: int,
-    db: Session = Depends(get_db),
-    current_user = Depends(require_role(["admin"]))
-):
-    """
-    Soft delete customer (set is_active = False)
-    We never actually delete data
-    """
-    db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
-    if not db_customer:
-        raise HTTPException(status_code=404, detail="客戶不存在")
-    
-    # Soft delete
-    db_customer.is_active = False
-    db_customer.updated_at = datetime.now()
-    db.commit()
-    
-    return {"message": "客戶已停用"}
-
-
-@router.get("/statistics/")
-def get_customer_statistics(
-    include_inactive: bool = Query(False),
-    date_from: Optional[str] = Query(None),
-    date_to: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    """
-    Get customer statistics
-    """
-    # Parse date strings if provided
-    date_from_dt = None
-    date_to_dt = None
-    if date_from:
-        try:
-            date_from_dt = datetime.fromisoformat(date_from)
-        except ValueError:
-            pass  # Ignore invalid dates
-    if date_to:
-        try:
-            date_to_dt = datetime.fromisoformat(date_to)
-        except ValueError:
-            pass  # Ignore invalid dates
-    
-    # Count total customers
-    total_query = db.query(func.count(Customer.id))
-    if not include_inactive:
-        total_query = total_query.filter(Customer.is_active == True)
-    total_customers = total_query.scalar() or 0
-    
-    # Count active customers
-    active_customers = db.query(func.count(Customer.id)).filter(
-        Customer.is_active == True
-    ).scalar() or 0
-    
-    # Count new customers this month
-    start_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    new_customers_this_month = db.query(func.count(Customer.id)).filter(
-        Customer.created_at >= start_of_month
-    ).scalar() or 0
-    
-    return {
-        "totalCustomers": total_customers,
-        "activeCustomers": active_customers,
-        "newCustomersThisMonth": new_customers_this_month,
-        "averageOrderFrequency": 0  # Will be calculated once orders are imported
-    }
-
-@router.get("/stats/summary")
-@cache_result(ttl_seconds=600)  # Cache for 10 minutes
-def get_customer_stats(
-    db: Session = Depends(get_db),
-    current_user = Depends(require_role(["admin", "manager"]))
-):
-    """
-    Get customer statistics summary
-    Cached because stats don't change frequently
-    """
-    stats = db.query(
-        func.count(Customer.id).label('total_customers'),
-        func.count(Customer.id).filter(Customer.is_active == True).label('active_customers'),
-        func.count(Customer.id).filter(Customer.customer_type == CustomerType.RESTAURANT).label('restaurants'),
-        func.count(Customer.id).filter(Customer.customer_type == CustomerType.RESIDENTIAL).label('residential'),
-        func.count(Customer.id).filter(Customer.customer_type == CustomerType.COMMERCIAL).label('commercial'),
-        func.count(Customer.id).filter(Customer.customer_type == CustomerType.INDUSTRIAL).label('industrial')
+@router.get("/{customer_id}/equipment")
+def get_customer_equipment(customer_id: int, db: Session = Depends(get_db)):
+    """Get equipment info for a specific customer"""
+    equipment = db.query(CustomerEquipment).filter(
+        CustomerEquipment.customer_id == customer_id
     ).first()
     
+    if not equipment:
+        return None
+        
     return {
-        "total_customers": stats.total_customers,
-        "active_customers": stats.active_customers,
-        "by_type": {
-            "restaurant": stats.restaurants,
-            "residential": stats.residential,
-            "commercial": stats.commercial,
-            "industrial": stats.industrial
-        }
+        "has_switch_valve": equipment.has_switch_valve,
+        "has_gas_meter": equipment.has_gas_meter,
+        "has_monitoring_device": equipment.has_monitoring_device,
+        "has_safety_equipment": equipment.has_safety_equipment,
+        "equipment_notes": equipment.equipment_notes
     }
+
+
+@router.get("/{customer_id}/time-slots")
+def get_customer_time_slots(customer_id: int, db: Session = Depends(get_db)):
+    """Get time availability for a specific customer"""
+    time_slots = db.query(CustomerTimeAvailability).filter(
+        CustomerTimeAvailability.customer_id == customer_id
+    ).all()
+    
+    return [{
+        "weekday": t.weekday.value if hasattr(t.weekday, 'value') else str(t.weekday),
+        "time_slot": t.time_slot.value if hasattr(t.time_slot, 'value') else str(t.time_slot),
+        "is_available": t.is_available
+    } for t in time_slots]
+
+
+@router.get("/{customer_id}/usage-metrics")
+def get_customer_usage_metrics(customer_id: int, db: Session = Depends(get_db)):
+    """Get usage metrics for a specific customer"""
+    metrics = db.query(CustomerUsageMetrics).filter(
+        CustomerUsageMetrics.customer_id == customer_id
+    ).first()
+    
+    if not metrics:
+        return None
+        
+    return {
+        "monthly_consumption": metrics.monthly_consumption,
+        "average_cylinder_count": metrics.average_cylinder_count,
+        "refill_frequency_days": metrics.refill_frequency_days,
+        "consumption_pattern": metrics.consumption_pattern
+    }
+
+
+# Area and district listing endpoints
+@router.get("/areas/list")
+def get_areas_list(db: Session = Depends(get_db)):
+    """Get list of all unique areas"""
+    areas = db.query(Customer.area).distinct().filter(
+        Customer.area != None
+    ).order_by(Customer.area).all()
+    
+    return [area[0] for area in areas if area[0]]
+
+
+@router.get("/districts/list")
+def get_districts_list(db: Session = Depends(get_db)):
+    """Get list of all unique districts - returning empty as we use areas instead"""
+    # Note: The Customer model doesn't have a district field, only area
+    # Returning empty list to prevent errors
+    return []

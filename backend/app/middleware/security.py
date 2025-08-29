@@ -15,7 +15,6 @@ import json
 import re
 import secrets
 from datetime import datetime
-from typing import Dict, Optional
 
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware

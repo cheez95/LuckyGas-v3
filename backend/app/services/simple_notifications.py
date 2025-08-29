@@ -5,7 +5,6 @@ Replaces complex notification_service.py with direct sending
 
 import logging
 import re
-from typing import Any, Dict, Optional
 
 import httpx
 

@@ -7,7 +7,6 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Dict, Optional
 
 import redis.asyncio as redis
 from fastapi import WebSocket

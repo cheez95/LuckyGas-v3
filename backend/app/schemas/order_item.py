@@ -1,8 +1,8 @@
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.schemas.gas_product import GasProduct
+from typing import Optional
 
 
 class OrderItemBase(BaseModel):

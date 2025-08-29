@@ -1,17 +1,23 @@
 """
 Simplified customer schemas
 """
-from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime, date
 from enum import Enum
+from typing import Optional, List
 
 
 class CustomerType(str, Enum):
-    RESIDENTIAL = "residential"
-    RESTAURANT = "restaurant"
-    COMMERCIAL = "commercial"
-    INDUSTRIAL = "industrial"
+    # Support both uppercase and lowercase
+    RESIDENTIAL = "RESIDENTIAL"
+    RESTAURANT = "RESTAURANT" 
+    COMMERCIAL = "COMMERCIAL"
+    INDUSTRIAL = "INDUSTRIAL"
+    # Lowercase for compatibility
+    residential = "residential"
+    restaurant = "restaurant"
+    commercial = "commercial"
+    industrial = "industrial"
 
 
 class CustomerBase(BaseModel):
@@ -22,7 +28,7 @@ class CustomerBase(BaseModel):
     invoice_title: Optional[str] = None
     address: str
     area: Optional[str] = None
-    customer_type: CustomerType = CustomerType.RESIDENTIAL
+    customer_type: Optional[CustomerType] = CustomerType.RESIDENTIAL
     cylinders_50kg: int = 0
     cylinders_20kg: int = 0
     cylinders_16kg: int = 0
@@ -59,7 +65,7 @@ class CustomerResponse(BaseModel):
     invoice_title: Optional[str] = None
     address: str
     area: Optional[str] = None
-    customer_type: CustomerType = CustomerType.RESIDENTIAL
+    customer_type: Optional[CustomerType] = CustomerType.RESIDENTIAL
     cylinders_50kg: Optional[int] = 0
     cylinders_20kg: Optional[int] = 0
     cylinders_16kg: Optional[int] = 0
@@ -70,7 +76,7 @@ class CustomerResponse(BaseModel):
     updated_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
         from_attributes = True
 
 
@@ -86,7 +92,7 @@ class DeliveryResponse(BaseModel):
     delivery_notes: Optional[str]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CustomerDeliveryHistory(BaseModel):

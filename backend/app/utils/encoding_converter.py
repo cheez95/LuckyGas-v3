@@ -6,7 +6,6 @@ Handles Traditional Chinese character conversion with proper error handling
 import logging
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
 
 import chardet
 import pandas as pd
@@ -496,10 +495,9 @@ def validate_taiwan_data(text: str, data_type: str) -> bool:
 
 if __name__ == "__main__":
     # Example usage
-    import sys
-
+    
     if len(sys.argv) < 3:
-        print("Usage: python encoding_converter.py <input_db> <output_dir>")
+        # print("Usage: python encoding_converter.py <input_db> <output_dir>")
         sys.exit(1)
 
     input_db = sys.argv[1]
@@ -514,7 +512,7 @@ if __name__ == "__main__":
     # Run conversion
     results = convert_customer_data(input_db, output_dir)
 
-    print(f"\nConversion complete. Converted {len(results)} tables.")
+    # print(f"\nConversion complete. Converted {len(results)} tables.")
     for table, df in results.items():
         if df is not None:
-            print(f"  - {table}: {len(df)} rows")
+            # print(f"  - {table}: {len(df)} rows")

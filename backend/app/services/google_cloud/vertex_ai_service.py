@@ -5,7 +5,6 @@ Google Cloud Vertex AI Service for demand prediction
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from google.cloud import aiplatform, storage

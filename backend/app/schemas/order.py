@@ -1,12 +1,12 @@
 import re
 from datetime import date, datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.validators import TaiwanValidators
 from app.models.order import OrderStatus, PaymentStatus
 from app.schemas.order_item import OrderItem, OrderItemCreate
+from typing import Optional
 
 
 class OrderBase(BaseModel):

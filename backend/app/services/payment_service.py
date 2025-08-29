@@ -3,7 +3,6 @@ Payment service for business logic
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, Optional
 
 from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession

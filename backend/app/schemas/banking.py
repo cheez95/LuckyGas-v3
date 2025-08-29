@@ -2,9 +2,9 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
 
 
 class PaymentBatchStatus(str, Enum):

@@ -5,7 +5,6 @@ Performance monitoring middleware for tracking API response times and metrics.
 import logging
 import time
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Dict, Optional
 
 import redis.asyncio as redis
 from fastapi import Request, Response

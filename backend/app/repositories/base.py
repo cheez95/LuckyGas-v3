@@ -5,7 +5,6 @@ Provides common CRUD operations with SQLAlchemy async support
 
 import logging
 from abc import ABC
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession

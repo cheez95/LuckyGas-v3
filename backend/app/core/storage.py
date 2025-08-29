@@ -4,7 +4,6 @@ import os
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 import aiofiles
 

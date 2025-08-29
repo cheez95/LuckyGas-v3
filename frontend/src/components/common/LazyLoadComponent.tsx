@@ -85,10 +85,10 @@ const DefaultLoadingComponent: React.FC = () => (
 export function lazyLoadComponent<T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
   options?: LazyLoadComponentProps
-): LazyExoticComponent<T> {
+): React.FC<any> {
   const LazyComponent = lazy(importFunc);
 
-  const WrappedComponent = (props: any) => (
+  const WrappedComponent: React.FC<any> = (props) => (
     <ErrorBoundary fallback={options?.errorFallback}>
       <Suspense fallback={options?.fallback || <DefaultLoadingComponent />}>
         <LazyComponent {...props} />
@@ -99,7 +99,7 @@ export function lazyLoadComponent<T extends ComponentType<any>>(
   // Set display name for debugging
   WrappedComponent.displayName = `LazyLoad(${LazyComponent.displayName || 'Component'})`;
 
-  return WrappedComponent as any;
+  return WrappedComponent;
 }
 
 // Retry mechanism for failed imports
@@ -131,7 +131,7 @@ export function lazyLoadWithRetry<T extends ComponentType<any>>(
 // Export convenience function for dashboard components
 export function lazyLoadDashboard<T extends ComponentType<any>>(
   componentPath: string
-): LazyExoticComponent<T> {
+): React.FC<any> {
   return lazyLoadComponent<T>(
     lazyLoadWithRetry(() => import(componentPath)),
     {

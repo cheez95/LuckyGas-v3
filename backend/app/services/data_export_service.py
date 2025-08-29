@@ -8,7 +8,6 @@ import json
 import logging
 import zipfile
 from datetime import date
-from typing import Any, BinaryIO, Dict, List, Optional
 
 import pandas as pd
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side

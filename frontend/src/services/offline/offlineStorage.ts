@@ -143,7 +143,7 @@ export class OfflineStorage {
       });
 
       dbInstance = this.db;
-      console.log('IndexedDB initialized successfully');
+      // console.log('IndexedDB initialized successfully');
     } catch (error) {
       console.error('Failed to initialize IndexedDB:', error);
       throw error;

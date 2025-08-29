@@ -8,7 +8,6 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta
-from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2

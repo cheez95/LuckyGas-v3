@@ -7,7 +7,7 @@
 export const toArray = <T = any>(data: any, fieldName: string | null = null): T[] => {
   // Log for debugging in development
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[toArray] called with:`, data, `fieldName:`, fieldName);
+    // console.log(`[toArray] called with:`, data, `fieldName:`, fieldName);
   }
   
   // If already an array, return it
@@ -28,7 +28,7 @@ export const toArray = <T = any>(data: any, fieldName: string | null = null): T[
     // Try specific field name if provided
     if (fieldName && Array.isArray(data[fieldName])) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[toArray] Found array in field: ${fieldName}`);
+        // console.log(`[toArray] Found array in field: ${fieldName}`);
       }
       return data[fieldName] as T[];
     }
@@ -56,7 +56,7 @@ export const toArray = <T = any>(data: any, fieldName: string | null = null): T[
     for (const field of commonFields) {
       if (data.hasOwnProperty(field) && Array.isArray(data[field])) {
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[toArray] Found array in common field: ${field}`);
+          // console.log(`[toArray] Found array in common field: ${field}`);
         }
         return data[field] as T[];
       }
@@ -65,7 +65,7 @@ export const toArray = <T = any>(data: any, fieldName: string | null = null): T[
     // Check for paginated responses
     if (data.content && Array.isArray(data.content)) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[toArray] Found array in paginated response (content field)');
+        // console.log('[toArray] Found array in paginated response (content field)');
       }
       return data.content as T[];
     }
@@ -74,7 +74,7 @@ export const toArray = <T = any>(data: any, fieldName: string | null = null): T[
     const keys = Object.keys(data);
     if (keys.length === 1 && Array.isArray(data[keys[0]])) {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[toArray] Found array in single field: ${keys[0]}`);
+        // console.log(`[toArray] Found array in single field: ${keys[0]}`);
       }
       return data[keys[0]] as T[];
     }
@@ -82,7 +82,7 @@ export const toArray = <T = any>(data: any, fieldName: string | null = null): T[
     // Check if it's a single item that should be wrapped in an array
     if (data.id || data._id || data.uuid) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[toArray] Wrapping single object in array');
+        // console.log('[toArray] Wrapping single object in array');
       }
       return [data] as T[];
     }

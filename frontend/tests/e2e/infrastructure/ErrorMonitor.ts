@@ -373,7 +373,7 @@ export class ErrorMonitor {
     const summary = this.getErrorSummary();
     const errors = this.getErrors();
     
-    let report = `
+    const report = `
 # Error Monitoring Report
 Session: ${this.sessionId}
 Generated: ${new Date().toISOString()}

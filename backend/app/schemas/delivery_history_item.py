@@ -1,6 +1,6 @@
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 
 class DeliveryHistoryItemBase(BaseModel):

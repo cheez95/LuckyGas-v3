@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession

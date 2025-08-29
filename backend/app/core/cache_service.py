@@ -4,7 +4,6 @@ Redis caching service for API optimization
 
 import json
 import hashlib
-from typing import Any, Optional, Union, Callable
 from datetime import timedelta
 import redis
 from redis.exceptions import RedisError

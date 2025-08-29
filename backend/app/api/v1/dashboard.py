@@ -4,7 +4,7 @@ Provides summary statistics and real-time data for the dashboard.
 """
 
 from datetime import datetime, timedelta, date
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_, text

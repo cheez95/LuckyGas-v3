@@ -3,10 +3,9 @@ Structured logging configuration for Lucky Gas
 """
 
 import logging
-import sys
+from typing import Optional, Dict, Any
 from contextvars import ContextVar
 from datetime import datetime
-from typing import Any, Dict, Optional
 
 from pythonjsonlogger import jsonlogger
 

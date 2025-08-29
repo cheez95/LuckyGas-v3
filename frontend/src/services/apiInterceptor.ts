@@ -70,11 +70,11 @@ export function setupRetryInterceptor(
       
       // Log request with ID
       if (import.meta.env.DEV) {
-        console.log(`🚀 [${config._requestId}] API Request:`, {
-          method: config.method,
-          url: config.url,
-          retryCount: config._retryCount,
-        });
+        // console.log(`🚀 [${config._requestId}] API Request:`, {
+        //   method: config.method,
+        //   url: config.url,
+        //   retryCount: config._retryCount,
+        // });
       }
       
       return config;
@@ -142,11 +142,11 @@ export function setupRetryInterceptor(
       
       // Log retry attempt
       if (import.meta.env.DEV) {
-        console.log(`🔄 [${config._requestId}] Retrying request (${config._retryCount}/${retryConfig.maxRetries}) after ${delay}ms:`, {
-          url: config.url,
-          status: error.response?.status,
-          reason: error.message,
-        });
+        // console.log(`🔄 [${config._requestId}] Retrying request (${config._retryCount}/${retryConfig.maxRetries}) after ${delay}ms:`, {
+        //   url: config.url,
+        //   status: error.response?.status,
+        //   reason: error.message,
+        // });
       }
       
       // Show retry notification for long delays
@@ -216,7 +216,7 @@ export class CircuitBreaker {
       this.lastFailureTime.delete(endpoint);
       
       if (import.meta.env.DEV) {
-        console.log(`⚡ Circuit breaker closed for ${endpoint}`);
+        // console.log(`⚡ Circuit breaker closed for ${endpoint}`);
       }
     }
   }

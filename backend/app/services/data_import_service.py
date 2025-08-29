@@ -7,7 +7,6 @@ import io
 import logging
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, BinaryIO, Dict, List, Optional
 
 import pandas as pd
 from sqlalchemy import select

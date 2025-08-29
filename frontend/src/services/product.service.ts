@@ -169,6 +169,36 @@ export class ProductService {
   static getSizeDisplay(size: number): string {
     return `${size}公斤`;
   }
+
+  /**
+   * Import products from Excel file (admin only)
+   */
+  static async importProducts(file: File): Promise<{
+    imported_count: number;
+    skipped_count: number;
+    errors: string[];
+    message: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post(`${this.BASE_URL}/import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  /**
+   * Export products to Excel file
+   */
+  static async exportProducts(): Promise<Blob> {
+    const response = await api.get(`${this.BASE_URL}/export`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
 }
 
 export default ProductService;

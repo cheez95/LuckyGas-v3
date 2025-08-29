@@ -341,7 +341,7 @@ class PerformanceMonitoringService {
   // Send report to backend with safe error handling
   private async sendReportToBackend(report: PerformanceReport) {
     if (import.meta.env.DEV) {
-      console.log('Performance Report:', report);
+      // console.log('Performance Report:', report);
     }
 
     // In production, send to backend

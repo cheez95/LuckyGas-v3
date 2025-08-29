@@ -9,7 +9,6 @@ import logging
 import random
 from datetime import date, datetime, timedelta
 from math import pi, sin
-from typing import Any, Dict, List, Optional
 
 
 from app.models.order import Order

@@ -32,7 +32,7 @@ class MonitoringService {
     } = config;
 
     if (!enabled || !dsn) {
-      console.log('Monitoring disabled or DSN not configured');
+      // console.log('Monitoring disabled or DSN not configured');
       return;
     }
 
@@ -81,7 +81,7 @@ class MonitoringService {
 
     this.initialized = true;
     this.initPerformanceMonitoring();
-    console.log('Monitoring initialized');
+    // console.log('Monitoring initialized');
   }
 
   /**

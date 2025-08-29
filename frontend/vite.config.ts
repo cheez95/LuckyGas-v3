@@ -1,13 +1,20 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import viteCompression from 'vite-plugin-compression'
+import path from 'path'
 
 // https://vite.dev/config/
-export default defineConfig({
-  // Use absolute paths for Firebase hosting with SPA
-  base: '/',
-  plugins: [
+export default defineConfig(({ mode }) => {
+  // Load env from current directory
+  const env = loadEnv(mode, process.cwd(), '')
+  
+  return {
+    // Use absolute paths for Firebase hosting with SPA
+    base: '/',
+    // Load .env from current directory
+    envDir: '.',
+    plugins: [
     // Force HTTPS plugin - MUST be first to process all code
     {
       name: 'force-https',
@@ -122,10 +129,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8001',
+        target: env.VITE_API_URL || 'http://localhost:8001',
         changeOrigin: true,
         ws: true, // Enable WebSocket proxy
       }
     }
+  }
   }
 })

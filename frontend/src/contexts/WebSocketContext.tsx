@@ -54,7 +54,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   const { isConnected, lastMessage, sendMessage } = useWebSocket({
     endpoint: getEndpoint() as any,
     onMessage: (message) => {
-      console.log('WebSocket message received:', message);
+      // console.log('WebSocket message received:', message);
       // Emit to event listeners
       const listeners = eventListenersRef.current.get(message.type);
       if (listeners) {
@@ -62,10 +62,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       }
     },
     onConnect: () => {
-      console.log('WebSocket connected in context');
+      // console.log('WebSocket connected in context');
     },
     onDisconnect: () => {
-      console.log('WebSocket disconnected in context');
+      // console.log('WebSocket disconnected in context');
     },
   });
 

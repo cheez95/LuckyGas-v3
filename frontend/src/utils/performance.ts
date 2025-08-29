@@ -151,7 +151,7 @@ class PerformanceMonitor {
         domProcessing: timing.domComplete - timing.domLoading,
       };
       
-      console.log('Navigation Timing:', metrics);
+      // console.log('Navigation Timing:', metrics);
       
       // Check against performance budgets
       if (metrics.loadComplete > 3000) {
@@ -171,7 +171,7 @@ class PerformanceMonitor {
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       const emoji = this.getMetricEmoji(name, value);
-      console.log(`${emoji} ${name}: ${value.toFixed(2)}ms`);
+      // console.log(`${emoji} ${name}: ${value.toFixed(2)}ms`);
     }
     
     // Send to analytics in production

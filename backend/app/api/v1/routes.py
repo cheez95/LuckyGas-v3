@@ -1,6 +1,5 @@
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, select
@@ -23,7 +22,7 @@ from app.schemas.prediction import (
     RouteOptimizationRequest,
     RouteOptimizationResponse,
 )
-from app.services.realtime_route_adjustment import realtime_route_adjustment_service
+# realtime_route_adjustment service temporarily disabled - implementation pending
 from app.services.route_optimization_service import route_optimization_service
 from app.schemas.route import AdjustmentRequest
 
@@ -42,6 +41,7 @@ async def create_route(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new route"""
+from typing import Any, Dict, List, Optional
     # Create route
     # Note: driver_id is skipped due to foreign key constraint issue
     # Handle route_date - use it for both date and route_date fields

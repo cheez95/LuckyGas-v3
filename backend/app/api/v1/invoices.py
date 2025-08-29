@@ -1,9 +1,9 @@
 """
 Invoice management API endpoints
 """
+from typing import List, Optional
 
 from datetime import date
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import and_, or_, select

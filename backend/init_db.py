@@ -51,7 +51,7 @@ def create_admin_user(db: SessionLocal):
                 username="admin",
                 full_name="System Administrator",
                 hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
-                role=UserRole.ADMIN,
+                role=UserRole.SUPER_ADMIN,
                 is_active=True,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow()

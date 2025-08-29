@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +39,7 @@ async def predict_daily_demand(
     - **customer_ids**: Optional list of customer IDs (all if not specified)
     - **confidence_threshold**: Minimum confidence for predictions (0.0 - 1.0)
     """
+from typing import Dict, List, Optional
     # Get customer data from database
     customer_data = []
 

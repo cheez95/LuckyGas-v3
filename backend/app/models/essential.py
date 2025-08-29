@@ -19,11 +19,11 @@ from app.core.database import Base
 # ============================================================================
 
 class UserRole(str, enum.Enum):
-    ADMIN = "admin"
-    MANAGER = "manager"
-    STAFF = "staff"
-    DRIVER = "driver"
-    CUSTOMER = "customer"
+    SUPER_ADMIN = "SUPER_ADMIN"
+    MANAGER = "MANAGER"
+    OFFICE_STAFF = "OFFICE_STAFF"
+    DRIVER = "DRIVER"
+    CUSTOMER = "CUSTOMER"
 
 
 class OrderStatus(str, enum.Enum):

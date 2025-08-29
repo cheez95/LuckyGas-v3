@@ -47,7 +47,7 @@ class DashboardService {
     // Check cache
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      console.log('📊 Using cached dashboard data');
+      // console.log('📊 Using cached dashboard data');
       return cached.data;
     }
     
@@ -88,7 +88,7 @@ class DashboardService {
    */
   clearCache(): void {
     this.cache.clear();
-    console.log('📊 Dashboard cache cleared');
+    // console.log('📊 Dashboard cache cleared');
   }
   
   /**

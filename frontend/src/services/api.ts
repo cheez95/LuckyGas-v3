@@ -16,14 +16,14 @@ declare module 'axios' {
   }
 }
 
-// Use environment variable or fallback to production URL
-// CRITICAL: Always use HTTPS, never allow HTTP URLs
+// Use environment variable or fallback to local development URL
+// CRITICAL: Always use HTTPS, never allow HTTP URLs (except localhost)
 let API_URL = import.meta.env.VITE_API_URL || 
-              'https://luckygas-backend-full-154687573210.asia-east1.run.app';
+              'http://localhost:8000';
 
 // Debug: Log the raw environment variable
-console.log('🔍 [API] Raw VITE_API_URL from environment:', import.meta.env.VITE_API_URL);
-console.log('🔍 [API] All environment variables:', import.meta.env);
+// console.log('🔍 [API] Raw VITE_API_URL from environment:', import.meta.env.VITE_API_URL);
+// console.log('🔍 [API] All environment variables:', import.meta.env);
 
 // Force HTTPS if somehow an HTTP URL gets through (but not for localhost)
 if (API_URL.startsWith('http://') && !API_URL.includes('localhost')) {
@@ -40,7 +40,7 @@ if (API_URL.includes('staging') && API_URL.startsWith('http://')) {
   console.warn('✅ [API] Fixed to:', API_URL);
 }
 
-console.log('🔧 [API] Final API URL configured as:', API_URL);
+// console.log('🔧 [API] Final API URL configured as:', API_URL);
 console.trace('[API] Stack trace for API URL configuration');
 
 // Create axios instance
@@ -70,9 +70,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(`🔐 Adding Authorization header to ${config.url}:`, config.headers.Authorization.substring(0, 50) + '...');
+      // console.log(`🔐 Adding Authorization header to ${config.url}:`, config.headers.Authorization.substring(0, 50) + '...');
     } else {
-      console.log(`🔐 No token found for ${config.url}`);
+      // console.log(`🔐 No token found for ${config.url}`);
     }
     
     // Add request timestamp for performance monitoring
@@ -80,10 +80,10 @@ api.interceptors.request.use(
     
     // Log request in development
     if (import.meta.env.DEV) {
-      console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-        params: config.params,
-        data: config.data,
-      });
+      // console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      //   params: config.params,
+      //   data: config.data,
+      // });
     }
     
     return config;
@@ -120,10 +120,10 @@ api.interceptors.response.use(
       const duration = endTime.getTime() - response.config.metadata.startTime.getTime();
       
       const emoji = duration < 1000 ? '✅' : duration < 3000 ? '⚠️' : '🐌';
-      console.log(`${emoji} API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration}ms`, {
-        status: response.status,
-        data: response.data,
-      });
+      // console.log(`${emoji} API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration}ms`, {
+      //   status: response.status,
+      //   data: response.data,
+      // });
       
       // Warn if response is slow
       if (duration > 5000) {
@@ -158,12 +158,12 @@ api.interceptors.response.use(
     
     // Handle 401 errors - try to refresh token first
     if (error.response?.status === 401 && !originalRequest.url?.includes('/auth/login') && !originalRequest.url?.includes('/auth/refresh')) {
-      console.log(`🔐 Got 401 for ${originalRequest.url}, retry status:`, originalRequest._retry);
+      // console.log(`🔐 Got 401 for ${originalRequest.url}, retry status:`, originalRequest._retry);
       
       // Mark request as retry to avoid infinite loop
       if (originalRequest._retry) {
         // Already tried to refresh, clear tokens and redirect
-        console.log('🔐 Already tried refresh, clearing tokens...');
+        // console.log('🔐 Already tried refresh, clearing tokens...');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('token_expiry');

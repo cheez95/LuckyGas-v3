@@ -475,8 +475,11 @@
     },
     "attributes": {
       "regular": "一般",
+      "commercial": "營業用",
       "haoyun": "好運",
-      "pingan": "瓶安"
+      "pingan": "瓶安",
+      "xingfu": "幸福",
+      "special": "特殊"
     },
     "sizes": {
       "4kg": "4公斤",

@@ -32,7 +32,12 @@ import {
   ExportOutlined,
   UserOutlined,
   EnvironmentOutlined,
-  PhoneOutlined
+  PhoneOutlined,
+  EyeOutlined,
+  PlusCircleOutlined,
+  FireOutlined,
+  DollarOutlined,
+  TagOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { debounce } from 'lodash';
@@ -48,6 +53,7 @@ import {
   PaymentMethodDisplay,
   PricingMethodDisplay
 } from '../types/Customer.types';
+import CustomerViewModal from '../components/office/CustomerViewModal';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -65,6 +71,8 @@ const CustomerList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | string | null>(null);
 
   // Filter state from URL params
   const filters: CustomerFilterParams = {
@@ -173,16 +181,33 @@ const CustomerList: React.FC = () => {
     message.info(`準備匯出 ${selectedRowKeys.length} 位客戶資料`);
   };
 
+  // Handle view customer
+  const handleViewCustomer = (customerId: number | string) => {
+    setSelectedCustomerId(customerId);
+    setViewModalVisible(true);
+  };
+
+  // Handle edit customer
+  const handleEditCustomer = () => {
+    if (selectedCustomerId) {
+      navigate(`/customers/${selectedCustomerId}/edit`);
+    }
+  };
+
   // Table columns
   const columns: ColumnsType<CustomerSummary> = [
     {
       title: '客戶代碼',
       dataIndex: 'customer_code',
       key: 'customer_code',
-      width: 100,
+      width: 120,
       fixed: 'left',
-      render: (code: string) => (
-        <a onClick={() => navigate(`/customers/${code}`)}>
+      render: (code: string, record) => (
+        <a 
+          onClick={() => handleViewCustomer(record.id)}
+          style={{ fontWeight: 500 }}
+        >
+          <TagOutlined style={{ marginRight: 4 }} />
           {code}
         </a>
       )
@@ -194,7 +219,7 @@ const CustomerList: React.FC = () => {
       width: 150,
       render: (name: string, record) => (
         <Space>
-          <UserOutlined />
+          <UserOutlined style={{ color: '#1890ff' }} />
           <Text strong>{name}</Text>
           {!record.is_active && <Tag color="red">已終止</Tag>}
         </Space>
@@ -249,6 +274,7 @@ const CustomerList: React.FC = () => {
         const cylinders = summary.split(', ');
         return (
           <Space wrap>
+            <FireOutlined style={{ color: '#fa8c16' }} />
             {cylinders.map((cyl, idx) => (
               <Tag key={idx} color="orange">{cyl}</Tag>
             ))}
@@ -271,35 +297,33 @@ const CustomerList: React.FC = () => {
       title: '付款方式',
       dataIndex: 'payment_method',
       key: 'payment_method',
-      width: 100,
+      width: 120,
       render: (method: string) => (
-        <Tag color="cyan">
-          {PaymentMethodDisplay[method] || method}
-        </Tag>
+        <Space>
+          <DollarOutlined style={{ color: '#13c2c2' }} />
+          <Tag color="cyan">
+            {PaymentMethodDisplay[method] || method}
+          </Tag>
+        </Space>
       )
     },
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 80,
       fixed: 'right',
       render: (_, record) => (
-        <Space>
+        <Tooltip title="檢視詳情">
           <Button
-            type="link"
+            type="primary"
             size="small"
-            onClick={() => navigate(`/customers/${record.id}`)}
+            icon={<EyeOutlined />}
+            onClick={() => handleViewCustomer(record.id)}
+            style={{ borderRadius: 6 }}
           >
             檢視
           </Button>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => navigate(`/customers/${record.id}/edit`)}
-          >
-            編輯
-          </Button>
-        </Space>
+        </Tooltip>
       )
     }
   ];
@@ -334,7 +358,10 @@ const CustomerList: React.FC = () => {
             </Button>
             <Button
               type="primary"
+              icon={<PlusCircleOutlined />}
               onClick={() => navigate('/customers/new')}
+              size="middle"
+              style={{ borderRadius: 6 }}
             >
               新增客戶
             </Button>
@@ -463,6 +490,19 @@ const CustomerList: React.FC = () => {
         {/* TODO: Add more advanced filters */}
         <p>更多篩選選項開發中...</p>
       </Drawer>
+
+      {/* Customer View Modal */}
+      {selectedCustomerId && (
+        <CustomerViewModal
+          customerId={selectedCustomerId}
+          visible={viewModalVisible}
+          onClose={() => {
+            setViewModalVisible(false);
+            setSelectedCustomerId(null);
+          }}
+          onEdit={handleEditCustomer}
+        />
+      )}
     </div>
   );
 };

@@ -15,7 +15,7 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./local_luckygas.db"
 os.environ["ENVIRONMENT"] = "development"
 os.environ["SECRET_KEY"] = "local-dev-secret-key-change-in-production"
 os.environ["FIRST_SUPERUSER"] = "admin@luckygas.com"
-os.environ["FIRST_SUPERUSER_PASSWORD"] = "admin-password-2025"
+os.environ["FIRST_SUPERUSER_PASSWORD"] = "luckygas123"
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +86,7 @@ async def init_db():
                     email="admin@luckygas.com",
                     username="admin@luckygas.com",
                     full_name="System Administrator",
-                    hashed_password=get_password_hash("admin-password-2025"),
+                    hashed_password=get_password_hash("luckygas123"),
                     is_active=True,
                     role=UserRole.SUPER_ADMIN
                 )
@@ -186,7 +186,7 @@ async def test_api():
             "http://127.0.0.1:8001/api/v1/auth/login",
             data={
                 "username": "admin@luckygas.com",
-                "password": "admin-password-2025"
+                "password": "luckygas123"
             }
         )
         

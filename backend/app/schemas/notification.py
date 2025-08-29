@@ -1,12 +1,12 @@
 """Notification schemas."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.notification import NotificationChannel, NotificationStatus, SMSProvider
+from typing import Optional
 
 
 # SMS Send Schemas

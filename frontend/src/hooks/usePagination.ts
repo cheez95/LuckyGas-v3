@@ -111,7 +111,7 @@ export function usePagination<T>(
         const cached = pageCache.get(cacheKey);
         
         if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-          console.log(`[usePagination] Using cached data for page ${page}`);
+          // console.log(`[usePagination] Using cached data for page ${page}`);
           setData(cached.data);
           return;
         }

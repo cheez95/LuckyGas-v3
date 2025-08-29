@@ -36,7 +36,7 @@ export function useSimpleWebSocket(options: WebSocketOptions = {}) {
 
   const connect = useCallback(() => {
     if (!token) {
-      console.log('No auth token, skipping WebSocket connection');
+      // console.log('No auth token, skipping WebSocket connection');
       return;
     }
 
@@ -49,11 +49,11 @@ export function useSimpleWebSocket(options: WebSocketOptions = {}) {
     const wsUrl = new URL('/api/v1/websocket/ws', import.meta.env.VITE_WS_URL || 'ws://localhost:8000');
     wsUrl.searchParams.append('token', token);
     
-    console.log('Connecting to WebSocket:', wsUrl.origin);
+    // console.log('Connecting to WebSocket:', wsUrl.origin);
     ws.current = new WebSocket(wsUrl.toString());
     
     ws.current.onopen = () => {
-      console.log('WebSocket connected');
+      // console.log('WebSocket connected');
       setIsConnected(true);
       reconnectAttempts.current = 0;
       
@@ -74,13 +74,13 @@ export function useSimpleWebSocket(options: WebSocketOptions = {}) {
     };
     
     ws.current.onclose = (event) => {
-      console.log('WebSocket disconnected:', event.code, event.reason);
+      // console.log('WebSocket disconnected:', event.code, event.reason);
       setIsConnected(false);
       
       // Attempt reconnection if not intentional close
       if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
         reconnectAttempts.current++;
-        console.log(`Reconnecting in ${reconnectDelay}ms... (attempt ${reconnectAttempts.current})`);
+        // console.log(`Reconnecting in ${reconnectDelay}ms... (attempt ${reconnectAttempts.current})`);
         
         reconnectTimer.current = setTimeout(connect, reconnectDelay);
       }
@@ -92,7 +92,7 @@ export function useSimpleWebSocket(options: WebSocketOptions = {}) {
   }, [token, reconnectDelay, maxReconnectAttempts, onMessage]);
 
   const handleMessage = (message: WebSocketMessage) => {
-    console.log('WebSocket message:', message.type, message.data);
+    // console.log('WebSocket message:', message.type, message.data);
     
     switch (message.type) {
       case 'connected':

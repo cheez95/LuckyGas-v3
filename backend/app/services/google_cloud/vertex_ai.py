@@ -8,7 +8,6 @@ import json
 import logging
 import random
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
 
 from sqlalchemy import select
 

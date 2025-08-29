@@ -210,7 +210,7 @@ const RouteInfoPanel: React.FC<RouteInfoPanelProps> = ({
                 block
                 onClick={() => {
                   // In real app, this would make a call
-                  console.log('Calling driver:', route.driverId);
+                  // console.log('Calling driver:', route.driverId);
                 }}
               >
                 聯絡司機

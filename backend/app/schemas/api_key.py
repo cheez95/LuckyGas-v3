@@ -3,9 +3,9 @@ Pydantic schemas for API key management.
 """
 
 from datetime import datetime
-from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field, validator
+from typing import Optional
 
 
 class APIKeyCreate(BaseModel):

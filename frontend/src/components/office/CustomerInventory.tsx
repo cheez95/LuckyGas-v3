@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Table, Card, Button, InputNumber, Space, Tag, message, Spin } from 'antd';
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import { customerService } from '../../services/customer.service';
 import { Customer } from '../../types/order';
@@ -18,6 +19,7 @@ interface EditingCell {
 }
 
 const CustomerInventoryComponent: React.FC<CustomerInventoryProps> = ({ customer, open, onClose }) => {
+  const { t } = useTranslation();
   const [inventory, setInventory] = useState<CustomerInventory[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
@@ -76,20 +78,11 @@ const CustomerInventoryComponent: React.FC<CustomerInventoryProps> = ({ customer
   };
 
   const getDeliveryMethodText = (method: DeliveryMethod) => {
-    const methodMap = {
-      [DeliveryMethod.CYLINDER]: '桶裝',
-      [DeliveryMethod.FLOW]: '流量'
-    };
-    return methodMap[method] || method;
+    return t(`product.deliveryMethods.${method}`);
   };
 
   const getAttributeText = (attribute: ProductAttribute) => {
-    const attributeMap = {
-      [ProductAttribute.REGULAR]: '一般',
-      [ProductAttribute.HAOYUN]: '好運',
-      [ProductAttribute.PINGAN]: '平安'
-    };
-    return attributeMap[attribute] || attribute;
+    return t(`product.attributes.${attribute}`);
   };
 
   const columns: ColumnsType<CustomerInventory> = [

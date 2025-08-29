@@ -3,7 +3,7 @@ Simplified database configuration for Lucky Gas backend.
 Supports both PostgreSQL and SQLite for development flexibility.
 """
 import os
-from typing import AsyncGenerator, Optional
+from typing import Optional, AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, AsyncEngine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy import create_engine

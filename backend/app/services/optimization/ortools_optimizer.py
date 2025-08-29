@@ -5,7 +5,6 @@ Google OR - Tools VRP (Vehicle Routing Problem) optimizer for Lucky Gas deliveri
 import logging
 from dataclasses import dataclass
 from math import atan2, cos, radians, sin, sqrt
-from typing import Dict, List, Optional, Tuple
 
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 

@@ -1,6 +1,5 @@
 import random
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -15,7 +14,7 @@ from app.models.sync_operation import ConflictResolution, SyncStatus
 from app.models.user import User
 # Schema classes are defined in this file
 from app.services.feature_flags import get_feature_flag_service
-from app.services.sync_service import get_sync_service
+# from app.services.sync_service import get_sync_service  # Service not implemented yet
 
 logger = get_logger(__name__)
 

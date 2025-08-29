@@ -52,7 +52,7 @@ const GoogleMapsPlaceholder: React.FC<GoogleMapsPlaceholderProps> = ({
 
   const handleCenterMap = () => {
     // In real implementation, this would center the map
-    console.log('Centering map to:', center);
+    // console.log('Centering map to:', center);
   };
 
   const getMarkerIcon = (type: string) => {

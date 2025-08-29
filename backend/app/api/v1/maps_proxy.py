@@ -5,6 +5,7 @@ This module provides a secure proxy for Google Maps API calls,
 hiding API keys from the frontend and implementing rate limiting,
 authentication, and usage monitoring.
 """
+from typing import Optional
 
 import asyncio
 import hashlib
@@ -12,7 +13,6 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query

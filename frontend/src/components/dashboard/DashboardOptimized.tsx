@@ -110,7 +110,7 @@ const DashboardOptimized: React.FC = () => {
   const fetchDashboardData = useCallback(async (force = false) => {
     // Check cache validity
     if (!force && lastFetchTime && (Date.now() - lastFetchTime.getTime()) < CACHE_DURATION) {
-      console.log('📊 Using cached dashboard data');
+      // console.log('📊 Using cached dashboard data');
       return;
     }
     
@@ -168,7 +168,7 @@ const DashboardOptimized: React.FC = () => {
         setResponseTime(loadTime);
         
         // Log performance
-        console.log(`📊 Dashboard loaded in ${loadTime}ms`);
+        // console.log(`📊 Dashboard loaded in ${loadTime}ms`);
         
         if (loadTime > 2000) {
           console.warn(`⚠️ Dashboard load time exceeded target: ${loadTime}ms`);
@@ -187,12 +187,12 @@ const DashboardOptimized: React.FC = () => {
   // WebSocket connection management with proper URL
   useEffect(() => {
     const handleConnected = () => {
-      console.log('📡 Dashboard: WebSocket connected!');
+      // console.log('📡 Dashboard: WebSocket connected!');
       setIsConnected(true);
     };
     
     const handleDisconnected = () => {
-      console.log('📡 Dashboard: WebSocket disconnected!');
+      // console.log('📡 Dashboard: WebSocket disconnected!');
       setIsConnected(false);
     };
     
@@ -201,7 +201,7 @@ const DashboardOptimized: React.FC = () => {
                   import.meta.env.VITE_API_URL?.replace('https://', 'wss://').replace('http://', 'ws://') ||
                   'wss://localhost:8000';
     
-    console.log('🔌 WebSocket URL configured:', wsUrl);
+    // console.log('🔌 WebSocket URL configured:', wsUrl);
     
     websocketService.on('connected', handleConnected);
     websocketService.on('disconnected', handleDisconnected);
@@ -222,7 +222,7 @@ const DashboardOptimized: React.FC = () => {
   // Real-time updates via WebSocket
   useEffect(() => {
     const handleOrderUpdate = (data: any) => {
-      console.log('📦 Order update received:', data);
+      // console.log('📦 Order update received:', data);
       setStats(prev => ({ ...prev, todayOrders: prev.todayOrders + 1 }));
       addActivity('order', `新訂單 #${data.order_id} 已創建`, 'success');
       

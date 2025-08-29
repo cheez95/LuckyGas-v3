@@ -3,11 +3,11 @@ Payment schemas for API requests and responses
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.invoice import PaymentMethod
+from typing import Optional
 
 
 class PaymentBase(BaseModel):

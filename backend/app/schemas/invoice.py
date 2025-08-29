@@ -4,7 +4,7 @@ Invoice schemas for API requests and responses
 
 import re
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 

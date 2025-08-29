@@ -31,9 +31,7 @@ export function register(config?: Config) {
 
         // Add some additional logging to localhost
         navigator.serviceWorker.ready.then(() => {
-          console.log(
-            'This web app is being served cache-first by a service worker.'
-          );
+          // console.log('This web app is being served cache-first by a service worker.');
         });
       } else {
         // Is not localhost. Just register service worker
@@ -66,9 +64,7 @@ function registerValidSW(swUrl: string, config?: Config) {
             if (navigator.serviceWorker.controller) {
               // At this point, the updated precached content has been fetched,
               // but the previous service worker will still serve the older content
-              console.log(
-                'New content is available and will be used when all tabs for this page are closed.'
-              );
+              // console.log('New content is available and will be used when all tabs for this page are closed.');
 
               // Execute callback
               if (config && config.onUpdate) {
@@ -76,7 +72,7 @@ function registerValidSW(swUrl: string, config?: Config) {
               }
             } else {
               // At this point, everything has been precached.
-              console.log('Content is cached for offline use.');
+              // console.log('Content is cached for offline use.');
 
               // Execute callback
               if (config && config.onSuccess) {
@@ -116,9 +112,7 @@ function checkValidServiceWorker(swUrl: string, config?: Config) {
       }
     })
     .catch(() => {
-      console.log(
-        'No internet connection found. App is running in offline mode.'
-      );
+      // console.log('No internet connection found. App is running in offline mode.');
     });
 }
 
@@ -137,7 +131,7 @@ export function unregister() {
 // Helper function to request notification permission
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    // console.log('This browser does not support notifications');
     return false;
   }
 
@@ -159,7 +153,7 @@ export async function registerSync(tag: string = 'luckygas-sync'): Promise<void>
     const registration = await navigator.serviceWorker.ready;
     try {
       await registration.sync.register(tag);
-      console.log('Sync registered:', tag);
+      // console.log('Sync registered:', tag);
     } catch (error) {
       console.error('Failed to register sync:', error);
     }

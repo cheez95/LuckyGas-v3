@@ -5,7 +5,6 @@ Ensures all required configuration is present at startup
 
 import logging
 import os
-import sys
 from typing import Dict, List, Tuple
 from urllib.parse import urlparse
 
@@ -194,28 +193,28 @@ def validate_environment():
     success, errors = EnvironmentValidator.validate()
 
     if not success:
-        print("\n" + "=" * 60)
-        print("ENVIRONMENT VALIDATION FAILED")
-        print("=" * 60)
+        # print("\n" + "=" * 60)
+        # print("ENVIRONMENT VALIDATION FAILED")
+        # print("=" * 60)
         for error in errors:
             print(f"❌ {error}")
-        print("=" * 60)
-        print("\nPlease set the required environment variables and try again.")
-        print("For development, you can use the .env.example file as a template.")
+        # print("=" * 60)
+        # print("\nPlease set the required environment variables and try again.")
+        # print("For development, you can use the .env.example file as a template.")
         sys.exit(1)
 
     # Print configuration summary
     config = EnvironmentValidator.get_config_summary()
-    print("\n" + "=" * 60)
-    print("ENVIRONMENT CONFIGURATION")
-    print("=" * 60)
-    print(f"Environment: {config['environment']}")
-    print(f"Development Mode: {config['development_mode']}")
-    print("\nGoogle APIs Ready:")
+    # print("\n" + "=" * 60)
+    # print("ENVIRONMENT CONFIGURATION")
+    # print("=" * 60)
+    # print(f"Environment: {config['environment']}")
+    # print(f"Development Mode: {config['development_mode']}")
+    # print("\nGoogle APIs Ready:")
     for api, ready in config["google_apis_ready"].items():
         status = "✅" if ready else "❌"
-        print(f"  {status} {api}")
-    print("=" * 60 + "\n")
+        # print(f"  {status} {api}")
+    # print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

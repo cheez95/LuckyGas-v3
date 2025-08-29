@@ -101,7 +101,7 @@ const CustomerList: React.FC = () => {
   const handleDelete = (customer: Customer) => {
     // This will be handled by BaseModal's confirmation feature
     // or by a separate confirmation modal implementation
-    console.log('Delete customer:', customer);
+    // console.log('Delete customer:', customer);
   };
 
   const handleViewInventory = (customer: Customer) => {

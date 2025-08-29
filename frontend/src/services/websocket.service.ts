@@ -79,11 +79,11 @@ class WebSocketService extends EventEmitter {
       this.url = `${protocol}//${host}/api/v1/websocket/ws`;
     }
     
-    console.log('🔌 WebSocket URL:', this.url);
+    // console.log('🔌 WebSocket URL:', this.url);
   }
 
   connect(): void {
-    console.log('🔌 WebSocket connect() called');
+    // console.log('🔌 WebSocket connect() called');
     const token = localStorage.getItem('access_token');
     if (!token) {
       console.error('No authentication token found');
@@ -98,7 +98,7 @@ class WebSocketService extends EventEmitter {
     }
 
     const wsUrl = `${this.url}?token=${encodeURIComponent(token)}`;
-    console.log('🔌 Attempting to connect to:', wsUrl);
+    // console.log('🔌 Attempting to connect to:', wsUrl);
 
     try {
       // Clean up old connection if exists
@@ -106,7 +106,7 @@ class WebSocketService extends EventEmitter {
       
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
-      console.log('🔌 WebSocket connection initiated');
+      // console.log('🔌 WebSocket connection initiated');
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       this.scheduleReconnect();
@@ -114,7 +114,7 @@ class WebSocketService extends EventEmitter {
   }
 
   disconnect(): void {
-    console.log('🔌 WebSocket disconnect() called');
+    // console.log('🔌 WebSocket disconnect() called');
     this.isIntentionallyClosed = true;
     this.reconnectAttempts = 0; // Reset reconnect attempts
     this.clearTimers();
@@ -132,7 +132,7 @@ class WebSocketService extends EventEmitter {
     // Remove all event listeners
     this.removeAllListeners();
     
-    console.log('🔌 WebSocket fully disconnected and cleaned up');
+    // console.log('🔌 WebSocket fully disconnected and cleaned up');
   }
   
   /**
@@ -148,7 +148,7 @@ class WebSocketService extends EventEmitter {
       
       // Close connection if open
       if (this.ws.readyState !== WebSocket.CLOSED) {
-        console.log('🔌 Closing WebSocket connection');
+        // console.log('🔌 Closing WebSocket connection');
         this.ws.close(1000, 'Client disconnecting');
       }
       
@@ -159,10 +159,10 @@ class WebSocketService extends EventEmitter {
   private setupEventHandlers(): void {
     if (!this.ws) return;
     
-    console.log('🔌 Setting up WebSocket event handlers');
+    // console.log('🔌 Setting up WebSocket event handlers');
 
     this.ws.onopen = () => {
-      console.log('✅ WebSocket connected successfully!');
+      // console.log('✅ WebSocket connected successfully!');
       this.emit('connected');
       this.isIntentionallyClosed = false;
       this.reconnectAttempts = 0; // Reset on successful connection
@@ -208,7 +208,7 @@ class WebSocketService extends EventEmitter {
     };
 
     this.ws.onclose = (event) => {
-      console.log('WebSocket disconnected', { code: event.code, reason: event.reason });
+      // console.log('WebSocket disconnected', { code: event.code, reason: event.reason });
       this.emit('disconnected');
       this.clearTimers();
 
@@ -219,7 +219,7 @@ class WebSocketService extends EventEmitter {
   }
 
   private handleMessage(message: WebSocketMessage): void {
-    console.log('📨 WebSocket received message:', message);
+    // console.log('📨 WebSocket received message:', message);
     
     // Store in history with limit
     this.messageHistory.push(message);
@@ -355,7 +355,7 @@ class WebSocketService extends EventEmitter {
     }
 
     this.reconnectAttempts++;
-    console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds... (attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
+    // console.log(`Reconnecting in ${this.reconnectInterval / 1000} seconds... (attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
     this.emit('reconnecting');
     
     this.reconnectTimer = window.setTimeout(() => {
@@ -400,7 +400,7 @@ class WebSocketService extends EventEmitter {
    */
   clearMessageHistory(): void {
     this.messageHistory = [];
-    console.log('🔌 Message history cleared');
+    // console.log('🔌 Message history cleared');
   }
   
   /**

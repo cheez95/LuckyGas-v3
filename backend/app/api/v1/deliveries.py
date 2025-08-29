@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime
-from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
@@ -39,6 +38,7 @@ async def update_driver_location(
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, str]:
     """Update driver location (for driver app)"""
+from typing import Dict, Optional
 
     # Broadcast location update via WebSocket
     await websocket_manager.handle_driver_location(

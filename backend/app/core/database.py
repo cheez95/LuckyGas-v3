@@ -71,11 +71,10 @@ def init_db():
     Run this once when setting up
     """
     try:
-        # Import all models to register them - use comprehensive models
-        from app.models_comprehensive import (
-            User, Customer, Order,
-            Driver, Delivery, Route,
-            CustomerCylinder, CustomerTimeAvailability,
+        # Import all models to register them
+        from app.models import User, Order, Driver, Delivery, Route
+        from app.client_models import (
+            Customer, CustomerCylinder, CustomerTimeAvailability,
             CustomerEquipment, CustomerUsageArea, CustomerUsageMetrics
         )
         

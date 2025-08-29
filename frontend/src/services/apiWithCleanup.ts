@@ -52,7 +52,7 @@ class ApiWithCleanup {
     return {
       request: request.catch(error => {
         if (axios.isCancel(error)) {
-          console.log('Request cancelled:', url);
+          // console.log('Request cancelled:', url);
         }
         throw error;
       }),

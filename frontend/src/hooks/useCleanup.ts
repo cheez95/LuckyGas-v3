@@ -68,7 +68,7 @@ export function useCleanup() {
 
       // Log cleanup in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('[useCleanup] Component cleanup completed');
+        // console.log('[useCleanup] Component cleanup completed');
       }
     };
   }, []);
@@ -189,7 +189,7 @@ export function useCleanup() {
       } catch (error: any) {
         // Don't log abort errors
         if (error.name === 'AbortError') {
-          console.log('[useCleanup] Request aborted due to component unmount');
+          // console.log('[useCleanup] Request aborted due to component unmount');
           throw error;
         }
         
@@ -210,7 +210,7 @@ export function useCleanup() {
         if (isMounted()) {
           return callback(...args);
         }
-        console.log('[useCleanup] Callback skipped - component unmounted');
+        // console.log('[useCleanup] Callback skipped - component unmounted');
       }) as T;
     },
     [isMounted]
@@ -225,7 +225,7 @@ export function useCleanup() {
         if (isMounted()) {
           setState(value);
         } else {
-          console.log('[useCleanup] State update skipped - component unmounted');
+          // console.log('[useCleanup] State update skipped - component unmounted');
         }
       };
     },

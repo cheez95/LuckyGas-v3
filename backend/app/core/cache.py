@@ -5,8 +5,8 @@ Perfect for 15 concurrent users - no Redis needed!
 import time
 import hashlib
 import json
+from typing import Optional, Any
 from functools import wraps, lru_cache
-from typing import Any, Optional, Dict
 from datetime import datetime, timedelta
 import logging
 
@@ -293,4 +293,4 @@ def example_cached_endpoint():
     
     # Check cache stats
     stats = get_customer_summary.cache_stats()
-    print(f"Cache stats: {stats}")
+    # print(f"Cache stats: {stats}")

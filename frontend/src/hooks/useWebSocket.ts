@@ -46,7 +46,7 @@ export const useWebSocket = ({
     websocketRef.current = ws;
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      // console.log('WebSocket connected');
       setIsConnected(true);
       onConnect?.();
 
@@ -80,7 +80,7 @@ export const useWebSocket = ({
     };
 
     ws.onclose = (event) => {
-      console.log('WebSocket disconnected', event.code, event.reason);
+      // console.log('WebSocket disconnected', event.code, event.reason);
       setIsConnected(false);
       onDisconnect?.();
 
@@ -93,7 +93,7 @@ export const useWebSocket = ({
       // Auto reconnect
       if (autoReconnect && event.code !== 1000) {
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('Attempting to reconnect...');
+          // console.log('Attempting to reconnect...');
           connect();
         }, reconnectInterval);
       }

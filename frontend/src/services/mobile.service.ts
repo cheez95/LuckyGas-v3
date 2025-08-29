@@ -81,7 +81,7 @@ class MobileService {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
         this.serviceWorkerRegistration = registration;
-        console.log('Service Worker registered for background sync');
+        // console.log('Service Worker registered for background sync');
       } catch (error) {
         console.error('Service Worker registration failed:', error);
       }
@@ -203,7 +203,7 @@ class MobileService {
     if ('wakeLock' in navigator) {
       try {
         this.wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Wake lock acquired');
+        // console.log('Wake lock acquired');
       } catch (error) {
         console.error('Wake lock request failed:', error);
       }
@@ -215,7 +215,7 @@ class MobileService {
     if (this.wakeLock) {
       this.wakeLock.release();
       this.wakeLock = null;
-      console.log('Wake lock released');
+      // console.log('Wake lock released');
     }
   }
 
@@ -235,7 +235,7 @@ class MobileService {
     if (this.backgroundLocationInterval !== null) {
       clearInterval(this.backgroundLocationInterval);
       const newInterval = this.calculateTrackingInterval();
-      console.log(`Adjusting tracking interval to ${newInterval}ms (battery: ${this.batteryLevel}%)`);
+      // console.log(`Adjusting tracking interval to ${newInterval}ms (battery: ${this.batteryLevel}%)`);
     }
   }
 
@@ -371,7 +371,7 @@ class MobileService {
   // Request notification permission
   async requestNotificationPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
+      // console.log('This browser does not support notifications');
       return false;
     }
 

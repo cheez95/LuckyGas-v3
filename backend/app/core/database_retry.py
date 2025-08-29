@@ -6,7 +6,6 @@ This module provides resilient database connection with exponential backoff retr
 import asyncio
 import logging
 import time
-from typing import Optional, Any
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, AsyncSession

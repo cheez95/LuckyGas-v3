@@ -3,9 +3,9 @@ Taiwan E - Invoice Pydantic schemas for API validation
 """
 
 from datetime import datetime
-from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+from typing import Optional
 
 
 class InvoiceData(BaseModel):

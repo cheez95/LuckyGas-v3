@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Alert, Button, Space, Typography } from 'antd';
 import { CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import api from '../services/api';
 
 const { Title, Text } = Typography;
 
@@ -41,11 +42,7 @@ const MinimalDashboard: React.FC = () => {
     }
     
     try {
-      const response = await fetch('https://luckygas-backend-production-154687573210.asia-east1.run.app/api/v1/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await api.get('/auth/me');
       
       if (response.ok) {
         const data = await response.json();
@@ -136,7 +133,7 @@ const MinimalDashboard: React.FC = () => {
             hasToken: !!localStorage.getItem('access_token'),
             tokenLength: localStorage.getItem('access_token')?.length || 0,
             currentUrl: window.location.href,
-            apiUrl: 'https://luckygas-backend-production-154687573210.asia-east1.run.app/api/v1',
+            apiUrl: api.defaults.baseURL || 'http://localhost:8000/api/v1',
           }, null, 2)}
         </pre>
       </Card>

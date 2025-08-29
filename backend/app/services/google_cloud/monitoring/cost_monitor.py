@@ -5,7 +5,6 @@ Google API Cost Monitoring and Control
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
 
 import redis.asyncio as redis
 
