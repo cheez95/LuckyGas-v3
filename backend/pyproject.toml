@@ -61,6 +61,7 @@ dependencies = [
     "pytz>=2024.1",
     # Contract Testing
     # "pact-python>=2.1.1",  # Removed - contract testing
+    "prometheus-client>=0.22.1",
 ]
 
 [tool.black]

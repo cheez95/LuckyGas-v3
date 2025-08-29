@@ -206,9 +206,9 @@ system_info = Info("lucky_gas_system", "Lucky Gas system information")
 system_info.info(
     {
         "version": "1.0.0",
-        "environment": settings.ENVIRONMENT.value,
+        "environment": settings.ENVIRONMENT,
         "framework": "FastAPI",
-        "project": settings.PROJECT_NAME,
+        "project": "Lucky Gas",
     }
 )
 
@@ -223,7 +223,6 @@ def get_cloud_metrics():
     if _cloud_metrics is None and os.getenv("GCP_PROJECT_ID"):
         try:
             # Import at runtime to avoid dependency issues
-            import sys
             from pathlib import Path
 
             sys.path.insert(0, str(Path(__file__).parent.parent.parent))
